@@ -1953,7 +1953,7 @@ func FindSubnets(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) ([]*ec2.Subnet,
 	return output, nil
 }
 
-func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
+func FindSubnetCIDRReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
 	input := &ec2.GetSubnetCidrReservationsInput{
 		SubnetId: aws.String(subnetID),
 	}

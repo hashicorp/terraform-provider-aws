@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2LocalGatewayRouteTablesDataSource_basic(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRouteTablesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,7 +26,7 @@ func TestAccEC2LocalGatewayRouteTablesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2LocalGatewayRouteTablesDataSource_filter(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRouteTablesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{

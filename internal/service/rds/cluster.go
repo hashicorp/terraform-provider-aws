@@ -1460,7 +1460,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 		var dbc *rds.DBCluster
 
 		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == dbClusterIdentifier {
+			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
 				dbc = c
 			}
 		}

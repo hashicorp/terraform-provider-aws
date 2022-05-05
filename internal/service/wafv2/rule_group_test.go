@@ -1358,7 +1358,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock_CustomResponseBody(ruleGroupName, "test_body_1"),
+				Config: testAccRuleGroupConfig_RuleActionBlock_CustomResponseBody(ruleGroupName, "test_body_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1390,7 +1390,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock_CustomResponseBody(ruleGroupName, "test_body_2"),
+				Config: testAccRuleGroupConfig_RuleActionBlock_CustomResponseBody(ruleGroupName, "test_body_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -2108,7 +2108,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_RuleActionBlock_CustomResponseBody(name string, customBodyKey string) string {
+func testAccRuleGroupConfig_RuleActionBlock_CustomResponseBody(name string, customBodyKey string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2

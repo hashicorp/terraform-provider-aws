@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCEndpointDataSource_gatewayBasic(t *testing.T) {
+func TestAccVPCEndpointDataSource_gatewayBasic(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -41,7 +41,7 @@ func TestAccEC2VPCEndpointDataSource_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_byID(t *testing.T) {
+func TestAccVPCEndpointDataSource_byID(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -71,7 +71,7 @@ func TestAccEC2VPCEndpointDataSource_byID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_byFilter(t *testing.T) {
+func TestAccVPCEndpointDataSource_byFilter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -101,7 +101,7 @@ func TestAccEC2VPCEndpointDataSource_byFilter(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_byTags(t *testing.T) {
+func TestAccVPCEndpointDataSource_byTags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -131,7 +131,7 @@ func TestAccEC2VPCEndpointDataSource_byTags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
+func TestAccVPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -162,7 +162,7 @@ func TestAccEC2VPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) 
 	})
 }
 
-func TestAccEC2VPCEndpointDataSource_interface(t *testing.T) {
+func TestAccVPCEndpointDataSource_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

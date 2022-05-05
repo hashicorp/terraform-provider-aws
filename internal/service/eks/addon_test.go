@@ -615,7 +615,7 @@ func TestAccEKSAddon_defaultAndIgnoreTags(t *testing.T) {
 				Config: testAccAddonConfigTags1(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
-					testAccCheckEksAddonUpdateTags(&addon, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
+					testAccCheckAddonUpdateTags(&addon, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -656,7 +656,7 @@ func TestAccEKSAddon_ignoreTags(t *testing.T) {
 				Config: testAccAddonConfigTags1(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
-					testAccCheckEksAddonUpdateTags(&addon, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckAddonUpdateTags(&addon, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -756,7 +756,7 @@ func testAccPreCheckAddon(t *testing.T) {
 	}
 }
 
-func testAccCheckEksAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 

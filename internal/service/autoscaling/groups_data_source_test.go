@@ -23,7 +23,7 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingGroupsDataSourceConfig(rName),
+				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
 					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
@@ -39,7 +39,7 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAutoScalingGroupsDataSourceConfig(rName string) string {
+func testAccGroupsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),

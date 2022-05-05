@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceVPCIpamPool_basic(t *testing.T) {
+func TestAccIPAMPoolDataSource_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 	dataSourceName := "data.aws_vpc_ipam_pool.test"
 

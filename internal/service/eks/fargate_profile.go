@@ -112,7 +112,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 		ClusterName:         aws.String(clusterName),
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
-		Selectors:           expandEksFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
+		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
 		Subnets:             flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
@@ -188,7 +188,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("fargate_profile_name", fargateProfile.FargateProfileName)
 	d.Set("pod_execution_role_arn", fargateProfile.PodExecutionRoleArn)
 
-	if err := d.Set("selector", flattenEksFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
+	if err := d.Set("selector", flattenFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
 		return fmt.Errorf("error setting selector: %w", err)
 	}
 
@@ -262,7 +262,7 @@ func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandEksFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSelector {
+func expandFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSelector {
 	if len(l) == 0 {
 		return nil
 	}
@@ -292,7 +292,7 @@ func expandEksFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSele
 	return fargateProfileSelectors
 }
 
-func flattenEksFargateProfileSelectors(fargateProfileSelectors []*eks.FargateProfileSelector) []map[string]interface{} {
+func flattenFargateProfileSelectors(fargateProfileSelectors []*eks.FargateProfileSelector) []map[string]interface{} {
 	if len(fargateProfileSelectors) == 0 {
 		return []map[string]interface{}{}
 	}

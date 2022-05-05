@@ -16,7 +16,7 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func testAccAppSyncFunction_basic(t *testing.T) {
+func testAccFunction_basic(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	rName3 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
@@ -58,7 +58,7 @@ func testAccAppSyncFunction_basic(t *testing.T) {
 	})
 }
 
-func testAccAppSyncFunction_syncConfig(t *testing.T) {
+func testAccFunction_syncConfig(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_function.test"
 	var config appsync.FunctionConfiguration
@@ -87,7 +87,7 @@ func testAccAppSyncFunction_syncConfig(t *testing.T) {
 	})
 }
 
-func testAccAppSyncFunction_description(t *testing.T) {
+func testAccFunction_description(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
@@ -122,7 +122,7 @@ func testAccAppSyncFunction_description(t *testing.T) {
 	})
 }
 
-func testAccAppSyncFunction_responseMappingTemplate(t *testing.T) {
+func testAccFunction_responseMappingTemplate(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
@@ -149,7 +149,7 @@ func testAccAppSyncFunction_responseMappingTemplate(t *testing.T) {
 	})
 }
 
-func testAccAppSyncFunction_disappears(t *testing.T) {
+func testAccFunction_disappears(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
@@ -259,11 +259,11 @@ EOF
 #end
 EOF
 }
-`, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
+`, testAccDataSourceConfig_DynamoDBConfig_region(r1, region), r2)
 }
 
 func testAccFunctionSyncConfig(rName, region string) string {
-	return testAccAppsyncDatasourceConfig_base_DynamoDB(rName) + fmt.Sprintf(`
+	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q
@@ -347,7 +347,7 @@ EOF
 #end
 EOF
 }
-`, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2, description)
+`, testAccDataSourceConfig_DynamoDBConfig_region(r1, region), r2, description)
 }
 
 func testAccFunctionResponseMappingTemplateConfig(r1, r2, region string) string {
@@ -377,5 +377,5 @@ EOF
 #end
 EOF
 }
-`, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
+`, testAccDataSourceConfig_DynamoDBConfig_region(r1, region), r2)
 }

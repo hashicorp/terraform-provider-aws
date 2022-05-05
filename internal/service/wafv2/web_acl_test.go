@@ -1428,7 +1428,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_CustomResponseBody(webACLName, 404, 429),
+				Config: testAccWebACLConfig_CustomResponseBody(webACLName, 404, 429),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -2151,7 +2151,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, defaultStatusCode, countryBlockStatusCode, countryHeaderName)
 }
 
-func testAccAwsWafv2WebACLConfig_CustomResponseBody(name string, defaultStatusCode int, countryBlockStatusCode int) string {
+func testAccWebACLConfig_CustomResponseBody(name string, defaultStatusCode int, countryBlockStatusCode int) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"

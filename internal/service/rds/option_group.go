@@ -191,7 +191,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var option *rds.OptionGroup
 	for _, ogl := range options.OptionGroupsList {
-		if *ogl.OptionGroupName == d.Id() {
+		if aws.StringValue(ogl.OptionGroupName) == d.Id() {
 			option = ogl
 			break
 		}
@@ -235,7 +235,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func optionInList(optionName string, list []*string) bool {
 	for _, opt := range list {
-		if *opt == optionName {
+		if aws.StringValue(opt) == optionName {
 			return true
 		}
 	}

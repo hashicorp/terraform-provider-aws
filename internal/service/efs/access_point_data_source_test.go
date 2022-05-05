@@ -19,7 +19,7 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointDataSourceConfig(rName),

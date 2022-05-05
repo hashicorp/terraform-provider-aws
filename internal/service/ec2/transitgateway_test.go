@@ -17,7 +17,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TransitGateway_serial(t *testing.T) {
+func TestAccTransitGateway_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Connect": {
 			"basic":      testAccTransitGatewayConnect_basic,

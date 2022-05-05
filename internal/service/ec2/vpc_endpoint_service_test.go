@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2VPCEndpointService_basic(t *testing.T) {
+func TestAccVPCEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,7 +50,7 @@ func TestAccEC2VPCEndpointService_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointService_allowedPrincipals(t *testing.T) {
+func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -95,7 +95,7 @@ func TestAccEC2VPCEndpointService_allowedPrincipals(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointService_disappears(t *testing.T) {
+func TestAccVPCEndpointService_disappears(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -119,7 +119,7 @@ func TestAccEC2VPCEndpointService_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
+func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
@@ -153,7 +153,7 @@ func TestAccEC2VPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointService_tags(t *testing.T) {
+func TestAccVPCEndpointService_tags(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -199,7 +199,7 @@ func TestAccEC2VPCEndpointService_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointService_PrivateDNS_name(t *testing.T) {
+func TestAccVPCEndpointService_PrivateDNS_name(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

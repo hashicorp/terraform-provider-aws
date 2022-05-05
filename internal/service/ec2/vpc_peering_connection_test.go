@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCPeeringConnection_basic(t *testing.T) {
+func TestAccVPCPeeringConnection_basic(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
@@ -48,7 +48,7 @@ func TestAccEC2VPCPeeringConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnection_disappears(t *testing.T) {
+func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
@@ -71,7 +71,7 @@ func TestAccEC2VPCPeeringConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnection_tags(t *testing.T) {
+func TestAccVPCPeeringConnection_tags(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
@@ -119,7 +119,7 @@ func TestAccEC2VPCPeeringConnection_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnection_options(t *testing.T) {
+func TestAccVPCPeeringConnection_options(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
@@ -261,7 +261,7 @@ func TestAccEC2VPCPeeringConnection_options(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnection_failedState(t *testing.T) {
+func TestAccVPCPeeringConnection_failedState(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,7 +278,7 @@ func TestAccEC2VPCPeeringConnection_failedState(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
+func TestAccVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -299,7 +299,7 @@ func TestAccEC2VPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnection_region(t *testing.T) {
+func TestAccVPCPeeringConnection_region(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -333,7 +333,7 @@ func TestAccEC2VPCPeeringConnection_region(t *testing.T) {
 }
 
 // Tests the peering connection acceptance functionality for same region, same account.
-func TestAccEC2VPCPeeringConnection_accept(t *testing.T) {
+func TestAccVPCPeeringConnection_accept(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
@@ -400,7 +400,7 @@ func TestAccEC2VPCPeeringConnection_accept(t *testing.T) {
 }
 
 // Tests that VPC peering connection options can't be set on non-active connection.
-func TestAccEC2VPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
+func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

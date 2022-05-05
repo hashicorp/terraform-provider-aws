@@ -45,8 +45,6 @@ rules:
     paths:
       include:
         - internal/service
-      exclude:
-        - internal/service/ec2
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
@@ -59,11 +57,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/ecs
-        - internal/service/elasticache
         - internal/service/elb
-        - internal/service/rds
-        - internal/service/redshift
     patterns:
       - pattern-either:
         - pattern: '$LHS == *$RHS'

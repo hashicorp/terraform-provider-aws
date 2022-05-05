@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -32,7 +32,7 @@ func TestAccEC2VPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_id(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_id(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -72,7 +72,7 @@ func TestAccEC2VPCPeeringConnectionDataSource_id(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -94,7 +94,7 @@ func TestAccEC2VPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -115,7 +115,7 @@ func TestAccEC2VPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_vpcID(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_vpcID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"

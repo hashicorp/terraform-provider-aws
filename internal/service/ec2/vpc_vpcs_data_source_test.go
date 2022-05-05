@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCsDataSource_basic(t *testing.T) {
+func TestAccVPCsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,7 +28,7 @@ func TestAccEC2VPCsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCsDataSource_tags(t *testing.T) {
+func TestAccVPCsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccEC2VPCsDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCsDataSource_filters(t *testing.T) {
+func TestAccVPCsDataSource_filters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -64,7 +64,7 @@ func TestAccEC2VPCsDataSource_filters(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCsDataSource_empty(t *testing.T) {
+func TestAccVPCsDataSource_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

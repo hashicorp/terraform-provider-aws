@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NATGateway_basic(t *testing.T) {
+func TestAccVPCNATGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -46,7 +46,7 @@ func TestAccEC2NATGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_disappears(t *testing.T) {
+func TestAccVPCNATGateway_disappears(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -69,7 +69,7 @@ func TestAccEC2NATGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_ConnectivityType_private(t *testing.T) {
+func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -102,7 +102,7 @@ func TestAccEC2NATGateway_ConnectivityType_private(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_tags(t *testing.T) {
+func TestAccVPCNATGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

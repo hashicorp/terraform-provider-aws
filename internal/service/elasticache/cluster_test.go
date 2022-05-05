@@ -1395,7 +1395,7 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "TestAccAWSElastiCacheCluster_basic"
+    Name = %[1]q
   }
 }
 

@@ -21,12 +21,12 @@ func TestAccAutoScalingGroupTag_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
+		CheckDestroy: testAccCheckGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
+				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoscalingGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1"),
 				),
@@ -47,12 +47,12 @@ func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
+		CheckDestroy: testAccCheckGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
+				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoscalingGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -68,12 +68,12 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
+		CheckDestroy: testAccCheckGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
+				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoscalingGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1"),
 				),
@@ -84,9 +84,9 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAutoscalingGroupTagConfig("key1", "value1updated"),
+				Config: testAccGroupTagConfig_basic("key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutoscalingGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1updated"),
 				),
@@ -95,7 +95,7 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 	})
 }
 
-func testAccCheckAutoscalingGroupTagDestroy(s *terraform.State) error {
+func testAccCheckGroupTagDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -125,7 +125,7 @@ func testAccCheckAutoscalingGroupTagDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
+func testAccCheckGroupTagExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,7 +154,7 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAutoscalingGroupTagConfig(key string, value string) string {
+func testAccGroupTagConfig_basic(key string, value string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),

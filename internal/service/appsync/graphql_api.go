@@ -272,23 +272,23 @@ func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("log_config"); ok {
-		input.LogConfig = expandAppsyncGraphqlApiLogConfig(v.([]interface{}))
+		input.LogConfig = expandGraphQLAPILogConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("openid_connect_config"); ok {
-		input.OpenIDConnectConfig = expandAppsyncGraphqlApiOpenIDConnectConfig(v.([]interface{}))
+		input.OpenIDConnectConfig = expandGraphQLAPIOpenIDConnectConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
 	}
 
 	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
-		input.LambdaAuthorizerConfig = expandAppsyncGraphqlApiLambdaAuthorizerConfig(v.([]interface{}))
+		input.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandAppsyncGraphqlApiAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
 	}
 
 	if len(tags) > 0 {
@@ -338,23 +338,23 @@ func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authentication_type", resp.GraphqlApi.AuthenticationType)
 	d.Set("name", resp.GraphqlApi.Name)
 
-	if err := d.Set("log_config", flattenAppsyncGraphqlApiLogConfig(resp.GraphqlApi.LogConfig)); err != nil {
+	if err := d.Set("log_config", flattenGraphQLAPILogConfig(resp.GraphqlApi.LogConfig)); err != nil {
 		return fmt.Errorf("error setting log_config: %s", err)
 	}
 
-	if err := d.Set("openid_connect_config", flattenAppsyncGraphqlApiOpenIDConnectConfig(resp.GraphqlApi.OpenIDConnectConfig)); err != nil {
+	if err := d.Set("openid_connect_config", flattenGraphQLAPIOpenIDConnectConfig(resp.GraphqlApi.OpenIDConnectConfig)); err != nil {
 		return fmt.Errorf("error setting openid_connect_config: %s", err)
 	}
 
-	if err := d.Set("user_pool_config", flattenAppsyncGraphqlApiUserPoolConfig(resp.GraphqlApi.UserPoolConfig)); err != nil {
+	if err := d.Set("user_pool_config", flattenGraphQLAPIUserPoolConfig(resp.GraphqlApi.UserPoolConfig)); err != nil {
 		return fmt.Errorf("error setting user_pool_config: %s", err)
 	}
 
-	if err := d.Set("lambda_authorizer_config", flattenAppsyncGraphqlApiLambdaAuthorizerConfig(resp.GraphqlApi.LambdaAuthorizerConfig)); err != nil {
+	if err := d.Set("lambda_authorizer_config", flattenGraphQLAPILambdaAuthorizerConfig(resp.GraphqlApi.LambdaAuthorizerConfig)); err != nil {
 		return fmt.Errorf("error setting lambda_authorizer_config: %s", err)
 	}
 
-	if err := d.Set("additional_authentication_provider", flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(resp.GraphqlApi.AdditionalAuthenticationProviders)); err != nil {
+	if err := d.Set("additional_authentication_provider", flattenGraphQLAPIAdditionalAuthenticationProviders(resp.GraphqlApi.AdditionalAuthenticationProviders)); err != nil {
 		return fmt.Errorf("error setting additional_authentication_provider: %s", err)
 	}
 
@@ -398,23 +398,23 @@ func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("log_config"); ok {
-		input.LogConfig = expandAppsyncGraphqlApiLogConfig(v.([]interface{}))
+		input.LogConfig = expandGraphQLAPILogConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("openid_connect_config"); ok {
-		input.OpenIDConnectConfig = expandAppsyncGraphqlApiOpenIDConnectConfig(v.([]interface{}))
+		input.OpenIDConnectConfig = expandGraphQLAPIOpenIDConnectConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
 	}
 
 	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
-		input.LambdaAuthorizerConfig = expandAppsyncGraphqlApiLambdaAuthorizerConfig(v.([]interface{}))
+		input.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandAppsyncGraphqlApiAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -454,7 +454,7 @@ func resourceGraphQLAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAppsyncGraphqlApiLogConfig(l []interface{}) *appsync.LogConfig {
+func expandGraphQLAPILogConfig(l []interface{}) *appsync.LogConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -470,7 +470,7 @@ func expandAppsyncGraphqlApiLogConfig(l []interface{}) *appsync.LogConfig {
 	return logConfig
 }
 
-func expandAppsyncGraphqlApiOpenIDConnectConfig(l []interface{}) *appsync.OpenIDConnectConfig {
+func expandGraphQLAPIOpenIDConnectConfig(l []interface{}) *appsync.OpenIDConnectConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -496,7 +496,7 @@ func expandAppsyncGraphqlApiOpenIDConnectConfig(l []interface{}) *appsync.OpenID
 	return openIDConnectConfig
 }
 
-func expandAppsyncGraphqlApiUserPoolConfig(l []interface{}, currentRegion string) *appsync.UserPoolConfig {
+func expandGraphQLAPIUserPoolConfig(l []interface{}, currentRegion string) *appsync.UserPoolConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -520,7 +520,7 @@ func expandAppsyncGraphqlApiUserPoolConfig(l []interface{}, currentRegion string
 	return userPoolConfig
 }
 
-func expandAppsyncGraphqlApiLambdaAuthorizerConfig(l []interface{}) *appsync.LambdaAuthorizerConfig {
+func expandGraphQLAPILambdaAuthorizerConfig(l []interface{}) *appsync.LambdaAuthorizerConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -539,7 +539,7 @@ func expandAppsyncGraphqlApiLambdaAuthorizerConfig(l []interface{}) *appsync.Lam
 	return lambdaAuthorizerConfig
 }
 
-func expandAppsyncGraphqlApiAdditionalAuthProviders(items []interface{}, currentRegion string) []*appsync.AdditionalAuthenticationProvider {
+func expandGraphQLAPIAdditionalAuthProviders(items []interface{}, currentRegion string) []*appsync.AdditionalAuthenticationProvider {
 	if len(items) < 1 {
 		return nil
 	}
@@ -556,15 +556,15 @@ func expandAppsyncGraphqlApiAdditionalAuthProviders(items []interface{}, current
 		}
 
 		if v, ok := m["openid_connect_config"]; ok {
-			additionalAuthProvider.OpenIDConnectConfig = expandAppsyncGraphqlApiOpenIDConnectConfig(v.([]interface{}))
+			additionalAuthProvider.OpenIDConnectConfig = expandGraphQLAPIOpenIDConnectConfig(v.([]interface{}))
 		}
 
 		if v, ok := m["user_pool_config"]; ok {
-			additionalAuthProvider.UserPoolConfig = expandAppsyncGraphqlApiCognitoUserPoolConfig(v.([]interface{}), currentRegion)
+			additionalAuthProvider.UserPoolConfig = expandGraphQLAPICognitoUserPoolConfig(v.([]interface{}), currentRegion)
 		}
 
 		if v, ok := m["lambda_authorizer_config"]; ok {
-			additionalAuthProvider.LambdaAuthorizerConfig = expandAppsyncGraphqlApiLambdaAuthorizerConfig(v.([]interface{}))
+			additionalAuthProvider.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
 		}
 
 		additionalAuthProviders = append(additionalAuthProviders, additionalAuthProvider)
@@ -573,7 +573,7 @@ func expandAppsyncGraphqlApiAdditionalAuthProviders(items []interface{}, current
 	return additionalAuthProviders
 }
 
-func expandAppsyncGraphqlApiCognitoUserPoolConfig(l []interface{}, currentRegion string) *appsync.CognitoUserPoolConfig {
+func expandGraphQLAPICognitoUserPoolConfig(l []interface{}, currentRegion string) *appsync.CognitoUserPoolConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -596,7 +596,7 @@ func expandAppsyncGraphqlApiCognitoUserPoolConfig(l []interface{}, currentRegion
 	return userPoolConfig
 }
 
-func flattenAppsyncGraphqlApiLogConfig(logConfig *appsync.LogConfig) []interface{} {
+func flattenGraphQLAPILogConfig(logConfig *appsync.LogConfig) []interface{} {
 	if logConfig == nil {
 		return []interface{}{}
 	}
@@ -610,7 +610,7 @@ func flattenAppsyncGraphqlApiLogConfig(logConfig *appsync.LogConfig) []interface
 	return []interface{}{m}
 }
 
-func flattenAppsyncGraphqlApiOpenIDConnectConfig(openIDConnectConfig *appsync.OpenIDConnectConfig) []interface{} {
+func flattenGraphQLAPIOpenIDConnectConfig(openIDConnectConfig *appsync.OpenIDConnectConfig) []interface{} {
 	if openIDConnectConfig == nil {
 		return []interface{}{}
 	}
@@ -625,7 +625,7 @@ func flattenAppsyncGraphqlApiOpenIDConnectConfig(openIDConnectConfig *appsync.Op
 	return []interface{}{m}
 }
 
-func flattenAppsyncGraphqlApiUserPoolConfig(userPoolConfig *appsync.UserPoolConfig) []interface{} {
+func flattenGraphQLAPIUserPoolConfig(userPoolConfig *appsync.UserPoolConfig) []interface{} {
 	if userPoolConfig == nil {
 		return []interface{}{}
 	}
@@ -643,7 +643,7 @@ func flattenAppsyncGraphqlApiUserPoolConfig(userPoolConfig *appsync.UserPoolConf
 	return []interface{}{m}
 }
 
-func flattenAppsyncGraphqlApiLambdaAuthorizerConfig(lambdaAuthorizerConfig *appsync.LambdaAuthorizerConfig) []interface{} {
+func flattenGraphQLAPILambdaAuthorizerConfig(lambdaAuthorizerConfig *appsync.LambdaAuthorizerConfig) []interface{} {
 	if lambdaAuthorizerConfig == nil {
 		return []interface{}{}
 	}
@@ -665,7 +665,7 @@ func flattenAppsyncGraphqlApiLambdaAuthorizerConfig(lambdaAuthorizerConfig *apps
 	return []interface{}{m}
 }
 
-func flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(additionalAuthenticationProviders []*appsync.AdditionalAuthenticationProvider) []interface{} {
+func flattenGraphQLAPIAdditionalAuthenticationProviders(additionalAuthenticationProviders []*appsync.AdditionalAuthenticationProvider) []interface{} {
 	if len(additionalAuthenticationProviders) == 0 {
 		return []interface{}{}
 	}
@@ -674,16 +674,16 @@ func flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(additionalAuthent
 	for i, provider := range additionalAuthenticationProviders {
 		result[i] = map[string]interface{}{
 			"authentication_type":      aws.StringValue(provider.AuthenticationType),
-			"lambda_authorizer_config": flattenAppsyncGraphqlApiLambdaAuthorizerConfig(provider.LambdaAuthorizerConfig),
-			"openid_connect_config":    flattenAppsyncGraphqlApiOpenIDConnectConfig(provider.OpenIDConnectConfig),
-			"user_pool_config":         flattenAppsyncGraphqlApiCognitoUserPoolConfig(provider.UserPoolConfig),
+			"lambda_authorizer_config": flattenGraphQLAPILambdaAuthorizerConfig(provider.LambdaAuthorizerConfig),
+			"openid_connect_config":    flattenGraphQLAPIOpenIDConnectConfig(provider.OpenIDConnectConfig),
+			"user_pool_config":         flattenGraphQLAPICognitoUserPoolConfig(provider.UserPoolConfig),
 		}
 	}
 
 	return result
 }
 
-func flattenAppsyncGraphqlApiCognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserPoolConfig) []interface{} {
+func flattenGraphQLAPICognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserPoolConfig) []interface{} {
 	if userPoolConfig == nil {
 		return []interface{}{}
 	}

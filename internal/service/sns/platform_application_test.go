@@ -29,21 +29,21 @@ import (
  APNS_SANDBOX_PRINCIPAL_PATH - Apple Push Notification Sandbox Certificate file location
 **/
 
-type testAccAWSSnsPlatformApplicationPlatform struct {
+type testAccPlatformApplicationPlatform struct {
 	Name       string
 	Credential string
 	Principal  string
 }
 
-func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAWSSnsPlatformApplicationPlatform {
-	platforms := make([]*testAccAWSSnsPlatformApplicationPlatform, 0, 2)
+func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccPlatformApplicationPlatform {
+	platforms := make([]*testAccPlatformApplicationPlatform, 0, 2)
 
 	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
 		}
 
-		platform := &testAccAWSSnsPlatformApplicationPlatform{
+		platform := &testAccPlatformApplicationPlatform{
 			Name:       "APNS_SANDBOX",
 			Credential: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
 			Principal:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
@@ -54,7 +54,7 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAWSSnsPla
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
 
-		platform := &testAccAWSSnsPlatformApplicationPlatform{
+		platform := &testAccPlatformApplicationPlatform{
 			Name:       "APNS_SANDBOX",
 			Credential: strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
 			Principal:  strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
@@ -63,7 +63,7 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAWSSnsPla
 	}
 
 	if os.Getenv("GCM_API_KEY") != "" {
-		platform := &testAccAWSSnsPlatformApplicationPlatform{
+		platform := &testAccPlatformApplicationPlatform{
 			Name:       "GCM",
 			Credential: strconv.Quote(os.Getenv("GCM_API_KEY")),
 		}
@@ -397,7 +397,7 @@ func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPlatformApplicationConfig_basic(name string, platform *testAccAWSSnsPlatformApplicationPlatform) string {
+func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatformApplicationPlatform) string {
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
@@ -417,7 +417,7 @@ resource "aws_sns_platform_application" "test" {
 `, name, platform.Name, platform.Credential, platform.Principal)
 }
 
-func testAccPlatformApplicationConfig_basicAttribute(name string, platform *testAccAWSSnsPlatformApplicationPlatform, attributeKey, attributeValue string) string {
+func testAccPlatformApplicationConfig_basicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, attributeValue string) string {
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
@@ -439,7 +439,7 @@ resource "aws_sns_platform_application" "test" {
 `, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
 }
 
-func testAccPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccAWSSnsPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
+func testAccPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -469,7 +469,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, iamRoleName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
-func testAccPlatformApplicationConfig_snsTopicAttribute(name string, platform *testAccAWSSnsPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
+func testAccPlatformApplicationConfig_snsTopicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "%s"

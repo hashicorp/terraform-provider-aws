@@ -1421,7 +1421,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -1430,12 +1430,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1506,7 +1506,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName)
@@ -1553,7 +1553,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -1562,12 +1562,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test1" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1585,7 +1585,7 @@ resource "aws_lb_target_group" "test1" {
 }
 
 resource "aws_lb_target_group" "test2" {
-  name     = "%s"
+  name     = %[3]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1656,7 +1656,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName1, targetGroupName2)
@@ -1708,7 +1708,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -1717,12 +1717,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test1" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1740,7 +1740,7 @@ resource "aws_lb_target_group" "test1" {
 }
 
 resource "aws_lb_target_group" "test2" {
-  name     = "%s"
+  name     = %[3]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1811,7 +1811,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName1, targetGroupName2)
@@ -1847,7 +1847,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -1856,12 +1856,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test1" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1879,7 +1879,7 @@ resource "aws_lb_target_group" "test1" {
 }
 
 resource "aws_lb_target_group" "test2" {
-  name     = "%s"
+  name     = %[3]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -1950,7 +1950,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName1, targetGroupName2)
@@ -1986,7 +1986,7 @@ resource "aws_alb_listener" "front_end" {
 }
 
 resource "aws_alb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -1995,12 +1995,12 @@ resource "aws_alb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_alb_target_group" "test" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -2071,7 +2071,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName)
@@ -2131,7 +2131,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_redirect"
+    Name = %[1]q
   }
 }
 
@@ -2189,7 +2189,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_redirect"
+    Name = %[1]q
   }
 }
 `, lbName, query)
@@ -2206,7 +2206,7 @@ resource "aws_lb_listener_rule" "static" {
 
     fixed_response {
       content_type = "text/plain"
-      message_body = "%s"
+      message_body = %[1]q
       status_code  = "200"
     }
   }
@@ -2235,7 +2235,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[2]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -2244,7 +2244,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_fixedResponse"
+    Name = %[2]q
   }
 }
 
@@ -2302,7 +2302,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_fixedresponse"
+    Name = %[2]q
   }
 }
 `, response, lbName)
@@ -2338,7 +2338,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -2347,12 +2347,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -2423,7 +2423,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName)
@@ -2470,7 +2470,7 @@ resource "aws_lb_listener" "front_end_ruleupdate" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -2479,12 +2479,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -2555,7 +2555,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName)
@@ -2575,7 +2575,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -2584,12 +2584,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = %[2]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -2660,7 +2660,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName)
@@ -2856,9 +2856,9 @@ resource "aws_lb_listener_rule" "cognito" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name             = "%[1]s"
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
+  name             = %[1]q
+  certificate_body = %[2]q
+  private_key      = %[3]q
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2875,7 +2875,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%[1]s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -2884,12 +2884,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_cognito"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%[1]s"
+  name     = %[1]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -2960,7 +2960,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_cognito"
+    Name = %[1]q
   }
 }
 
@@ -3023,9 +3023,9 @@ resource "aws_lb_listener_rule" "oidc" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name             = "%[1]s"
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
+  name             = %[1]q
+  certificate_body = %[2]q
+  private_key      = %[3]q
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -3042,7 +3042,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%[1]s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -3051,12 +3051,12 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_cognito"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%[1]s"
+  name     = %[1]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.alb_test.id
@@ -3127,7 +3127,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_cognito"
+    Name = %[1]q
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
@@ -3183,9 +3183,9 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  certificate_body = "%[2]s"
+  certificate_body = %[2]q
   name             = var.rName
-  private_key      = "%[3]s"
+  private_key      = %[3]q
 }
 
 resource "aws_lb_listener" "test" {
@@ -3369,7 +3369,7 @@ condition {
 `)
 }
 
-func testAccListenerRuleConfig_condition_base(condition, name, lbName string) string {
+func testAccListenerRuleConfig_conditionBase(condition, lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.front_end.arn
@@ -3385,7 +3385,7 @@ resource "aws_lb_listener_rule" "static" {
     }
   }
 
-  %s
+  %[1]s
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -3405,7 +3405,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[2]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -3414,7 +3414,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_condition%s"
+    Name = %[2]q
   }
 }
 
@@ -3436,7 +3436,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "TestAccAWSALB_condition%s"
+    Name = %[2]q
   }
 }
 
@@ -3448,7 +3448,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "TestAccAWSALB_condition%s-${count.index}"
+    Name = "%[2]s-${count.index}"
   }
 }
 
@@ -3472,24 +3472,24 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_condition%s"
+    Name = %[2]q
   }
 }
-`, condition, lbName, name, name, name, name)
+`, condition, lbName)
 }
 
 func testAccListenerRuleConfig_conditionHostHeader(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   host_header {
     values = ["example.com", "www.example.com"]
   }
 }
-`, "HostHeader", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionHTTPHeader(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   http_header {
     http_header_name = "X-Forwarded-For"
@@ -3503,7 +3503,7 @@ condition {
     values           = ["RFC7230 Validity"]
   }
 }
-`, "HttpHeader", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionHTTPHeader_invalid() string {
@@ -3537,27 +3537,27 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 func testAccListenerRuleConfig_conditionHTTPRequestMethod(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   http_request_method {
     values = ["GET", "POST"]
   }
 }
-`, "HttpRequestMethod", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionPathPattern(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   path_pattern {
     values = ["/public/*", "/cgi-bin/*"]
   }
 }
-`, "PathPattern", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionQueryString(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   query_string {
     value = "surprise"
@@ -3580,11 +3580,11 @@ condition {
     value = "baz"
   }
 }
-`, "QueryString", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionSourceIP(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   source_ip {
     values = [
@@ -3593,11 +3593,11 @@ condition {
     ]
   }
 }
-`, "SourceIp", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionMixed(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   path_pattern {
     values = ["/public/*"]
@@ -3611,12 +3611,12 @@ condition {
     ]
   }
 }
-`, "Mixed", lbName)
+`, lbName)
 }
 
 // Update new style condition without modifying deprecated. Issue GH-11323
 func testAccListenerRuleConfig_conditionMixed_updated(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   path_pattern {
     values = ["/public/*"]
@@ -3630,12 +3630,12 @@ condition {
     ]
   }
 }
-`, "Mixed", lbName)
+`, lbName)
 }
 
 // Then update deprecated syntax without touching new. Issue GH-11362
 func testAccListenerRuleConfig_conditionMixed_updated2(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   path_pattern {
     values = ["/cgi-bin/*"]
@@ -3649,12 +3649,12 @@ condition {
     ]
   }
 }
-`, "Mixed", lbName)
+`, lbName)
 }
 
 // Currently a maximum of 5 condition values per rule
 func testAccListenerRuleConfig_conditionMultiple(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   host_header {
     values = ["example.com"]
@@ -3685,11 +3685,11 @@ condition {
     values = ["192.168.0.0/16"]
   }
 }
-`, "Multiple", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleConfig_conditionMultiple_updated(lbName string) string {
-	return testAccListenerRuleConfig_condition_base(`
+	return testAccListenerRuleConfig_conditionBase(`
 condition {
   host_header {
     values = ["example.com"]
@@ -3720,7 +3720,7 @@ condition {
     values = ["192.168.0.0/24"]
   }
 }
-`, "Multiple", lbName)
+`, lbName)
 }
 
 func testAccListenerRuleTags1Config(lbName, targetGroupName, tagKey1, tagValue1 string) string {
@@ -3766,7 +3766,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
@@ -3842,7 +3842,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName, tagKey1, tagValue1)
@@ -3892,7 +3892,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
@@ -3968,7 +3968,7 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 `, lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2)

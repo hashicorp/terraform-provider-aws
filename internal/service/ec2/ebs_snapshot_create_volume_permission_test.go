@@ -13,7 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2SnapshotCreateVolumePermission_basic(t *testing.T) {
+func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 	var snapshotId string
 	accountId := "111122223333"
 
@@ -42,7 +42,7 @@ func TestAccEC2SnapshotCreateVolumePermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SnapshotCreateVolumePermission_disappears(t *testing.T) {
+func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 	var snapshotId string
 	accountId := "111122223333"
 

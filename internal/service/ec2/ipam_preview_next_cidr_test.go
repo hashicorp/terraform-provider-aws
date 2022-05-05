@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccVPCIpamPreviewNextCidr_ipv4Basic(t *testing.T) {
+func TestAccIPAMPreviewNextCidr_ipv4Basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
 	netmaskLength := "28"
 
@@ -32,7 +32,7 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPreviewNextCidr_ipv4Allocated(t *testing.T) {
+func TestAccIPAMPreviewNextCidr_ipv4Allocated(t *testing.T) {
 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
 	netmaskLength := "28"
 	allocatedCidr := "172.2.0.0/28"
@@ -66,7 +66,7 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Allocated(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPreviewNextCidr_ipv4DisallowedCidr(t *testing.T) {
+func TestAccIPAMPreviewNextCidr_ipv4DisallowedCidr(t *testing.T) {
 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
 	disallowedCidr := "172.2.0.0/28"
 	netmaskLength := "28"

@@ -488,7 +488,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if c.NotificationConfiguration != nil {
-		if *c.NotificationConfiguration.TopicStatus == "active" {
+		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -775,7 +775,7 @@ func (b byCacheNodeId) Len() int      { return len(b) }
 func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byCacheNodeId) Less(i, j int) bool {
 	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		*b[i].CacheNodeId < *b[j].CacheNodeId
+		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {

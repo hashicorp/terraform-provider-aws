@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCDHCPOptionsDataSource_basic(t *testing.T) {
+func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
@@ -47,7 +47,7 @@ func TestAccEC2VPCDHCPOptionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptionsDataSource_filter(t *testing.T) {
+func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
