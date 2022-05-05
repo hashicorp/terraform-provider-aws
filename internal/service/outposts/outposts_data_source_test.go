@@ -20,16 +20,16 @@ func TestAccOutpostsDataSource_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostsDataSourceConfig(),
+				Config: testAccOutpostsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOutpostsOutpostsAttributes(dataSourceName),
+					testAccCheckOutpostsAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOutpostsOutpostsAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -48,7 +48,7 @@ func testAccCheckOutpostsOutpostsAttributes(dataSourceName string) resource.Test
 	}
 }
 
-func testAccOutpostsDataSourceConfig() string {
+func testAccOutpostsDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 `

@@ -22,14 +22,14 @@ func TestAccOutpostsOutpostInstanceTypesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOutpostInstanceTypesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName),
+					testAccCheckOutpostInstanceTypesAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckOutpostInstanceTypesAttributes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
