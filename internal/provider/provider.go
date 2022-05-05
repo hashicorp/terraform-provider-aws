@@ -111,6 +111,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
@@ -1606,6 +1607,8 @@ func Provider() *schema.Provider {
 			"aws_lightsail_key_pair":              lightsail.ResourceKeyPair(),
 			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
+
+			"aws_location_map": location.ResourceMap(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
