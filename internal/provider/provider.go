@@ -656,6 +656,7 @@ func Provider() *schema.Provider {
 			"aws_iam_account_alias":           iam.DataSourceAccountAlias(),
 			"aws_iam_group":                   iam.DataSourceGroup(),
 			"aws_iam_instance_profile":        iam.DataSourceInstanceProfile(),
+			"aws_iam_instance_profiles":       iam.DataSourceInstanceProfiles(),
 			"aws_iam_openid_connect_provider": iam.DataSourceOpenIDConnectProvider(),
 			"aws_iam_policy":                  iam.DataSourcePolicy(),
 			"aws_iam_policy_document":         iam.DataSourcePolicyDocument(),
