@@ -887,14 +887,15 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
-						"client_properties.%":                 "6",
-						"client_properties.acks":              "1",
-						"client_properties.bootstrap.servers": "b-1.localhost:9094",
-						"client_properties.compression.type":  "none",
-						"client_properties.key.serializer":    "org.apache.kafka.common.serialization.StringSerializer",
-						"client_properties.security.protocol": "SSL",
-						"client_properties.value.serializer":  "org.apache.kafka.common.serialization.ByteBufferSerializer",
-						"topic":                               "fake_topic",
+						"client_properties.%":                     "8",
+						"client_properties.acks":                  "1",
+						"client_properties.bootstrap.servers":     "b-1.localhost:9094",
+						"client_properties.compression.type":      "none",
+						"client_properties.key.serializer":        "org.apache.kafka.common.serialization.StringSerializer",
+						"client_properties.security.protocol":     "SSL",
+						"client_properties.ssl.keystore.password": "password",
+						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
+						"topic":                                   "fake_topic",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
@@ -1996,12 +1997,14 @@ resource "aws_iot_topic_rule" "test" {
     topic           = "fake_topic"
 
     client_properties = {
-      "acks"              = "1"
-      "bootstrap.servers" = "b-1.localhost:9094"
-      "compression.type"  = "none"
-      "key.serializer"    = "org.apache.kafka.common.serialization.StringSerializer"
-      "security.protocol" = "SSL"
-      "value.serializer"  = "org.apache.kafka.common.serialization.ByteBufferSerializer"
+      "acks"                  = "1"
+      "bootstrap.servers"     = "b-1.localhost:9094"
+      "compression.type"      = "none"
+      "key.serializer"        = "org.apache.kafka.common.serialization.StringSerializer"
+      "security.protocol"     = "SSL"
+      "ssl.keystore"          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.test.arn}')}"
+      "ssl.keystore.password" = "password"
+      "value.serializer"      = "org.apache.kafka.common.serialization.ByteBufferSerializer"
     }
   }
 }
