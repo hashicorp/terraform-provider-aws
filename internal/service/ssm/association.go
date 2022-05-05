@@ -183,7 +183,7 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
@@ -191,7 +191,7 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+		associationInput.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("compliance_severity"); ok {
@@ -309,7 +309,7 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
 	if _, ok := d.GetOk("targets"); ok {
@@ -317,7 +317,7 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+		associationInput.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("compliance_severity"); ok {
@@ -365,7 +365,7 @@ func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSSMDocumentParameters(params map[string]interface{}) map[string][]*string {
+func expandDocumentParameters(params map[string]interface{}) map[string][]*string {
 	var docParams = make(map[string][]*string)
 	for k, v := range params {
 		values := make([]*string, 1)
@@ -376,7 +376,7 @@ func expandSSMDocumentParameters(params map[string]interface{}) map[string][]*st
 	return docParams
 }
 
-func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssociationOutputLocation {
+func expandAssociationOutputLocation(config []interface{}) *ssm.InstanceAssociationOutputLocation {
 	if config == nil {
 		return nil
 	}
