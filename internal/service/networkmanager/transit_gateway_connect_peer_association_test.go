@@ -18,9 +18,9 @@ import (
 
 func TestAccNetworkManagerTransitGatewayConnectPeerAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                  testAccNetworkManagerTransitGatewayConnectPeerAssociation_basic,
-		"disappears":             testAccNetworkManagerTransitGatewayConnectPeerAssociation_disappears,
-		"disappears_ConnectPeer": testAccNetworkManagerTransitGatewayConnectPeerAssociation_disappears_ConnectPeer,
+		"basic":                  testAccTransitGatewayConnectPeerAssociation_basic,
+		"disappears":             testAccTransitGatewayConnectPeerAssociation_disappears,
+		"disappears_ConnectPeer": testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer,
 	}
 
 	for name, tc := range testCases {
@@ -31,7 +31,7 @@ func TestAccNetworkManagerTransitGatewayConnectPeerAssociation_serial(t *testing
 	}
 }
 
-func testAccNetworkManagerTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
+func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_connect_peer_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -56,7 +56,7 @@ func testAccNetworkManagerTransitGatewayConnectPeerAssociation_basic(t *testing.
 	})
 }
 
-func testAccNetworkManagerTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
+func testAccTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_connect_peer_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -78,7 +78,7 @@ func testAccNetworkManagerTransitGatewayConnectPeerAssociation_disappears(t *tes
 	})
 }
 
-func testAccNetworkManagerTransitGatewayConnectPeerAssociation_disappears_ConnectPeer(t *testing.T) {
+func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_connect_peer_association.test"
 	connetPeerResourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
