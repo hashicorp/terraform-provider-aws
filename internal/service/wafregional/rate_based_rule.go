@@ -113,7 +113,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 	newPredicates := d.Get("predicate").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
+		err := updateRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
 		}
@@ -194,7 +194,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
+		err := updateRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
 		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -225,7 +225,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		noPredicates := []interface{}{}
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
+		err := updateRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
 		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
@@ -253,7 +253,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func updateWafRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateLimit interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateLimit interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{

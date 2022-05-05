@@ -115,7 +115,7 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 				Config: testAccRateBasedRuleChangeNameConfig(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &after),
-					testAccCheckWAFRateBasedRuleIdDiffers(&before, &after),
+					testAccCheckRateBasedRuleIdDiffers(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
@@ -267,7 +267,7 @@ func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 	})
 }
 
-func testAccCheckWAFRateBasedRuleIdDiffers(before, after *waf.RateBasedRule) resource.TestCheckFunc {
+func testAccCheckRateBasedRuleIdDiffers(before, after *waf.RateBasedRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.RuleId == *after.RuleId {
 			return fmt.Errorf("Expected different IDs, given %q for both rules", *before.RuleId)
