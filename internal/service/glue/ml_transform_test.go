@@ -174,14 +174,14 @@ func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 		CheckDestroy: testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMLTransformGlueVersionConfig(rName, "0.9"),
+				Config: testAccMlTransformConfig_mLTransformVersion(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccMLTransformGlueVersionConfig(rName, "1.0"),
+				Config: testAccMlTransformConfig_mLTransformVersion(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -670,7 +670,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, description)
 }
 
-func testAccMLTransformGlueVersionConfig(rName, glueVersion string) string {
+func testAccMlTransformConfig_mLTransformVersion(rName, glueVersion string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name         = %[1]q
