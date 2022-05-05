@@ -2,7 +2,6 @@ package iam
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -43,33 +42,33 @@ func dataSourceInstanceProfilesRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	roleName := d.Get("role_name").(string)
-
-	req := &iam.ListInstanceProfilesForRoleInput{
+	input := &iam.ListInstanceProfilesForRoleInput{
 		RoleName: aws.String(roleName),
 	}
+	var arns, names, paths []string
 
-	log.Printf("[DEBUG] Reading IAM Instance Profiles for given role %s: %s", roleName, req)
-	resp, err := conn.ListInstanceProfilesForRole(req)
+	err := conn.ListInstanceProfilesForRolePages(input, func(page *iam.ListInstanceProfilesForRoleOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceProfiles {
+			arns = append(arns, aws.StringValue(v.Arn))
+			names = append(names, aws.StringValue(v.InstanceProfileName))
+			paths = append(paths, aws.StringValue(v.Path))
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error getting instance profiles: %w", err)
-	}
-	if resp == nil {
-		return fmt.Errorf("no IAM instance profiles found for role %s", roleName)
-	}
-
-	instanceProfiles := resp.InstanceProfiles
-
-	var arns, paths, names []string
-	for _, profile := range instanceProfiles {
-		arns = append(arns, aws.StringValue(profile.Arn))
-		paths = append(paths, aws.StringValue(profile.Path))
-		names = append(names, aws.StringValue(profile.InstanceProfileName))
+		return fmt.Errorf("listing IAM Instance Profiles for Role (%s): %w", roleName, err)
 	}
 
 	d.SetId(roleName)
 	d.Set("arns", arns)
-	d.Set("paths", paths)
 	d.Set("names", names)
+	d.Set("paths", paths)
 
 	return nil
 }
