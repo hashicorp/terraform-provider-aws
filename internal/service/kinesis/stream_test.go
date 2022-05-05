@@ -476,7 +476,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 		CheckDestroy: testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_ChangeProvisionedToOnDemand_1(rName),
+				Config: testAccStreamConfig_changeProvisionedToOnDemand1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
@@ -491,7 +491,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 			{
-				Config: testAccStreamConfig_ChangeProvisionedToOnDemand_2(rName),
+				Config: testAccStreamConfig_changeProvisionedToOnDemand2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
@@ -506,7 +506,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 			{
-				Config: testAccStreamConfig_ChangeProvisionedToOnDemand_3(rName),
+				Config: testAccStreamConfig_changeProvisionedToOnDemand3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
@@ -521,7 +521,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 			{
-				Config: testAccStreamConfig_ChangeProvisionedToOnDemand_1(rName),
+				Config: testAccStreamConfig_changeProvisionedToOnDemand1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
@@ -838,7 +838,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_ChangeProvisionedToOnDemand_1(rName string) string {
+func testAccStreamConfig_changeProvisionedToOnDemand1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %[1]q
@@ -847,7 +847,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_ChangeProvisionedToOnDemand_2(rName string) string {
+func testAccStreamConfig_changeProvisionedToOnDemand2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name = %[1]q
@@ -859,7 +859,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccStreamConfig_ChangeProvisionedToOnDemand_3(rName string) string {
+func testAccStreamConfig_changeProvisionedToOnDemand3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %[1]q
