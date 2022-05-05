@@ -23,6 +23,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Fix PreconditionFailed errors when other CloudFront resources are changed before the distribution ([#24537](https://github.com/hashicorp/terraform-provider-aws/issues/24537))
+* resource/aws_ecs_service: Fix retry when using the `wait_for_steady_state` parameter ([#24541](https://github.com/hashicorp/terraform-provider-aws/issues/24541))
 * resource/aws_ssm_document: Always include `attachment_sources` when updating SSM documents ([#24530](https://github.com/hashicorp/terraform-provider-aws/issues/24530))
 
 ## 4.12.1 (April 29, 2022)
