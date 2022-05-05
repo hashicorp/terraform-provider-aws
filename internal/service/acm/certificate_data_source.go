@@ -25,6 +25,14 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tls_certificate": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tls_certificate_full_chain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"statuses": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -169,10 +177,19 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("No certificate for domain %q found in this region", target)
 	}
 
+	// get the certificate data
+	getCertInput := acm.GetCertificateInput{
+		CertificateArn: matchedCertificate.CertificateArn,
+	}
+	output, err := conn.GetCertificate(&getCertInput)
+	if err != nil {
+		return err
+	}
 	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
-
+	d.Set("tls_certificate", output.Certificate)
+	d.Set("tls_certificate_full_chain", output.CertificateChain)
 	tags, err := ListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
