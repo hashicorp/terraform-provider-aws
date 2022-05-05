@@ -35,6 +35,7 @@ func ResourceFlow() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 			},
 			"description": {
@@ -668,6 +669,7 @@ func ResourceFlow() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`arn:aws:kms:.*:[0-9]+:.*`), "must be a valid ARN of a Key Management Services (KMS) key"),
 			},
 			"source_flow_config": {
