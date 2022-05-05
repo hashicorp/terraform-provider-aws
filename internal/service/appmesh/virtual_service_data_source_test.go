@@ -20,7 +20,7 @@ func TestAccAppMeshVirtualServiceDataSource_virtualNode(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		CheckDestroy: testAccCheckVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
@@ -50,7 +50,7 @@ func TestAccAppMeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		CheckDestroy: testAccCheckVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),
