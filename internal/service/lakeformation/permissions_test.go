@@ -642,7 +642,7 @@ func testAccCheckPermissionsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		permCount, err := permissionCountForLakeFormationResource(conn, rs)
+		permCount, err := permissionCountForResource(conn, rs)
 
 		if err != nil {
 			return fmt.Errorf("acceptance test: error listing Lake Formation permissions (%s): %w", rs.Primary.ID, err)
@@ -668,7 +668,7 @@ func testAccCheckPermissionsExists(resourceName string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
-		permCount, err := permissionCountForLakeFormationResource(conn, rs)
+		permCount, err := permissionCountForResource(conn, rs)
 
 		if err != nil {
 			return fmt.Errorf("acceptance test: error listing Lake Formation permissions (%s): %w", rs.Primary.ID, err)
@@ -682,7 +682,7 @@ func testAccCheckPermissionsExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, rs *terraform.ResourceState) (int, error) {
+func permissionCountForResource(conn *lakeformation.LakeFormation, rs *terraform.ResourceState) (int, error) {
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(rs.Primary.Attributes["principal"]),

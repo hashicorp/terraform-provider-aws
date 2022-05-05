@@ -183,7 +183,7 @@ func testAccCheckResourceDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("resource still registered: %s", resourceArn)
 		}
-		if !isLakeFormationResourceNotFoundErr(err) {
+		if !isResourceNotFoundErr(err) {
 			return err
 		}
 	}
@@ -214,7 +214,7 @@ func testAccCheckResourceExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func isLakeFormationResourceNotFoundErr(err error) bool {
+func isResourceNotFoundErr(err error) bool {
 	return tfawserr.ErrMessageContains(
 		err,
 		"EntityNotFoundException",
