@@ -21,7 +21,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingGroupDataResourceConfig(rName),
+				Config: testAccGroupDataSourceConfig_groupDataResource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -54,7 +54,7 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingGroupDataResourceConfig_launchTemplate(),
+				Config: testAccGroupDataSourceConfig_groupDataResourcelaunchTemplate(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -81,7 +81,7 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 }
 
 // Lookup based on AutoScalingGroupName
-func testAccAutoScalingGroupDataResourceConfig(rName string) string {
+func testAccGroupDataSourceConfig_groupDataResource(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -123,7 +123,7 @@ resource "aws_launch_configuration" "data_source_aws_autoscaling_group_test" {
 `, rName))
 }
 
-func testAccAutoScalingGroupDataResourceConfig_launchTemplate() string {
+func testAccGroupDataSourceConfig_groupDataResourcelaunchTemplate() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),
