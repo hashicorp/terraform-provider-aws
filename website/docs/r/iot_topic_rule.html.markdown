@@ -88,7 +88,7 @@ EOF
 * `enabled` - (Required) Specifies whether the rule is enabled.
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
-* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `http`, `iot_analytics`, `iot_events`, `kinesis`, `lambda`, `republish`, `s3`, `sns`, `sqs`, `step_functions`, `timestream` configuration blocks for further configuration details.
+* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `http`, `iot_analytics`, `iot_events`, `kafka`, `kinesis`, `lambda`, `republish`, `s3`, `sns`, `sqs`, `step_functions`, `timestream` configuration blocks for further configuration details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `cloudwatch_alarm` object takes the following arguments:
@@ -166,6 +166,14 @@ The `iot_events` object takes the following arguments:
 * `input_name` - (Required) The name of the AWS IoT Events input.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
+
+The `kafka` object takes the following arguments:
+
+* `client_properties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
+* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html) .
+* `key` - (Optional) The Kafka message key.
+* `partition` - (Optional) The Kafka message partition.
+* `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.
 
 The `kinesis` object takes the following arguments:
 
