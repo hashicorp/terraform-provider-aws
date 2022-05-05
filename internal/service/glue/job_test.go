@@ -253,14 +253,14 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 		CheckDestroy: testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_GlueVersion_MaxCapacity(rName, "0.9"),
+				Config: testAccJobConfig_Version_maxCapacity(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccJobConfig_GlueVersion_MaxCapacity(rName, "1.0"),
+				Config: testAccJobConfig_Version_maxCapacity(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -272,7 +272,7 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobConfig_GlueVersion_NumberOfWorkers(rName, "2.0"),
+				Config: testAccJobConfig_Version_numberOfWorkers(rName, "2.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "2.0"),
@@ -894,7 +894,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), description, rName)
 }
 
-func testAccJobConfig_GlueVersion_MaxCapacity(rName, glueVersion string) string {
+func testAccJobConfig_Version_maxCapacity(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -913,7 +913,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), glueVersion, rName)
 }
 
-func testAccJobConfig_GlueVersion_NumberOfWorkers(rName, glueVersion string) string {
+func testAccJobConfig_Version_numberOfWorkers(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 

@@ -257,7 +257,7 @@ func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become available", d.Id())
-	if _, err := waitGlueDevEndpointCreated(conn, d.Id()); err != nil {
+	if _, err := waitDevEndpointCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -523,7 +523,7 @@ func resourceDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become terminated", d.Id())
-	if _, err := waitGlueDevEndpointDeleted(conn, d.Id()); err != nil {
+	if _, err := waitDevEndpointDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become terminated: %w", d.Id(), err)
 	}
 
