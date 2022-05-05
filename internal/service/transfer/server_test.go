@@ -18,11 +18,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(transfer.EndpointsID, testAccErrorCheckSkipTransfer)
+	acctest.RegisterServiceErrorCheckFunc(transfer.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Invalid server type: PUBLIC",
 		"InvalidServiceName: The Vpc Endpoint Service",
@@ -945,7 +945,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 	})
 }
 
-func testAccTransferServer_AuthenticationLoginBanners(t *testing.T) {
+func testAccServer_authenticationLoginBanners(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
