@@ -139,7 +139,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
-		SubnetMappings:    expandNetworkFirewallSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
+		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -211,12 +211,12 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", firewall.FirewallName)
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
-	d.Set("firewall_status", flattenNetworkFirewallFirewallStatus(output.FirewallStatus))
+	d.Set("firewall_status", flattenFirewallStatus(output.FirewallStatus))
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	d.Set("update_token", output.UpdateToken)
 	d.Set("vpc_id", firewall.VpcId)
 
-	if err := d.Set("subnet_mapping", flattenNetworkFirewallSubnetMappings(firewall.SubnetMappings)); err != nil {
+	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting subnet_mappings: %w", err))
 	}
 
@@ -324,7 +324,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("subnet_mapping") {
 		o, n := d.GetChange("subnet_mapping")
-		subnetsToRemove, subnetsToAdd := networkFirewallSubnetMappingsDiff(o.(*schema.Set), n.(*schema.Set))
+		subnetsToRemove, subnetsToAdd := subnetMappingsDiff(o.(*schema.Set), n.(*schema.Set))
 		// Ensure we add before removing a SubnetMapping if there is only 1
 		if len(subnetsToAdd) > 0 {
 			input := &networkfirewall.AssociateSubnetsInput{
@@ -406,7 +406,7 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func expandNetworkFirewallSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
+func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 	mappings := make([]*networkfirewall.SubnetMapping, 0, len(l))
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -422,7 +422,7 @@ func expandNetworkFirewallSubnetMappings(l []interface{}) []*networkfirewall.Sub
 	return mappings
 }
 
-func expandNetworkFirewallSubnetMappingIds(l []interface{}) []string {
+func expandSubnetMappingIDs(l []interface{}) []string {
 	var ids []string
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -437,19 +437,19 @@ func expandNetworkFirewallSubnetMappingIds(l []interface{}) []string {
 	return ids
 }
 
-func flattenNetworkFirewallFirewallStatus(status *networkfirewall.FirewallStatus) []interface{} {
+func flattenFirewallStatus(status *networkfirewall.FirewallStatus) []interface{} {
 	if status == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"sync_states": flattenNetworkFirewallSyncStates(status.SyncStates),
+		"sync_states": flattenSyncStates(status.SyncStates),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
+func flattenSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
 	if s == nil {
 		return nil
 	}
@@ -458,7 +458,7 @@ func flattenNetworkFirewallSyncStates(s map[string]*networkfirewall.SyncState) [
 	for k, v := range s {
 		m := map[string]interface{}{
 			"availability_zone": k,
-			"attachment":        flattenNetworkFirewallSyncStateAttachment(v.Attachment),
+			"attachment":        flattenSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}
@@ -466,7 +466,7 @@ func flattenNetworkFirewallSyncStates(s map[string]*networkfirewall.SyncState) [
 	return syncStates
 }
 
-func flattenNetworkFirewallSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
+func flattenSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
 	if a == nil {
 		return nil
 	}
@@ -479,7 +479,7 @@ func flattenNetworkFirewallSyncStateAttachment(a *networkfirewall.Attachment) []
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
+func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
@@ -491,7 +491,7 @@ func flattenNetworkFirewallSubnetMappings(sm []*networkfirewall.SubnetMapping) [
 	return mappings
 }
 
-func networkFirewallSubnetMappingsHash(v interface{}) int {
+func subnetMappingsHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	tfMap, ok := v.(map[string]interface{})
@@ -505,22 +505,22 @@ func networkFirewallSubnetMappingsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func networkFirewallSubnetMappingsDiff(old, new *schema.Set) ([]string, []*networkfirewall.SubnetMapping) {
+func subnetMappingsDiff(old, new *schema.Set) ([]string, []*networkfirewall.SubnetMapping) {
 	if old.Len() == 0 {
-		return nil, expandNetworkFirewallSubnetMappings(new.List())
+		return nil, expandSubnetMappings(new.List())
 	}
 	if new.Len() == 0 {
-		return expandNetworkFirewallSubnetMappingIds(old.List()), nil
+		return expandSubnetMappingIDs(old.List()), nil
 	}
 
-	oldHashedSet := schema.NewSet(networkFirewallSubnetMappingsHash, old.List())
-	newHashedSet := schema.NewSet(networkFirewallSubnetMappingsHash, new.List())
+	oldHashedSet := schema.NewSet(subnetMappingsHash, old.List())
+	newHashedSet := schema.NewSet(subnetMappingsHash, new.List())
 
 	toRemove := oldHashedSet.Difference(newHashedSet)
 	toAdd := new.Difference(old)
 
-	subnetsToRemove := expandNetworkFirewallSubnetMappingIds(toRemove.List())
-	subnetsToAdd := expandNetworkFirewallSubnetMappings(toAdd.List())
+	subnetsToRemove := expandSubnetMappingIDs(toRemove.List())
+	subnetsToAdd := expandSubnetMappings(toAdd.List())
 
 	return subnetsToRemove, subnetsToAdd
 }
