@@ -558,7 +558,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 	engine := "aurora"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -595,7 +595,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL2(t *testin
 	engineVersion := "5.7.mysql_aurora.2.04.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -631,7 +631,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 	engine := "aurora-postgresql"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -668,7 +668,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 	engine := "aurora"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -705,7 +705,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 	engine := "aurora"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -747,7 +747,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL2(t *testi
 	engineVersion := "5.7.mysql_aurora.2.04.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -785,7 +785,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL2_defaultKe
 	engineVersion := "5.7.mysql_aurora.2.04.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -824,7 +824,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "aurora") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "aurora") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterDestroy,
@@ -870,7 +870,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 	engine := "aurora-postgresql"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -907,7 +907,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 	engine := "aurora-postgresql"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterInstanceDestroy,
@@ -972,7 +972,7 @@ func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 	})
 }
 
-func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine string) {
+func testAccPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{
@@ -989,10 +989,10 @@ func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine st
 		t.Fatalf("unexpected PreCheck error, no default version for engine: %s", engine)
 	}
 
-	testAccRDSPerformanceInsightsPreCheck(t, engine, aws.StringValue(result.DBEngineVersions[0].EngineVersion))
+	testAccPerformanceInsightsPreCheck(t, engine, aws.StringValue(result.DBEngineVersions[0].EngineVersion))
 }
 
-func testAccRDSPerformanceInsightsPreCheck(t *testing.T, engine string, engineVersion string) {
+func testAccPerformanceInsightsPreCheck(t *testing.T, engine string, engineVersion string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{

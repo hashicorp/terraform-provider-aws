@@ -478,7 +478,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
-	rdsClusterSetResourceDataEngineVersionFromClusterInstance(d, db)
+	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
@@ -683,7 +683,7 @@ var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func rdsClusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
+func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)

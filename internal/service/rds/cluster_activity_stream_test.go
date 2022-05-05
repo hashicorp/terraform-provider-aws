@@ -38,7 +38,7 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 			{
 				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
+					testAccCheckClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckClusterActivityStreamAttributes(&dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", rdsClusterResourceName, "arn"),
@@ -75,7 +75,7 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 			{
 				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
+					testAccCheckClusterActivityStreamExists(resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterActivityStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,11 +84,11 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRDSClusterActivityStreamExists(resourceName string, dbCluster *rds.DBCluster) resource.TestCheckFunc {
-	return testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName, dbCluster, acctest.Provider)
+func testAccCheckClusterActivityStreamExists(resourceName string, dbCluster *rds.DBCluster) resource.TestCheckFunc {
+	return testAccCheckClusterActivityStreamExistsProvider(resourceName, dbCluster, acctest.Provider)
 }
 
-func testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName string, dbCluster *rds.DBCluster, provider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterActivityStreamExistsProvider(resourceName string, dbCluster *rds.DBCluster, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
