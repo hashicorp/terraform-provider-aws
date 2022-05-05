@@ -667,6 +667,7 @@ func ResourceFlow() *schema.Resource {
 			"kms_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`arn:aws:kms:.*:[0-9]+:.*`), "must be a valid ARN of a Key Management Services (KMS) key"),
 			},
 			"source_flow_config": {
@@ -1092,9 +1093,12 @@ func ResourceFlow() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 						"source_fields": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 2048),
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(0, 2048),
+							},
 						},
 						"task_properties": {
 							Type:     schema.TypeMap,
