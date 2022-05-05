@@ -19,10 +19,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sqs.EndpointsID, testAccErrorCheckSkipSQS)
+	acctest.RegisterServiceErrorCheckFunc(sqs.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipSQS(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Unknown Attribute RedriveAllowPolicy",
 	)
