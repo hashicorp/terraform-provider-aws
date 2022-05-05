@@ -1139,6 +1139,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3.*", map[string]string{
 						"bucket_name": "mybucket",
+						"canned_acl":  "private",
 						"key":         "mykey",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
@@ -2097,6 +2098,7 @@ resource "aws_iot_topic_rule" "test" {
 
   s3 {
     bucket_name = "mybucket"
+    canned_acl  = "private"
     key         = "mykey"
     role_arn    = aws_iam_role.test.arn
   }
