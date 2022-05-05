@@ -63,7 +63,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "website_endpoint"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					testAccCheckS3BucketDomainName(resourceName, "bucket_domain_name", bucketName),
+					testAccCheckBucketDomainName(resourceName, "bucket_domain_name", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
@@ -2222,7 +2222,7 @@ func TestAccS3Bucket_Web_simple(t *testing.T) {
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 			{
@@ -2238,7 +2238,7 @@ func TestAccS3Bucket_Web_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 			{
@@ -2250,7 +2250,7 @@ func TestAccS3Bucket_Web_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 		},
@@ -2274,7 +2274,7 @@ func TestAccS3Bucket_Web_redirect(t *testing.T) {
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.redirect_all_requests_to", "hashicorp.com?my=query"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 			{
@@ -2289,7 +2289,7 @@ func TestAccS3Bucket_Web_redirect(t *testing.T) {
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.redirect_all_requests_to", "https://hashicorp.com?my=query"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 			{
@@ -2300,7 +2300,7 @@ func TestAccS3Bucket_Web_redirect(t *testing.T) {
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.redirect_all_requests_to", "https://hashicorp.com?my=query"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 		},
@@ -2326,7 +2326,7 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
 					resource.TestCheckResourceAttrSet(resourceName, "website.0.routing_rules"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 			{
@@ -2345,7 +2345,7 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
 					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
 					resource.TestCheckResourceAttrSet(resourceName, "website.0.routing_rules"),
-					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+					testAccCheckBucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
 				),
 			},
 		},
@@ -2815,7 +2815,7 @@ func testAccCheckBucketTagKeys(n string, keys ...string) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckS3BucketDomainName(resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
+func testAccCheckBucketDomainName(resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedValue := acctest.Provider.Meta().(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
 
@@ -2878,7 +2878,7 @@ func testAccBucketRegionalDomainName(bucket, region string) string {
 	return regionalEndpoint
 }
 
-func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
+func testAccCheckBucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		website := tfs3.WebsiteEndpoint(acctest.Provider.Meta().(*conns.AWSClient), bucketName, region)
 		expectedValue := website.Endpoint

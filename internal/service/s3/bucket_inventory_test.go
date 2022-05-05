@@ -79,7 +79,7 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 		CheckDestroy: testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryEncryptWithSSES3Config(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_encryptSSE(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
@@ -244,7 +244,7 @@ resource "aws_s3_bucket_inventory" "test" {
 `, inventoryName)
 }
 
-func testAccBucketInventoryEncryptWithSSES3Config(bucketName, inventoryName string) string {
+func testAccBucketInventoryConfig_encryptSSE(bucketName, inventoryName string) string {
 	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 resource "aws_s3_bucket_inventory" "test" {
   bucket = aws_s3_bucket.test.id
