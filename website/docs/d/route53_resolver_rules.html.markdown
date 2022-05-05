@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-Retrieving the default resolver rule.
+### Retrieving the default resolver rule
 
 ```terraform
 data "aws_route53_resolver_rules" "example" {
@@ -22,6 +22,8 @@ data "aws_route53_resolver_rules" "example" {
 }
 ```
 
+### Retrieving forward rule(s) shared with me
+
 ```terraform
 data "aws_route53_resolver_rules" "example" {
   rule_type    = "FORWARD"
@@ -29,10 +31,23 @@ data "aws_route53_resolver_rules" "example" {
 }
 ```
 
+### Retrieving rule(s) by name regex
+
+Resolver rules whose name contains `abc`.
+
+```terraform
+data "aws_route53_resolver_rules" "example" {
+  name_regex = ".*abc.*"
+}
+```
+
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 
+* `name_regex` - (Optional) A regex string to apply to the resolver rules list returned by AWS. This allows more advanced filtering not supported from the AWS API.
+  This filtering is done locally on what AWS returns, and could have a performance impact if the result is large. It is recommended to combine this with other
+  options to narrow down the list AWS returns.
 * `owner_id` (Optional) When the desired resolver rules are shared with another AWS account, the account ID of the account that the rules are shared with.
 * `resolver_endpoint_id` (Optional) The ID of the outbound resolver endpoint for the desired resolver rules.
 * `rule_type` (Optional) The rule type of the desired resolver rules. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
