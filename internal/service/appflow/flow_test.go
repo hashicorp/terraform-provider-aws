@@ -32,6 +32,11 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					testAccCheckFlowExists(resourceName, &flowOutput),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

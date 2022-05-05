@@ -26,6 +26,9 @@ func ResourceFlow() *schema.Resource {
 		ReadWithoutTimeout:   resourceFlowRead,
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -1270,6 +1273,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
+	d.Set("name", out.FlowName)
 	d.Set("arn", out2.FlowArn)
 	d.Set("description", out2.Description)
 
