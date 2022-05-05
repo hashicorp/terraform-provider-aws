@@ -44,7 +44,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name = "%[1]s-instance-profile"
+  name = %[1]q
   role = aws_iam_role.test.name
   path = "/testpath/"
 }
