@@ -62,7 +62,7 @@ func resourceAdminAccountCreate(d *schema.ResourceData, meta interface{}) error 
 			fms.AccountRoleStatusCreating,
 		},
 		Target:  []string{fms.AccountRoleStatusReady},
-		Refresh: associateFmsAdminAccountRefreshFunc(conn, accountID),
+		Refresh: associateAdminAccountRefreshFunc(conn, accountID),
 		Timeout: 30 * time.Minute,
 		Delay:   10 * time.Second,
 	}
@@ -76,7 +76,7 @@ func resourceAdminAccountCreate(d *schema.ResourceData, meta interface{}) error 
 	return resourceAdminAccountRead(d, meta)
 }
 
-func associateFmsAdminAccountRefreshFunc(conn *fms.FMS, accountId string) resource.StateRefreshFunc {
+func associateAdminAccountRefreshFunc(conn *fms.FMS, accountId string) resource.StateRefreshFunc {
 	// This is all wrapped in a refresh func since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an organization
 	return func() (interface{}, string, error) {
@@ -149,14 +149,14 @@ func resourceAdminAccountDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error disassociating FMS Admin Account (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForFmsAdminAccountDeletion(conn); err != nil {
+	if err := waitForAdminAccountDeletion(conn); err != nil {
 		return fmt.Errorf("error waiting for FMS Admin Account (%s) disassociation: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func waitForFmsAdminAccountDeletion(conn *fms.FMS) error {
+func waitForAdminAccountDeletion(conn *fms.FMS) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			fms.AccountRoleStatusDeleting,
