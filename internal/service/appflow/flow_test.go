@@ -22,9 +22,10 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
@@ -188,4 +189,27 @@ func testAccCheckFlowExists(resourceName string, flow *appflow.FlowDefinition) r
 
 		return nil
 	}
+}
+
+func testAccCheckFlowDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_appflow_flow" {
+			continue
+		}
+
+		_, err := tfappflow.FindFlowByArn(context.Background(), conn, rs.Primary.ID)
+
+		if _, ok := err.(*resource.NotFoundError); ok {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Expected AppFlow Flow to be destroyed, %s found", rs.Primary.ID)
+	}
+
+	return nil
 }
