@@ -42,6 +42,31 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowFlow_disappears(t *testing.T) {
+	var flowOutput appflow.FlowDefinition
+	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFlowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(resourceName, &flowOutput),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceFlow(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccConfigFlowBase(rSourceName string, rDestinationName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test_source" {
