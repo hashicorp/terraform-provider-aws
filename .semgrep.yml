@@ -60,7 +60,6 @@ rules:
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elb
-        - internal/service/rds
     patterns:
       - pattern-either:
         - pattern: '$LHS == *$RHS'
