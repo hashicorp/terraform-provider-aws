@@ -161,7 +161,7 @@ func updateSqlInjectionMatchSetResource(id string, oldT, newT []interface{}, con
 		req := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(id),
-			Updates:                diffWafSqlInjectionMatchTuples(oldT, newT),
+			Updates:                diffSQLInjectionMatchTuples(oldT, newT),
 		}
 
 		log.Printf("[INFO] Updating SqlInjectionMatchSet: %s", req)
@@ -186,7 +186,7 @@ func flattenSQLInjectionMatchTuples(ts []*waf.SqlInjectionMatchTuple) []interfac
 	return out
 }
 
-func diffWafSqlInjectionMatchTuples(oldT, newT []interface{}) []*waf.SqlInjectionMatchSetUpdate {
+func diffSQLInjectionMatchTuples(oldT, newT []interface{}) []*waf.SqlInjectionMatchSetUpdate {
 	updates := make([]*waf.SqlInjectionMatchSetUpdate, 0)
 
 	for _, od := range oldT {

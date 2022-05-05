@@ -319,7 +319,7 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					computeWafRegionalWebAclRuleIndex(&r.RuleId, 1, "REGULAR", "BLOCK", &idx),
+					computeWebACLRuleIndex(&r.RuleId, 1, "REGULAR", "BLOCK", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"priority": "1",
 					}),
@@ -391,7 +391,7 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 }
 
 // Calculates the index which isn't static because ruleId is generated as part of the test
-func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, ruleType string, actionType string, idx *int) resource.TestCheckFunc {
+func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, actionType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ruleResource := tfwafregional.ResourceWebACL().Schema["rule"].Elem.(*schema.Resource)
 		actionMap := map[string]interface{}{

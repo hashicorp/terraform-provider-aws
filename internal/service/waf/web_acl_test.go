@@ -184,7 +184,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckWafLoggingConfiguration(t)
+			testAccPreCheckLoggingConfiguration(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -522,7 +522,7 @@ resource "aws_waf_web_acl" "test" {
 
 func testAccWebACLConfig_Logging(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWafLoggingConfigurationRegionProviderConfig(),
+		testAccLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   name        = %[1]q
@@ -593,7 +593,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccWebACLConfig_LoggingRemoved(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWafLoggingConfigurationRegionProviderConfig(),
+		testAccLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   metric_name = %[1]q
@@ -608,7 +608,7 @@ resource "aws_waf_web_acl" "test" {
 
 func testAccWebACLConfig_LoggingUpdate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWafLoggingConfigurationRegionProviderConfig(),
+		testAccLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   metric_name = %[1]q
