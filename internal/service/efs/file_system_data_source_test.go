@@ -150,7 +150,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(resourceName, &desc),
 				),
 			},
 			{
