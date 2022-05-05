@@ -105,7 +105,7 @@ func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interf
 
 	var associatedCluster *redshift.ClusterAssociatedToSchedule
 	for _, cluster := range snapshotSchedule.AssociatedClusters {
-		if *cluster.ClusterIdentifier == clusterIdentifier {
+		if aws.StringValue(cluster.ClusterIdentifier) == clusterIdentifier {
 			associatedCluster = cluster
 			break
 		}

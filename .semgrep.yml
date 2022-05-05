@@ -61,7 +61,6 @@ rules:
         - internal/service/elasticbeanstalk
         - internal/service/elb
         - internal/service/rds
-        - internal/service/redshift
     patterns:
       - pattern-either:
         - pattern: '$LHS == *$RHS'
