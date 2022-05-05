@@ -30,7 +30,7 @@ func ExpandClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguratio
 	return scalingConfiguration
 }
 
-func flattenRDSScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
+func flattenScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
 	if scalingConfigurationInfo == nil {
 		return []interface{}{}
 	}

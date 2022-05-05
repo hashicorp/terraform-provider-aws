@@ -3872,7 +3872,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterDestroy,
@@ -3915,7 +3915,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterDestroy,
@@ -3959,7 +3959,7 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterDestroy,
@@ -4012,7 +4012,7 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckClusterDestroy,
@@ -4060,7 +4060,7 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -4095,7 +4095,7 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,

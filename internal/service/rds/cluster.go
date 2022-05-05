@@ -1074,7 +1074,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 
-	if err := d.Set("scaling_configuration", flattenRDSScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
+	if err := d.Set("scaling_configuration", flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
 		return fmt.Errorf("error setting scaling_configuration: %s", err)
 	}
 

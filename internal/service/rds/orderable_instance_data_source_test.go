@@ -211,7 +211,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccOrderableInstancePreCheck(t)
-			testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql")
+			testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
