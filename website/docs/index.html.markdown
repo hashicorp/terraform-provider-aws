@@ -188,6 +188,23 @@ provider "aws" {
 
 > **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
 
+### Assuming an IAM Role Using A Web Identity
+
+If provided with a role ARN and a token from a web identity provider,
+the AWS Provider will attempt to assume this role using the supplied credentials.
+
+Usage:
+
+```terraform
+provider "aws" {
+  assume_role {
+    role_arn                = "arn:aws:iam::123456789012:role/ROLE_NAME"
+    session_name            = "SESSION_NAME"
+    web_identity_token_file = "/Users/tf_user/secrets/web-identity-token"
+  }
+}
+```
+
 ### Using an External Credentials Process
 
 To use an [external process to source credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html),
