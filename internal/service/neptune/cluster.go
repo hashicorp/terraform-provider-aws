@@ -426,7 +426,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("iam_roles"); ok {
 		for _, role := range v.(*schema.Set).List() {
-			err := setIamRoleToNeptuneCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -677,14 +677,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		enableRoles := ns.Difference(os)
 
 		for _, role := range enableRoles.List() {
-			err := setIamRoleToNeptuneCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
 		}
 
 		for _, role := range removeRoles.List() {
-			err := removeIamRoleFromNeptuneCluster(d.Id(), role.(string), conn)
+			err := removeIAMRoleFromCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -755,7 +755,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func setIamRoleToNeptuneCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
+func setIAMRoleToCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
 	params := &neptune.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),
@@ -764,7 +764,7 @@ func setIamRoleToNeptuneCluster(clusterIdentifier string, roleArn string, conn *
 	return err
 }
 
-func removeIamRoleFromNeptuneCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
+func removeIAMRoleFromCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
 	params := &neptune.RemoveRoleFromDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),
