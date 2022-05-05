@@ -192,7 +192,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 		CheckDestroy: testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatch(rName, true),
+				Config: testAccCustomLayerConfig_cloudWatch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -209,7 +209,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatch(rName, false),
+				Config: testAccCustomLayerConfig_cloudWatch(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -221,7 +221,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatchFull(rName),
+				Config: testAccCustomLayerConfig_cloudWatchFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -568,7 +568,7 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccOpsworksCustomLayerConfigCloudWatch(name string, enabled bool) string {
+func testAccCustomLayerConfig_cloudWatch(name string, enabled bool) string {
 	return acctest.ConfigCompose(
 		testAccStackNoVPCCreateConfig(name),
 		testAccCustomLayerSecurityGroups(name),
@@ -598,7 +598,7 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name, enabled))
 }
 
-func testAccOpsworksCustomLayerConfigCloudWatchFull(name string) string {
+func testAccCustomLayerConfig_cloudWatchFull(name string) string {
 	return acctest.ConfigCompose(
 		testAccStackNoVPCCreateConfig(name),
 		testAccCustomLayerSecurityGroups(name),
