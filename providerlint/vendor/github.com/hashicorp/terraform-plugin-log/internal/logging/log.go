@@ -41,6 +41,12 @@ const (
 	// SinkKey is the loggerKey that will hold the logging sink used for
 	// test frameworks.
 	SinkKey loggerKey = ""
+
+	// SinkOptionsKey is the loggerKey that will hold the sink
+	// logger options when the SDK provider logger is created. This is to
+	// assist creating subsystem loggers, as most options cannot be fetched and
+	// a logger does not provide set methods for these options.
+	SinkOptionsKey loggerKey = "sink-options"
 )
 
 var (

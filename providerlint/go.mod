@@ -5,6 +5,6 @@ go 1.16
 require (
 	github.com/aws/aws-sdk-go v1.44.4
 	github.com/bflad/tfproviderlint v0.28.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.14.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.15.0
 	golang.org/x/tools v0.0.0-20201028111035-eafbe7b904eb
 )
