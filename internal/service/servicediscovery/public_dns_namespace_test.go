@@ -31,7 +31,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(rName),
+				Config: testAccPublicDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
@@ -64,7 +64,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(rName),
+				Config: testAccPublicDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourcePublicDNSNamespace(), resourceName),
@@ -90,7 +90,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigDescription(rName, "test"),
+				Config: testAccPublicDNSNamespaceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -115,7 +115,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigTags1(rName, "key1", "value1"),
+				Config: testAccPublicDNSNamespaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -128,7 +128,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPublicDNSNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -137,7 +137,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigTags1(rName, "key2", "value2"),
+				Config: testAccPublicDNSNamespaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -189,7 +189,7 @@ func testAccCheckPublicDNSNamespaceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccServiceDiscoveryPublicDnsNamespaceConfig(rName string) string {
+func testAccPublicDNSNamespaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
@@ -197,7 +197,7 @@ resource "aws_service_discovery_public_dns_namespace" "test" {
 `, rName)
 }
 
-func testAccServiceDiscoveryPublicDnsNamespaceConfigDescription(rName, description string) string {
+func testAccPublicDNSNamespaceConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
   description = %[1]q
@@ -206,7 +206,7 @@ resource "aws_service_discovery_public_dns_namespace" "test" {
 `, description, rName)
 }
 
-func testAccServiceDiscoveryPublicDnsNamespaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccPublicDNSNamespaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
@@ -218,7 +218,7 @@ resource "aws_service_discovery_public_dns_namespace" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccServiceDiscoveryPublicDnsNamespaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPublicDNSNamespaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
