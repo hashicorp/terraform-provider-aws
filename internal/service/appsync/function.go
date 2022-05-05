@@ -137,7 +137,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
-		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
+		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
 	resp, err := conn.CreateFunction(input)
@@ -185,7 +185,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("response_mapping_template", function.ResponseMappingTemplate)
 	d.Set("max_batch_size", function.MaxBatchSize)
 
-	if err := d.Set("sync_config", flattenAppsyncSyncConfig(function.SyncConfig)); err != nil {
+	if err := d.Set("sync_config", flattenSyncConfig(function.SyncConfig)); err != nil {
 		return fmt.Errorf("error setting sync_config: %w", err)
 	}
 
@@ -222,7 +222,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
-		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
+		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
 	_, err = conn.UpdateFunction(input)
@@ -265,7 +265,7 @@ func DecodeFunctionID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func expandAppsyncSyncConfig(l []interface{}) *appsync.SyncConfig {
+func expandSyncConfig(l []interface{}) *appsync.SyncConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -283,13 +283,13 @@ func expandAppsyncSyncConfig(l []interface{}) *appsync.SyncConfig {
 	}
 
 	if v, ok := configured["lambda_conflict_handler_config"].([]interface{}); ok && len(v) > 0 {
-		result.LambdaConflictHandlerConfig = expandAppsyncLambdaConflictHandlerConfig(v)
+		result.LambdaConflictHandlerConfig = expandLambdaConflictHandlerConfig(v)
 	}
 
 	return result
 }
 
-func flattenAppsyncSyncConfig(config *appsync.SyncConfig) []map[string]interface{} {
+func flattenSyncConfig(config *appsync.SyncConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -297,13 +297,13 @@ func flattenAppsyncSyncConfig(config *appsync.SyncConfig) []map[string]interface
 	result := map[string]interface{}{
 		"conflict_detection":             aws.StringValue(config.ConflictDetection),
 		"conflict_handler":               aws.StringValue(config.ConflictHandler),
-		"lambda_conflict_handler_config": flattenAppsyncLambdaConflictHandlerConfig(config.LambdaConflictHandlerConfig),
+		"lambda_conflict_handler_config": flattenLambdaConflictHandlerConfig(config.LambdaConflictHandlerConfig),
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncLambdaConflictHandlerConfig(l []interface{}) *appsync.LambdaConflictHandlerConfig {
+func expandLambdaConflictHandlerConfig(l []interface{}) *appsync.LambdaConflictHandlerConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -319,7 +319,7 @@ func expandAppsyncLambdaConflictHandlerConfig(l []interface{}) *appsync.LambdaCo
 	return result
 }
 
-func flattenAppsyncLambdaConflictHandlerConfig(config *appsync.LambdaConflictHandlerConfig) []map[string]interface{} {
+func flattenLambdaConflictHandlerConfig(config *appsync.LambdaConflictHandlerConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
