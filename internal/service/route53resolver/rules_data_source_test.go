@@ -63,7 +63,7 @@ data "aws_route53_resolver_rules" "test" {
 `
 
 func testAccRulesDataSource_resolverEndpointID(rName1, rName2 string) string {
-	return testAccRoute53ResolverRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
+	return testAccRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "forward" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
