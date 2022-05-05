@@ -21,7 +21,7 @@ func TestAccEventsBusDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventsBusDataSourceConfig(busName),
+				Config: testAccBusDataSourceConfig_basic(busName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -31,7 +31,7 @@ func TestAccEventsBusDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEventsBusDataSourceConfig(busName string) string {
+func testAccBusDataSourceConfig_basic(busName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q

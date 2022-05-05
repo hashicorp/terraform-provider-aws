@@ -19,11 +19,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(eventbridge.EndpointsID, testAccErrorCheckSkipEvents)
+	acctest.RegisterServiceErrorCheckFunc(eventbridge.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Operation is disabled in this region",
 		"not a supported service for a target",
