@@ -45,7 +45,7 @@ func dataSourceInstanceProfilesRead(d *schema.ResourceData, meta interface{}) er
 	roleName := d.Get("role_name").(string)
 
 	req := &iam.ListInstanceProfilesForRoleInput{
-		RoleName: &roleName,
+		RoleName: aws.String(roleName),
 	}
 
 	log.Printf("[DEBUG] Reading IAM Instance Profiles for given role %s: %s", roleName, req)
