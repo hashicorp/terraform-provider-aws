@@ -15,12 +15,12 @@ func DataSourceInstanceProfiles() *schema.Resource {
 		Read: dataSourceInstanceProfilesRead,
 
 		Schema: map[string]*schema.Schema{
-			"role_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validIamResourceName(roleNameMaxLen),
-			},
 			"arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -30,10 +30,10 @@ func DataSourceInstanceProfiles() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"role_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validIamResourceName(roleNameMaxLen),
 			},
 		},
 	}
