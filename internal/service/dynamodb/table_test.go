@@ -19,10 +19,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(dynamodb.EndpointsID, testAccErrorCheckSkipDynamoDb)
+	acctest.RegisterServiceErrorCheckFunc(dynamodb.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipDynamoDb(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Unsupported input parameter TableClass",
 	)
