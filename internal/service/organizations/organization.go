@@ -271,7 +271,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
 	}
 
-	if err := d.Set("accounts", flattenOrganizationsAccounts(accounts)); err != nil {
+	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return fmt.Errorf("error setting accounts: %s", err)
 	}
 
@@ -281,7 +281,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
 
-	if err := d.Set("non_master_accounts", flattenOrganizationsAccounts(nonMasterAccounts)); err != nil {
+	if err := d.Set("non_master_accounts", flattenAccounts(nonMasterAccounts)); err != nil {
 		return fmt.Errorf("error setting non_master_accounts: %s", err)
 	}
 
@@ -424,7 +424,7 @@ func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func flattenOrganizationsAccounts(accounts []*organizations.Account) []map[string]interface{} {
+func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
 	if len(accounts) == 0 {
 		return nil
 	}
@@ -451,13 +451,13 @@ func FlattenRoots(roots []*organizations.Root) []map[string]interface{} {
 			"id":           aws.StringValue(r.Id),
 			"name":         aws.StringValue(r.Name),
 			"arn":          aws.StringValue(r.Arn),
-			"policy_types": flattenOrganizationsRootPolicyTypeSummaries(r.PolicyTypes),
+			"policy_types": flattenRootPolicyTypeSummaries(r.PolicyTypes),
 		})
 	}
 	return result
 }
 
-func flattenOrganizationsRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
+func flattenRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
 	if len(summaries) == 0 {
 		return nil
 	}

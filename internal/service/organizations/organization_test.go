@@ -413,14 +413,14 @@ func TestFlattenOrganizationsRoots(t *testing.T) {
 			continue
 		}
 		if types, ok := result[i]["policy_types"].([]map[string]interface{}); ok {
-			testFlattenOrganizationsRootPolicyTypes(t, i, types, r.PolicyTypes)
+			testFlattenRootPolicyTypes(t, i, types, r.PolicyTypes)
 			continue
 		}
 		t.Fatalf(`result[%d]["policy_types"] could not be converted to []map[string]interface{}`, i)
 	}
 }
 
-func testFlattenOrganizationsRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
+func testFlattenRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
 	if len(result) != len(types) {
 		t.Fatalf(`expected result[%d]["policy_types"] to have %d elements, got %d`, index, len(types), len(result))
 	}
