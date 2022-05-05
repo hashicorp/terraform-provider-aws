@@ -87,7 +87,7 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configNamePrefix(bucketName, namePrefix, macie2.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_namePrefix(bucketName, namePrefix, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
@@ -137,7 +137,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configStatus(bucketName, macie2.JobStatusRunning),
+				Config: testAccClassificationJobConfig_status(bucketName, macie2.JobStatusRunning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
@@ -147,7 +147,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_configStatus(bucketName, macie2.JobStatusUserPaused),
+				Config: testAccClassificationJobConfig_status(bucketName, macie2.JobStatusUserPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output2),
 					testAccCheckClassificationJobNotRecreated(&macie2Output, &macie2Output2),
@@ -180,7 +180,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configComplete(bucketName, macie2.JobStatusRunning, description),
+				Config: testAccClassificationJobConfig_complete(bucketName, macie2.JobStatusRunning, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
@@ -199,7 +199,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_configComplete(bucketName, macie2.JobStatusRunning, descriptionUpdated),
+				Config: testAccClassificationJobConfig_complete(bucketName, macie2.JobStatusRunning, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
@@ -237,7 +237,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configCompleteTags(bucketName, macie2.JobStatusRunning),
+				Config: testAccClassificationJobConfig_completeTags(bucketName, macie2.JobStatusRunning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
@@ -250,7 +250,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_configCompleteTags(bucketName, macie2.JobStatusUserPaused),
+				Config: testAccClassificationJobConfig_completeTags(bucketName, macie2.JobStatusUserPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
@@ -358,7 +358,7 @@ resource "aws_macie2_classification_job" "test" {
 `, bucketName, jobType)
 }
 
-func testAccClassificationJobConfig_configNamePrefix(nameBucket, namePrefix, jobType string) string {
+func testAccClassificationJobConfig_namePrefix(nameBucket, namePrefix, jobType string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -382,7 +382,7 @@ resource "aws_macie2_classification_job" "test" {
 `, nameBucket, namePrefix, jobType)
 }
 
-func testAccClassificationJobConfig_configComplete(nameBucket, jobStatus, description string) string {
+func testAccClassificationJobConfig_complete(nameBucket, jobStatus, description string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -433,7 +433,7 @@ resource "aws_macie2_classification_job" "test" {
 `, nameBucket, jobStatus, description)
 }
 
-func testAccClassificationJobConfig_configStatus(nameBucket, jobStatus string) string {
+func testAccClassificationJobConfig_status(nameBucket, jobStatus string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -483,7 +483,7 @@ resource "aws_macie2_classification_job" "test" {
 `, nameBucket, jobStatus)
 }
 
-func testAccClassificationJobConfig_configCompleteTags(nameBucket, jobStatus string) string {
+func testAccClassificationJobConfig_completeTags(nameBucket, jobStatus string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
