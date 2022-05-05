@@ -553,7 +553,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-					err := testAccEmrDeleteManagedSecurityGroups(conn, &vpc)
+					err := testAccDeleteManagedSecurityGroups(conn, &vpc)
 
 					if err != nil {
 						t.Fatal(err)
@@ -1651,7 +1651,7 @@ func testAccCheckClusterRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
 	}
 }
 
-func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
+func testAccDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 	// Reference: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html
 	managedSecurityGroups := map[string]*ec2.SecurityGroup{
 		"ElasticMapReduce-master": nil,
@@ -1675,7 +1675,7 @@ func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 			continue
 		}
 
-		err := testAccEmrRevokeManagedSecurityGroup(conn, securityGroup)
+		err := testAccRevokeManagedSecurityGroup(conn, securityGroup)
 
 		if err != nil {
 			return fmt.Errorf("error revoking EMR Managed Security Group (%s): %w", groupName, err)
@@ -1687,7 +1687,7 @@ func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 			continue
 		}
 
-		err := testAccEmrDeleteManagedSecurityGroup(conn, securityGroup)
+		err := testAccDeleteManagedSecurityGroup(conn, securityGroup)
 
 		if err != nil {
 			return fmt.Errorf("error deleting EMR Managed Security Group (%s): %w", groupName, err)
@@ -1697,7 +1697,7 @@ func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 	return nil
 }
 
-func testAccEmrRevokeManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
+func testAccRevokeManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
 	input := &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:       securityGroup.GroupId,
 		IpPermissions: securityGroup.IpPermissions,
@@ -1708,7 +1708,7 @@ func testAccEmrRevokeManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.Secu
 	return err
 }
 
-func testAccEmrDeleteManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
+func testAccDeleteManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
 	input := &ec2.DeleteSecurityGroupInput{
 		GroupId: securityGroup.GroupId,
 	}
