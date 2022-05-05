@@ -23,13 +23,13 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
+		CheckDestroy: testAccCheckGroupMembershipDestroy,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupMembershipExists(resourceName),
+					testAccCheckGroupMembershipExists(resourceName),
 				),
 			},
 			{
@@ -50,12 +50,12 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
+		CheckDestroy: testAccCheckGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupMembershipExists(resourceName),
+					testAccCheckGroupMembershipExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -64,7 +64,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
+func testAccCheckGroupMembershipDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -97,7 +97,7 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckGroupMembershipExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
