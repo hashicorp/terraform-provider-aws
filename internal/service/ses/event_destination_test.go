@@ -30,7 +30,7 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESEventDestinationDestroy,
+		CheckDestroy: testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDestinationConfig(rName1, rName2, rName3),
@@ -84,7 +84,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESEventDestinationDestroy,
+		CheckDestroy: testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDestinationConfig(rName1, rName2, rName3),
@@ -102,7 +102,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
+func testAccCheckEventDestinationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
