@@ -202,7 +202,7 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("nfs_exports"); ok {
-		input.OpenZFSConfiguration.NfsExports = expandFsxOpenzfsVolumeNfsExports(v.([]interface{}))
+		input.OpenZFSConfiguration.NfsExports = expandOpenzfsVolumeNFSExports(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("read_only"); ok {
@@ -222,11 +222,11 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("user_and_group_quotas"); ok {
-		input.OpenZFSConfiguration.UserAndGroupQuotas = expandFsxOpenzfsVolumeUserAndGroupQuotas(v.(*schema.Set).List())
+		input.OpenZFSConfiguration.UserAndGroupQuotas = expandOpenzfsVolumeUserAndGroupQuotas(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("origin_snapshot"); ok {
-		input.OpenZFSConfiguration.OriginSnapshot = expandFsxOpenzfsCreateVolumeOriginSnapshot(v.([]interface{}))
+		input.OpenZFSConfiguration.OriginSnapshot = expandOpenzfsCreateVolumeOriginSnapshot(v.([]interface{}))
 
 		log.Printf("[DEBUG] Creating FSx OpenZFS Volume: %s", input)
 		result, err := conn.CreateVolume(input)
@@ -308,15 +308,15 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("origin_snapshot", flattenFsxOpenzfsVolumeOriginSnapshot(openzfsConfig.OriginSnapshot)); err != nil {
+	if err := d.Set("origin_snapshot", flattenOpenzfsVolumeOriginSnapshot(openzfsConfig.OriginSnapshot)); err != nil {
 		return fmt.Errorf("error setting nfs_exports: %w", err)
 	}
 
-	if err := d.Set("nfs_exports", flattenFsxOpenzfsVolumeNfsExports(openzfsConfig.NfsExports)); err != nil {
+	if err := d.Set("nfs_exports", flattenOpenzfsVolumeNFSExports(openzfsConfig.NfsExports)); err != nil {
 		return fmt.Errorf("error setting nfs_exports: %w", err)
 	}
 
-	if err := d.Set("user_and_group_quotas", flattenFsxOpenzfsVolumeUserAndGroupQuotas(openzfsConfig.UserAndGroupQuotas)); err != nil {
+	if err := d.Set("user_and_group_quotas", flattenOpenzfsVolumeUserAndGroupQuotas(openzfsConfig.UserAndGroupQuotas)); err != nil {
 		return fmt.Errorf("error setting user_and_group_quotas: %w", err)
 	}
 
@@ -350,7 +350,7 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.HasChange("nfs_exports") {
-			input.OpenZFSConfiguration.NfsExports = expandFsxOpenzfsVolumeNfsExports(d.Get("nfs_exports").([]interface{}))
+			input.OpenZFSConfiguration.NfsExports = expandOpenzfsVolumeNFSExports(d.Get("nfs_exports").([]interface{}))
 		}
 
 		if d.HasChange("read_only") {
@@ -366,7 +366,7 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.HasChange("user_and_group_quotas") {
-			input.OpenZFSConfiguration.UserAndGroupQuotas = expandFsxOpenzfsVolumeUserAndGroupQuotas(d.Get("user_and_group_quotas").(*schema.Set).List())
+			input.OpenZFSConfiguration.UserAndGroupQuotas = expandOpenzfsVolumeUserAndGroupQuotas(d.Get("user_and_group_quotas").(*schema.Set).List())
 		}
 
 		_, err := conn.UpdateVolume(input)
@@ -407,11 +407,11 @@ func resourceOpenzfsVolumeDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandFsxOpenzfsVolumeUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrGroupQuota {
+func expandOpenzfsVolumeUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrGroupQuota {
 	quotas := []*fsx.OpenZFSUserOrGroupQuota{}
 
 	for _, quota := range cfg {
-		expandedQuota := expandFsxOpenzfsVolumeUserAndGroupQuota(quota.(map[string]interface{}))
+		expandedQuota := expandOpenzfsVolumeUserAndGroupQuota(quota.(map[string]interface{}))
 		if expandedQuota != nil {
 			quotas = append(quotas, expandedQuota)
 		}
@@ -421,7 +421,7 @@ func expandFsxOpenzfsVolumeUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSU
 
 }
 
-func expandFsxOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
+func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
 	if len(conf) < 1 {
 		return nil
 	}
@@ -444,11 +444,11 @@ func expandFsxOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.O
 
 }
 
-func expandFsxOpenzfsVolumeNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
+func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	exports := []*fsx.OpenZFSNfsExport{}
 
 	for _, export := range cfg {
-		expandedExport := expandFsxOpenzfsVolumeNfsExport(export.(map[string]interface{}))
+		expandedExport := expandOpenzfsVolumeNFSExport(export.(map[string]interface{}))
 		if expandedExport != nil {
 			exports = append(exports, expandedExport)
 		}
@@ -458,21 +458,21 @@ func expandFsxOpenzfsVolumeNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport
 
 }
 
-func expandFsxOpenzfsVolumeNfsExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
+func expandOpenzfsVolumeNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
 	out := fsx.OpenZFSNfsExport{}
 
 	if v, ok := cfg["client_configurations"]; ok {
-		out.ClientConfigurations = expandFsxOpenzfsVolumeClinetConfigurations(v.(*schema.Set).List())
+		out.ClientConfigurations = expandOpenzfsVolumeClinetConfigurations(v.(*schema.Set).List())
 	}
 
 	return &out
 }
 
-func expandFsxOpenzfsVolumeClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientConfiguration {
+func expandOpenzfsVolumeClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientConfiguration {
 	configurations := []*fsx.OpenZFSClientConfiguration{}
 
 	for _, configuration := range cfg {
-		expandedConfiguration := expandFsxOpenzfsVolumeClientConfiguration(configuration.(map[string]interface{}))
+		expandedConfiguration := expandOpenzfsVolumeClientConfiguration(configuration.(map[string]interface{}))
 		if expandedConfiguration != nil {
 			configurations = append(configurations, expandedConfiguration)
 		}
@@ -482,7 +482,7 @@ func expandFsxOpenzfsVolumeClinetConfigurations(cfg []interface{}) []*fsx.OpenZF
 
 }
 
-func expandFsxOpenzfsVolumeClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
+func expandOpenzfsVolumeClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
 	out := fsx.OpenZFSClientConfiguration{}
 
 	if v, ok := conf["clients"].(string); ok && len(v) > 0 {
@@ -496,7 +496,7 @@ func expandFsxOpenzfsVolumeClientConfiguration(conf map[string]interface{}) *fsx
 	return &out
 }
 
-func expandFsxOpenzfsCreateVolumeOriginSnapshot(cfg []interface{}) *fsx.CreateOpenZFSOriginSnapshotConfiguration {
+func expandOpenzfsCreateVolumeOriginSnapshot(cfg []interface{}) *fsx.CreateOpenZFSOriginSnapshotConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -516,13 +516,13 @@ func expandFsxOpenzfsCreateVolumeOriginSnapshot(cfg []interface{}) *fsx.CreateOp
 	return &out
 }
 
-func flattenFsxOpenzfsVolumeNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]interface{} {
+func flattenOpenzfsVolumeNFSExports(rs []*fsx.OpenZFSNfsExport) []map[string]interface{} {
 	exports := make([]map[string]interface{}, 0)
 
 	for _, export := range rs {
 		if export != nil {
 			cfg := make(map[string]interface{})
-			cfg["client_configurations"] = flattenFsxOpenzfsVolumeClientConfigurations(export.ClientConfigurations)
+			cfg["client_configurations"] = flattenOpenzfsVolumeClientConfigurations(export.ClientConfigurations)
 			exports = append(exports, cfg)
 		}
 	}
@@ -534,7 +534,7 @@ func flattenFsxOpenzfsVolumeNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]
 	return nil
 }
 
-func flattenFsxOpenzfsVolumeClientConfigurations(rs []*fsx.OpenZFSClientConfiguration) []map[string]interface{} {
+func flattenOpenzfsVolumeClientConfigurations(rs []*fsx.OpenZFSClientConfiguration) []map[string]interface{} {
 	configurations := make([]map[string]interface{}, 0)
 
 	for _, configuration := range rs {
@@ -553,7 +553,7 @@ func flattenFsxOpenzfsVolumeClientConfigurations(rs []*fsx.OpenZFSClientConfigur
 	return nil
 }
 
-func flattenFsxOpenzfsVolumeUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota) []map[string]interface{} {
+func flattenOpenzfsVolumeUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota) []map[string]interface{} {
 	quotas := make([]map[string]interface{}, 0)
 
 	for _, quota := range rs {
@@ -573,7 +573,7 @@ func flattenFsxOpenzfsVolumeUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota
 	return nil
 }
 
-func flattenFsxOpenzfsVolumeOriginSnapshot(rs *fsx.OpenZFSOriginSnapshotConfiguration) []interface{} {
+func flattenOpenzfsVolumeOriginSnapshot(rs *fsx.OpenZFSOriginSnapshotConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
