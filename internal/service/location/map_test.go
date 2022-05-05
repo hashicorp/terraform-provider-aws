@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 )
 
 func TestAccLocationMap_basic(t *testing.T) {
@@ -35,7 +36,35 @@ func TestAccLocationMap_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "map_arn", "geo", fmt.Sprintf("map/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "map_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLocationMap_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_location_map.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, locationservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckMapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigMap_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourceMap(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -59,10 +88,59 @@ func TestAccLocationMap_description(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccConfigMap_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocationMap_tags(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_location_map.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, locationservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckMapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigMap_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigMap_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccConfigMap_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -146,4 +224,37 @@ resource "aws_location_map" "test" {
   description = %[2]q
 }
 `, rName, description)
+}
+
+func testAccConfigMap_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_location_map" "test" {
+  configuration {
+    style = "VectorHereBerlin"
+  }
+
+  map_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccConfigMap_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_location_map" "test" {
+  configuration {
+    style = "VectorHereBerlin"
+  }
+
+  map_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
