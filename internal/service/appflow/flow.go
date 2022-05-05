@@ -1514,6 +1514,8 @@ func expandDestinationConnectorProperties(tfMap map[string]interface{}) *appflow
 		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
+	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
+	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
 	//if v, ok := tfMap["lookout_metrics"].(map[string]interface{}); ok && len(v) > 0 {
 	//	a.LookoutMetrics = v
 	//}
@@ -2616,6 +2618,8 @@ func flattenDestinationConnectorProperties(destinationConnectorProperties *appfl
 		m["honeycode"] = []interface{}{flattenHoneycodeDestinationProperties(v)}
 	}
 
+	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
+	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
 	//if v := destinationConnectorProperties.LookoutMetrics; v != nil {
 	//	m["lookout_metrics"] = v[0].(appflow.LookoutMetricsDestinationProperties)
 	//}
