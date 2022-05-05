@@ -28,7 +28,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
+				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
@@ -57,13 +57,13 @@ func TestAccSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
 		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
+				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 				),
 			},
 			{
-				Config: testAccSSOAdminPermissionSetInlinePolicyUpdateConfig(rName),
+				Config: testAccPermissionSetInlinePolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
@@ -89,7 +89,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
+				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
@@ -112,7 +112,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_Disappears_permissionSet(t *testin
 		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
+				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
@@ -203,7 +203,7 @@ func testAccCheckPermissionSetInlinePolicyExists(resourceName string) resource.T
 	}
 }
 
-func testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName string) string {
+func testAccPermissionSetInlinePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -237,7 +237,7 @@ resource "aws_ssoadmin_permission_set_inline_policy" "test" {
 `, rName)
 }
 
-func testAccSSOAdminPermissionSetInlinePolicyUpdateConfig(rName string) string {
+func testAccPermissionSetInlinePolicyConfig_update(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
