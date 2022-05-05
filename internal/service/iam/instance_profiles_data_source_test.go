@@ -49,7 +49,7 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 data "aws_iam_instance_profiles" "test" {
-  role_name  = aws_iam_role.test.name
+  role_name = aws_iam_role.test.name
 
   depends_on = [aws_iam_instance_profile.test]
 }
