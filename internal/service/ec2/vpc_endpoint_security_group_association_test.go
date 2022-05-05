@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_security_group_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -36,7 +36,7 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_security_group_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -59,7 +59,7 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName0 := "aws_vpc_endpoint_security_group_association.test.0"
 	resourceName1 := "aws_vpc_endpoint_security_group_association.test.1"
@@ -85,7 +85,7 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_security_group_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

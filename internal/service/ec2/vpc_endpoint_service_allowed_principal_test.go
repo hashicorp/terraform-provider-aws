@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccEC2VPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testAccAWSnlb-basic-%s", sdkacctest.RandString(10))
+func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
+	lbName := fmt.Sprintf("testAccNLB-basic-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

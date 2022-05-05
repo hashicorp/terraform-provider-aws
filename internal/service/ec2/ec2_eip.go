@@ -281,7 +281,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("network_interface", "")
 	}
 
-	region := *conn.Config.Region
+	region := aws.StringValue(conn.Config.Region)
 	d.Set("private_ip", address.PrivateIpAddress)
 	if address.PrivateIpAddress != nil {
 		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(*address.PrivateIpAddress), RegionalPrivateDNSSuffix(region)))

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2NATGatewayDataSource_basic(t *testing.T) {
+func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_nat_gateway.test_by_id"
 	dataSourceNameBySubnetId := "data.aws_nat_gateway.test_by_subnet_id"

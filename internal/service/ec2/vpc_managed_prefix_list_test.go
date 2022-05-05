@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2ManagedPrefixList_basic(t *testing.T) {
+func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -57,7 +57,7 @@ func TestAccEC2ManagedPrefixList_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixList_disappears(t *testing.T) {
+func TestAccVPCManagedPrefixList_disappears(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,7 +79,7 @@ func TestAccEC2ManagedPrefixList_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
+func TestAccVPCManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -106,7 +106,7 @@ func TestAccEC2ManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixList_Entry_cidr(t *testing.T) {
+func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func TestAccEC2ManagedPrefixList_Entry_cidr(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixList_Entry_description(t *testing.T) {
+func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -217,7 +217,7 @@ func TestAccEC2ManagedPrefixList_Entry_description(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixList_name(t *testing.T) {
+func TestAccVPCManagedPrefixList_name(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -255,7 +255,7 @@ func TestAccEC2ManagedPrefixList_name(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixList_tags(t *testing.T) {
+func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

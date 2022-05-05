@@ -25,7 +25,7 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileNameConfig(rName),
@@ -58,7 +58,7 @@ func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileNameConfig(rName),
@@ -80,7 +80,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileValidatorConfig_JSON(rName),
@@ -133,7 +133,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileValidatorConfig_Lambda(rName),
@@ -171,7 +171,7 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileValidatorConfig_Multiple(rName),
@@ -206,7 +206,7 @@ func TestAccAppConfigConfigurationProfile_updateName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileNameConfig(rName),
@@ -240,7 +240,7 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileDescriptionConfig(rName, rName),
@@ -278,7 +278,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
+		CheckDestroy: testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileTags1(rName, "key1", "value1"),
@@ -314,7 +314,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigConfigurationProfileDestroy(s *terraform.State) error {
+func testAccCheckConfigurationProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {

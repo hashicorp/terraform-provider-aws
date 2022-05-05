@@ -21,12 +21,12 @@ import (
  ADM_CLIENT_SECRET - Amazon ADM OAuth Credentials Client Secret
 **/
 
-type testAccAWSPinpointADMChannelConfiguration struct {
+type testAccADMChannelConfiguration struct {
 	ClientID     string
 	ClientSecret string
 }
 
-func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccAWSPinpointADMChannelConfiguration {
+func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccADMChannelConfiguration {
 	if os.Getenv("ADM_CLIENT_ID") == "" {
 		t.Skipf("ADM_CLIENT_ID ENV is missing")
 	}
@@ -35,7 +35,7 @@ func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccAWSPinpointADMC
 		t.Skipf("ADM_CLIENT_SECRET ENV is missing")
 	}
 
-	conf := testAccAWSPinpointADMChannelConfiguration{
+	conf := testAccADMChannelConfiguration{
 		ClientID:     os.Getenv("ADM_CLIENT_ID"),
 		ClientSecret: os.Getenv("ADM_CLIENT_SECRET"),
 	}
@@ -108,7 +108,7 @@ func testAccCheckADMChannelExists(n string, channel *pinpoint.ADMChannelResponse
 	}
 }
 
-func testAccADMChannelConfig_basic(conf *testAccAWSPinpointADMChannelConfiguration) string {
+func testAccADMChannelConfig_basic(conf *testAccADMChannelConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 

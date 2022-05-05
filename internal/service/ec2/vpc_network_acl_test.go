@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NetworkACL_basic(t *testing.T) {
+func TestAccVPCNetworkACL_basic(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
@@ -49,7 +49,7 @@ func TestAccEC2NetworkACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_disappears(t *testing.T) {
+func TestAccVPCNetworkACL_disappears(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +72,7 @@ func TestAccEC2NetworkACL_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_tags(t *testing.T) {
+func TestAccVPCNetworkACL_tags(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -117,7 +117,7 @@ func TestAccEC2NetworkACL_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_Egress_mode(t *testing.T) {
+func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -168,7 +168,7 @@ func TestAccEC2NetworkACL_Egress_mode(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_Ingress_mode(t *testing.T) {
+func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -219,7 +219,7 @@ func TestAccEC2NetworkACL_Ingress_mode(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_egressAndIngressRules(t *testing.T) {
+func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -261,7 +261,7 @@ func TestAccEC2NetworkACL_egressAndIngressRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_OnlyIngressRules_basic(t *testing.T) {
+func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -295,7 +295,7 @@ func TestAccEC2NetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_OnlyIngressRules_update(t *testing.T) {
+func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -349,7 +349,7 @@ func TestAccEC2NetworkACL_OnlyIngressRules_update(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_caseSensitivityNoChanges(t *testing.T) {
+func TestAccVPCNetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -375,7 +375,7 @@ func TestAccEC2NetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_onlyEgressRules(t *testing.T) {
+func TestAccVPCNetworkACL_onlyEgressRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -401,7 +401,7 @@ func TestAccEC2NetworkACL_onlyEgressRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_subnetChange(t *testing.T) {
+func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -438,7 +438,7 @@ func TestAccEC2NetworkACL_subnetChange(t *testing.T) {
 
 }
 
-func TestAccEC2NetworkACL_subnets(t *testing.T) {
+func TestAccVPCNetworkACL_subnets(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -477,7 +477,7 @@ func TestAccEC2NetworkACL_subnets(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_subnetsDelete(t *testing.T) {
+func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -514,7 +514,7 @@ func TestAccEC2NetworkACL_subnetsDelete(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_ipv6Rules(t *testing.T) {
+func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -550,7 +550,7 @@ func TestAccEC2NetworkACL_ipv6Rules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_ipv6ICMPRules(t *testing.T) {
+func TestAccVPCNetworkACL_ipv6ICMPRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -571,7 +571,7 @@ func TestAccEC2NetworkACL_ipv6ICMPRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_ipv6VPCRules(t *testing.T) {
+func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -601,7 +601,7 @@ func TestAccEC2NetworkACL_ipv6VPCRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_espProtocol(t *testing.T) {
+func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

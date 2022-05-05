@@ -25,7 +25,7 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBasicConfig(rName),
@@ -56,7 +56,7 @@ func TestAccAppConfigEnvironment_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBasicConfig(rName),
@@ -79,7 +79,7 @@ func TestAccAppConfigEnvironment_updateName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBasicConfig(rName),
@@ -112,7 +112,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentDescriptionConfig(rName, rName),
@@ -157,7 +157,7 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentWithMonitors(rName, 1),
@@ -214,7 +214,7 @@ func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMultipleConfig(rName),
@@ -256,7 +256,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		CheckDestroy: testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentTags1(rName, "key1", "value1"),
@@ -292,7 +292,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigEnvironmentDestroy(s *terraform.State) error {
+func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {

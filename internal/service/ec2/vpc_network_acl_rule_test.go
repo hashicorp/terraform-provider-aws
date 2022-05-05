@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NetworkACLRule_basic(t *testing.T) {
+func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 	resource1Name := "aws_network_acl_rule.test1"
 	resource2Name := "aws_network_acl_rule.test2"
 	resource3Name := "aws_network_acl_rule.test3"
@@ -86,7 +86,7 @@ func TestAccEC2NetworkACLRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLRule_disappears(t *testing.T) {
+func TestAccVPCNetworkACLRule_disappears(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -108,7 +108,7 @@ func TestAccEC2NetworkACLRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLRule_Disappears_networkACL(t *testing.T) {
+func TestAccVPCNetworkACLRule_Disappears_networkACL(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -130,7 +130,7 @@ func TestAccEC2NetworkACLRule_Disappears_networkACL(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
+func TestAccVPCNetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -152,7 +152,7 @@ func TestAccEC2NetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLRule_ipv6(t *testing.T) {
+func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -186,7 +186,7 @@ func TestAccEC2NetworkACLRule_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLRule_ipv6ICMP(t *testing.T) {
+func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_rule.test"
 
@@ -221,7 +221,7 @@ func TestAccEC2NetworkACLRule_ipv6ICMP(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6710
-func TestAccEC2NetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testing.T) {
+func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testing.T) {
 	var v ec2.Vpc
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vpcResourceName := "aws_vpc.test"
@@ -260,7 +260,7 @@ func TestAccEC2NetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 	})
 }
 
-func TestAccEC2NetworkACLRule_allProtocol(t *testing.T) {
+func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_rule.test"
 
@@ -292,7 +292,7 @@ func TestAccEC2NetworkACLRule_allProtocol(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLRule_tcpProtocol(t *testing.T) {
+func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_rule.test"
 

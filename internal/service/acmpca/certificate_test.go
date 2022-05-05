@@ -325,7 +325,7 @@ data "aws_partition" "current" {}
 
 func testAccCertificateConfig_SubordinateCertificate(domain string) string {
 	return acctest.ConfigCompose(
-		testAccAcmpcaCertificateBaseRootCAConfig(domain),
+		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
@@ -358,7 +358,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 func testAccCertificateConfig_EndEntityCertificate(domain, csr string) string {
 	return acctest.ConfigCompose(
-		testAccAcmpcaCertificateBaseRootCAConfig(domain),
+		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
@@ -377,7 +377,7 @@ resource "aws_acmpca_certificate" "test" {
 
 func testAccCertificateConfig_Validity_EndDate(domain, csr, expiry string) string {
 	return acctest.ConfigCompose(
-		testAccAcmpcaCertificateBaseRootCAConfig(domain),
+		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
@@ -396,7 +396,7 @@ resource "aws_acmpca_certificate" "test" {
 
 func testAccCertificateConfig_Validity_Absolute(domain, csr string, expiry int64) string {
 	return acctest.ConfigCompose(
-		testAccAcmpcaCertificateBaseRootCAConfig(domain),
+		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
@@ -413,7 +413,7 @@ resource "aws_acmpca_certificate" "test" {
 `, csr, expiry))
 }
 
-func testAccAcmpcaCertificateBaseRootCAConfig(domain string) string {
+func testAccCertificateBaseRootCAConfig(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "root" {
   permanent_deletion_time_in_days = 7

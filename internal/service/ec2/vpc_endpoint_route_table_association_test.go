@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointRouteTableAssociation_basic(t *testing.T) {
+func TestAccVPCEndpointRouteTableAssociation_basic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -40,7 +40,7 @@ func TestAccEC2VPCEndpointRouteTableAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointRouteTableAssociation_disappears(t *testing.T) {
+func TestAccVPCEndpointRouteTableAssociation_disappears(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

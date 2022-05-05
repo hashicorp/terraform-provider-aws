@@ -710,7 +710,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccTriggerConfig_Crawler(rName, state string) string {
-	return acctest.ConfigCompose(testAccGlueCrawlerConfig_S3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
 resource "aws_glue_crawler" "test2" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 

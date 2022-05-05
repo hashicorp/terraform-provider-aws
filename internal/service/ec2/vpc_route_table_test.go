@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2RouteTable_basic(t *testing.T) {
+func TestAccVPCRouteTable_basic(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -49,7 +49,7 @@ func TestAccEC2RouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_disappears(t *testing.T) {
+func TestAccVPCRouteTable_disappears(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +72,7 @@ func TestAccEC2RouteTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_Disappears_subnetAssociation(t *testing.T) {
+func TestAccVPCRouteTable_Disappears_subnetAssociation(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -95,7 +95,7 @@ func TestAccEC2RouteTable_Disappears_subnetAssociation(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToInternetGateway(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToInternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -149,7 +149,7 @@ func TestAccEC2RouteTable_ipv4ToInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToInstance(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToInstance(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	instanceResourceName := "aws_instance.test"
@@ -185,7 +185,7 @@ func TestAccEC2RouteTable_ipv4ToInstance(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
+func TestAccVPCRouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
@@ -226,7 +226,7 @@ func TestAccEC2RouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_tags(t *testing.T) {
+func TestAccVPCRouteTable_tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -271,7 +271,7 @@ func TestAccEC2RouteTable_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_requireRouteDestination(t *testing.T) {
+func TestAccVPCRouteTable_requireRouteDestination(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -292,7 +292,7 @@ func TestAccEC2RouteTable_requireRouteDestination(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_requireRouteTarget(t *testing.T) {
+func TestAccVPCRouteTable_requireRouteTarget(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -309,7 +309,7 @@ func TestAccEC2RouteTable_requireRouteTarget(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_Route_mode(t *testing.T) {
+func TestAccVPCRouteTable_Route_mode(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -385,7 +385,7 @@ func TestAccEC2RouteTable_Route_mode(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToTransitGateway(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToTransitGateway(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -425,7 +425,7 @@ func TestAccEC2RouteTable_ipv4ToTransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToVPCEndpoint(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -465,7 +465,7 @@ func TestAccEC2RouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToCarrierGateway(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToCarrierGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	cgwResourceName := "aws_ec2_carrier_gateway.test"
@@ -501,7 +501,7 @@ func TestAccEC2RouteTable_ipv4ToCarrierGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToLocalGateway(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToLocalGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	lgwDataSourceName := "data.aws_ec2_local_gateway.first"
@@ -537,7 +537,7 @@ func TestAccEC2RouteTable_ipv4ToLocalGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToVPCPeeringConnection(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToVPCPeeringConnection(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -573,7 +573,7 @@ func TestAccEC2RouteTable_ipv4ToVPCPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_vgwRoutePropagation(t *testing.T) {
+func TestAccVPCRouteTable_vgwRoutePropagation(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	vgwResourceName1 := "aws_vpn_gateway.test1"
@@ -623,7 +623,7 @@ func TestAccEC2RouteTable_vgwRoutePropagation(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_conditionalCIDRBlock(t *testing.T) {
+func TestAccVPCRouteTable_conditionalCIDRBlock(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -660,7 +660,7 @@ func TestAccEC2RouteTable_conditionalCIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_ipv4ToNatGateway(t *testing.T) {
+func TestAccVPCRouteTable_ipv4ToNatGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	ngwResourceName := "aws_nat_gateway.test"
@@ -696,7 +696,7 @@ func TestAccEC2RouteTable_ipv4ToNatGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_IPv6ToNetworkInterface_unattached(t *testing.T) {
+func TestAccVPCRouteTable_IPv6ToNetworkInterface_unattached(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	eniResourceName := "aws_network_interface.test"
@@ -732,7 +732,7 @@ func TestAccEC2RouteTable_IPv6ToNetworkInterface_unattached(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
+func TestAccVPCRouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	eni1ResourceName := "aws_network_interface.test1"
@@ -811,7 +811,7 @@ func TestAccEC2RouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_vpcMultipleCIDRs(t *testing.T) {
+func TestAccVPCRouteTable_vpcMultipleCIDRs(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -844,7 +844,7 @@ func TestAccEC2RouteTable_vpcMultipleCIDRs(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_vpcClassicLink(t *testing.T) {
+func TestAccVPCRouteTable_vpcClassicLink(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -877,7 +877,7 @@ func TestAccEC2RouteTable_vpcClassicLink(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_gatewayVPCEndpoint(t *testing.T) {
+func TestAccVPCRouteTable_gatewayVPCEndpoint(t *testing.T) {
 	var routeTable ec2.RouteTable
 	var vpce ec2.VpcEndpoint
 	resourceName := "aws_route_table.test"
@@ -916,7 +916,7 @@ func TestAccEC2RouteTable_gatewayVPCEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_multipleRoutes(t *testing.T) {
+func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
@@ -1001,7 +1001,7 @@ func TestAccEC2RouteTable_multipleRoutes(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTable_prefixListToInternetGateway(t *testing.T) {
+func TestAccVPCRouteTable_prefixListToInternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"

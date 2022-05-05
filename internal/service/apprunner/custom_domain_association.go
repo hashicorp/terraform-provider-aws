@@ -138,7 +138,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 		return nil
 	}
 
-	if err := d.Set("certificate_validation_records", flattenAppRunnerCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
+	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting certificate_validation_records: %w", err))
 	}
 
@@ -185,7 +185,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenAppRunnerCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
+func flattenCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
 	var results []interface{}
 
 	for _, record := range records {

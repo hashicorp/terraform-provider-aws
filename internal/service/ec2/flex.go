@@ -13,7 +13,7 @@ import (
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {
-		group_id := *v.GroupId
+		group_id := aws.StringValue(v.GroupId)
 		ids = append(ids, group_id)
 	}
 	return ids

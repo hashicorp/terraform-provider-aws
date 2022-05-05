@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPCIpamPool_basic(t *testing.T) {
+func TestAccIPAMPool_basic(t *testing.T) {
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
@@ -56,7 +56,7 @@ func TestAccVPCIpamPool_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPool_tags(t *testing.T) {
+func TestAccIPAMPool_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -96,7 +96,7 @@ func TestAccVPCIpamPool_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPool_ipv6Basic(t *testing.T) {
+func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 

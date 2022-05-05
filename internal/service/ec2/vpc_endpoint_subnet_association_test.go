@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointSubnetAssociation_basic(t *testing.T) {
+func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,7 +41,7 @@ func TestAccEC2VPCEndpointSubnetAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSubnetAssociation_disappears(t *testing.T) {
+func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -64,7 +64,7 @@ func TestAccEC2VPCEndpointSubnetAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSubnetAssociation_multiple(t *testing.T) {
+func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 	resourceName0 := "aws_vpc_endpoint_subnet_association.test.0"
 	resourceName1 := "aws_vpc_endpoint_subnet_association.test.1"

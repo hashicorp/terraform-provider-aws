@@ -62,7 +62,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 		return diag.FromErr(fmt.Errorf("error enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output", streamArn, tableName))
 	}
 
-	if err := waitDynamoDBKinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
+	if err := waitKinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be active: %w", streamArn, tableName, err))
 	}
 
@@ -127,7 +127,7 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 		return diag.FromErr(fmt.Errorf("error disabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %w", streamArn, tableName, err))
 	}
 
-	if err := waitDynamoDBKinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
+	if err := waitKinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be disabled: %w", streamArn, tableName, err))
 	}
 

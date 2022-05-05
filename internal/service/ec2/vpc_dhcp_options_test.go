@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCDHCPOptions_basic(t *testing.T) {
+func TestAccVPCDHCPOptions_basic(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 	rName := sdkacctest.RandString(5)
@@ -50,7 +50,7 @@ func TestAccEC2VPCDHCPOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptions_tags(t *testing.T) {
+func TestAccVPCDHCPOptions_tags(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 	rName := sdkacctest.RandString(5)
@@ -95,7 +95,7 @@ func TestAccEC2VPCDHCPOptions_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptions_disappears(t *testing.T) {
+func TestAccVPCDHCPOptions_disappears(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 	rName := sdkacctest.RandString(5)

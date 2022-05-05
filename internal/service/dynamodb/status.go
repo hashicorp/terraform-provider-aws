@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
+func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
@@ -27,7 +27,7 @@ func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamo
 	}
 }
 
-func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := FindDynamoDBTableByName(conn, tableName)
 
@@ -47,7 +47,7 @@ func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.Sta
 	}
 }
 
-func statusDynamoDBReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func statusReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),
@@ -74,7 +74,7 @@ func statusDynamoDBReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region stri
 	}
 }
 
-func statusDynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func statusReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),
@@ -101,7 +101,7 @@ func statusDynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region stri
 	}
 }
 
-func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
+func statusGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		gsi, err := FindDynamoDBGSIByTableNameIndexName(conn, tableName, indexName)
 
@@ -121,7 +121,7 @@ func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) res
 	}
 }
 
-func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		pitr, err := FindDynamoDBPITRDescriptionByTableName(conn, tableName)
 
@@ -141,7 +141,7 @@ func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.Stat
 	}
 }
 
-func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ttl, err := FindDynamoDBTTLRDescriptionByTableName(conn, tableName)
 
@@ -161,7 +161,7 @@ func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.State
 	}
 }
 
-func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := FindDynamoDBTableByName(conn, tableName)
 

@@ -259,7 +259,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAutoScalingPolicyConfigPredictiveScalingUpdated(name),
+				Config: testAccPolicyConfig_predictiveScalingUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastOnly"),
@@ -723,7 +723,7 @@ resource "aws_autoscaling_policy" "test" {
 `, name))
 }
 
-func testAccAutoScalingPolicyConfigPredictiveScalingUpdated(name string) string {
+func testAccPolicyConfig_predictiveScalingUpdated(name string) string {
 	return testAccPolicyConfigBase(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-policy_predictive"

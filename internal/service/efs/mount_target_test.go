@@ -28,12 +28,12 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsMountTargetDestroy,
+		CheckDestroy: testAccCheckMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsMountTarget(resourceName, &mount),
+					testAccCheckMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
@@ -52,8 +52,8 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 			{
 				Config: testAccMountTargetModifiedConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsMountTarget(resourceName, &mount),
-					testAccCheckEfsMountTarget(resourceName2, &mount),
+					testAccCheckMountTarget(resourceName, &mount),
+					testAccCheckMountTarget(resourceName2, &mount),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 					acctest.MatchResourceAttrRegionalHostname(resourceName2, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 				),
@@ -76,7 +76,7 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 			{
 				Config: testAccMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsMountTarget(resourceName, &mount),
+					testAccCheckMountTarget(resourceName, &mount),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,12 +94,12 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsMountTargetDestroy,
+		CheckDestroy: testAccCheckMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetIPAddressConfig(rName, "10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsMountTarget(resourceName, &mount),
+					testAccCheckMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.100"),
 				),
 			},
@@ -122,12 +122,12 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsMountTargetDestroy,
+		CheckDestroy: testAccCheckMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetIPAddressConfigNullIP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsMountTarget(resourceName, &mount),
+					testAccCheckMountTarget(resourceName, &mount),
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 				),
 			},
@@ -159,7 +159,7 @@ func TestMountTarget_hasEmptyMountTargets(t *testing.T) {
 	}
 }
 
-func testAccCheckEfsMountTargetDestroy(s *terraform.State) error {
+func testAccCheckMountTargetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_mount_target" {
@@ -184,7 +184,7 @@ func testAccCheckEfsMountTargetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEfsMountTarget(resourceID string, mount *efs.MountTargetDescription) resource.TestCheckFunc {
+func testAccCheckMountTarget(resourceID string, mount *efs.MountTargetDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceID]
 		if !ok {

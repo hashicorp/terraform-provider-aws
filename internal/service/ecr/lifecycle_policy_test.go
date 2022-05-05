@@ -26,7 +26,7 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrLifecyclePolicyConfig(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(resourceName),
 				),
@@ -51,13 +51,13 @@ func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrLifecyclePolicyOrderConfig(rName),
+				Config: testAccLifecyclePolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(resourceName),
 				),
 			},
 			{
-				Config:   testAccEcrLifecyclePolicyNewOrderConfig(rName),
+				Config:   testAccLifecyclePolicyConfig_newOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -75,13 +75,13 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrLifecyclePolicyConfig(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(resourceName),
 				),
 			},
 			{
-				Config:             testAccEcrLifecyclePolicyChangedConfig(rName),
+				Config:             testAccLifecyclePolicyConfig_changed(rName),
 				ExpectNonEmptyPlan: true,
 				PlanOnly:           true,
 			},
@@ -134,7 +134,7 @@ func testAccCheckLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccEcrLifecyclePolicyConfig(rName string) string {
+func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = "%s"
@@ -166,7 +166,7 @@ EOF
 `, rName)
 }
 
-func testAccEcrLifecyclePolicyChangedConfig(rName string) string {
+func testAccLifecyclePolicyConfig_changed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = "%s"
@@ -198,7 +198,7 @@ EOF
 `, rName)
 }
 
-func testAccEcrLifecyclePolicyOrderConfig(rName string) string {
+func testAccLifecyclePolicyConfig_order(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -246,7 +246,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
 `, rName)
 }
 
-func testAccEcrLifecyclePolicyNewOrderConfig(rName string) string {
+func testAccLifecyclePolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = "%s"

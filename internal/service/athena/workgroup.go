@@ -173,7 +173,7 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	input := &athena.CreateWorkGroupInput{
-		Configuration: expandAthenaWorkGroupConfiguration(d.Get("configuration").([]interface{})),
+		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
 		Name:          aws.String(name),
 	}
 
@@ -241,7 +241,7 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn.String())
 	d.Set("description", resp.WorkGroup.Description)
 
-	if err := d.Set("configuration", flattenAthenaWorkGroupConfiguration(resp.WorkGroup.Configuration)); err != nil {
+	if err := d.Set("configuration", flattenWorkGroupConfiguration(resp.WorkGroup.Configuration)); err != nil {
 		return fmt.Errorf("error setting configuration: %w", err)
 	}
 
@@ -302,7 +302,7 @@ func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("configuration") {
-			input.ConfigurationUpdates = expandAthenaWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
+			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
 		}
 
 		if d.HasChange("description") {
@@ -329,7 +329,7 @@ func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceWorkGroupRead(d, meta)
 }
 
-func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguration {
+func expandWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -347,7 +347,7 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 	}
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		configuration.EngineVersion = expandAthenaWorkGroupEngineVersion(v)
+		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
@@ -355,7 +355,7 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 	}
 
 	if v, ok := m["result_configuration"]; ok {
-		configuration.ResultConfiguration = expandAthenaWorkGroupResultConfiguration(v.([]interface{}))
+		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := m["requester_pays_enabled"]; ok {
@@ -365,7 +365,7 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 	return configuration
 }
 
-func expandAthenaWorkGroupEngineVersion(l []interface{}) *athena.EngineVersion {
+func expandWorkGroupEngineVersion(l []interface{}) *athena.EngineVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -381,7 +381,7 @@ func expandAthenaWorkGroupEngineVersion(l []interface{}) *athena.EngineVersion {
 	return engineVersion
 }
 
-func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfigurationUpdates {
+func expandWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -401,7 +401,7 @@ func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGrou
 	}
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		configurationUpdates.EngineVersion = expandAthenaWorkGroupEngineVersion(v)
+		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
@@ -409,7 +409,7 @@ func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGrou
 	}
 
 	if v, ok := m["result_configuration"]; ok {
-		configurationUpdates.ResultConfigurationUpdates = expandAthenaWorkGroupResultConfigurationUpdates(v.([]interface{}))
+		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]interface{}))
 	}
 
 	if v, ok := m["requester_pays_enabled"]; ok {
@@ -419,7 +419,7 @@ func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGrou
 	return configurationUpdates
 }
 
-func expandAthenaWorkGroupResultConfiguration(l []interface{}) *athena.ResultConfiguration {
+func expandWorkGroupResultConfiguration(l []interface{}) *athena.ResultConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -429,7 +429,7 @@ func expandAthenaWorkGroupResultConfiguration(l []interface{}) *athena.ResultCon
 	resultConfiguration := &athena.ResultConfiguration{}
 
 	if v, ok := m["encryption_configuration"]; ok {
-		resultConfiguration.EncryptionConfiguration = expandAthenaWorkGroupEncryptionConfiguration(v.([]interface{}))
+		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := m["output_location"].(string); ok && v != "" {
@@ -441,13 +441,13 @@ func expandAthenaWorkGroupResultConfiguration(l []interface{}) *athena.ResultCon
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfiguration.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+		resultConfiguration.AclConfiguration = expandResultConfigurationAclConfig(v.([]interface{}))
 	}
 
 	return resultConfiguration
 }
 
-func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.ResultConfigurationUpdates {
+func expandWorkGroupResultConfigurationUpdates(l []interface{}) *athena.ResultConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -457,7 +457,7 @@ func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.Re
 	resultConfigurationUpdates := &athena.ResultConfigurationUpdates{}
 
 	if v, ok := m["encryption_configuration"]; ok {
-		resultConfigurationUpdates.EncryptionConfiguration = expandAthenaWorkGroupEncryptionConfiguration(v.([]interface{}))
+		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
 	} else {
 		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
 	}
@@ -475,7 +475,7 @@ func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.Re
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfigurationUpdates.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationAclConfig(v.([]interface{}))
 	} else {
 		resultConfigurationUpdates.RemoveAclConfiguration = aws.Bool(true)
 	}
@@ -483,7 +483,7 @@ func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.Re
 	return resultConfigurationUpdates
 }
 
-func expandAthenaWorkGroupEncryptionConfiguration(l []interface{}) *athena.EncryptionConfiguration {
+func expandWorkGroupEncryptionConfiguration(l []interface{}) *athena.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -503,7 +503,7 @@ func expandAthenaWorkGroupEncryptionConfiguration(l []interface{}) *athena.Encry
 	return encryptionConfiguration
 }
 
-func flattenAthenaWorkGroupConfiguration(configuration *athena.WorkGroupConfiguration) []interface{} {
+func flattenWorkGroupConfiguration(configuration *athena.WorkGroupConfiguration) []interface{} {
 	if configuration == nil {
 		return []interface{}{}
 	}
@@ -511,16 +511,16 @@ func flattenAthenaWorkGroupConfiguration(configuration *athena.WorkGroupConfigur
 	m := map[string]interface{}{
 		"bytes_scanned_cutoff_per_query":     aws.Int64Value(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
-		"engine_version":                     flattenAthenaWorkGroupEngineVersion(configuration.EngineVersion),
+		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":               flattenAthenaWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAthenaWorkGroupEngineVersion(engineVersion *athena.EngineVersion) []interface{} {
+func flattenWorkGroupEngineVersion(engineVersion *athena.EngineVersion) []interface{} {
 	if engineVersion == nil {
 		return []interface{}{}
 	}
@@ -533,13 +533,13 @@ func flattenAthenaWorkGroupEngineVersion(engineVersion *athena.EngineVersion) []
 	return []interface{}{m}
 }
 
-func flattenAthenaWorkGroupResultConfiguration(resultConfiguration *athena.ResultConfiguration) []interface{} {
+func flattenWorkGroupResultConfiguration(resultConfiguration *athena.ResultConfiguration) []interface{} {
 	if resultConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"encryption_configuration": flattenAthenaWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
+		"encryption_configuration": flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
 		"output_location":          aws.StringValue(resultConfiguration.OutputLocation),
 	}
 
@@ -548,13 +548,13 @@ func flattenAthenaWorkGroupResultConfiguration(resultConfiguration *athena.Resul
 	}
 
 	if resultConfiguration.AclConfiguration != nil {
-		m["acl_configuration"] = flattenAthenaWorkGroupAclConfiguration(resultConfiguration.AclConfiguration)
+		m["acl_configuration"] = flattenWorkGroupAclConfiguration(resultConfiguration.AclConfiguration)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAthenaWorkGroupEncryptionConfiguration(encryptionConfiguration *athena.EncryptionConfiguration) []interface{} {
+func flattenWorkGroupEncryptionConfiguration(encryptionConfiguration *athena.EncryptionConfiguration) []interface{} {
 	if encryptionConfiguration == nil {
 		return []interface{}{}
 	}
@@ -567,7 +567,7 @@ func flattenAthenaWorkGroupEncryptionConfiguration(encryptionConfiguration *athe
 	return []interface{}{m}
 }
 
-func flattenAthenaWorkGroupAclConfiguration(aclConfig *athena.AclConfiguration) []interface{} {
+func flattenWorkGroupAclConfiguration(aclConfig *athena.AclConfiguration) []interface{} {
 	if aclConfig == nil {
 		return []interface{}{}
 	}

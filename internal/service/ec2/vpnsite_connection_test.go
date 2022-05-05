@@ -146,7 +146,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 	}
 }
 
-func TestAccEC2VPNConnection_basic(t *testing.T) {
+func TestAccVPNSiteConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -234,7 +234,7 @@ func TestAccEC2VPNConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_transitGatewayID(t *testing.T) {
+func TestAccVPNSiteConnection_transitGatewayID(t *testing.T) {
 	var vpn ec2.VpnConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -264,7 +264,7 @@ func TestAccEC2VPNConnection_transitGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_tunnel1InsideCIDR(t *testing.T) {
+func TestAccVPNSiteConnection_tunnel1InsideCIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -293,7 +293,7 @@ func TestAccEC2VPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
+func TestAccVPNSiteConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -322,7 +322,7 @@ func TestAccEC2VPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_tunnel1PreSharedKey(t *testing.T) {
+func TestAccVPNSiteConnection_tunnel1PreSharedKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -351,7 +351,7 @@ func TestAccEC2VPNConnection_tunnel1PreSharedKey(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_tunnelOptions(t *testing.T) {
+func TestAccVPNSiteConnection_tunnelOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	badCidrRangeErr := regexp.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -482,8 +482,8 @@ func TestAccEC2VPNConnection_tunnelOptions(t *testing.T) {
 	})
 }
 
-// TestAccEC2VPNConnection_tunnelOptionsLesser tests less algorithms such as those supported in GovCloud.
-func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
+// TestAccVPNSiteConnection_tunnelOptionsLesser tests less algorithms such as those supported in GovCloud.
+func TestAccVPNSiteConnection_tunnelOptionsLesser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1032,7 +1032,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_withStaticRoutes(t *testing.T) {
+func TestAccVPNSiteConnection_withStaticRoutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1060,7 +1060,7 @@ func TestAccEC2VPNConnection_withStaticRoutes(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_withEnableAcceleration(t *testing.T) {
+func TestAccVPNSiteConnection_withEnableAcceleration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1088,7 +1088,7 @@ func TestAccEC2VPNConnection_withEnableAcceleration(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_withIPv6(t *testing.T) {
+func TestAccVPNSiteConnection_withIPv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1115,7 +1115,7 @@ func TestAccEC2VPNConnection_withIPv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_tags(t *testing.T) {
+func TestAccVPNSiteConnection_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1161,7 +1161,7 @@ func TestAccEC2VPNConnection_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_specifyIPv4(t *testing.T) {
+func TestAccVPNSiteConnection_specifyIPv4(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1198,7 +1198,7 @@ func TestAccEC2VPNConnection_specifyIPv4(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_specifyIPv6(t *testing.T) {
+func TestAccVPNSiteConnection_specifyIPv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1222,7 +1222,7 @@ func TestAccEC2VPNConnection_specifyIPv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_disappears(t *testing.T) {
+func TestAccVPNSiteConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1246,7 +1246,7 @@ func TestAccEC2VPNConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_updateCustomerGatewayID(t *testing.T) {
+func TestAccVPNSiteConnection_updateCustomerGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn1 := sdkacctest.RandIntRange(64512, 65534)
 	rBgpAsn2 := sdkacctest.RandIntRange(64512, 65534)
@@ -1283,7 +1283,7 @@ func TestAccEC2VPNConnection_updateCustomerGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_updateVPNGatewayID(t *testing.T) {
+func TestAccVPNSiteConnection_updateVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1319,7 +1319,7 @@ func TestAccEC2VPNConnection_updateVPNGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_updateTransitGatewayID(t *testing.T) {
+func TestAccVPNSiteConnection_updateTransitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1357,7 +1357,7 @@ func TestAccEC2VPNConnection_updateTransitGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
+func TestAccVPNSiteConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1395,7 +1395,7 @@ func TestAccEC2VPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
+func TestAccVPNSiteConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"

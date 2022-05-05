@@ -163,7 +163,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 // AWS does not support changing from an IAM role to an SLR. No error is thrown
 // but the registration is not changed (the IAM role continues in the registration).
 //
-// func TestAccAWSLakeFormationResource_updateRoleToSLR(t *testing.T) {
+// func TestAccLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckResourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
