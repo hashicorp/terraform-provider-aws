@@ -28,7 +28,7 @@ func testAccClassificationJob_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configNameGenerated(bucketName, macie2.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -58,7 +58,7 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configNameGenerated(bucketName, macie2.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -115,7 +115,7 @@ func testAccClassificationJob_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_configNameGenerated(bucketName, macie2.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
@@ -335,7 +335,7 @@ func testAccCheckClassificationJobNotRecreated(i, j *macie2.DescribeClassificati
 	}
 }
 
-func testAccClassificationJobConfig_configNameGenerated(bucketName, jobType string) string {
+func testAccClassificationJobConfig_nameGenerated(bucketName, jobType string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

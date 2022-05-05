@@ -29,7 +29,7 @@ func testAccCustomDataIdentifier_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDataIdentifierConfig_configNameGenerated(regex),
+				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -60,7 +60,7 @@ func testAccCustomDataIdentifier_Name_Generated(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDataIdentifierConfig_configNameGenerated(regex),
+				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -88,7 +88,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDataIdentifierConfig_configNameGenerated(regex),
+				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -267,7 +267,7 @@ func testAccCheckCustomDataIdentifierDestroy(s *terraform.State) error {
 
 }
 
-func testAccCustomDataIdentifierConfig_configNameGenerated(regex string) string {
+func testAccCustomDataIdentifierConfig_nameGenerated(regex string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 

@@ -27,7 +27,7 @@ func testAccFindingsFilter_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_configNameGenerated(),
+				Config: testAccFindingsFilterConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -56,7 +56,7 @@ func testAccFindingsFilter_Name_Generated(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_configNameGenerated(),
+				Config: testAccFindingsFilterConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -111,7 +111,7 @@ func testAccFindingsFilter_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_configNameGenerated(),
+				Config: testAccFindingsFilterConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -446,7 +446,7 @@ func testAccCheckFindingsFilterDestroy(s *terraform.State) error {
 
 }
 
-func testAccFindingsFilterConfig_configNameGenerated() string {
+func testAccFindingsFilterConfig_nameGenerated() string {
 	return `
 resource "aws_macie2_account" "test" {}
 
