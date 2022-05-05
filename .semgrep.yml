@@ -56,8 +56,6 @@ rules:
     paths:
       include:
         - internal/service
-      exclude:
-        - internal/service/elb
     patterns:
       - pattern-either:
         - pattern: '$LHS == *$RHS'
