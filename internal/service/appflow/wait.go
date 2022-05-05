@@ -15,7 +15,7 @@ const (
 
 func FlowDeleted(ctx context.Context, conn *appflow.Appflow, id string) error {
 	stateConf := &resource.StateChangeConf{
-		Target:  []string{appflow.FlowStatusDeleted},
+		Target:  []string{},
 		Refresh: FlowStatus(ctx, conn, id),
 		Timeout: FlowDeletionTimeout,
 	}

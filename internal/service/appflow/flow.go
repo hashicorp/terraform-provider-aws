@@ -1103,6 +1103,7 @@ func ResourceFlow() *schema.Resource {
 						"task_properties": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Computed: true,
 							ValidateDiagFunc: allDiagFunc(
 								validation.MapValueLenBetween(0, 2048),
 								validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
@@ -1124,6 +1125,7 @@ func ResourceFlow() *schema.Resource {
 						"trigger_properties": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
