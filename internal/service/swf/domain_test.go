@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
+func testAccPreCheckDomainTestingEnabled(t *testing.T) {
 	if os.Getenv("SWF_DOMAIN_TESTING_ENABLED") == "" {
 		t.Skip(
 			"Environment variable SWF_DOMAIN_TESTING_ENABLED is not set. " +
@@ -31,7 +31,7 @@ func TestAccSWFDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckSwfDomainTestingEnabled(t)
+			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
@@ -62,7 +62,7 @@ func TestAccSWFDomain_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckSwfDomainTestingEnabled(t)
+			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
@@ -108,7 +108,7 @@ func TestAccSWFDomain_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckSwfDomainTestingEnabled(t)
+			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
@@ -137,7 +137,7 @@ func TestAccSWFDomain_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckSwfDomainTestingEnabled(t)
+			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
@@ -165,7 +165,7 @@ func TestAccSWFDomain_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckSwfDomainTestingEnabled(t)
+			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
