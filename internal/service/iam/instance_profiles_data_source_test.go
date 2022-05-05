@@ -13,7 +13,6 @@ import (
 func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_iam_instance_profiles.test"
 	resourceName := "aws_iam_instance_profile.test"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,9 +26,9 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "paths.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arns.*", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "paths.*", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "names.*", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arns.0", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, "names.0", resourceName, "name"),
 				),
 			},
 		},
@@ -51,7 +50,8 @@ resource "aws_iam_instance_profile" "test" {
 
 data "aws_iam_instance_profiles" "test" {
   role_name  = aws_iam_role.test.name
-  depends_on = [aws_iam_role.test, aws_iam_instance_profile.test]
+
+  depends_on = [aws_iam_instance_profile.test]
 }
 `, rName)
 }
