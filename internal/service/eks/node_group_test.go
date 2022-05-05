@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
+	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkip)
 
 }
 
@@ -955,7 +955,7 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 	})
 }
 
-func testAccErrorCheckSkipEKS(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterException: The following supplied instance types do not exist",
 	)
