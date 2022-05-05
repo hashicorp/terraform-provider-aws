@@ -24,11 +24,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkipAutoScaling)
+	acctest.RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipAutoScaling(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"gp3 is invalid",
 	)
@@ -54,7 +54,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					testAccCheckGroupAttributes(&group, randName),
 					acctest.MatchResourceAttrRegionalARN("aws_autoscaling_group.bar", "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
 					resource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
-					testAccCheckAutoScalingInstanceRefreshCount(&group, 0),
+					testAccCheckInstanceRefreshCount(&group, 0),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "default_cooldown", "300"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "4"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
@@ -103,20 +103,20 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckLaunchConfigurationExists("aws_launch_configuration.new", &lc),
-					testAccCheckAutoScalingInstanceRefreshCount(&group, 0),
+					testAccCheckInstanceRefreshCount(&group, 0),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "5"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.0", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "protect_from_scale_in", "true"),
 					testLaunchConfigurationName("aws_autoscaling_group.bar", &lc),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags1Changed", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags1Changed", map[string]interface{}{
 						"value":               "value1changed",
 						"propagate_at_launch": true,
 					}),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags2", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags2", map[string]interface{}{
 						"value":               "value2changed",
 						"propagate_at_launch": true,
 					}),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags3", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags3", map[string]interface{}{
 						"value":               "value3",
 						"propagate_at_launch": true,
 					}),
@@ -280,15 +280,15 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig(randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags1", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags1", map[string]interface{}{
 						"value":               "value1",
 						"propagate_at_launch": true,
 					}),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags2", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags2", map[string]interface{}{
 						"value":               "value2",
 						"propagate_at_launch": true,
 					}),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags3", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags3", map[string]interface{}{
 						"value":               "value3",
 						"propagate_at_launch": true,
 					}),
@@ -311,16 +311,16 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 				Config: testAccGroupUpdateConfig(randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAutoscalingTagNotExists(&group.Tags, "Foo"),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags1Changed", map[string]interface{}{
+					testAccCheckTagNotExists(&group.Tags, "Foo"),
+					testAccCheckTags(&group.Tags, "FromTags1Changed", map[string]interface{}{
 						"value":               "value1changed",
 						"propagate_at_launch": true,
 					}),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags2", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags2", map[string]interface{}{
 						"value":               "value2changed",
 						"propagate_at_launch": true,
 					}),
-					testAccCheckAutoscalingTags(&group.Tags, "FromTags3", map[string]interface{}{
+					testAccCheckTags(&group.Tags, "FromTags3", map[string]interface{}{
 						"value":               "value3",
 						"propagate_at_launch": true,
 					}),
@@ -1032,7 +1032,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
-					testAccCheckAutoScalingInstanceRefreshCount(&group, 0),
+					testAccCheckInstanceRefreshCount(&group, 0),
 				),
 			},
 			{
@@ -1040,8 +1040,8 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
-					testAccCheckAutoScalingInstanceRefreshCount(&group, 1),
-					testAccCheckAutoScalingInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshCount(&group, 1),
+					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
 				),
 			},
 			{
@@ -1049,9 +1049,9 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
-					testAccCheckAutoScalingInstanceRefreshCount(&group, 2),
-					testAccCheckAutoScalingInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
-					testAccCheckAutoScalingInstanceRefreshStatus(&group, 1, autoscaling.InstanceRefreshStatusCancelled),
+					testAccCheckInstanceRefreshCount(&group, 2),
+					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshStatus(&group, 1, autoscaling.InstanceRefreshStatusCancelled),
 				),
 			},
 		},
@@ -1083,8 +1083,8 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tags"),
-					testAccCheckAutoScalingInstanceRefreshCount(&group, 1),
-					testAccCheckAutoScalingInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshCount(&group, 1),
+					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
 				),
 			},
 		},
@@ -1336,10 +1336,10 @@ func testAccCheckGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) reso
 }
 
 // testAccCheckTags can be used to check the tags on a resource.
-func testAccCheckAutoscalingTags(
+func testAccCheckTags(
 	ts *[]*autoscaling.TagDescription, key string, expected map[string]interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := autoscalingTagDescriptionsToMap(ts)
+		m := TagDescriptionsToMap(ts)
 		v, ok := m[key]
 		if !ok {
 			return fmt.Errorf("Missing tag: %s", key)
@@ -1354,9 +1354,9 @@ func testAccCheckAutoscalingTags(
 	}
 }
 
-func testAccCheckAutoscalingTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
+func testAccCheckTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := autoscalingTagDescriptionsToMap(ts)
+		m := TagDescriptionsToMap(ts)
 		if _, ok := m[key]; ok {
 			return fmt.Errorf("Tag exists when it should not: %s", key)
 		}
@@ -1365,8 +1365,8 @@ func testAccCheckAutoscalingTagNotExists(ts *[]*autoscaling.TagDescription, key 
 	}
 }
 
-// autoscalingTagDescriptionsToMap turns the list of tags into a map.
-func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
+// TagDescriptionsToMap turns the list of tags into a map.
+func TagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
 	tags := make(map[string]map[string]interface{})
 	for _, t := range *ts {
 		tag := map[string]interface{}{
@@ -4862,7 +4862,7 @@ resource "aws_launch_configuration" "test" {
 `
 }
 
-func testAccCheckAutoScalingInstanceRefreshCount(group *autoscaling.Group, expected int) resource.TestCheckFunc {
+func testAccCheckInstanceRefreshCount(group *autoscaling.Group, expected int) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
@@ -4881,7 +4881,7 @@ func testAccCheckAutoScalingInstanceRefreshCount(group *autoscaling.Group, expec
 	}
 }
 
-func testAccCheckAutoScalingInstanceRefreshStatus(group *autoscaling.Group, offset int, expected ...string) resource.TestCheckFunc {
+func testAccCheckInstanceRefreshStatus(group *autoscaling.Group, offset int, expected ...string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
