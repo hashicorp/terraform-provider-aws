@@ -14,6 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(iot.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"not been supported in region",
+	)
+}
+
 func TestAccIoTTopicRule_basic(t *testing.T) {
 	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.test"
