@@ -33,7 +33,7 @@ func DataSourceInstanceProfiles() *schema.Resource {
 			"role_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validIamResourceName(roleNameMaxLen),
+				ValidateFunc: validResourceName(roleNameMaxLen),
 			},
 		},
 	}

@@ -55,7 +55,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validIamResourceName(roleNameMaxLen),
+				ValidateFunc:  validResourceName(roleNameMaxLen),
 			},
 
 			"name_prefix": {
@@ -64,7 +64,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(roleNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
 			},
 
 			"path": {
