@@ -245,7 +245,7 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	var addressAllocationIDs []*string
 
 	if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
+		input.EndpointDetails = expandEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
 
 		// Prevent the following error: InvalidRequestException: AddressAllocationIds cannot be set in CreateServer
 		// Reference: https://docs.aws.amazon.com/transfer/latest/userguide/API_EndpointDetails.html#TransferFamily-Type-EndpointDetails-AddressAllocationIds
@@ -334,7 +334,7 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// AddressAllocationIds is only valid in the UpdateServer API.
 	if len(addressAllocationIDs) > 0 {
-		if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := stopServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 
@@ -345,11 +345,11 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 			},
 		}
 
-		if err := updateTransferServer(conn, input); err != nil {
+		if err := updateServer(conn, input); err != nil {
 			return err
 		}
 
-		if err := startTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := startServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
@@ -400,7 +400,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := d.Set("endpoint_details", []interface{}{flattenTransferEndpointDetails(output.EndpointDetails, securityGroupIDs)}); err != nil {
+		if err := d.Set("endpoint_details", []interface{}{flattenEndpointDetails(output.EndpointDetails, securityGroupIDs)}); err != nil {
 			return fmt.Errorf("error setting endpoint_details: %w", err)
 		}
 	} else {
@@ -478,7 +478,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("endpoint_details") {
 			if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
+				input.EndpointDetails = expandEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
 
 				if newEndpointTypeVpc && !oldEndpointTypeVpc {
 					// Prevent the following error: InvalidRequestException: Cannot specify AddressAllocationids when updating server to EndpointType: VPC
@@ -614,7 +614,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if offlineUpdate {
-			if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := stopServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
 		}
@@ -628,13 +628,13 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Removing Transfer Server Address Allocation IDs: %s", input)
-			if err := updateTransferServer(conn, input); err != nil {
+			if err := updateServer(conn, input); err != nil {
 				return err
 			}
 		}
 
 		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
-		if err := updateTransferServer(conn, input); err != nil {
+		if err := updateServer(conn, input); err != nil {
 			return err
 		}
 
@@ -647,13 +647,13 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Adding Transfer Server Address Allocation IDs: %s", input)
-			if err := updateTransferServer(conn, input); err != nil {
+			if err := updateServer(conn, input); err != nil {
 				return err
 			}
 		}
 
 		if offlineUpdate {
-			if err := startTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := startServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
 		}
@@ -684,7 +684,7 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			for _, user := range page.Users {
-				err := transferUserDelete(conn, d.Id(), aws.StringValue(user.UserName))
+				err := userDelete(conn, d.Id(), aws.StringValue(user.UserName))
 
 				if err != nil {
 					log.Printf("[ERROR] %s", err)
@@ -734,7 +734,7 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandTransferEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetails {
+func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetails {
 	if tfMap == nil {
 		return nil
 	}
@@ -764,7 +764,7 @@ func expandTransferEndpointDetails(tfMap map[string]interface{}) *transfer.Endpo
 	return apiObject
 }
 
-func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupIDs []*string) map[string]interface{} {
+func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupIDs []*string) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -883,7 +883,7 @@ func flattenWorkflowDetail(apiObjects []*transfer.WorkflowDetail) []interface{} 
 	return tfList
 }
 
-func stopTransferServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
+func stopServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
 	input := &transfer.StopServerInput{
 		ServerId: aws.String(serverID),
 	}
@@ -899,7 +899,7 @@ func stopTransferServer(conn *transfer.Transfer, serverID string, timeout time.D
 	return nil
 }
 
-func startTransferServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
+func startServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
 	input := &transfer.StartServerInput{
 		ServerId: aws.String(serverID),
 	}
@@ -915,7 +915,7 @@ func startTransferServer(conn *transfer.Transfer, serverID string, timeout time.
 	return nil
 }
 
-func updateTransferServer(conn *transfer.Transfer, input *transfer.UpdateServerInput) error {
+func updateServer(conn *transfer.Transfer, input *transfer.UpdateServerInput) error {
 	// The Transfer API will return a state of ONLINE for a server before the
 	// underlying VPC Endpoint is available and attempting to update the server
 	// will return an error until that EC2 API process is complete:
