@@ -56,6 +56,37 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowFlow_update(t *testing.T) {
+	var flowOutput appflow.FlowDefinition
+	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+	description := "test description"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFlowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(resourceName, &flowOutput),
+				),
+			},
+			{
+				Config: testAccConfigFlow_update(rSourceName, rDestinationName, rFlowName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAppFlowFlow_disappears(t *testing.T) {
 	var flowOutput appflow.FlowDefinition
 	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -203,6 +234,57 @@ resource "aws_appflow_flow" "test" {
   }
 }
 `, rSourceName, rDestinationName, rFlowName),
+	)
+}
+
+func testAccConfigFlow_update(rSourceName string, rDestinationName string, rFlowName string, description string) string {
+	return acctest.ConfigCompose(
+		testAccConfigFlowBase(rSourceName, rDestinationName),
+		fmt.Sprintf(`
+resource "aws_appflow_flow" "test" {
+  name = %[3]q
+  description = %[4]q
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_source.bucket
+		bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+		s3_output_format_config {
+		  prefix_config {
+		    prefix_type = "PATH"
+		  }
+		}
+      }
+    }
+  }
+
+  task {
+    source_fields = ["testField"]
+	destination_field = "testField"
+    task_type     = "Map"
+
+	connector_operator {
+	  s3 = "NO_OP"
+	}
+  }
+
+  trigger_config {
+    trigger_type = "OnDemand"
+  }
+}
+`, rSourceName, rDestinationName, rFlowName, description),
 	)
 }
 

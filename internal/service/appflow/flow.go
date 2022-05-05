@@ -1328,23 +1328,16 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	update := false
-
 	in := &appflow.UpdateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
-		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").(map[string]interface{})),
-		Tasks:                     expandTasks(d.Get("task").([]interface{})),
-		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").(map[string]interface{})),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
+		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
+		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if d.HasChange("description") {
 		in.Description = aws.String(d.Get("description").(string))
-		update = true
-	}
-
-	if !update {
-		return nil
 	}
 
 	log.Printf("[DEBUG] Updating AppFlow Flow (%s): %#v", d.Id(), in)
@@ -1352,6 +1345,15 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
+	}
+
+	arn := d.Get("arn").(string)
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, arn, o, n); err != nil {
+			return diag.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceFlowRead(ctx, d, meta)
@@ -2440,11 +2442,13 @@ func expandTriggerProperties(tfMap map[string]interface{}) *appflow.TriggerPrope
 
 	a := &appflow.TriggerProperties{}
 
+	// Only return TriggerProperties if nested field is non-empty
 	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 {
 		a.Scheduled = expandScheduledTriggerProperties(v[0].(map[string]interface{}))
+		return a
 	}
 
-	return a
+	return nil
 }
 
 func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.ScheduledTriggerProperties {
