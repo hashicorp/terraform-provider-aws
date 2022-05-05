@@ -380,7 +380,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Logs = expandLogs(engineType, v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
+		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
@@ -1063,7 +1063,7 @@ func flattenLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password 
 	return []interface{}{tfMap}
 }
 
-func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
+func expandLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
