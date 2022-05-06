@@ -19,10 +19,10 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccDomainServiceAccessPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainServiceAccessPolicyConfig(rName),
@@ -45,10 +45,10 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccDomainServiceAccessPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainServiceAccessPolicyConfig(rName),
