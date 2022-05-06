@@ -257,15 +257,15 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 		CheckDestroy: testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRoleConfig_checkMaxSessionDuration(rName, 3599),
+				Config:      testAccRoleConfig_maxSessionDuration(rName, 3599),
 				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
-				Config:      testAccRoleConfig_checkMaxSessionDuration(rName, 43201),
+				Config:      testAccRoleConfig_maxSessionDuration(rName, 43201),
 				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
-				Config: testAccRoleConfig_checkMaxSessionDuration(rName, 3700),
+				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
@@ -277,7 +277,7 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_checkMaxSessionDuration(rName, 3701),
+				Config: testAccRoleConfig_maxSessionDuration(rName, 3701),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3701"),
@@ -309,7 +309,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test creation
 			{
-				Config: testAccRoleConfig_checkPermissionsBoundary(rName, permissionsBoundary1),
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
@@ -318,7 +318,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test update
 			{
-				Config: testAccRoleConfig_checkPermissionsBoundary(rName, permissionsBoundary2),
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
@@ -345,7 +345,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test addition
 			{
-				Config: testAccRoleConfig_checkPermissionsBoundary(rName, permissionsBoundary1),
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
@@ -354,7 +354,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test empty value
 			{
-				Config: testAccRoleConfig_checkPermissionsBoundary(rName, ""),
+				Config: testAccRoleConfig_permissionsBoundary(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
@@ -1033,7 +1033,7 @@ func testAccCheckRolePolicyRemoveInlinePolicy(role *iam.Role, inlinePolicy strin
 	}
 }
 
-func testAccRoleConfig_checkMaxSessionDuration(rName string, maxSessionDuration int) string {
+func testAccRoleConfig_maxSessionDuration(rName string, maxSessionDuration int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1064,7 +1064,7 @@ EOF
 `, rName, maxSessionDuration)
 }
 
-func testAccRoleConfig_checkPermissionsBoundary(rName, permissionsBoundary string) string {
+func testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
