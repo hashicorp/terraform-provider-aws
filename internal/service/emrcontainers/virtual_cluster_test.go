@@ -32,7 +32,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		Providers:         acctest.Providers,
+		ProviderFactories: acctest.ProviderFactories,
 		ExternalProviders: testExternalProviders,
 		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		Providers:         acctest.Providers,
+		ProviderFactories: acctest.ProviderFactories,
 		ExternalProviders: testExternalProviders,
 		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
@@ -120,7 +120,7 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		Providers:         acctest.Providers,
+		ProviderFactories: acctest.ProviderFactories,
 		ExternalProviders: testExternalProviders,
 		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
