@@ -144,7 +144,7 @@ func resourceMapRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
-	d.Set("update_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
