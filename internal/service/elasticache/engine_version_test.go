@@ -377,29 +377,44 @@ func TestNormalizeEngineVersion(t *testing.T) {
 	testcases := []struct {
 		version    string
 		normalized string
+		valid      bool
 	}{
 		{
 			version:    "5.4.3",
 			normalized: "5.4.3",
+			valid:      true,
 		},
 		{
 			version:    "6.2",
 			normalized: "6.2.0",
+			valid:      true,
 		},
 		{
 			version:    "6.x",
 			normalized: fmt.Sprintf("6.%d.0", math.MaxInt),
+			valid:      true,
 		},
 		{
 			version: "5.x",
+			valid:   false,
 		},
 	}
 
 	for _, testcase := range testcases {
 		t.Run(testcase.version, func(t *testing.T) {
-			version := normalizeEngineVersion(testcase.version)
-			if a, e := version, testcase.normalized; a != e {
-				t.Errorf("expected %q, got %q", e, a)
+			version, err := normalizeEngineVersion(testcase.version)
+
+			if testcase.valid {
+				if err != nil {
+					t.Fatalf("expected no error, got %s", err)
+				}
+				if a, e := version.String(), testcase.normalized; a != e {
+					t.Errorf("expected %q, got %q", e, a)
+				}
+			} else {
+				if err == nil {
+					t.Error("expected an error, got none")
+				}
 			}
 		})
 	}

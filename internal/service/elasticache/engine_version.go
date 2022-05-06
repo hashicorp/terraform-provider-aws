@@ -7,8 +7,8 @@ import (
 	"regexp"
 
 	multierror "github.com/hashicorp/go-multierror"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -101,19 +101,26 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 	}
 
 	o, n := diff.GetChange("engine_version")
-	oVersion := normalizeEngineVersion(o.(string))
-	nVersion := normalizeEngineVersion(n.(string))
+	oVersion, err := normalizeEngineVersion(o.(string))
+	if err != nil {
+		return fmt.Errorf("error parsing old engine_version: %w", err)
+	}
+	nVersion, err := normalizeEngineVersion(n.(string))
+	if err != nil {
+		return fmt.Errorf("error parsing new engine_version: %w", err)
+	}
 
-	if verify.SemVerGreaterThan(nVersion, oVersion) || verify.SemVerEqual(nVersion, oVersion) {
+	if nVersion.GreaterThan(oVersion) || nVersion.Equal(oVersion) {
 		return nil
 	}
 
 	return diff.ForceNew("engine_version")
 }
 
-// normalizeEngineVersion can handle a regular 1.2.3 version number or either the  6.x or 6.0 version number used for
+// normalizeEngineVersion returns a github.com/hashicorp/go-version Version
+// that can handle a regular 1.2.3 version number or either the  6.x or 6.0 version number used for
 // ElastiCache Redis version 6 and higher. 6.x will sort to 6.<maxint>
-func normalizeEngineVersion(version string) string {
+func normalizeEngineVersion(version string) (*gversion.Version, error) {
 	if matches := redisVersionPostV6Regexp.FindStringSubmatch(version); matches != nil {
 		if matches[1] != "" {
 			version = fmt.Sprintf("%s.%d", matches[2], math.MaxInt)
@@ -121,5 +128,5 @@ func normalizeEngineVersion(version string) string {
 			version = matches[3]
 		}
 	}
-	return version
+	return gversion.NewVersion(version)
 }
