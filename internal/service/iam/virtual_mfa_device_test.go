@@ -22,10 +22,10 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVirtualMFADeviceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualMFADeviceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualMFADeviceConfig(rName),
@@ -53,10 +53,10 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVirtualMFADeviceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualMFADeviceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualMFADeviceConfigTags1(rName, "key1", "value1"),
@@ -100,10 +100,10 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVirtualMFADeviceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualMFADeviceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualMFADeviceConfig(rName),
