@@ -35,10 +35,10 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, schema),
@@ -80,10 +80,10 @@ func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, schema),
@@ -132,10 +132,10 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_allAttributes(rName, schema1),
