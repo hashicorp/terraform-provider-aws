@@ -10,5 +10,5 @@ const (
 )
 
 const (
-	iamPropagationTimeout = 2 * time.Minute
+	IAMPropagationTimeout = 2 * time.Minute
 )

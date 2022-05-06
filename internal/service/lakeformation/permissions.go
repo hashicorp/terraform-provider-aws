@@ -305,7 +305,7 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GrantPermissions(input)
 		if err != nil {

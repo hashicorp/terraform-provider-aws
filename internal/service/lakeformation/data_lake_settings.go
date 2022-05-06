@@ -135,7 +135,7 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 	input.DataLakeSettings = settings
 
 	var output *lakeformation.PutDataLakeSettingsOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutDataLakeSettings(input)
 		if err != nil {

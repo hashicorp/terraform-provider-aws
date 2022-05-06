@@ -1,4 +1,4 @@
-package iam
+package lambda
 
 import (
 	"encoding/json"
@@ -211,16 +211,4 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 
 	*cs = out
 	return nil
-}
-
-func iamPolicyDecodeConfigStringList(lI []interface{}) interface{} {
-	if len(lI) == 1 {
-		return lI[0].(string)
-	}
-	ret := make([]string, len(lI))
-	for i, vI := range lI {
-		ret[i] = vI.(string)
-	}
-	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
-	return ret
 }

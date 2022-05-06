@@ -793,7 +793,7 @@ func permissionCountForResource(conn *lakeformation.LakeFormation, rs *terraform
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var allPermissions []*lakeformation.PrincipalResourcePermissions
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tflakeformation.IAMPropagationTimeout, func() *resource.RetryError {
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {

@@ -151,12 +151,12 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
 
 	if v, ok := d.GetOk("pgp_key"); ok {
-		encryptionKey, err := RetrieveGPGKey(v.(string))
+		encryptionKey, err := retrieveGPGKey(v.(string))
 		if err != nil {
 			return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %w", username, err)
 		}
 
-		fingerprint, encrypted, err := EncryptValue(encryptionKey, initialPassword, "Password")
+		fingerprint, encrypted, err := encryptValue(encryptionKey, initialPassword, "Password")
 		if err != nil {
 			return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %w", username, err)
 		}
