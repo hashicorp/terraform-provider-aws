@@ -1039,7 +1039,7 @@ func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 // inPlaceEncryptionEnableVersion returns true if, based on version, encryption
 // can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
-	return verify.SemVerLessThan(version, "6.7")
+	return verify.SemVerGreaterThanOrEqual(version, "6.7")
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
