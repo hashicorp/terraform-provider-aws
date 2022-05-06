@@ -83,9 +83,9 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSubnetDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSubnetConfig(),
@@ -127,9 +127,9 @@ func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSubnetDestroyNotFound,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSubnetDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSubnetForceDestroyConfig(),
@@ -153,9 +153,9 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSubnetDestroyNotFound,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSubnetDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSubnetIPv6Config(),
@@ -198,9 +198,9 @@ func testAccDefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSubnetDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSubnetPrivateDnsNameOptionsOnLaunchConfig(rName),
@@ -243,9 +243,9 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetNotFound(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSubnetDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSubnetNotFoundConfig(),
@@ -287,9 +287,9 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetNotFound(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSubnetDestroyNotFound,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSubnetDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSubnetIPv6NativeConfig(),

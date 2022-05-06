@@ -19,10 +19,10 @@ func TestAccIPAMPoolCidr_ipv4Basic(t *testing.T) {
 	cidr_range := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamProvisionedPoolCidrDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamProvisionedPoolCidrDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamProvisionedPoolCidrIpv4(cidr_range),

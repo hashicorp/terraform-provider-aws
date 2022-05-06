@@ -27,9 +27,9 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
@@ -62,9 +62,9 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigEni(rName, description),
@@ -95,9 +95,9 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key1", "value1"),
@@ -144,9 +144,9 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),

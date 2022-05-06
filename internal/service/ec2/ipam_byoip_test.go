@@ -48,10 +48,10 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 	netmaskLength := 56
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: ipv4VPCIpamByoipIPv6DefaultNetmask(p, m, s),
