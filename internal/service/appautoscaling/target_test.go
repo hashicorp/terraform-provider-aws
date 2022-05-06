@@ -22,10 +22,10 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig(randClusterName),
@@ -62,10 +62,10 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 	resourceName := "aws_appautoscaling_target.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig(rName),
@@ -84,10 +84,10 @@ func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetSpotFleetRequestConfig(validUntil),
@@ -112,10 +112,10 @@ func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetEMRClusterConfig(rInt),
@@ -143,10 +143,10 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTarget_multipleTargets(tableName),
@@ -177,10 +177,10 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTarget_optionalRoleARN(tableName),
