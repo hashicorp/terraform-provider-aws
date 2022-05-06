@@ -185,8 +185,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		input.CallAs = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		dt := expandDeploymentTargets(v.([]interface{}))
+	if dt := expandDeploymentTargets(d); dt != nil && len(dt.OrganizationalUnitIds) > 0 {
 		// temporarily set the accountId to the DeploymentTarget IDs
 		// to later inform the Read CRUD operation if the true accountID needs to be determined
 		accountID = strings.Join(aws.StringValueSlice(dt.OrganizationalUnitIds), "/")
@@ -279,12 +278,9 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("region", region)
 	d.Set("stack_set_name", stackSetName)
 
-	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if dt := expandDeploymentTargets(d); dt != nil && len(dt.OrganizationalUnitIds) > 0 {
 		// Process this as a deployment target instance
-		orgIDs := make([]string, 0, len(v.([]interface{})))
-		for _, orgID := range expandDeploymentTargets(v.([]interface{})).OrganizationalUnitIds {
-			orgIDs = append(orgIDs, *orgID)
-		}
+		orgIDs := aws.StringValueSlice(dt.OrganizationalUnitIds)
 		if !accountIDIsDT {
 			accountID = strings.Join(orgIDs, "/")
 			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountID, region))
@@ -299,8 +295,12 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 		accountIDs := make([]*string, 0, len(summaries))
 		stackIDs := make([]*string, 0, len(summaries))
 		for _, si := range summaries {
-			accountIDs = append(accountIDs, si.Account)
-			stackIDs = append(stackIDs, si.StackId)
+			if si.Account != nil && len(*si.Account) > 0 {
+				accountIDs = append(accountIDs, si.Account)
+			}
+			if si.StackId != nil && len(*si.StackId) > 0 {
+				stackIDs = append(stackIDs, si.StackId)
+			}
 		}
 		d.Set("account_ids", accountIDs)
 		d.Set("stack_ids", stackIDs)
@@ -360,10 +360,10 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			input.CallAs = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if dt := expandDeploymentTargets(d); dt != nil && len(dt.OrganizationalUnitIds) > 0 {
 			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
 			input.Accounts = nil
-			input.DeploymentTargets = expandDeploymentTargets(v.([]interface{}))
+			input.DeploymentTargets = dt
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -411,13 +411,11 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 		input.CallAs = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("organizational_unit_id"); ok {
+	if dt := expandDeploymentTargets(d); dt != nil && len(dt.OrganizationalUnitIds) > 0 {
 		// For instances associated with stack sets that use a self-managed permission model,
 		// the organizational unit must be provided;
 		input.Accounts = nil
-		input.DeploymentTargets = &cloudformation.DeploymentTargets{
-			OrganizationalUnitIds: aws.StringSlice([]string{v.(string)}),
-		}
+		input.DeploymentTargets = dt
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
@@ -438,7 +436,13 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func expandDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets {
+func expandDeploymentTargets(d *schema.ResourceData) *cloudformation.DeploymentTargets {
+	v, ok := d.GetOk("deployment_targets")
+	if !ok {
+		return nil
+	}
+	l := v.([]interface{})
+
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -451,8 +455,8 @@ func expandDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets 
 
 	dt := &cloudformation.DeploymentTargets{}
 
-	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
-		dt.OrganizationalUnitIds = flex.ExpandStringSet(v)
+	if ou_id, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && ou_id.Len() > 0 {
+		dt.OrganizationalUnitIds = flex.ExpandStringSet(ou_id)
 	}
 
 	return dt
