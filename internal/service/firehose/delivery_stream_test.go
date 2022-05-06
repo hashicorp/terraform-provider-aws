@@ -350,7 +350,7 @@ func TestAccFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
 		CheckDestroy: testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_s3KinesisStreamSource(rName),
+				Config: testAccDeliveryStreamConfig_s3StreamSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -1035,7 +1035,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_kinesisStreamSource(t *testing.T) 
 		CheckDestroy: testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_extendedS3_KinesisStreamSource(rName),
+				Config: testAccDeliveryStreamConfig_ExtendedS3_streamSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -2318,7 +2318,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_s3KinesisStreamSource(rName string) string {
+func testAccDeliveryStreamConfig_s3StreamSource(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseConfig(rName),
 		testAccStreamSourceConfig(rName),
@@ -2395,7 +2395,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_extendedS3_KinesisStreamSource(rName string) string {
+func testAccDeliveryStreamConfig_ExtendedS3_streamSource(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseConfig(rName),
 		testAccStreamSourceConfig(rName),
