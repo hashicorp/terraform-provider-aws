@@ -28,7 +28,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckContainerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerPolicyConfig(rName),
+				Config: testAccContainerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
@@ -41,7 +41,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMediaStoreContainerPolicyConfig(rName),
+				Config: testAccContainerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
@@ -102,7 +102,7 @@ func testAccCheckContainerPolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccMediaStoreContainerPolicyConfig(rName string) string {
+func testAccContainerPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
