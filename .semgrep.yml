@@ -600,6 +600,8 @@ rules:
     paths:
       include:
         - internal/
+      exclude:
+        - internal/service/route53domains/registered_domain_test.go
     patterns:
       - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
       - pattern-not-regex: 'no-reply@hashicorp\.com'
