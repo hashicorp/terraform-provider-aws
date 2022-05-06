@@ -13,5 +13,5 @@ const (
 )
 
 const (
-	propagationTimeout = 2 * time.Minute
+	propagationTimeout = 5 * time.Minute
 )
