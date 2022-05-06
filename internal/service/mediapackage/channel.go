@@ -119,7 +119,7 @@ func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("channel_id", resp.Id)
 	d.Set("description", resp.Description)
 
-	if err := d.Set("hls_ingest", flattenMediaPackageHLSIngest(resp.HlsIngest)); err != nil {
+	if err := d.Set("hls_ingest", flattenHLSIngest(resp.HlsIngest)); err != nil {
 		return fmt.Errorf("error setting hls_ingest: %s", err)
 	}
 
@@ -199,7 +199,7 @@ func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenMediaPackageHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
+func flattenHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
 	if h.IngestEndpoints == nil {
 		return []map[string]interface{}{
 			{"ingest_endpoints": []map[string]interface{}{}},
