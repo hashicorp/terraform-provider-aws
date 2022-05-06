@@ -16,7 +16,7 @@ import (
 
 func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_mysql_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
@@ -25,10 +25,10 @@ func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 		CheckDestroy: testAccCheckMySQLLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMySQLLayerVPCCreateConfig(stackName),
+				Config: testAccMySQLLayerVPCCreateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "name", stackName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName)),
 			},
 		},
 	})
@@ -36,7 +36,7 @@ func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 
 func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_mysql_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
@@ -45,7 +45,7 @@ func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 		CheckDestroy: testAccCheckMySQLLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMySQLLayerTags1Config(stackName, "key1", "value1"),
+				Config: testAccMySQLLayerTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -53,7 +53,7 @@ func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMySQLLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMySQLLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -62,7 +62,7 @@ func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMySQLLayerTags1Config(stackName, "key2", "value2"),
+				Config: testAccMySQLLayerTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -77,29 +77,31 @@ func testAccCheckMySQLLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_mysql_layer", s)
 }
 
-func testAccMySQLLayerVPCCreateConfig(name string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccMySQLLayerVPCCreateConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_mysql_layer" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-  name     = "%s"
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-layer1.id,
     aws_security_group.tf-ops-acc-layer2.id,
   ]
 }
-`, name)
+`, rName))
 }
 
-func testAccMySQLLayerTags1Config(name, tagKey1, tagValue1 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccMySQLLayerTags1Config(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_mysql_layer" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-  name     = "%s"
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-layer1.id,
@@ -110,16 +112,17 @@ resource "aws_opsworks_mysql_layer" "test" {
     %[2]q = %[3]q
   }
 }
-`, name, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccMySQLLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccMySQLLayerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_mysql_layer" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-  name     = "%s"
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-layer1.id,
@@ -131,5 +134,5 @@ resource "aws_opsworks_mysql_layer" "test" {
     %[4]q = %[5]q
   }
 }
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

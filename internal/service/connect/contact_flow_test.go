@@ -20,7 +20,7 @@ func TestAccConnectContactFlow_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccContactFlow_basic,
 		"filename":   testAccContactFlow_filename,
-		"disappears": testAccContactFlow_disappears_ConnectInstance,
+		"disappears": testAccContactFlow_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -93,7 +93,7 @@ func testAccContactFlow_filename(t *testing.T) {
 		CheckDestroy: testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "testdata/connect_contact_flow.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -115,7 +115,7 @@ func testAccContactFlow_filename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "testdata/connect_contact_flow_updated.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -131,14 +131,12 @@ func testAccContactFlow_filename(t *testing.T) {
 	})
 }
 
-// Can't delete an contact flow. Test deletion of entire connect instance
-func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
+func testAccContactFlow_disappears(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
-	instanceResourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -150,7 +148,7 @@ func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
 				Config: testAccContactFlowBasicConfig(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

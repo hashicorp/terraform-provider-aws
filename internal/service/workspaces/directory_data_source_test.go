@@ -20,7 +20,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},

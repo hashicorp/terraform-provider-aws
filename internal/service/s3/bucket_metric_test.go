@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -284,7 +284,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					resource.TestCheckNoResourceAttr(resourceName, "filter"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", metricName),
 				),
 			},
@@ -580,7 +580,7 @@ func testAccCheckBucketMetricDestroy(s *terraform.State) error {
 			log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
 			output, err := conn.GetBucketMetricsConfiguration(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 					return nil
 				}
 				return resource.NonRetryableError(err)
@@ -635,8 +635,12 @@ func testAccCheckBucketMetricsExistsConfig(n string, res *s3.MetricsConfiguratio
 func testAccBucketMetricsBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  acl    = "public-read"
   bucket = "%s"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
 }
 `, name)
 }

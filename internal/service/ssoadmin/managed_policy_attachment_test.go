@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,7 +27,7 @@ func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					//lintignore:AWSAT001
@@ -58,13 +58,13 @@ func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 				),
 			},
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentConfig_forceNew(rName),
+				Config: testAccManagedPolicyAttachmentConfig_forceNew(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					//lintignore:AWSAT001
@@ -94,7 +94,7 @@ func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
@@ -117,7 +117,7 @@ func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.
 		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
@@ -141,13 +141,13 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 				),
 			},
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentConfig_multiple(rName),
+				Config: testAccManagedPolicyAttachmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					testAccCheckManagedPolicyAttachmentExists(otherResourceName),
@@ -234,7 +234,7 @@ func testAccCheckManagedPolicyAttachmentExists(resourceName string) resource.Tes
 	}
 }
 
-func testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName string) string {
+func testAccManagedPolicyAttachmentBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -247,9 +247,9 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName string) string {
+func testAccManagedPolicyAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName),
+		testAccManagedPolicyAttachmentBaseConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
@@ -259,9 +259,9 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 `)
 }
 
-func testAccSSOAdminManagedPolicyAttachmentConfig_forceNew(rName string) string {
+func testAccManagedPolicyAttachmentConfig_forceNew(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName),
+		testAccManagedPolicyAttachmentBaseConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
@@ -271,9 +271,9 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 `)
 }
 
-func testAccSSOAdminManagedPolicyAttachmentConfig_multiple(rName string) string {
+func testAccManagedPolicyAttachmentConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+		testAccManagedPolicyAttachmentConfig_basic(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "other" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]

@@ -20,7 +20,7 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		CheckDestroy: testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneIDDataSourceConfig(fqdn),
@@ -46,7 +46,7 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		CheckDestroy: testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneNameDataSourceConfig(fqdn),
@@ -72,7 +72,7 @@ func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		CheckDestroy: testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneTagsPrivateDataSourceConfig(fqdn, rInt),
@@ -96,7 +96,7 @@ func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		CheckDestroy: testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneVPCDataSourceConfig(rInt),
@@ -120,7 +120,7 @@ func TestAccRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("servicediscovery", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		CheckDestroy: testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneServiceDiscoveryDataSourceConfig(rInt),

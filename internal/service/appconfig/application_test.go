@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,7 +24,7 @@ func TestAccAppConfigApplication_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationNameConfig(rName),
@@ -52,7 +52,7 @@ func TestAccAppConfigApplication_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationNameConfig(rName),
@@ -75,7 +75,7 @@ func TestAccAppConfigApplication_updateName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationNameConfig(rName),
@@ -108,7 +108,7 @@ func TestAccAppConfigApplication_updateDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDescriptionConfig(rName, rName),
@@ -153,7 +153,7 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationTags1(rName, "key1", "value1"),
@@ -189,7 +189,7 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigApplicationDestroy(s *terraform.State) error {
+func testAccCheckApplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {

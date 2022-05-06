@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func TestAccKMSKey_basic(t *testing.T) {
@@ -33,7 +33,59 @@ func TestAccKMSKey_basic(t *testing.T) {
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+		},
+	})
+}
+
+func TestAccKMSKey_disappears(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyNameConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccKMSKey_multiRegion(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKey_multiRegion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
 				),
 			},
 			{
@@ -69,34 +121,11 @@ func TestAccKMSKey_asymmetricKey(t *testing.T) {
 	})
 }
 
-func TestAccKMSKey_disappears(t *testing.T) {
+func TestAccKMSKey_Policy_basic(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKeyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeyNameConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceKey(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccKMSKey_policy(t *testing.T) {
-	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kms_key.test"
-	expectedPolicyText := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
+	expectedPolicyText := fmt.Sprintf(`{"Version":"2012-10-17","Id":%[1]q,"Statement":[{"Sid":"Enable IAM User Permissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -127,7 +156,7 @@ func TestAccKMSKey_policy(t *testing.T) {
 	})
 }
 
-func TestAccKMSKey_policyBypass(t *testing.T) {
+func TestAccKMSKey_Policy_bypass(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
@@ -159,7 +188,7 @@ func TestAccKMSKey_policyBypass(t *testing.T) {
 	})
 }
 
-func TestAccKMSKey_policyBypassUpdate(t *testing.T) {
+func TestAccKMSKey_Policy_bypassUpdate(t *testing.T) {
 	var before, after kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
@@ -215,6 +244,49 @@ func TestAccKMSKey_Policy_iamRole(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11801
+func TestAccKMSKey_Policy_iamRoleOrder(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPolicyIAMMultiRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+			},
+			{
+				Config: testAccKeyPolicyIAMMultiRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccKeyPolicyIAMMultiRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccKeyPolicyIAMMultiRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646
 func TestAccKMSKey_Policy_iamServiceLinkedRole(t *testing.T) {
 	var key kms.KeyMetadata
@@ -243,6 +315,27 @@ func TestAccKMSKey_Policy_iamServiceLinkedRole(t *testing.T) {
 	})
 }
 
+func TestAccKMSKey_Policy_booleanCondition(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPolicyBooleanConditionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKMSKey_isEnabled(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -259,8 +352,7 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					testAccCheckKeyIsEnabled(&key1, true),
-					resource.TestCheckResourceAttr("aws_kms_key.test", "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
 				),
 			},
 			{
@@ -274,7 +366,6 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					testAccCheckKeyIsEnabled(&key2, false),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "false"),
 				),
 			},
@@ -283,7 +374,6 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					testAccCheckKeyIsEnabled(&key3, true),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
 				),
 			},
@@ -358,7 +448,7 @@ func testAccCheckKeyHasPolicy(name string, expectedPolicyText string) resource.T
 			return err
 		}
 
-		actualPolicyText := *out.Policy
+		actualPolicyText := aws.StringValue(out.Policy)
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
@@ -424,16 +514,6 @@ func testAccCheckKeyExists(name string, key *kms.KeyMetadata) resource.TestCheck
 	}
 }
 
-func testAccCheckKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if got, want := aws.BoolValue(key.Enabled), isEnabled; got != want {
-			return fmt.Errorf("Expected key %q to have is_enabled=%t, given %t", aws.StringValue(key.Arn), want, got)
-		}
-
-		return nil
-	}
-}
-
 func testAccKeyConfig() string {
 	return `
 resource "aws_kms_key" "test" {}
@@ -445,6 +525,18 @@ func testAccKeyNameConfig(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+}
+`, rName)
+}
+
+func testAccKey_multiRegion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = false
+  is_enabled              = true
+  multi_region            = true
 }
 `, rName)
 }
@@ -467,23 +559,19 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [{
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "kms:*"
+      Resource = "*"
+    }]
+    Version = "2012-10-17"
+  })
 }
 `, rName)
 }
@@ -498,32 +586,30 @@ resource "aws_kms_key" "test" {
 
   bypass_policy_lockout_safety_check = %[2]t
 
-  policy = <<-POLICY
-    {
-      "Version": "2012-10-17",
-      "Id": "kms-tf-1",
-      "Statement": [
-        {
-          "Sid": "Enable IAM User Permissions",
-          "Effect": "Allow",
-          "Principal": {
-            "AWS": "${data.aws_caller_identity.current.arn}"
-          },
-          "Action": [
-            "kms:CreateKey",
-            "kms:DescribeKey",
-            "kms:ScheduleKeyDeletion",
-            "kms:Describe*",
-            "kms:Get*",
-            "kms:List*",
-            "kms:TagResource",
-            "kms:UntagResource"
-          ],
-          "Resource": "*"
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [
+      {
+        Action = [
+          "kms:CreateKey",
+          "kms:DescribeKey",
+          "kms:ScheduleKeyDeletion",
+          "kms:Describe*",
+          "kms:Get*",
+          "kms:List*",
+          "kms:TagResource",
+          "kms:UntagResource",
+        ]
+        Effect = "Allow"
+        Principal = {
+          AWS = data.aws_caller_identity.current.arn
         }
-      ]
-    }
-  POLICY
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
 }
 `, rName, bypassFlag)
 }
@@ -552,7 +638,7 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   policy = jsonencode({
-    Id = "kms-tf-1"
+    Id = %[1]q
     Statement = [
       {
         Action = "kms:*"
@@ -574,7 +660,7 @@ resource "aws_kms_key" "test" {
         ]
         Effect = "Allow"
         Principal = {
-          AWS = [aws_iam_role.test.arn]
+          AWS = aws_iam_role.test.arn
         }
 
         Resource = "*"
@@ -583,6 +669,131 @@ resource "aws_kms_key" "test" {
     ]
     Version = "2012-10-17"
   })
+}
+`, rName)
+}
+
+func testAccKeyPolicyIAMMultiRoleConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test1" {
+  name = "%[1]s-sultan"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-shepard"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_iam_role" "test3" {
+  name = "%[1]s-tritonal"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_iam_role" "test4" {
+  name = "%[1]s-artlec"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_iam_role" "test5" {
+  name = "%[1]s-cazzette"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_iam_policy_document" "test" {
+  policy_id = %[1]q
+  statement {
+    actions = [
+      "kms:*",
+    ]
+    effect = "Allow"
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+    ]
+    effect = "Allow"
+    principals {
+      identifiers = [
+        aws_iam_role.test2.arn,
+        aws_iam_role.test1.arn,
+        aws_iam_role.test4.arn,
+        aws_iam_role.test3.arn,
+        aws_iam_role.test5.arn,
+      ]
+      type = "AWS"
+    }
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = data.aws_iam_policy_document.test.json
 }
 `, rName)
 }
@@ -601,7 +812,7 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   policy = jsonencode({
-    Id = "kms-tf-1"
+    Id = %[1]q
     Statement = [
       {
         Action = "kms:*"
@@ -623,11 +834,63 @@ resource "aws_kms_key" "test" {
         ]
         Effect = "Allow"
         Principal = {
-          AWS = [aws_iam_service_linked_role.test.arn]
+          AWS = aws_iam_service_linked_role.test.arn
         }
 
         Resource = "*"
         Sid      = "Enable IAM User Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccKeyPolicyBooleanConditionConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+      {
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+        ]
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+
+        Condition = {
+          Bool = {
+            "kms:GrantIsForAWSResource" = true
+          }
+        }
       },
     ]
     Version = "2012-10-17"

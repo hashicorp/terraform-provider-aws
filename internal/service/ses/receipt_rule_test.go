@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -26,11 +26,11 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
@@ -72,11 +72,11 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleS3ActionConfig(rName),
@@ -109,11 +109,11 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleSNSActionConfig(rName),
@@ -146,11 +146,11 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleSNSActionEncodingConfig(rName),
@@ -183,11 +183,11 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleLambdaActionConfig(rName),
@@ -220,11 +220,11 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleStopActionConfig(rName),
@@ -256,11 +256,11 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleOrderConfig(rName),
@@ -289,11 +289,11 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleActionsConfig(rName),
@@ -332,11 +332,11 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		CheckDestroy: testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
@@ -358,7 +358,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESReceiptRuleDestroy(s *terraform.State) error {
+func testAccCheckReceiptRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -428,7 +428,7 @@ func testAccReceiptRuleImportStateIdFunc(resourceName string) resource.ImportSta
 	}
 }
 
-func testAccPreCheckSESReceiptRule(t *testing.T) {
+func testAccPreCheckReceiptRule(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	input := &ses.DescribeReceiptRuleInput{
@@ -442,7 +442,7 @@ func testAccPreCheckSESReceiptRule(t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if tfawserr.ErrMessageContains(err, "RuleSetDoesNotExist", "") {
+	if tfawserr.ErrCodeEquals(err, "RuleSetDoesNotExist") {
 		return
 	}
 
@@ -476,8 +476,12 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "public-read-write"
   force_destroy = "true"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read-write"
 }
 
 resource "aws_ses_receipt_rule" "test" {
@@ -489,7 +493,7 @@ resource "aws_ses_receipt_rule" "test" {
   tls_policy    = "Require"
 
   s3_action {
-    bucket_name = aws_s3_bucket.test.id
+    bucket_name = aws_s3_bucket_acl.test.bucket
     position    = 1
   }
 }

@@ -16,9 +16,10 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource":                 testAccOrganizationDataSource_basic,
 		},
 		"Account": {
-			"basic":    testAccAccount_basic,
-			"ParentId": testAccAccount_ParentID,
-			"Tags":     testAccAccount_Tags,
+			"basic":           testAccAccount_basic,
+			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
+			"ParentId":        testAccAccount_ParentID,
+			"Tags":            testAccAccount_Tags,
 		},
 		"OrganizationalUnit": {
 			"basic":      testAccOrganizationalUnit_basic,
@@ -49,6 +50,9 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"DelegatedAdministrator": {
 			"basic":      testAccDelegatedAdministrator_basic,
 			"disappears": testAccDelegatedAdministrator_disappears,
+		},
+		"ResourceTags": {
+			"basic": testAccResourceTagsDataSource_basic,
 		},
 	}
 

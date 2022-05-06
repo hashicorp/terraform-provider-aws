@@ -3,8 +3,9 @@ package kms
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func FindAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
@@ -57,16 +58,13 @@ func FindKeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	}
 
 	if output == nil || output.KeyMetadata == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	keyMetadata := output.KeyMetadata
 
-	// Once the CMK is in the pending deletion state Terraform considers it logically deleted.
-	if state := aws.StringValue(keyMetadata.KeyState); state == kms.KeyStatePendingDeletion {
+	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
+	if state := aws.StringValue(keyMetadata.KeyState); state == kms.KeyStatePendingDeletion || state == kms.KeyStatePendingReplicaDeletion {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
@@ -96,10 +94,7 @@ func FindKeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) 
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Policy, nil
@@ -124,10 +119,7 @@ func FindKeyRotationEnabledByKeyID(conn *kms.KMS, keyID string) (*bool, error) {
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.KeyRotationEnabled, nil

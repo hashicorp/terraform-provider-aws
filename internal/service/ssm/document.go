@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,10 +39,13 @@ func ResourceDocument() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringLenBetween(3, 128),
+				),
 			},
 			"attachments_source": {
 				Type:     schema.TypeList,
@@ -59,7 +62,7 @@ func ResourceDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 								validation.StringLenBetween(3, 128),
 							),
 						},
@@ -217,7 +220,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok {
-		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+		docInput.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
@@ -264,7 +267,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeDocumentOutput, err := conn.DescribeDocument(describeDocumentInput)
 
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
 		log.Printf("[WARN] SSM Document not found so removing from state")
 		d.SetId("")
 		return nil
@@ -339,16 +342,16 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 		param := make(map[string]interface{})
 
 		if dp.DefaultValue != nil {
-			param["default_value"] = *dp.DefaultValue
+			param["default_value"] = aws.StringValue(dp.DefaultValue)
 		}
 		if dp.Description != nil {
-			param["description"] = *dp.Description
+			param["description"] = aws.StringValue(dp.Description)
 		}
 		if dp.Name != nil {
-			param["name"] = *dp.Name
+			param["name"] = aws.StringValue(dp.Name)
 		}
 		if dp.Type != nil {
-			param["type"] = *dp.Type
+			param["type"] = aws.StringValue(dp.Type)
 		}
 		params = append(params, param)
 	}
@@ -443,7 +446,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = waitDocumentDeleted(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SSM Document (%s) to be Deleted: %w", d.Id(), err)
@@ -452,7 +455,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
+func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 	if len(a) == 0 {
 		return nil
 	}
@@ -546,16 +549,13 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 		return nil, fmt.Errorf("Error setting permissions for SSM document: %s", err)
 	}
 
-	var account_ids = make([]string, len(resp.AccountIds))
-	for i := 0; i < len(resp.AccountIds); i++ {
-		account_ids[i] = *resp.AccountIds[i]
-	}
-
 	ids := ""
-	if len(account_ids) == 1 {
-		ids = account_ids[0]
-	} else if len(account_ids) > 1 {
-		ids = strings.Join(account_ids, ",")
+	accountIds := aws.StringValueSlice(resp.AccountIds)
+
+	if len(accountIds) == 1 {
+		ids = accountIds[0]
+	} else if len(accountIds) > 1 {
+		ids = strings.Join(accountIds, ",")
 	}
 
 	if ids == "" {
@@ -673,8 +673,8 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 		updateDocInput.VersionName = aws.String(v.(string))
 	}
 
-	if d.HasChange("attachments_source") {
-		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
+	if v, ok := d.GetOk("attachments_source"); ok {
+		updateDocInput.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	newDefaultVersion := d.Get("default_version").(string)
@@ -682,7 +682,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	updated, err := conn.UpdateDocument(updateDocInput)
 
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDuplicateDocumentContent, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDuplicateDocumentContent) {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 
@@ -691,7 +691,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error updating SSM document: %s", err)
 	} else {
 		log.Printf("[INFO] Updating the default version to the new version %s: %s", newDefaultVersion, d.Id())
-		newDefaultVersion = *updated.DocumentDescription.DocumentVersion
+		newDefaultVersion = aws.StringValue(updated.DocumentDescription.DocumentVersion)
 	}
 
 	updateDefaultInput := &ssm.UpdateDocumentDefaultVersionInput{

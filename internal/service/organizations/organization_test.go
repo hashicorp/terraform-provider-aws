@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -295,7 +295,7 @@ func testAccCheckOrganizationDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeOrganization(params)
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 			return nil
 		}
 
@@ -413,14 +413,14 @@ func TestFlattenOrganizationsRoots(t *testing.T) {
 			continue
 		}
 		if types, ok := result[i]["policy_types"].([]map[string]interface{}); ok {
-			testFlattenOrganizationsRootPolicyTypes(t, i, types, r.PolicyTypes)
+			testFlattenRootPolicyTypes(t, i, types, r.PolicyTypes)
 			continue
 		}
 		t.Fatalf(`result[%d]["policy_types"] could not be converted to []map[string]interface{}`, i)
 	}
 }
 
-func testFlattenOrganizationsRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
+func testFlattenRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
 	if len(result) != len(types) {
 		t.Fatalf(`expected result[%d]["policy_types"] to have %d elements, got %d`, index, len(types), len(result))
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -304,7 +304,7 @@ func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 			UserName:  u,
 			PolicyArn: aws.String(arn),
 		})
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -319,7 +319,7 @@ func detachPolicyFromRoles(conn *iam.IAM, roles []*string, arn string) error {
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
 		})
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -334,7 +334,7 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 			GroupName: g,
 			PolicyArn: aws.String(arn),
 		})
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {

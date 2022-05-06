@@ -215,7 +215,7 @@ resource "aws_lb_target_group" "test" {
   }
 
   tags = {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "TestAccAutoScalingAttachment_albTargetGroup"
   }
 }
 
@@ -244,7 +244,7 @@ resource "aws_lb_target_group" "another_test" {
   }
 
   tags = {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "TestAccAutoScalingAttachment_albTargetGroup"
   }
 }
 

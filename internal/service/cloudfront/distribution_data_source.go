@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +19,11 @@ func DataSourceDistribution() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"aliases": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -80,8 +86,17 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 		d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 		d.Set("status", distribution.Status)
+		region := meta.(*conns.AWSClient).Region
+		if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
+			d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+		} else {
+			d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+		}
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
+			if aliases := distributionConfig.Aliases; aliases != nil {
+				d.Set("aliases", aliases.Items)
+			}
 		}
 	}
 	tags, err := ListTags(conn, d.Get("arn").(string))
@@ -92,6 +107,5 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
 	return nil
 }

@@ -71,6 +71,7 @@ func WaitDBClusterAvailable(conn *neptune.Neptune, id string, timeout time.Durat
 			"preparing-data-migration",
 			"migrating",
 			"configuring-iam-database-auth",
+			"upgrading",
 		},
 		Target:     []string{"available"},
 		Refresh:    StatusCluster(conn, id),

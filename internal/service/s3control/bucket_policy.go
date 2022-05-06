@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,6 +38,10 @@ func ResourceBucketPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -47,12 +52,18 @@ func resourceBucketPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	bucket := d.Get("bucket").(string)
 
-	input := &s3control.PutBucketPolicyInput{
-		Bucket: aws.String(bucket),
-		Policy: aws.String(d.Get("policy").(string)),
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
 
-	_, err := conn.PutBucketPolicy(input)
+	input := &s3control.PutBucketPolicyInput{
+		Bucket: aws.String(bucket),
+		Policy: aws.String(policy),
+	}
+
+	_, err = conn.PutBucketPolicy(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating S3 Control Bucket Policy (%s): %w", bucket, err)
@@ -110,7 +121,18 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("bucket", d.Id())
-	d.Set("policy", output.Policy)
+
+	if output.Policy != nil {
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
+
+		if err != nil {
+			return err
+		}
+
+		d.Set("policy", policyToSet)
+	} else {
+		d.Set("policy", "")
+	}
 
 	return nil
 }
@@ -118,12 +140,18 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceBucketPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	input := &s3control.PutBucketPolicyInput{
-		Bucket: aws.String(d.Id()),
-		Policy: aws.String(d.Get("policy").(string)),
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
 
-	_, err := conn.PutBucketPolicy(input)
+	input := &s3control.PutBucketPolicyInput{
+		Bucket: aws.String(d.Id()),
+		Policy: aws.String(policy),
+	}
+
+	_, err = conn.PutBucketPolicy(input)
 
 	if err != nil {
 		return fmt.Errorf("error updating S3 Control Bucket Policy (%s): %w", d.Id(), err)

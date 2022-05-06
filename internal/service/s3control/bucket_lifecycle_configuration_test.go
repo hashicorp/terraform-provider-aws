@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -311,7 +311,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 			// does not get populated from the XML response. Reference:
 			// https://github.com/aws/aws-sdk-go/issues/3591
 			// {
-			// 	Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+			// 	Config: testAccBucketLifecycleConfigurationConfig_Rule_Filter_tags2(rName, "key1", "value1updated", "key2", "value2"),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckBucketLifecycleConfigurationExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -672,7 +672,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 }
 
 // See TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags note about XML handling bug.
-// func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+// func testAccBucketLifecycleConfigurationConfig_Rule_Filter_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 // 	return fmt.Sprintf(`
 // data "aws_outposts_outposts" "test" {}
 

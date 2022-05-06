@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCEndpointServiceDataSource_gateway(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,7 +23,7 @@ func TestAccEC2VPCEndpointServiceDataSource_gateway(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceGatewayDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "dynamodb"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", "data.aws_availability_zones.available", "names.#"),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
@@ -39,7 +40,7 @@ func TestAccEC2VPCEndpointServiceDataSource_gateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_interface(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +51,7 @@ func TestAccEC2VPCEndpointServiceDataSource_interface(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceInterfaceDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
@@ -66,7 +67,7 @@ func TestAccEC2VPCEndpointServiceDataSource_interface(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_custom(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -93,7 +94,7 @@ func TestAccEC2VPCEndpointServiceDataSource_custom(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -120,7 +121,7 @@ func TestAccEC2VPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -147,7 +148,7 @@ func TestAccEC2VPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +159,7 @@ func TestAccEC2VPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_ServiceType("s3", "Gateway"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "s3"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "s3"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 				),
 			},
@@ -166,7 +167,7 @@ func TestAccEC2VPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,12 +178,23 @@ func TestAccEC2VPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) 
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_ServiceType("ec2", "Interface"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 				),
 			},
 		},
 	})
+}
+
+// testAccCheckResourceAttrRegionalReverseDNSService ensures the Terraform state exactly matches a service reverse DNS hostname with region and partition DNS suffix
+//
+// For example: com.amazonaws.us-west-2.s3
+func testAccCheckResourceAttrRegionalReverseDNSService(resourceName, attributeName, serviceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		reverseDns := fmt.Sprintf("%s.%s.%s", acctest.PartitionReverseDNSPrefix(), acctest.Region(), serviceName)
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, reverseDns)(s)
+	}
 }
 
 const testAccVPCEndpointServiceGatewayDataSourceConfig = `

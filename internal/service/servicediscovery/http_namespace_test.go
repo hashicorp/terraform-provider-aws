@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -31,7 +31,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfig(rName),
+				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
@@ -65,7 +65,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfig(rName),
+				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourceHTTPNamespace(), resourceName),
@@ -91,7 +91,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfigDescription(rName, "test"),
+				Config: testAccHTTPNamespaceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -121,7 +121,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfigTags1(rName, "key1", "value1"),
+				Config: testAccHTTPNamespaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -134,7 +134,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccHTTPNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -143,7 +143,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfigTags1(rName, "key2", "value2"),
+				Config: testAccHTTPNamespaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -168,7 +168,7 @@ func testAccCheckHTTPNamespaceDestroy(s *terraform.State) error {
 
 		_, err := conn.GetNamespace(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
 				continue
 			}
 			return err
@@ -195,7 +195,7 @@ func testAccCheckHTTPNamespaceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccServiceDiscoveryHttpNamespaceConfig(rName string) string {
+func testAccHTTPNamespaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   name = %[1]q
@@ -203,7 +203,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 `, rName)
 }
 
-func testAccServiceDiscoveryHttpNamespaceConfigDescription(rName, description string) string {
+func testAccHTTPNamespaceConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   description = %[1]q
@@ -212,7 +212,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 `, description, rName)
 }
 
-func testAccServiceDiscoveryHttpNamespaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccHTTPNamespaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   name = %[1]q
@@ -224,7 +224,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccServiceDiscoveryHttpNamespaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccHTTPNamespaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   name = %[1]q

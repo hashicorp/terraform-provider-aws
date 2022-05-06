@@ -86,7 +86,7 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccWorkspacesBundlePreCheck(t)
+			testAccBundlePreCheck(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  acctest.Providers,
@@ -101,7 +101,7 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	})
 }
 
-func testAccWorkspacesBundlePreCheck(t *testing.T) {
+func testAccBundlePreCheck(t *testing.T) {
 	if os.Getenv("AWS_WORKSPACES_BUNDLE_NAME") == "" {
 		t.Skip("AWS_WORKSPACES_BUNDLE_NAME env var must be set for AWS WorkSpaces private bundle acceptance test. This is required until AWS provides bundle creation API.")
 	}

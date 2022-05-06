@@ -7,31 +7,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// getInstanceTagValue returns instance tag value by name
-func getInstanceTagValue(conn *ec2.EC2, instanceId string, tagKey string) (*string, error) {
-	tagsResp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(instanceId)},
-			},
-			{
-				Name:   aws.String("key"),
-				Values: []*string{aws.String(tagKey)},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(tagsResp.Tags) != 1 {
-		return nil, nil
-	}
-
-	return tagsResp.Tags[0].Value, nil
-}
-
 // ec2TagSpecificationsFromKeyValueTags returns the tag specifications for the given KeyValueTags object and resource type.
 func ec2TagSpecificationsFromKeyValueTags(tags tftags.KeyValueTags, t string) []*ec2.TagSpecification {
 	if len(tags) == 0 {

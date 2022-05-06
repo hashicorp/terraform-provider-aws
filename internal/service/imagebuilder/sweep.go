@@ -36,6 +36,11 @@ func init() {
 		F:    sweepImageRecipes,
 	})
 
+	resource.AddTestSweepers("aws_imagebuilder_container_recipe", &resource.Sweeper{
+		Name: "aws_imagebuilder_container_recipe",
+		F:    sweepContainerRecipes,
+	})
+
 	resource.AddTestSweepers("aws_imagebuilder_image", &resource.Sweeper{
 		Name: "aws_imagebuilder_image",
 		F:    sweepImages,
@@ -280,6 +285,60 @@ func sweepImageRecipes(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Image Recipes: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepContainerRecipes(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).ImageBuilderConn
+
+	var sweeperErrs *multierror.Error
+
+	input := &imagebuilder.ListContainerRecipesInput{
+		Owner: aws.String(imagebuilder.OwnershipSelf),
+	}
+
+	err = conn.ListContainerRecipesPages(input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, containerRecipeSummary := range page.ContainerRecipeSummaryList {
+			if containerRecipeSummary == nil {
+				continue
+			}
+
+			arn := aws.StringValue(containerRecipeSummary.Arn)
+
+			r := ResourceContainerRecipe()
+			d := r.Data(nil)
+			d.SetId(arn)
+
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Image Builder Container Recipe (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Image Builder Container Recipe sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Container Recipes: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -79,7 +79,7 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 		CheckDestroy: testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryEncryptWithSSES3Config(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_encryptSSE(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
@@ -179,7 +179,7 @@ func testAccCheckBucketInventoryDestroy(s *terraform.State) error {
 			log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 			output, err := conn.GetBucketInventoryConfiguration(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 					return nil
 				}
 				return resource.NonRetryableError(err)
@@ -200,6 +200,10 @@ func testAccBucketInventoryBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, name)
@@ -240,7 +244,7 @@ resource "aws_s3_bucket_inventory" "test" {
 `, inventoryName)
 }
 
-func testAccBucketInventoryEncryptWithSSES3Config(bucketName, inventoryName string) string {
+func testAccBucketInventoryConfig_encryptSSE(bucketName, inventoryName string) string {
 	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 resource "aws_s3_bucket_inventory" "test" {
   bucket = aws_s3_bucket.test.id

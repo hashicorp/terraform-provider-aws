@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -26,7 +26,7 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrLifecyclePolicyConfig(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(resourceName),
 				),
@@ -35,6 +35,55 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_order(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(resourceName),
+				),
+			},
+			{
+				Config:   testAccLifecyclePolicyConfig_newOrder(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(resourceName),
+				),
+			},
+			{
+				Config:             testAccLifecyclePolicyConfig_changed(rName),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
 			},
 		},
 	})
@@ -54,10 +103,10 @@ func testAccCheckLifecyclePolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetLifecyclePolicy(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 				return nil
 			}
-			if tfawserr.ErrMessageContains(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 				return nil
 			}
 			return err
@@ -85,7 +134,7 @@ func testAccCheckLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccEcrLifecyclePolicyConfig(rName string) string {
+func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = "%s"
@@ -113,6 +162,134 @@ resource "aws_ecr_lifecycle_policy" "test" {
   ]
 }
 EOF
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_changed(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = "%s"
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Expire images older than 14 days",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "sinceImagePushed",
+        "countUnit": "days",
+        "countNumber": 7
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_order(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire images older than 14 days"
+        selection = {
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 2
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPrefixList = [
+            "first",
+            "second",
+            "third",
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_newOrder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = "%s"
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 2
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPrefixList = [
+            "third",
+            "first",
+            "second",
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 1
+        description  = "Expire images older than 14 days"
+        selection = {
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+    ]
+  })
 }
 `, rName)
 }

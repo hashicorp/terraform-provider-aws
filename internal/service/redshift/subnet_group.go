@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -104,7 +104,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeResp, err := conn.DescribeClusterSubnetGroups(&describeOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ClusterSubnetGroupNotFoundFault", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterSubnetGroupNotFoundFault") {
 			log.Printf("[INFO] Redshift Subnet Group: %s was not found", d.Id())
 			d.SetId("")
 			return nil
@@ -186,7 +186,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteClusterSubnetGroup(&redshift.DeleteClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrMessageContains(err, "ClusterSubnetGroupNotFoundFault", "") {
+	if err != nil && tfawserr.ErrCodeEquals(err, "ClusterSubnetGroupNotFoundFault") {
 		return nil
 	}
 

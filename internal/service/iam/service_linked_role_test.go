@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
@@ -79,6 +79,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 	awsServiceName := "elasticbeanstalk.amazonaws.com"
 	name := "AWSServiceRoleForElasticBeanstalk"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
+	arnResource := fmt.Sprintf("role%s%s", path, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -89,30 +90,34 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Remove existing if possible
-					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-					deletionID, err := tfiam.DeleteServiceLinkedRole(conn, name)
+					client := acctest.Provider.Meta().(*conns.AWSClient)
+					arn := arn.ARN{
+						Partition: client.Partition,
+						Service:   "iam",
+						Region:    client.Region,
+						AccountID: client.AccountID,
+						Resource:  arnResource,
+					}.String()
+					r := tfiam.ResourceServiceLinkedRole()
+					d := r.Data(nil)
+					d.SetId(arn)
+					err := r.Delete(d, client)
+
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
-					}
-					if deletionID == "" {
-						return
-					}
-
-					err = tfiam.DeleteServiceLinkedRoleWaiter(conn, deletionID)
-					if err != nil {
-						t.Fatalf("Error waiting for role (%s) to be deleted: %s", name, err)
 					}
 				},
 				Config: testAccServiceLinkedRoleConfig(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", arnResource),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "path", path),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -218,6 +223,75 @@ func TestAccIAMServiceLinkedRole_description(t *testing.T) {
 	})
 }
 
+func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
+	resourceName := "aws_iam_service_linked_role.test"
+	awsServiceName := "autoscaling.amazonaws.com"
+	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServiceLinkedRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceLinkedRoleTags1Config(awsServiceName, customSuffix, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceLinkedRoleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceLinkedRoleTags2Config(awsServiceName, customSuffix, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceLinkedRoleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccServiceLinkedRoleTags1Config(awsServiceName, customSuffix, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceLinkedRoleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
+	resourceName := "aws_iam_service_linked_role.test"
+	awsServiceName := "autoscaling.amazonaws.com"
+	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServiceLinkedRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceLinkedRoleConfig_CustomSuffix(awsServiceName, customSuffix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceLinkedRoleExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckServiceLinkedRoleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
@@ -231,19 +305,17 @@ func testAccCheckServiceLinkedRoleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		params := &iam.GetRoleInput{
-			RoleName: aws.String(roleName),
+		_, err = tfiam.FindRoleByName(conn, roleName)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err = conn.GetRole(params)
-
-		if err == nil {
-			return fmt.Errorf("Service-Linked Role still exists: %q", rs.Primary.ID)
-		}
-
-		if !tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("IAM Service Linked Role %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -263,16 +335,9 @@ func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		params := &iam.GetRoleInput{
-			RoleName: aws.String(roleName),
-		}
-
-		_, err = conn.GetRole(params)
+		_, err = tfiam.FindRoleByName(conn, roleName)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-				return fmt.Errorf("Service-Linked Role doesn't exists: %q", rs.Primary.ID)
-			}
 			return err
 		}
 
@@ -305,4 +370,31 @@ resource "aws_iam_service_linked_role" "test" {
   description      = "%s"
 }
 `, awsServiceName, customSuffix, description)
+}
+
+func testAccServiceLinkedRoleTags1Config(awsServiceName, customSuffix, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = %[1]q
+  custom_suffix    = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, awsServiceName, customSuffix, tagKey1, tagValue1)
+}
+
+func testAccServiceLinkedRoleTags2Config(awsServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = %[1]q
+  custom_suffix    = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, awsServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2)
 }

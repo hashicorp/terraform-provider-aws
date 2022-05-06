@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,7 +24,7 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		CheckDestroy: testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyNameConfig(rName),
@@ -56,7 +56,7 @@ func TestAccAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		CheckDestroy: testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyDescriptionConfig(rName, rName),
@@ -89,7 +89,7 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		CheckDestroy: testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyFinalBakeTimeConfig(rName, 60),
@@ -134,7 +134,7 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		CheckDestroy: testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyNameConfig(rName),
@@ -156,7 +156,7 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		CheckDestroy: testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyTags1(rName, "key1", "value1"),
@@ -192,7 +192,7 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigDeploymentStrategyDestroy(s *terraform.State) error {
+func testAccCheckDeploymentStrategyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {

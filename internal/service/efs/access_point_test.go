@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -26,12 +26,12 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_id", fsResourceName, "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`access-point/fsap-.+`)),
@@ -60,12 +60,12 @@ func TestAccEFSAccessPoint_Root_directory(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointRootDirectoryConfig(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "0"),
@@ -89,12 +89,12 @@ func TestAccEFSAccessPoint_RootDirectoryCreation_info(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointRootDirectoryCreationInfoConfig(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "1"),
@@ -121,12 +121,12 @@ func TestAccEFSAccessPoint_POSIX_user(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointPOSIXUserConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
@@ -151,12 +151,12 @@ func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointPOSIXUserSecondaryGidsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
@@ -180,12 +180,12 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -198,7 +198,7 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 			{
 				Config: testAccAccessPointTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -207,7 +207,7 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 			{
 				Config: testAccAccessPointTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -225,12 +225,12 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		CheckDestroy: testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					testAccCheckAccessPointExists(resourceName, &ap),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -239,7 +239,7 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
+func testAccCheckAccessPointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_access_point" {
@@ -250,7 +250,7 @@ func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
 			AccessPointId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
 				continue
 			}
 			return fmt.Errorf("Error describing EFS access point in tests: %s", err)
@@ -263,7 +263,7 @@ func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEfsAccessPointExists(resourceID string, mount *efs.AccessPointDescription) resource.TestCheckFunc {
+func testAccCheckAccessPointExists(resourceID string, mount *efs.AccessPointDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceID]
 		if !ok {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,7 +20,7 @@ import (
 
 func TestAccIAMRole_basic(t *testing.T) {
 	var conf iam.Role
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 
 func TestAccIAMRole_basicWithDescription(t *testing.T) {
 	var conf iam.Role
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -119,7 +119,6 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 
 func TestAccIAMRole_namePrefix(t *testing.T) {
 	var conf iam.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -129,11 +128,11 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleNamePrefixConfig(rName),
+				Config: testAccRoleNamePrefixConfig(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
 				),
 			},
 			{
@@ -147,7 +146,7 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 
 func TestAccIAMRole_testNameChange(t *testing.T) {
 	var conf iam.Role
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,7 +177,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 }
 
 func TestAccIAMRole_badJSON(t *testing.T) {
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -218,9 +217,9 @@ func TestAccIAMRole_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_ForceDetach_policies(t *testing.T) {
+func TestAccIAMRole_policiesForceDetach(t *testing.T) {
 	var conf iam.Role
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -248,7 +247,7 @@ func TestAccIAMRole_ForceDetach_policies(t *testing.T) {
 
 func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 	var conf iam.Role
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -258,15 +257,15 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 		CheckDestroy: testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3599),
+				Config:      testAccRoleConfig_maxSessionDuration(rName, 3599),
 				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
-				Config:      testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 43201),
+				Config:      testAccRoleConfig_maxSessionDuration(rName, 43201),
 				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
-				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3700),
+				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
@@ -278,7 +277,7 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3701),
+				Config: testAccRoleConfig_maxSessionDuration(rName, 3701),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3701"),
@@ -296,7 +295,7 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	var role iam.Role
 
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
@@ -310,7 +309,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test creation
 			{
-				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary1),
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
@@ -319,7 +318,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test update
 			{
-				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary2),
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
@@ -346,7 +345,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test addition
 			{
-				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary1),
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
@@ -355,7 +354,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test empty value
 			{
-				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, ""),
+				Config: testAccRoleConfig_permissionsBoundary(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
@@ -403,7 +402,7 @@ func TestAccIAMRole_tags(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_policyBasicInline(t *testing.T) {
+func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -451,7 +450,46 @@ func TestAccIAMRole_policyBasicInline(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_policyBasicInlineEmpty(t *testing.T) {
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
+// This test currently fails but should not. A new PR will fix it.
+func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyInlineActionOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
+			{
+				Config:   testAccRolePolicyInlineActionOrderConfig(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccRolePolicyInlineActionNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:             testAccRolePolicyInlineActionOrderActualDiffConfig(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -472,7 +510,7 @@ func TestAccIAMRole_policyBasicInlineEmpty(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_policyBasicManaged(t *testing.T) {
+func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -519,7 +557,7 @@ func TestAccIAMRole_policyBasicManaged(t *testing.T) {
 
 // TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
 // out of band, it should be reattached.
-func TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty(t *testing.T) {
+func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -552,7 +590,7 @@ func TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty(t *testing.T
 
 // TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_inlineNonEmpty: if a policy is removed
 // out of band, it should be recreated.
-func TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing.T) {
+func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -583,9 +621,9 @@ func TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing.T)
 	})
 }
 
-// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedNonEmpty: if managed_policies arg
+// TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved: if managed_policy_arns arg
 // exists and is non-empty, policy attached out of band should be removed
-func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedNonEmpty(t *testing.T) {
+func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -619,7 +657,7 @@ func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedNonEmpty(t *testing.T)
 
 // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
 // exists and is non-empty, policy added out of band should be removed
-func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.T) {
+func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -654,7 +692,7 @@ func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.T) 
 
 // TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent: if there is no
 // inline_policy attribute, out of band changes should be ignored.
-func TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent(t *testing.T) {
+func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -694,8 +732,8 @@ func TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent(t *testing.
 }
 
 // TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent: if there is no
-// managed_policies attribute, out of band changes should be ignored.
-func TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent(t *testing.T) {
+// managed_policy_arns attribute, out of band changes should be ignored.
+func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -727,7 +765,7 @@ func TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent(t *testing
 
 // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
 // out of band with empty inline arg, should be removed
-func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) {
+func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -759,7 +797,7 @@ func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) {
 
 // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
 // out of band with empty managed arg, should be detached
-func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty(t *testing.T) {
+func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -995,7 +1033,7 @@ func testAccCheckRolePolicyRemoveInlinePolicy(role *iam.Role, inlinePolicy strin
 	}
 }
 
-func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
+func testAccRoleConfig_maxSessionDuration(rName string, maxSessionDuration int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1026,7 +1064,7 @@ EOF
 `, rName, maxSessionDuration)
 }
 
-func testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary string) string {
+func testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1627,6 +1665,125 @@ EOF
   }
 }
 `, roleName, policyName3)
+}
+
+func testAccRolePolicyInlineActionOrderConfig(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "ec2:DescribeScheduledInstances",
+          "ec2:DescribeScheduledInstanceAvailability",
+          "ec2:DescribeFastSnapshotRestores",
+          "ec2:DescribeElasticGpus",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+`, roleName)
+}
+
+func testAccRolePolicyInlineActionOrderActualDiffConfig(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "ec2:DescribeScheduledInstances",
+          "ec2:DescribeElasticGpus",
+          "ec2:DescribeScheduledInstanceAvailability",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+`, roleName)
+}
+
+func testAccRolePolicyInlineActionNewOrderConfig(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "ec2:DescribeElasticGpus",
+          "ec2:DescribeScheduledInstances",
+          "ec2:DescribeFastSnapshotRestores",
+          "ec2:DescribeScheduledInstanceAvailability",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+`, roleName)
 }
 
 func testAccRolePolicyManagedConfig(roleName, policyName string) string {

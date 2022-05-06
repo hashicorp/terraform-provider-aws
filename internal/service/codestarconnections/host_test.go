@@ -6,15 +6,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
@@ -35,7 +34,7 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://test.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 				),
 			},
@@ -89,7 +88,7 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://test.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
@@ -115,19 +114,18 @@ func testAccCheckHostExists(n string, v *codestarconnections.GetHostOutput) reso
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No CodeStar host ID is set")
+			return errors.New("No CodeStar Connections Host ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
 
-		resp, err := conn.GetHost(&codestarconnections.GetHostInput{
-			HostArn: aws.String(rs.Primary.ID),
-		})
+		output, err := tfcodestarconnections.FindHostByARN(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
@@ -137,16 +135,21 @@ func testAccCheckHostDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
 
 	for _, rs := range s.RootModule().Resources {
-		switch rs.Type {
-		case "aws_codestarconnections_host":
-			_, err := conn.DeleteHost(&codestarconnections.DeleteHostInput{
-				HostArn: aws.String(rs.Primary.ID),
-			})
-
-			if err != nil && !tfawserr.ErrMessageContains(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
-				return err
-			}
+		if rs.Type != "aws_codestarconnections_host" {
+			continue
 		}
+
+		_, err := tfcodestarconnections.FindHostByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("CodeStar Connections Host %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -206,7 +209,7 @@ func testAccHostBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
 }
 `, rName)
@@ -218,7 +221,7 @@ func testAccHostVPCConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
   vpc_configuration {
     security_group_ids = [aws_security_group.test.id]

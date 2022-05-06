@@ -29,7 +29,7 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 			{
 				Config: testAccStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_failure"),
 				),
@@ -111,7 +111,7 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 			{
 				Config: testAccStackConfig_withParams(rName, vpcCidrInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 			{
 				Config: testAccStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -159,7 +159,7 @@ func TestAccCloudFormationStack_yaml(t *testing.T) {
 			{
 				Config: testAccStackConfig_yaml(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -185,7 +185,7 @@ func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_defaultParams(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -213,7 +213,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 			{
 				Config: testAccStackConfig_allAttributesWithBodies(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
@@ -237,7 +237,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 			{
 				Config: testAccStackConfig_allAttributesWithBodies_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
@@ -274,7 +274,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_withParams(rName, vpcCidrInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrInitial),
 				),
@@ -288,7 +288,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_withParams(rName, vpcCidrUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrUpdated),
 				),
@@ -312,7 +312,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -324,7 +324,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -345,7 +345,7 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams_withYAML(rName, "tf-cf-stack.test", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -373,7 +373,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack-1.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -385,7 +385,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -406,14 +406,14 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 			{
 				Config: testAccStackConfig_withTransform(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
 				PlanOnly: true,
 				Config:   testAccStackConfig_withTransform(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -435,7 +435,7 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 			{
 				Config: testAccStackConfig_onFailure(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "on_failure", cloudformation.OnFailureDoNothing),
 				),
@@ -444,7 +444,7 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -497,7 +497,7 @@ func testAccCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
@@ -833,8 +833,15 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -851,15 +858,19 @@ resource "aws_s3_bucket" "b" {
   ]
 }
 POLICY
+}
 
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.b.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
   }
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.b.id
   key    = %[2]q
   source = "test-fixtures/cloudformation-template.json"
@@ -872,7 +883,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -887,8 +898,15 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -905,15 +923,19 @@ resource "aws_s3_bucket" "b" {
   ]
 }
 POLICY
+}
 
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.b.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
   }
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.b.id
   key    = %[2]q
   source = "test-fixtures/cloudformation-template.yaml"
@@ -926,7 +948,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }

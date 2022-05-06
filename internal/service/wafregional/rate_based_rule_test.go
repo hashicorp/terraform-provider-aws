@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -115,7 +115,7 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 				Config: testAccRateBasedRuleChangeNameConfig(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &after),
-					testAccCheckWAFRateBasedRuleIdDiffers(&before, &after),
+					testAccCheckRateBasedRuleIdDiffers(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
@@ -267,7 +267,7 @@ func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 	})
 }
 
-func testAccCheckWAFRateBasedRuleIdDiffers(before, after *waf.RateBasedRule) resource.TestCheckFunc {
+func testAccCheckRateBasedRuleIdDiffers(before, after *waf.RateBasedRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.RuleId == *after.RuleId {
 			return fmt.Errorf("Expected different IDs, given %q for both rules", *before.RuleId)
@@ -295,7 +295,7 @@ func testAccCheckRateBasedRuleDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Rule is already destroyed
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 

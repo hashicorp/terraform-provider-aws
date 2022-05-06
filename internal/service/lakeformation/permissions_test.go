@@ -8,13 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -642,7 +641,7 @@ func testAccCheckPermissionsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		permCount, err := permissionCountForLakeFormationResource(conn, rs)
+		permCount, err := permissionCountForResource(conn, rs)
 
 		if err != nil {
 			return fmt.Errorf("acceptance test: error listing Lake Formation permissions (%s): %w", rs.Primary.ID, err)
@@ -668,7 +667,7 @@ func testAccCheckPermissionsExists(resourceName string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
-		permCount, err := permissionCountForLakeFormationResource(conn, rs)
+		permCount, err := permissionCountForResource(conn, rs)
 
 		if err != nil {
 			return fmt.Errorf("acceptance test: error listing Lake Formation permissions (%s): %w", rs.Primary.ID, err)
@@ -682,7 +681,7 @@ func testAccCheckPermissionsExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, rs *terraform.ResourceState) (int, error) {
+func permissionCountForResource(conn *lakeformation.LakeFormation, rs *terraform.ResourceState) (int, error) {
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(rs.Primary.Attributes["principal"]),
@@ -794,7 +793,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var allPermissions []*lakeformation.PrincipalResourcePermissions
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tflakeformation.IAMPropagationTimeout, func() *resource.RetryError {
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {
@@ -1133,8 +1132,12 @@ resource "aws_iam_role" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_lakeformation_resource" "test" {

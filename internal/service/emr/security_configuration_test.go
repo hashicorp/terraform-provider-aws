@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,12 +20,12 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
+		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmrSecurityConfigurationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmrSecurityConfigurationExists(resourceName),
+					testAccCheckSecurityConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
 				),
 			},
@@ -38,7 +38,7 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
+func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_security_configuration" {
@@ -68,7 +68,7 @@ func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckSecurityConfigurationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

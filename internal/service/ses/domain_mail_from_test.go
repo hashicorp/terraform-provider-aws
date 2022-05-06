@@ -23,7 +23,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		CheckDestroy: testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig(domain, mailFromDomain1),
@@ -62,7 +62,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		CheckDestroy: testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig(domain, mailFromDomain),
@@ -86,7 +86,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		CheckDestroy: testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig(domain, mailFromDomain),
@@ -108,7 +108,7 @@ func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		CheckDestroy: testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, ses.BehaviorOnMXFailureUseDefaultValue),
@@ -166,7 +166,7 @@ func testAccCheckDomainMailFromExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSESDomainMailFromDestroy(s *terraform.State) error {
+func testAccCheckDomainMailFromDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {

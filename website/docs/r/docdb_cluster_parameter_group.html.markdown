@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_parameter_group"
 description: |-
@@ -37,6 +37,8 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
+
+~> **NOTE:** These arguments take a `string` representation of their values.
 
 * `name` - (Required) The name of the documentDB parameter.
 * `value` - (Required) The value of the documentDB parameter.

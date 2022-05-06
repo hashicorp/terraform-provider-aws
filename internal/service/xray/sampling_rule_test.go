@@ -27,7 +27,7 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 			{
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -68,7 +68,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 			{
 				Config: testAccSamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "priority"),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
@@ -86,7 +86,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 			{ // Update attributes
 				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
@@ -124,7 +124,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 			{
 				Config: testAccSamplingRuleTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -137,7 +137,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 			{
 				Config: testAccSamplingRuleTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -146,7 +146,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 			{
 				Config: testAccSamplingRuleTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -169,7 +169,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 			{
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -178,7 +178,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRule) resource.TestCheckFunc {
+func testAccCheckSamplingRuleExists(n string, samplingRule *xray.SamplingRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

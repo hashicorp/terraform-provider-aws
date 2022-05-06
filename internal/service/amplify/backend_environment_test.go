@@ -22,7 +22,7 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
@@ -54,7 +54,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
@@ -79,7 +79,7 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,

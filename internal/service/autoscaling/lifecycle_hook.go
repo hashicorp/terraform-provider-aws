@@ -73,10 +73,10 @@ func resourceLifecycleHookPutOp(conn *autoscaling.AutoScaling, params *autoscali
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if strings.Contains(awsErr.Message(), "Unable to publish test message to notification target") {
-					return resource.RetryableError(fmt.Errorf("Retrying AWS AutoScaling Lifecycle Hook: %s", awsErr))
+					return resource.RetryableError(fmt.Errorf("Retrying AWS AutoScaling Lifecycle Hook: %w", awsErr))
 				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("Error putting lifecycle hook: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("Error putting lifecycle hook: %w", err))
 		}
 		return nil
 	})
@@ -84,7 +84,7 @@ func resourceLifecycleHookPutOp(conn *autoscaling.AutoScaling, params *autoscali
 		_, err = conn.PutLifecycleHook(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error putting autoscaling lifecycle hook: %s", err)
+		return fmt.Errorf("Error putting autoscaling lifecycle hook: %w", err)
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func resourceLifecycleHookRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if p == nil {
+	if p == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Autoscaling Lifecycle Hook (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -141,7 +141,7 @@ func resourceLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error
 		LifecycleHookName:    aws.String(d.Get("name").(string)),
 	}
 	if _, err := conn.DeleteLifecycleHook(&params); err != nil {
-		return fmt.Errorf("Autoscaling Lifecycle Hook: %s", err)
+		return fmt.Errorf("Autoscaling Lifecycle Hook: %w", err)
 	}
 
 	return nil
@@ -191,7 +191,7 @@ func getLifecycleHook(d *schema.ResourceData, meta interface{}) (*autoscaling.Li
 	log.Printf("[DEBUG] AutoScaling Lifecycle Hook Describe Params: %#v", params)
 	resp, err := conn.DescribeLifecycleHooks(&params)
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving lifecycle hooks: %s", err)
+		return nil, fmt.Errorf("Error retrieving lifecycle hooks: %w", err)
 	}
 
 	// find lifecycle hooks

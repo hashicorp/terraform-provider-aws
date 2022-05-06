@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,6 +32,8 @@ func TestAccDAXCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					resource.TestCheckResourceAttr(
+						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
@@ -182,6 +184,74 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 	})
 }
 
+func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := sdkacctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+	clusterEndpointEncryptionType := "NONE"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterWithEndpointEncryptionConfig(rString, clusterEndpointEncryptionType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Ensure it shows no difference when removing cluster_endpoint_encryption_type configuration
+			{
+				Config:             testAccClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := sdkacctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+	clusterEndpointEncryptionType := "TLS"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterWithEndpointEncryptionConfig(rString, clusterEndpointEncryptionType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Ensure it shows a difference when removing cluster_endpoint_encryption_type configuration
+			{
+				Config:             testAccClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
@@ -194,7 +264,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 		})
 		if err != nil {
 			// Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeClusterNotFoundFault) {
 				continue
 			}
 			return err
@@ -321,6 +391,23 @@ resource "aws_dax_cluster" "test" {
   }
 }
 `, baseConfig, rString, enabled)
+}
+
+func testAccClusterWithEndpointEncryptionConfig(rString string, encryptionType string) string {
+	return fmt.Sprintf(`%s
+resource "aws_dax_cluster" "test" {
+  cluster_name                     = "tf-%s"
+  cluster_endpoint_encryption_type = "%s"
+  iam_role_arn                     = aws_iam_role.test.arn
+  node_type                        = "dax.t2.small"
+  replication_factor               = 1
+  description                      = "test cluster"
+
+  tags = {
+    foo = "bar"
+  }
+}
+`, baseConfig, rString, encryptionType)
 }
 
 func testAccClusterResizeConfig_singleNode(rString string) string {

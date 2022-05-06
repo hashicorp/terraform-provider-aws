@@ -31,9 +31,18 @@ func ResourceAttachment() *schema.Resource {
 			},
 
 			"alb_target_group_arn": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				Deprecated:    "Use lb_target_group_arn instead",
+				ConflictsWith: []string{"lb_target_group_arn"},
+			},
+
+			"lb_target_group_arn": {
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"alb_target_group_arn"},
 			},
 		},
 	}
@@ -65,7 +74,20 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] registering asg %s with ALB Target Group %s", asgName, v.(string))
 
 		if _, err := conn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
-			return fmt.Errorf("Failure attaching AutoScaling Group %s with ALB Target Group: %s: %s", asgName, v.(string), err)
+			return fmt.Errorf("failure attaching AutoScaling Group %s with ALB Target Group: %s: %w", asgName, v.(string), err)
+		}
+	}
+
+	if v, ok := d.GetOk("lb_target_group_arn"); ok {
+		attachOpts := &autoscaling.AttachLoadBalancerTargetGroupsInput{
+			AutoScalingGroupName: aws.String(asgName),
+			TargetGroupARNs:      []*string{aws.String(v.(string))},
+		}
+
+		log.Printf("[INFO] registering asg %s with LB Target Group %s", asgName, v.(string))
+
+		if _, err := conn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
+			return fmt.Errorf("failure attaching AutoScaling Group %s with LB Target Group: %s: %w", asgName, v.(string), err)
 		}
 	}
 
@@ -85,7 +107,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if asg == nil {
+	if asg == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Autoscaling Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,6 +145,22 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("lb_target_group_arn"); ok {
+		found := false
+		for _, i := range asg.TargetGroupARNs {
+			if v.(string) == aws.StringValue(i) {
+				d.Set("lb_target_group_arn", v.(string))
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
+			d.SetId("")
+		}
+	}
+
 	return nil
 }
 
@@ -138,7 +176,7 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[INFO] Deleting ELB %s association from: %s", v.(string), asgName)
 		if _, err := conn.DetachLoadBalancers(detachOpts); err != nil {
-			return fmt.Errorf("Failure detaching AutoScaling Group %s with Elastic Load Balancer: %s: %s", asgName, v.(string), err)
+			return fmt.Errorf("failure detaching AutoScaling Group %s with Elastic Load Balancer: %s: %w", asgName, v.(string), err)
 		}
 	}
 
@@ -150,7 +188,19 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[INFO] Deleting ALB Target Group %s association from: %s", v.(string), asgName)
 		if _, err := conn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
-			return fmt.Errorf("Failure detaching AutoScaling Group %s with ALB Target Group: %s: %s", asgName, v.(string), err)
+			return fmt.Errorf("failure detaching AutoScaling Group %s with ALB Target Group: %s: %w", asgName, v.(string), err)
+		}
+	}
+
+	if v, ok := d.GetOk("lb_target_group_arn"); ok {
+		detachOpts := &autoscaling.DetachLoadBalancerTargetGroupsInput{
+			AutoScalingGroupName: aws.String(asgName),
+			TargetGroupARNs:      []*string{aws.String(v.(string))},
+		}
+
+		log.Printf("[INFO] Deleting LB Target Group %s association from: %s", v.(string), asgName)
+		if _, err := conn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
+			return fmt.Errorf("failure detaching AutoScaling Group %s with LB Target Group: %s: %w", asgName, v.(string), err)
 		}
 	}
 

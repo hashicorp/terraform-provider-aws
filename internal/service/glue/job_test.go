@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -53,6 +53,43 @@ func TestAccGlueJob_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_basicStreaming(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_RequiredStreaming(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "gluestreaming"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccGlueJob_command(t *testing.T) {
 	var job glue.Job
 
@@ -216,14 +253,14 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 		CheckDestroy: testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_GlueVersion_MaxCapacity(rName, "0.9"),
+				Config: testAccJobConfig_Version_maxCapacity(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccJobConfig_GlueVersion_MaxCapacity(rName, "1.0"),
+				Config: testAccJobConfig_Version_maxCapacity(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -235,7 +272,7 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobConfig_GlueVersion_NumberOfWorkers(rName, "2.0"),
+				Config: testAccJobConfig_Version_numberOfWorkers(rName, "2.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "2.0"),
@@ -412,6 +449,40 @@ func TestAccGlueJob_tags(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_streamingTimeout(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_Timeout(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+				),
+			},
+			{
+				Config: testAccJobConfig_Timeout(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccGlueJob_timeout(t *testing.T) {
 	var job glue.Job
 
@@ -688,7 +759,7 @@ func testAccCheckJobDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 
@@ -823,7 +894,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), description, rName)
 }
 
-func testAccJobConfig_GlueVersion_MaxCapacity(rName, glueVersion string) string {
+func testAccJobConfig_Version_maxCapacity(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -842,7 +913,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), glueVersion, rName)
 }
 
-func testAccJobConfig_GlueVersion_NumberOfWorkers(rName, glueVersion string) string {
+func testAccJobConfig_Version_numberOfWorkers(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -935,6 +1006,25 @@ resource "aws_glue_job" "test" {
   role_arn     = aws_iam_role.test.arn
 
   command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, testAccJobConfig_Base(rName), rName)
+}
+
+func testAccJobConfig_RequiredStreaming(rName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
+
+  command {
+    name            = "gluestreaming"
     script_location = "testscriptlocation"
   }
 

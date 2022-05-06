@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -163,7 +163,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 // AWS does not support changing from an IAM role to an SLR. No error is thrown
 // but the registration is not changed (the IAM role continues in the registration).
 //
-// func TestAccAWSLakeFormationResource_updateRoleToSLR(t *testing.T) {
+// func TestAccLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckResourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
@@ -183,7 +183,7 @@ func testAccCheckResourceDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("resource still registered: %s", resourceArn)
 		}
-		if !isLakeFormationResourceNotFoundErr(err) {
+		if !isResourceNotFoundErr(err) {
 			return err
 		}
 	}
@@ -214,7 +214,7 @@ func testAccCheckResourceExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func isLakeFormationResourceNotFoundErr(err error) bool {
+func isResourceNotFoundErr(err error) bool {
 	return tfawserr.ErrMessageContains(
 		err,
 		"EntityNotFoundException",

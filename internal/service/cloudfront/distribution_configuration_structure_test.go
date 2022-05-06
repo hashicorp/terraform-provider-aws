@@ -30,6 +30,7 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 		"compress":                    true,
 		"field_level_encryption_id":   "",
 		"realtime_log_config_arn":     "",
+		"response_headers_policy_id":  "",
 	}
 }
 
@@ -264,7 +265,7 @@ func customErrorResponseConfNoResponseCode() map[string]interface{} {
 	return er
 }
 
-func viewerCertificateConfSetCloudFrontDefault() map[string]interface{} {
+func viewerCertificateConfSetDefault() map[string]interface{} {
 	return map[string]interface{}{
 		"acm_certificate_arn":            "",
 		"cloudfront_default_certificate": true,
@@ -1043,7 +1044,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 }
 
 func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certificate(t *testing.T) {
-	data := viewerCertificateConfSetCloudFrontDefault()
+	data := viewerCertificateConfSetDefault()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
 		t.Fatalf("Expected ACMCertificateArn to be unset, got %v", *vc.ACMCertificateArn)

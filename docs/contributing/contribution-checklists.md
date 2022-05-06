@@ -29,7 +29,7 @@ each type of contribution.
 
 ## Documentation Update
 
-The [Terraform AWS Provider's website source][website] is in this repository
+The [Terraform AWS Provider's website source](../../website) is in this repository
 along with the code and tests. Below are some common items that will get
 flagged during documentation reviews:
 
@@ -60,9 +60,6 @@ guidelines.
 - [ ] __Documentation updates__: If your code makes any changes that need to
    be documented, you should include those doc updates in the same PR. This
    includes things like new resource attributes or changes in default values.
-   The [Terraform website][website] source is in this repo and includes
-   instructions for getting a local copy of the site up and running if you'd
-   like to preview your changes.
 - [ ] __Well-formed Code__: Do your best to follow existing conventions you
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
@@ -151,7 +148,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
           create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-          resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
         ),
       },
       // If the resource supports import:
@@ -307,7 +304,7 @@ More details about this code generation, including fixes for potential error mes
   func ResourceCluster() *schema.Resource {
     return &schema.Resource{
       /* ... other configuration ... */
-      CustomizeDiff: SetTagsDiff,
+      CustomizeDiff: verify.SetTagsDiff,
     }
   }
   ```
@@ -335,7 +332,7 @@ More details about this code generation, including fixes for potential error mes
   
   input := &eks.CreateClusterInput{
     /* ... other configuration ... */
-    Tags: Tags(tags.IgnoreAws()),
+    Tags: Tags(tags.IgnoreAWS()),
   }
   ```
 
@@ -351,11 +348,11 @@ More details about this code generation, including fixes for potential error mes
   }
 
   if len(tags) > 0 {
-    input.Tags = Tags(tags.IgnoreAws())
+    input.Tags = Tags(tags.IgnoreAWS())
   }
   ```
 
-- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with ElasticSearch Domain:
+- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with Elasticsearch Domain:
 
   ```go
   // Typically declared near conn := /* ... */
@@ -364,7 +361,7 @@ More details about this code generation, including fixes for potential error mes
   
   if len(tags) > 0 {
     if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %w", d.Id(), err)
     }
   }
   ```
@@ -391,7 +388,7 @@ More details about this code generation, including fixes for potential error mes
   
   /* ... other d.Set(...) logic ... */
 
-  tags := keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+  tags := keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
   
   if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %w", err)
@@ -414,10 +411,10 @@ More details about this code generation, including fixes for potential error mes
   tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
   if err != nil {
-    return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+    return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
   }
 
-  tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+  tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
   
   if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %w", err)
@@ -434,7 +431,7 @@ More details about this code generation, including fixes for potential error mes
   if d.HasChange("tags_all") {
     o, n := d.GetChange("tags_all")
     if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-      return fmt.Errorf("error updating tags: %s", err)
+      return fmt.Errorf("error updating tags: %w", err)
     }
   }
   ```
@@ -451,7 +448,7 @@ More details about this code generation, including fixes for potential error mes
     }
 
     if _, err := conn.CreatePolicyVersion(request); err != nil {
-        return fmt.Errorf("error updating IAM policy %s: %w", d.Id(), err)
+        return fmt.Errorf("error updating IAM policy (%s): %w", d.Id(), err)
     }
   }
   ```
@@ -464,7 +461,7 @@ More details about this code generation, including fixes for potential error mes
   ```go
   func TestAccEKSCluster_tags(t *testing.T) {
     var cluster1, cluster2, cluster3 eks.Cluster
-    rName := acctest.RandomWithPrefix("tf-acc-test")
+    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
@@ -547,7 +544,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTARGS='-run=TestAccEKSCluster_'`)
+- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTS=TestAccEKSCluster_ PKG=eks`)
 
 ### Resource Tagging Documentation Implementation
 
@@ -571,7 +568,7 @@ See the [EC2 Listing and filtering your resources page](https://docs.aws.amazon.
 Implementing server-side filtering support for Terraform AWS Provider resources requires the following, each with its own section below:
 
 - [ ] _Generated Service Filtering Code_: In the internal code generators (e.g., `internal/generate/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
-- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `aws/data_source_aws_service_thing.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
+- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `internal/service/{servicename}/thing_data_source.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
 - [ ] _Resource Filtering Documentation Implementation_: In the resource's equivalent data source documentation (e.g., `website/docs/d/service_thing.html.markdown`), addition of `filter` argument
 
 ### Adding Service to Filter Generating Code
@@ -584,9 +581,9 @@ More details about this code generation can be found in the [namevaluesfilters d
 - Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `internal/generate/namevaluesfilters/generators/servicefilters/main.go`.
 - Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
 
-### Resource Filter Code Implementation
+### Resource Filtering Code Implementation
 
-- In the resource's equivalent data source Go file (e.g., `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"`
+- In the resource's equivalent data source Go file (e.g., `internal/service/ec2/internet_gateway_data_source.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 
@@ -598,7 +595,7 @@ filters := namevaluesfilters.New(map[string]string{
 	"internet-gateway-id": d.Get("internet_gateway_id").(string),
 })
 // Add filters based on keyvalue tags (N.B. Not applicable to all AWS services that support filtering)
-filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()))
+filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 // Add filters based on the custom filtering "filter" attribute.
 filters.Add(d.Get("filter").(*schema.Set))
 
@@ -638,7 +635,7 @@ guidelines.
    only submit **1 resource at a time**.
 - [ ] __Acceptance tests__: New resources should include acceptance tests
    covering their behavior. See [Writing Acceptance
-   Tests](#writing-acceptance-tests) below for a detailed guide on how to
+   Tests](./running-and-writing-acceptance-tests.md#writing-an-acceptance-test) for a detailed guide on how to
    approach these.
 - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
    using underscores (`_`) as the separator. Resources are namespaced with the
@@ -647,8 +644,8 @@ guidelines.
    and to prevent future conflicts with new AWS services/resources.
    For reference:
 
-    - `service` is the AWS short service name that matches the entry in
-     `endpointServiceNames` (created via the [New Service](#new-service)
+    - `service` is the AWS short service name that matches the key in
+     the `serviceData` map in the `conns` package (created via the [New Service](#new-service)
      section)
     - `name` represents the conceptual infrastructure represented by the
      create, read, update, and delete methods of the service API. It should
@@ -672,9 +669,9 @@ guidelines.
 
 Adding a tag resource, similar to the `aws_ecs_tag` resource, has its own implementation procedure since the resource code and initial acceptance testing functions are automatically generated. The rest of the resource acceptance testing and resource documentation must still be manually created.
 
-- In `aws/internal/keyvaluetags`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
-- In `aws/tag_resources.go`: Add the new `//go:generate` call with the correct service name. Run `make gen` after any modifications.
-- In `aws/provider.go`: Add the new resource.
+- In `internal/generate`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
+- In `internal/service/{service}/generate.go`: Add the new `//go:generate` call with the correct generator directives. Run `make gen` after any modifications.
+- In `internal/provider/provider.go`: Add the new resource.
 - Run `make test` and ensure there are no failures.
 - Create `internal/service/{service}/tag_gen_test.go` with initial acceptance testing similar to the following (where the parent resource is simple to provision):
 
@@ -690,7 +687,7 @@ import (
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -717,7 +714,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -739,7 +736,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_Value(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -792,7 +789,7 @@ resource "aws_{service}_tag" "test" {
 }
 ```
 
-- Run `make testacc TEST=./aws TESTARGS='-run=TestAcc{Service}Tags_'` and ensure there are no failures.
+- Run `make testacc TESTS=TestAcc{Service}Tags_ PKG={Service}` and ensure there are no failures.
 - Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
 
 ``````markdown
@@ -858,46 +855,18 @@ into Terraform.
   requests can easily have merge conflicts or be out of date. The maintainers
   prioritize reviewing and merging these quickly to prevent those situations.
 
-  To add the AWS Go SDK service client:
+  **We have changed these directions a lot! Please review them carefully!**
 
-    - In `aws/provider.go` Add a new service entry to `endpointServiceNames`.
-    This service name should match the AWS Go SDK or AWS CLI service name.
-    - In `aws/config.go`: Add a new import for the AWS Go SDK code. E.g.
-    `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `aws/config.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
-    struct for the service client. The service name should match the name
-    in `endpointServiceNames`. E.g., `quicksightconn *quicksight.QuickSight`
-    - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
-    field in the `AWSClient` instantiation within `Client()`. E.g.
-    `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
-    - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
-    - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
-    name in the list of customizable endpoints.
-    - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
-    - In `.github/labeler-issue-triage.yml`: Add the new service to automated issue labeling. E.g., with the `quicksight` service
+  To add an AWS Go SDK service client:
 
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - '((\*|-) ?`?|(data|resource) "?)aws_quicksight_'
-  # ... other services ...
-  ```
-
-    - In `.github/labeler-pr-triage.yml`: Add the new service to automated pull request labeling. E.g., with the `quicksight` service
-
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - 'aws/internal/service/quicksight/**/*'
-    - '**/*_quicksight_*'
-    - '**/quicksight_*'
-  # ... other services ...
-  ```
+    - Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier).
+    - In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](../../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and generators depend on the file being correct._**
 
     - Run the following then submit the pull request:
 
   ```sh
-  go test ./aws
+  make gen
+  make test
   go mod tidy
   ```
 
@@ -919,9 +888,10 @@ manually sourced values from documentation. Amazon employees can code search
 previous region values to find new region values in internal packages like
 RIPStaticConfig if they are not documented yet.
 
-- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
-- [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
-- [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
-- [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
-- [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
-- [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
+- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go)
+- [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)
+- [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to [`internal/service/cloudtrail/service_account_data_source.go`](../../internal/service/cloudtrail/service_account_data_source.go)
+- [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to [`internal/service/elb/service_account_data_source.go`](../../internal/service/elb/service_account_data_source.go)
+- [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to [`internal/service/redshift/service_account_data_source.go`](../../internal/service/redshift/service_account_data_source.go)
+- [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to [`internal/service/elasticbeanstalk/hosted_zone_data_source.go`](../../internal/service/elasticbeanstalk/hosted_zone_data_source.go)
+- [ ] Check [SageMaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html) and add AWS Account IDs if available to [`internal/service/sagemaker/prebuilt_ecr_image_data_source.go`](../../internal/service/sagemaker/prebuilt_ecr_image_data_source.go)

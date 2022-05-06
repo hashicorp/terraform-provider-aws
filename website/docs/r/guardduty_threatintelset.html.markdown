@@ -19,10 +19,15 @@ resource "aws_guardduty_detector" "primary" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  acl = "private"
+  # ... other configuration ...
 }
 
-resource "aws_s3_bucket_object" "MyThreatIntelSet" {
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "MyThreatIntelSet" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.bucket.id
@@ -33,7 +38,7 @@ resource "aws_guardduty_threatintelset" "MyThreatIntelSet" {
   activate    = true
   detector_id = aws_guardduty_detector.primary.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.MyThreatIntelSet.bucket}/${aws_s3_bucket_object.MyThreatIntelSet.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.MyThreatIntelSet.bucket}/${aws_s3_object.MyThreatIntelSet.key}"
   name        = "MyThreatIntelSet"
 }
 ```

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,7 +16,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
-func TestAccGlueMlTransform_ML_basic(t *testing.T) {
+func TestAccGlueMlTransform_basic(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -66,7 +66,7 @@ func TestAccGlueMlTransform_ML_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_typeFindMatchesFull(t *testing.T) {
+func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -126,7 +126,7 @@ func TestAccGlueMlTransform_ML_typeFindMatchesFull(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_description(t *testing.T) {
+func TestAccGlueMlTransform_description(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -161,7 +161,7 @@ func TestAccGlueMlTransform_ML_description(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_glueVersion(t *testing.T) {
+func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -174,14 +174,14 @@ func TestAccGlueMlTransform_ML_glueVersion(t *testing.T) {
 		CheckDestroy: testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMLTransformGlueVersionConfig(rName, "0.9"),
+				Config: testAccMlTransformConfig_mLTransformVersion(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccMLTransformGlueVersionConfig(rName, "1.0"),
+				Config: testAccMlTransformConfig_mLTransformVersion(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -196,7 +196,7 @@ func TestAccGlueMlTransform_ML_glueVersion(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_maxRetries(t *testing.T) {
+func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -235,7 +235,7 @@ func TestAccGlueMlTransform_ML_maxRetries(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_tags(t *testing.T) {
+func TestAccGlueMlTransform_tags(t *testing.T) {
 	var transform1, transform2, transform3 glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -281,7 +281,7 @@ func TestAccGlueMlTransform_ML_tags(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_timeout(t *testing.T) {
+func TestAccGlueMlTransform_timeout(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -316,7 +316,7 @@ func TestAccGlueMlTransform_ML_timeout(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_workerType(t *testing.T) {
+func TestAccGlueMlTransform_workerType(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -353,7 +353,7 @@ func TestAccGlueMlTransform_ML_workerType(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_maxCapacity(t *testing.T) {
+func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -388,7 +388,7 @@ func TestAccGlueMlTransform_ML_maxCapacity(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_disappears(t *testing.T) {
+func TestAccGlueMlTransform_disappears(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -458,7 +458,7 @@ func testAccCheckMLTransformDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 
@@ -670,7 +670,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, description)
 }
 
-func testAccMLTransformGlueVersionConfig(rName, glueVersion string) string {
+func testAccMlTransformConfig_mLTransformVersion(rName, glueVersion string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name         = %[1]q

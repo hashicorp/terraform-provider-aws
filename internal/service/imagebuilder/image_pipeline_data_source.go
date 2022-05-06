@@ -21,6 +21,10 @@ func DataSourceImagePipeline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"container_recipe_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -129,6 +133,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(imagePipeline.Arn))
 	d.Set("arn", imagePipeline.Arn)
+	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
@@ -139,7 +144,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 
 	if imagePipeline.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageBuilderImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -149,7 +154,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("platform", imagePipeline.Platform)
 
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenImageBuilderSchedule(imagePipeline.Schedule)})
+		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
 		d.Set("schedule", nil)
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -58,7 +58,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
@@ -143,7 +143,7 @@ func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err
@@ -168,7 +168,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
 	return acctest.ConfigCompose(
-		testAccCognitoUserPoolCustomDomainRegionProviderConfig(),
+		testAccUserPoolCustomDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q

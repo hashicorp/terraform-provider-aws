@@ -38,7 +38,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
-					testAccCheckNeptuneClusterAddress(&v, resourceName, tfneptune.DefaultPort),
+					testAccCheckClusterAddress(&v, resourceName, tfneptune.DefaultPort),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", clusterInstanceName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
@@ -242,7 +242,7 @@ func testAccCheckClusterInstanceAttributes(v *neptune.DBInstance) resource.TestC
 	}
 }
 
-func testAccCheckNeptuneClusterAddress(v *neptune.DBInstance, resourceName string, portNumber int) resource.TestCheckFunc {
+func testAccCheckClusterAddress(v *neptune.DBInstance, resourceName string, portNumber int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		address := aws.StringValue(v.Endpoint.Address)
 		if err := resource.TestCheckResourceAttr(resourceName, "address", address)(s); err != nil {

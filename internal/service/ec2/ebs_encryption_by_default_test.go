@@ -29,6 +29,11 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccEBSEncryptionByDefaultConfig(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsEncryptionByDefault(resourceName, true),

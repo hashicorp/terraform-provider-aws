@@ -26,7 +26,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig(rName),
@@ -75,7 +75,7 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_az(rName),
@@ -109,7 +109,7 @@ func TestAccDocDBClusterInstance_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_namePrefix(rName, rNamePrefix),
@@ -143,7 +143,7 @@ func TestAccDocDBClusterInstance_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_generatedName(rName),
@@ -176,7 +176,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceKMSKeyConfig(rName),
@@ -209,7 +209,7 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig(rName),

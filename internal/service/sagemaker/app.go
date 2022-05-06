@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,10 +65,20 @@ func ResourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 						},
+						"lifecycle_config_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"sagemaker_image_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"sagemaker_image_version_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 					},
@@ -104,17 +114,17 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("resource_spec"); ok {
-		input.ResourceSpec = expandSagemakerDomainDefaultResourceSpec(v.([]interface{}))
+		input.ResourceSpec = expandDomainDefaultResourceSpec(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Sagemaker App create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
 	output, err := conn.CreateApp(input)
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker App: %w", err)
 	}
 
 	appArn := aws.StringValue(output.AppArn)
-	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(appArn)
+	domainID, userProfileName, appType, appName, err := decodeAppID(appArn)
 	if err != nil {
 		return err
 	}
@@ -133,14 +143,14 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(d.Id())
+	domainID, userProfileName, appType, appName, err := decodeAppID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	app, err := FindAppByName(conn, domainID, userProfileName, appType, appName)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
 			return nil
@@ -161,7 +171,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain_id", app.DomainId)
 	d.Set("user_profile_name", app.UserProfileName)
 
-	if err := d.Set("resource_spec", flattenSagemakerDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
+	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
 		return fmt.Errorf("error setting resource_spec for SageMaker App (%s): %w", d.Id(), err)
 	}
 
@@ -221,13 +231,13 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error deleting SageMaker App (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitAppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}
 	}
@@ -235,7 +245,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeSagemakerAppID(id string) (string, string, string, string, error) {
+func decodeAppID(id string) (string, string, string, string, error) {
 	appArn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", "", "", err

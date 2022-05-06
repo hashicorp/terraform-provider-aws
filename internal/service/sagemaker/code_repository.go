@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -64,18 +65,27 @@ func ResourceCodeRepository() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
-
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("code_repository_name").(string)
 
 	input := &sagemaker.CreateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
-		GitConfig:          expandSagemakerCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
+		GitConfig:          expandCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *input)
@@ -91,6 +101,8 @@ func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	codeRepository, err := FindCodeRepositoryByName(conn, d.Id())
 	if err != nil {
@@ -103,11 +115,28 @@ func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error 
 
 	}
 
+	arn := aws.StringValue(codeRepository.CodeRepositoryArn)
 	d.Set("code_repository_name", codeRepository.CodeRepositoryName)
-	d.Set("arn", codeRepository.CodeRepositoryArn)
+	d.Set("arn", arn)
 
-	if err := d.Set("git_config", flattenSagemakerCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
+	if err := d.Set("git_config", flattenCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
 		return fmt.Errorf("error setting git_config for sagemaker code repository (%s): %w", d.Id(), err)
+	}
+
+	tags, err := ListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for SageMaker Code Repository (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -116,15 +145,25 @@ func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error 
 func resourceCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	input := &sagemaker.UpdateCodeRepositoryInput{
-		CodeRepositoryName: aws.String(d.Id()),
-		GitConfig:          expandSagemakerCodeRepositoryUpdateGitConfig(d.Get("git_config").([]interface{})),
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating SageMaker Code Repository (%s) tags: %w", d.Id(), err)
+		}
 	}
 
-	log.Printf("[DEBUG] sagemaker code repository update config: %#v", *input)
-	_, err := conn.UpdateCodeRepository(input)
-	if err != nil {
-		return fmt.Errorf("error updating SageMaker code repository: %w", err)
+	if d.HasChange("git_config") {
+		input := &sagemaker.UpdateCodeRepositoryInput{
+			CodeRepositoryName: aws.String(d.Id()),
+			GitConfig:          expandCodeRepositoryUpdateGitConfig(d.Get("git_config").([]interface{})),
+		}
+
+		log.Printf("[DEBUG] sagemaker code repository update config: %#v", *input)
+		_, err := conn.UpdateCodeRepository(input)
+		if err != nil {
+			return fmt.Errorf("error updating SageMaker code repository: %w", err)
+		}
 	}
 
 	return resourceCodeRepositoryRead(d, meta)
@@ -147,7 +186,7 @@ func resourceCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandSagemakerCodeRepositoryGitConfig(l []interface{}) *sagemaker.GitConfig {
+func expandCodeRepositoryGitConfig(l []interface{}) *sagemaker.GitConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -169,7 +208,7 @@ func expandSagemakerCodeRepositoryGitConfig(l []interface{}) *sagemaker.GitConfi
 	return config
 }
 
-func flattenSagemakerCodeRepositoryGitConfig(config *sagemaker.GitConfig) []map[string]interface{} {
+func flattenCodeRepositoryGitConfig(config *sagemaker.GitConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -189,7 +228,7 @@ func flattenSagemakerCodeRepositoryGitConfig(config *sagemaker.GitConfig) []map[
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerCodeRepositoryUpdateGitConfig(l []interface{}) *sagemaker.GitConfigForUpdate {
+func expandCodeRepositoryUpdateGitConfig(l []interface{}) *sagemaker.GitConfigForUpdate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

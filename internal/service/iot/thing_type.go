@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -69,17 +70,22 @@ func ResourceThingType() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
-
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	params := &iot.CreateThingTypeInput{
 		ThingTypeName: aws.String(d.Get("name").(string)),
 	}
@@ -91,6 +97,9 @@ func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 		if ok && config != nil {
 			params.ThingTypeProperties = expandThingTypeProperties(config)
 		}
+	}
+	if len(tags) > 0 {
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating IoT Thing Type: %s", params)
@@ -122,6 +131,9 @@ func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
 	params := &iot.DescribeThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
 	}
@@ -129,7 +141,7 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeThingType(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] IoT Thing Type %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -142,7 +154,23 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", out.ThingTypeArn)
 
-	if err := d.Set("properties", flattenIoTThingTypeProperties(out.ThingTypeProperties)); err != nil {
+	tags, err := ListTags(conn, aws.StringValue(out.ThingTypeArn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for IoT Thing Type (%s): %w", aws.StringValue(out.ThingTypeArn), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	if err := d.Set("properties", flattenThingTypeProperties(out.ThingTypeProperties)); err != nil {
 		return fmt.Errorf("error setting properties: %s", err)
 	}
 
@@ -163,6 +191,14 @@ func resourceThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return err
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -199,7 +235,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 
 			// As the delay post-deprecation is about 5 minutes, it may have been
 			// deleted in between, thus getting a Not Found Exception.
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
@@ -210,7 +246,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteThingType(deleteParams)
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 	}

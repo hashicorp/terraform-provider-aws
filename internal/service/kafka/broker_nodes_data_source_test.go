@@ -19,10 +19,10 @@ func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMskClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskBrokerNodesDataSourceConfig(rName),
+				Config: testAccBrokerNodesDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_info_list.#", resourceName, "number_of_broker_nodes"),
@@ -34,8 +34,8 @@ func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 		},
 	})
 }
-func testAccMskBrokerNodesDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+func testAccBrokerNodesDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"

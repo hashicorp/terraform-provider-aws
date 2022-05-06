@@ -5,12 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 const (
@@ -18,21 +17,24 @@ const (
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
 	KeyDeletedTimeout                = 20 * time.Minute
-	KeyDescriptionPropagationTimeout = 5 * time.Minute
+	KeyDescriptionPropagationTimeout = 10 * time.Minute
 	KeyMaterialImportedTimeout       = 10 * time.Minute
 	KeyPolicyPropagationTimeout      = 5 * time.Minute
 	KeyRotationUpdatedTimeout        = 10 * time.Minute
 	KeyStatePropagationTimeout       = 20 * time.Minute
-	KeyTagsPropagationTimeout        = 5 * time.Minute
+	KeyTagsPropagationTimeout        = 10 * time.Minute
 	KeyValidToPropagationTimeout     = 5 * time.Minute
 
 	PropagationTimeout = 2 * time.Minute
+
+	ReplicaExternalKeyCreatedTimeout = 2 * time.Minute
+	ReplicaKeyCreatedTimeout         = 2 * time.Minute
 )
 
 // WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
 func WaitIAMPropagation(f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(tfiam.PropagationTimeout, f, kms.ErrCodeMalformedPolicyDocumentException)
+	return tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, f, kms.ErrCodeMalformedPolicyDocumentException)
 }
 
 func WaitKeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
@@ -209,4 +211,38 @@ func WaitTagsPropagated(conn *kms.KMS, id string, tags tftags.KeyValueTags) erro
 	}
 
 	return tfresource.WaitUntil(KeyTagsPropagationTimeout, checkFunc, opts)
+}
+
+func WaitReplicaExternalKeyCreated(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kms.KeyStateCreating},
+		Target:  []string{kms.KeyStatePendingImport},
+		Refresh: StatusKeyState(conn, id),
+		Timeout: ReplicaExternalKeyCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitReplicaKeyCreated(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kms.KeyStateCreating},
+		Target:  []string{kms.KeyStateEnabled},
+		Refresh: StatusKeyState(conn, id),
+		Timeout: ReplicaKeyCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
+		return output, err
+	}
+
+	return nil, err
 }

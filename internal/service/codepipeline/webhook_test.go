@@ -2,6 +2,7 @@ package codepipeline_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,16 +37,51 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("webhook:%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "authentication", "GITHUB_HMAC"),
+					resource.TestCheckResourceAttr(resourceName, "target_action", "Source"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_pipeline", "aws_codepipeline.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
+						"json_path":    "$.ref",
+						"match_equals": "refs/head/{Branch}",
+					}),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "super-secret"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWebhookConfig_filters(rName, githubToken),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebhookExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
+						"json_path":    "$.ref",
+						"match_equals": "refs/head/{Branch}",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
+						"json_path":    "$.head_commit.modified",
+						"match_equals": "^.*mypath.*$",
+					}),
+				),
+			},
+			{
+				Config: testAccWebhookConfig_basic(rName, githubToken),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebhookExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
+						"json_path":    "$.ref",
+						"match_equals": "refs/head/{Branch}",
+					}),
+				),
 			},
 		},
 	})
@@ -183,6 +219,35 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 	})
 }
 
+func TestAccCodePipelineWebhook_disappears(t *testing.T) {
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+
+	var v codepipeline.ListWebhookItem
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codepipeline_webhook.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckSupported(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_basic(rName, githubToken),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebhookExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
@@ -255,7 +320,7 @@ func testAccCheckWebhookExists(n string, webhook *codepipeline.ListWebhookItem) 
 }
 
 func testAccWebhookConfig_basic(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -274,8 +339,33 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName)
 }
 
+func testAccWebhookConfig_filters(rName, githubToken string) string {
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
+resource "aws_codepipeline_webhook" "test" {
+  name            = %[1]q
+  authentication  = "GITHUB_HMAC"
+  target_action   = "Source"
+  target_pipeline = aws_codepipeline.test.name
+
+  authentication_configuration {
+    secret_token = "super-secret"
+  }
+
+  filter {
+    json_path    = "$.ref"
+    match_equals = "refs/head/{Branch}"
+  }
+
+  filter {
+    json_path    = "$.head_commit.modified"
+    match_equals = "^.*mypath.*$"
+  }
+}
+`, rName)
+}
+
 func testAccWebhookConfig_ipAuth(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "IP"
@@ -295,7 +385,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookConfig_unauthenticated(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "UNAUTHENTICATED"
@@ -311,7 +401,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookWithTagsConfig(rName, tag1, tag2, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -337,7 +427,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookConfig_secretTokenUpdated(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -356,10 +446,14 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookConfig_codePipeline(rName, githubToken string) string {
+func testAccWebhookConfig_base(rName, githubToken string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

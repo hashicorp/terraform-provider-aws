@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -378,7 +378,7 @@ func sweepRegistry(region string) error {
 	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
 			return nil
 		}
@@ -408,7 +408,7 @@ func sweepSchema(region string) error {
 	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
 			return nil
 		}
@@ -517,7 +517,7 @@ func sweepWorkflow(region string) error {
 	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Workflow sweep for %s: %s", region, err)
 			return nil
 		}

@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -112,7 +113,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 	newPredicates := d.Get("predicate").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
+		err := updateRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
 		}
@@ -131,7 +132,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetRateBasedRule(params)
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -193,8 +194,8 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		err := updateRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -224,8 +225,8 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		noPredicates := []interface{}{}
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		err := updateRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 		if err != nil {
@@ -242,7 +243,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[INFO] Deleting WAF Regional Rate Based Rule")
 		return conn.DeleteRateBasedRule(req)
 	})
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 	if err != nil {
@@ -252,13 +253,13 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func updateWafRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateLimit interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateLimit interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
-			Updates:     diffWafRulePredicates(oldP, newP),
+			Updates:     tfwaf.DiffRulePredicates(oldP, newP),
 			RateLimit:   aws.Int64(int64(rateLimit.(int))),
 		}
 
