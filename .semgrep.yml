@@ -700,6 +700,8 @@ rules:
     paths:
       include:
         - internal/
+      exclude:
+        - internal/service/iam
     patterns:
       - pattern: tfiam.PropagationTimeout
     severity: ERROR
