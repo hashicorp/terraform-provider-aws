@@ -24,10 +24,10 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBGPPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBGPPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxBgpPeerConfig(vifId, bgpAsn),
