@@ -20,10 +20,10 @@ func TestAccSFNActivity_basic(t *testing.T) {
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityBasicConfig(name),
@@ -47,10 +47,10 @@ func TestAccSFNActivity_tags(t *testing.T) {
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityBasicTags1Config(name, "key1", "value1"),
