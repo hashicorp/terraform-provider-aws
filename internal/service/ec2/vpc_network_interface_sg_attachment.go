@@ -86,7 +86,7 @@ func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta inter
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 

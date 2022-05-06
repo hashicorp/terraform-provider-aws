@@ -261,7 +261,7 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindSpotInstanceRequestByID(conn, d.Id())
 	}, d.IsNewResource())
 
