@@ -23,10 +23,10 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig(rName),
@@ -64,10 +64,10 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig(rName),
@@ -86,10 +86,10 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_withParameter0(rName),
@@ -195,10 +195,10 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_withTags0(rName),
