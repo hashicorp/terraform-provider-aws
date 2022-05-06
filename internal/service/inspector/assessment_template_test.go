@@ -21,10 +21,10 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssessmentBasic(rName),
@@ -53,10 +53,10 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssessmentBasic(rName),
@@ -76,10 +76,10 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssessmentTags1(rName, "key1", "value1"),
