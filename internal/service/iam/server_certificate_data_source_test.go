@@ -46,7 +46,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataServerCertConfig(rName, key, certificate),
@@ -70,7 +70,7 @@ func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataServerCertMatchNamePrefixConfig,
@@ -92,7 +92,7 @@ func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataServerCertPathConfig(rName, path, pathPrefix, key, certificate),

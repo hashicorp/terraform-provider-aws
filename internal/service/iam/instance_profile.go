@@ -46,14 +46,14 @@ func ResourceInstanceProfile() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validIamResourceName(instanceProfileNameMaxLen),
+				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(instanceProfileNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
 			"path": {
 				Type:     schema.TypeString,

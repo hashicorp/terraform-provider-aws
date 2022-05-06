@@ -28,17 +28,17 @@ func TestAccIAMUserPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		CheckDestroy: testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIAMUserPolicyConfig_name(rName, strconv.Quote("NonJSONString")),
+				Config:      testAccUserPolicyConfig_name(rName, strconv.Quote("NonJSONString")),
 				ExpectError: regexp.MustCompile("invalid JSON"),
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_name(rName, strconv.Quote(policy1)),
+				Config: testAccUserPolicyConfig_name(rName, strconv.Quote(policy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%[1]s:%[1]s$", rName))),
 					resource.TestCheckResourceAttr(policyResourceName, "name", rName),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
@@ -51,10 +51,10 @@ func TestAccIAMUserPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_name(rName, strconv.Quote(policy2)),
+				Config: testAccUserPolicyConfig_name(rName, strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy2),
 				),
 			},
@@ -71,13 +71,13 @@ func TestAccIAMUserPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		CheckDestroy: testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicyExists(resourceName, &out),
-					testAccCheckIAMUserPolicyDisappears(&out),
+					testAccCheckUserPolicyExists(resourceName, &out),
+					testAccCheckUserPolicyDisappears(&out),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,13 +96,13 @@ func TestAccIAMUserPolicy_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		CheckDestroy: testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMUserPolicyConfig_namePrefix(rName, acctest.ResourcePrefix, strconv.Quote(policy1)),
+				Config: testAccUserPolicyConfig_namePrefix(rName, acctest.ResourcePrefix, strconv.Quote(policy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%s:%s.+$", rName, acctest.ResourcePrefix))),
 					resource.TestCheckResourceAttr(policyResourceName, "name_prefix", acctest.ResourcePrefix),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
@@ -115,10 +115,10 @@ func TestAccIAMUserPolicy_namePrefix(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_namePrefix(rName, acctest.ResourcePrefix, strconv.Quote(policy2)),
+				Config: testAccUserPolicyConfig_namePrefix(rName, acctest.ResourcePrefix, strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy2),
 				),
 			},
@@ -137,13 +137,13 @@ func TestAccIAMUserPolicy_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		CheckDestroy: testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMUserPolicyConfig_generatedName(rName, strconv.Quote(policy1)),
+				Config: testAccUserPolicyConfig_generatedName(rName, strconv.Quote(policy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%s:.+$", rName))),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
 				),
@@ -154,10 +154,10 @@ func TestAccIAMUserPolicy_generatedName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_generatedName(rName, strconv.Quote(policy2)),
+				Config: testAccUserPolicyConfig_generatedName(rName, strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy2),
 				),
 			},
@@ -177,13 +177,13 @@ func TestAccIAMUserPolicy_multiplePolicies(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		CheckDestroy: testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMUserPolicyConfig_name(rName, strconv.Quote(policy1)),
+				Config: testAccUserPolicyConfig_name(rName, strconv.Quote(policy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName1),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName1),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 					resource.TestCheckResourceAttr(policyResourceName1, "name", rName),
 					resource.TestCheckResourceAttr(policyResourceName1, "policy", policy1),
 				),
@@ -194,30 +194,30 @@ func TestAccIAMUserPolicy_multiplePolicies(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_multiplePolicies(rName, strconv.Quote(policy1), strconv.Quote(policy2)),
+				Config: testAccUserPolicyConfig_multiplePolicies(rName, strconv.Quote(policy1), strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName1),
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName2),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 2),
+					testAccCheckUserPolicy(userResourceName, policyResourceName1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName2),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 2),
 					resource.TestCheckResourceAttr(policyResourceName1, "policy", policy1),
 					resource.TestCheckResourceAttr(policyResourceName2, "name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(policyResourceName2, "policy", policy2),
 				),
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_multiplePolicies(rName, strconv.Quote(policy2), strconv.Quote(policy2)),
+				Config: testAccUserPolicyConfig_multiplePolicies(rName, strconv.Quote(policy2), strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName1),
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName2),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 2),
+					testAccCheckUserPolicy(userResourceName, policyResourceName1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName2),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 2),
 					resource.TestCheckResourceAttr(policyResourceName1, "policy", policy2),
 				),
 			},
 			{
-				Config: testAccIAMUserPolicyConfig_name(rName, strconv.Quote(policy2)),
+				Config: testAccUserPolicyConfig_name(rName, strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName1),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName1),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 				),
 			},
 		},
@@ -233,13 +233,13 @@ func TestAccIAMUserPolicy_policyOrder(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		CheckDestroy: testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPolicyOrderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
-					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+					testAccCheckUserPolicy(userResourceName, policyResourceName),
+					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 				),
 			},
 			{
@@ -250,7 +250,7 @@ func TestAccIAMUserPolicy_policyOrder(t *testing.T) {
 	})
 }
 
-func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutput) resource.TestCheckFunc {
+func testAccCheckUserPolicyExists(resource string, res *iam.GetUserPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
 		if !ok {
@@ -282,7 +282,7 @@ func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutp
 	}
 }
 
-func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
+func testAccCheckUserPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -317,7 +317,7 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckIAMUserPolicyDisappears(out *iam.GetUserPolicyOutput) resource.TestCheckFunc {
+func testAccCheckUserPolicyDisappears(out *iam.GetUserPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
@@ -331,7 +331,7 @@ func testAccCheckIAMUserPolicyDisappears(out *iam.GetUserPolicyOutput) resource.
 	}
 }
 
-func testAccCheckIAMUserPolicy(
+func testAccCheckUserPolicy(
 	iamUserResource string,
 	iamUserPolicyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -364,7 +364,7 @@ func testAccCheckIAMUserPolicy(
 	}
 }
 
-func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected int) resource.TestCheckFunc {
+func testAccCheckUserPolicyExpectedPolicies(iamUserResource string, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[iamUserResource]
 		if !ok {
@@ -423,7 +423,7 @@ EOF
 `, rName))
 }
 
-func testAccIAMUserPolicyConfig_name(rName, policy string) string {
+func testAccUserPolicyConfig_name(rName, policy string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -435,7 +435,7 @@ resource "aws_iam_user_policy" "test" {
 `, rName, policy))
 }
 
-func testAccIAMUserPolicyConfig_namePrefix(rName, prefix, policy string) string {
+func testAccUserPolicyConfig_namePrefix(rName, prefix, policy string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -447,7 +447,7 @@ resource "aws_iam_user_policy" "test" {
 `, prefix, policy))
 }
 
-func testAccIAMUserPolicyConfig_generatedName(rName, policy string) string {
+func testAccUserPolicyConfig_generatedName(rName, policy string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -458,7 +458,7 @@ resource "aws_iam_user_policy" "test" {
 `, policy))
 }
 
-func testAccIAMUserPolicyConfig_multiplePolicies(rName, policy1, policy2 string) string {
+func testAccUserPolicyConfig_multiplePolicies(rName, policy1, policy2 string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`

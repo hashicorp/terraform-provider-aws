@@ -53,7 +53,7 @@ func ResourceRolePolicy() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(rolePolicyNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
 			},
 			"role": {
 				Type:     schema.TypeString,
