@@ -14,9 +14,9 @@ import (
 func TestAccDirectoryServiceDirectoryDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDirectoryDataSourceConfig_NonExistent,
@@ -34,9 +34,9 @@ func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckDirectoryServiceSimpleDirectory(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryServiceSimpleDirectory(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_SimpleAD(alias, domainName),
@@ -68,9 +68,9 @@ func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_MicrosoftAD(alias, domainName),
@@ -106,8 +106,8 @@ func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceDirectoryServiceDirectoryConfig_connector(domainName),
