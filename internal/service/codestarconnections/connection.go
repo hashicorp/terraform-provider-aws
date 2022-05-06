@@ -86,13 +86,14 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	resp, err := conn.CreateConnection(input)
+	log.Printf("[DEBUG] Creating CodeStar Connections Connection: %s", input)
+	output, err := conn.CreateConnection(input)
 
 	if err != nil {
 		return fmt.Errorf("creating CodeStar Connections Connection (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ConnectionArn))
+	d.SetId(aws.StringValue(output.ConnectionArn))
 
 	return resourceConnectionRead(d, meta)
 }
@@ -159,7 +160,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
-	log.Printf("[INFO] Deleting CodeStar Connections Connection: %s", d.Id())
+	log.Printf("[DEBUG] Deleting CodeStar Connections Connection: %s", d.Id())
 	_, err := conn.DeleteConnection(&codestarconnections.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
 	})
