@@ -199,7 +199,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
 
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console

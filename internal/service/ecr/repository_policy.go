@@ -64,7 +64,7 @@ func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error
 
 	// Retry due to IAM eventual consistency
 	var out *ecr.SetRepositoryPolicyOutput
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
 		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {

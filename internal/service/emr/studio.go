@@ -145,7 +145,7 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var result *emr.CreateStudioOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		result, err = conn.CreateStudio(input)
 		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "entity does not have permissions to assume role") {

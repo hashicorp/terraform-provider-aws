@@ -286,7 +286,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Creating GameLift Fleet: %s", input)
 	var out *gamelift.CreateFleetOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateFleet(input)
 

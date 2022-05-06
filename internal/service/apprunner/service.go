@@ -415,7 +415,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	var output *apprunner.CreateServiceOutput
 
-	err := resource.RetryContext(ctx, iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateServiceWithContext(ctx, input)
 

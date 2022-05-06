@@ -199,7 +199,7 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for IAM eventual consistency
 	var output *backup.CreateBackupSelectionOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateBackupSelection(input)
 

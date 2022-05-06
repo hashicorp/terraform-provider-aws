@@ -184,7 +184,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	outputRaw, err := tfresource.RetryWhen(iamPropagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateStack(input)
 		},
@@ -382,7 +382,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation Stack: %s", input)
-	_, err := tfresource.RetryWhen(iamPropagationTimeout,
+	_, err := tfresource.RetryWhen(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.UpdateStack(input)
 		},

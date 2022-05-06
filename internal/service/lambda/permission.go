@@ -149,7 +149,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
 	// Retry for IAM and Lambda eventual consistency.
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(iamPropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.AddPermission(input)
 		},

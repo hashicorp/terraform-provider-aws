@@ -86,7 +86,7 @@ func waitApplicationUpdated(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name st
 func waitIAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = f()

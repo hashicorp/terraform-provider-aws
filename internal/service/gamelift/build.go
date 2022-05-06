@@ -104,7 +104,7 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Creating GameLift Build: %s", input)
 	var out *gamelift.CreateBuildOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateBuild(&input)
 		if err != nil {

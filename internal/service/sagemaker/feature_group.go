@@ -228,7 +228,7 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFeatureGroup(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {

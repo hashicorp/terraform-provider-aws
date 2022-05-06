@@ -3,5 +3,5 @@ package secretsmanager
 import "time"
 
 const (
-	iamPropagationTimeout = 2 * time.Minute
+	PropagationTimeout = 2 * time.Minute
 )

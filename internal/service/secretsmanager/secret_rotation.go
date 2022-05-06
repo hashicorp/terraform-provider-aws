@@ -107,7 +107,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)

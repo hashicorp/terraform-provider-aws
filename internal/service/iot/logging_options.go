@@ -56,7 +56,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, iamPropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.SetV2LoggingOptionsWithContext(ctx, input)
 		},

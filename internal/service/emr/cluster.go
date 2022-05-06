@@ -950,7 +950,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
 
 	var resp *emr.RunJobFlowOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RunJobFlow(params)
 		if err != nil {

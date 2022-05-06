@@ -226,7 +226,7 @@ func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDevEndpoint(input)
 		if err != nil {
 			// Retry for IAM eventual consistency

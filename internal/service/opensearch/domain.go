@@ -654,7 +654,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *opensearchservice.CreateDomainOutput
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateDomain(&inputCreateDomain)
 		if err != nil {

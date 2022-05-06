@@ -289,7 +289,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -501,7 +501,7 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-		err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.UpdateTrail(&input)
 			if err != nil {

@@ -265,7 +265,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EKS Cluster: %s", input)
 	var output *eks.CreateClusterOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateCluster(input)

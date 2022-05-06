@@ -203,7 +203,7 @@ func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	var output *imagebuilder.CreateInfrastructureConfigurationOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateInfrastructureConfiguration(input)
@@ -365,7 +365,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 			input.SubnetId = aws.String(v.(string))
 		}
 
-		err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateInfrastructureConfiguration(input)
 
 			if tfawserr.ErrMessageContains(err, imagebuilder.ErrCodeInvalidParameterValueException, "instance profile does not exist") {

@@ -1574,7 +1574,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 
 		// Handle IAM eventual consistency
-		err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateProject(params)
 			if err != nil {
 				// InvalidInputException: CodeBuild is not authorized to perform

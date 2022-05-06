@@ -124,7 +124,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:

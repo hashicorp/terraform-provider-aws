@@ -650,7 +650,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating Elasticsearch Domain: %s", input)
 
 	outputRaw, err := tfresource.RetryWhen(
-		iamPropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateElasticsearchDomain(input)
 		},

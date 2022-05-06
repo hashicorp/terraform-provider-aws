@@ -241,7 +241,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// IAM Roles take some time to propagate
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
@@ -330,7 +330,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
 	var output *eventbridge.PutRuleOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutRule(input)
 

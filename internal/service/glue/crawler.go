@@ -319,7 +319,7 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry for IAM eventual consistency
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err = glueConn.CreateCrawler(crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
@@ -680,7 +680,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Retry for IAM eventual consistency
-		err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := glueConn.UpdateCrawler(updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx

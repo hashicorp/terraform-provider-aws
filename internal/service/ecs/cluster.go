@@ -435,7 +435,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryClusterCreate(conn *ecs.ECS, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
 	var output *ecs.CreateClusterOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateCluster(input)
 

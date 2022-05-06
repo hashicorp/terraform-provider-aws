@@ -60,7 +60,7 @@ func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutEventStream(&req)
 
 		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeBadRequestException, "make sure the IAM Role is configured correctly") {

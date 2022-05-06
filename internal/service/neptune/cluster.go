@@ -387,7 +387,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
 	}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		if restoreDBClusterFromSnapshot {
 			_, err = conn.RestoreDBClusterFromSnapshot(restoreDBClusterFromSnapshotInput)

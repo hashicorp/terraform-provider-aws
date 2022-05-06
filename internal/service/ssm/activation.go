@@ -111,7 +111,7 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreateActivation(activationInput)

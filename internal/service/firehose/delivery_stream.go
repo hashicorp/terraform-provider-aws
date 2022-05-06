@@ -2614,7 +2614,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		createInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
 			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
@@ -2768,7 +2768,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateDestination(updateInput)
 		if err != nil {
 			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.

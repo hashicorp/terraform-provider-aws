@@ -216,7 +216,7 @@ func resourceGameServerGroupCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating GameLift Game Server Group: %s", input)
 	var out *gamelift.CreateGameServerGroupOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateGameServerGroup(input)
 

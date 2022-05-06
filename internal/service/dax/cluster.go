@@ -251,7 +251,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateCluster(req)
 		if err != nil {

@@ -212,7 +212,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
 	var resp *applicationautoscaling.PutScalingPolicyOutput
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
@@ -304,7 +304,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
@@ -344,7 +344,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
 
 		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {

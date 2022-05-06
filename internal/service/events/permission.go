@@ -122,7 +122,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	var policyStatement *PermissionPolicyStatement
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {

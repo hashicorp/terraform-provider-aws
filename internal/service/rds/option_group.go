@@ -284,7 +284,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-			err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+			err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyOptionGroup(modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE

@@ -406,7 +406,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	var err error
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {

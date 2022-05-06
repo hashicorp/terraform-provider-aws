@@ -566,7 +566,7 @@ func TaskSetParseID(id string) (string, string, string, error) {
 
 func retryTaskSetCreate(conn *ecs.ECS, input *ecs.CreateTaskSetInput) (*ecs.CreateTaskSetOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(
-		iamPropagationTimeout+taskSetCreateTimeout,
+		propagationTimeout+taskSetCreateTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTaskSet(input)
 		},

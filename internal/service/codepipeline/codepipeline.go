@@ -224,7 +224,7 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreatePipeline(params)

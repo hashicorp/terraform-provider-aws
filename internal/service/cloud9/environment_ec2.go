@@ -129,7 +129,7 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[INFO] Creating Cloud9 EC2 Environment: %s", input)
 	var output *cloud9.CreateEnvironmentEC2Output
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateEnvironmentEC2(input)
 

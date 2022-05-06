@@ -207,7 +207,7 @@ func resourceRulePutConfig(d *schema.ResourceData, meta interface{}) error {
 		Tags:       Tags(tags.IgnoreAWS()),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutConfigRule(&input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeInsufficientPermissionsException) {

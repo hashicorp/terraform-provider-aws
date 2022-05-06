@@ -72,7 +72,7 @@ func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 	var output *secretsmanager.PutResourcePolicyOutput
 
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutResourcePolicy(input)
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -103,7 +103,7 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		SecretId: aws.String(d.Id()),
 	}
 
-	outputRaw, err := tfresource.RetryWhenNotFound(propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(PropagationTimeout, func() (interface{}, error) {
 		return conn.GetResourcePolicy(input)
 	})
 
@@ -154,7 +154,7 @@ func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-		err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {

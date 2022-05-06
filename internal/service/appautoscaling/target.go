@@ -75,7 +75,7 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
 	var err error
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {

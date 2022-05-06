@@ -94,7 +94,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule Destination: %s", input)
-	outputRaw, err := tfresource.RetryWhen(iamPropagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleDestinationWithContext(ctx, input)
 		},

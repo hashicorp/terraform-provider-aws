@@ -98,7 +98,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		out, err = conn.UpdateAccount(&input)
 
 		if err != nil {

@@ -775,7 +775,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Auto Scaling Group create configuration: %#v", createOpts)
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name

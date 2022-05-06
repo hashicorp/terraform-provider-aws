@@ -118,7 +118,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.RetryContext(ctx, iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {

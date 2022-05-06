@@ -171,7 +171,7 @@ func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{})
 		Attributes:             attributes,
 	}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.SetPlatformApplicationAttributes(req)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {

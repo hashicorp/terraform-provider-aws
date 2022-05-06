@@ -178,7 +178,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
 		// Temporarily retry on these errors to support immediate secret recreation:
@@ -213,7 +213,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -267,7 +267,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -389,7 +389,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
-			_, err = tfresource.RetryWhenAWSErrMessageContains(iamPropagationTimeout,
+			_, err = tfresource.RetryWhenAWSErrMessageContains(PropagationTimeout,
 				func() (interface{}, error) {
 					return conn.PutResourcePolicy(input)
 				},
@@ -493,7 +493,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting Secrets Manager Secret (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(conn, d.Id())
 	})
 

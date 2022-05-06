@@ -122,7 +122,7 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 		req.Level = aws.String(d.Get("level").(string))
 	}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := client.SetPermission(req)
 		if err != nil {
 

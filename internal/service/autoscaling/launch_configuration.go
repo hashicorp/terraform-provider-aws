@@ -515,7 +515,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IamInstanceProfile") {

@@ -121,7 +121,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
 
 	var output *datasync.CreateLocationS3Output
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateLocationS3(input)
 

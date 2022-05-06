@@ -104,7 +104,7 @@ func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error 
 
 	input := configservice.PutDeliveryChannelInput{DeliveryChannel: &channel}
 
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutDeliveryChannel(&input)
 		if err == nil {
 			return nil

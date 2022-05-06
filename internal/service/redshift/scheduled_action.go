@@ -172,7 +172,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
 	outputRaw, err := tfresource.RetryWhen(
-		iamPropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateScheduledAction(input)
 		},

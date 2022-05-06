@@ -118,7 +118,7 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Creating GameLift Script: %s", input)
 	var out *gamelift.CreateScriptOutput
-	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateScript(&input)
 		if err != nil {

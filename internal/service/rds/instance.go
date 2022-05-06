@@ -844,7 +844,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
 		// Retry for IAM eventual consistency
-		err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
