@@ -16,9 +16,9 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterBasicDataSourceConfig(rName),
