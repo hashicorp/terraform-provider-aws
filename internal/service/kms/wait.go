@@ -25,7 +25,7 @@ const (
 	KeyTagsPropagationTimeout        = 10 * time.Minute
 	KeyValidToPropagationTimeout     = 5 * time.Minute
 
-	propagationTimeout = 2 * time.Minute
+	PropagationTimeout = 2 * time.Minute
 
 	ReplicaExternalKeyCreatedTimeout = 2 * time.Minute
 	ReplicaKeyCreatedTimeout         = 2 * time.Minute

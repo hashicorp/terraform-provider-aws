@@ -122,7 +122,7 @@ func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *secretsmanager.GetSecretValueOutput
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetSecretValue(input)

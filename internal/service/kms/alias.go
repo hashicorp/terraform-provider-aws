@@ -95,7 +95,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindAliasByName(conn, d.Id())
 	}, d.IsNewResource())
 

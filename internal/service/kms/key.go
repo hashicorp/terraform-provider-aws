@@ -314,7 +314,7 @@ type kmsKey struct {
 
 func findKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		var err error
 		var key kmsKey
 
@@ -405,7 +405,7 @@ func updateKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
@@ -444,7 +444,7 @@ func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLoc
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)

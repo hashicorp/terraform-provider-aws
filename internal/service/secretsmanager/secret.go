@@ -178,7 +178,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
 		// Temporarily retry on these errors to support immediate secret recreation:
@@ -267,7 +267,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -493,7 +493,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting Secrets Manager Secret (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(conn, d.Id())
 	})
 

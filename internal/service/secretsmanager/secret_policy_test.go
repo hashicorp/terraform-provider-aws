@@ -133,7 +133,7 @@ func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
 
 		var output *secretsmanager.DescribeSecretOutput
 
-		err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfsecretsmanager.propagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.DescribeSecret(secretInput)
 

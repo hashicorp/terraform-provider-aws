@@ -103,7 +103,7 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		SecretId: aws.String(d.Id()),
 	}
 
-	outputRaw, err := tfresource.RetryWhenNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(propagationTimeout, func() (interface{}, error) {
 		return conn.GetResourcePolicy(input)
 	})
 
