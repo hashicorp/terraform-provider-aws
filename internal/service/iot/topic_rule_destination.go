@@ -320,7 +320,7 @@ func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.IoT, arn str
 
 func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.IoT, arn string, timeout time.Duration) (*iot.TopicRuleDestination, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{iot.TopicRuleDestinationStatusEnabled},
+		Pending: []string{iot.TopicRuleDestinationStatusInProgress},
 		Target:  []string{iot.TopicRuleDestinationStatusDisabled},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
 		Timeout: timeout,
@@ -339,7 +339,7 @@ func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.IoT, arn st
 
 func waitTopicRuleDestinationEnabled(ctx context.Context, conn *iot.IoT, arn string, timeout time.Duration) (*iot.TopicRuleDestination, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{iot.TopicRuleDestinationStatusDisabled},
+		Pending: []string{iot.TopicRuleDestinationStatusInProgress},
 		Target:  []string{iot.TopicRuleDestinationStatusEnabled},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
 		Timeout: timeout,
