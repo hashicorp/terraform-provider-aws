@@ -18,33 +18,33 @@ import (
 func TestAccGrafana_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Workspace": {
-			"saml":                     testAccGrafanaWorkspace_saml,
-			"sso":                      testAccGrafanaWorkspace_sso,
-			"disappears":               testAccGrafanaWorkspace_disappears,
-			"organization":             testAccGrafanaWorkspace_organization,
-			"dataSources":              testAccGrafanaWorkspace_dataSources,
-			"permissionType":           testAccGrafanaWorkspace_permissionType,
-			"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
-			"tags":                     testAccGrafanaWorkspace_tags,
+			"saml":                     testAccWorkspace_saml,
+			"sso":                      testAccWorkspace_sso,
+			"disappears":               testAccWorkspace_disappears,
+			"organization":             testAccWorkspace_organization,
+			"dataSources":              testAccWorkspace_dataSources,
+			"permissionType":           testAccWorkspace_permissionType,
+			"notificationDestinations": testAccWorkspace_notificationDestinations,
+			"tags":                     testAccWorkspace_tags,
 		},
 		"DataSource": {
-			"basic": testAccGrafanaWorkspaceDataSource_basic,
+			"basic": testAccWorkspaceDataSource_basic,
 		},
 		"LicenseAssociation": {
-			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
+			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
 		},
 		"SamlConfiguration": {
-			"basic":         testAccGrafanaWorkspaceSamlConfiguration_basic,
-			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
-			"assertions":    testAccGrafanaWorkspaceSamlConfiguration_assertions,
+			"basic":         testAccWorkspaceSamlConfiguration_basic,
+			"loginValidity": testAccWorkspaceSamlConfiguration_loginValidity,
+			"assertions":    testAccWorkspaceSamlConfiguration_assertions,
 		},
 		"RoleAssociation": {
-			"usersAdmin":           testAccGrafanaRoleAssociation_usersAdmin,
-			"usersEditor":          testAccGrafanaRoleAssociation_usersEditor,
-			"groupsAdmin":          testAccGrafanaRoleAssociation_groupsAdmin,
-			"groupsEditor":         testAccGrafanaRoleAssociation_groupsEditor,
-			"usersAndGroupsAdmin":  testAccGrafanaRoleAssociation_usersAndGroupsAdmin,
-			"usersAndGroupsEditor": testAccGrafanaRoleAssociation_usersAndGroupsEditor,
+			"usersAdmin":           testAccRoleAssociation_usersAdmin,
+			"usersEditor":          testAccRoleAssociation_usersEditor,
+			"groupsAdmin":          testAccRoleAssociation_groupsAdmin,
+			"groupsEditor":         testAccRoleAssociation_groupsEditor,
+			"usersAndGroupsAdmin":  testAccRoleAssociation_usersAndGroupsAdmin,
+			"usersAndGroupsEditor": testAccRoleAssociation_usersAndGroupsEditor,
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestAccGrafana_serial(t *testing.T) {
 	}
 }
 
-func testAccGrafanaWorkspace_saml(t *testing.T) {
+func testAccWorkspace_saml(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -104,7 +104,7 @@ func testAccGrafanaWorkspace_saml(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_sso(t *testing.T) {
+func testAccWorkspace_sso(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -151,7 +151,7 @@ func testAccGrafanaWorkspace_sso(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_disappears(t *testing.T) {
+func testAccWorkspace_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -173,7 +173,7 @@ func testAccGrafanaWorkspace_disappears(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_organization(t *testing.T) {
+func testAccWorkspace_organization(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -208,7 +208,7 @@ func testAccGrafanaWorkspace_organization(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_tags(t *testing.T) {
+func testAccWorkspace_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -252,7 +252,7 @@ func testAccGrafanaWorkspace_tags(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_dataSources(t *testing.T) {
+func testAccWorkspace_dataSources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -297,7 +297,7 @@ func testAccGrafanaWorkspace_dataSources(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_permissionType(t *testing.T) {
+func testAccWorkspace_permissionType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -330,7 +330,7 @@ func testAccGrafanaWorkspace_permissionType(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_notificationDestinations(t *testing.T) {
+func testAccWorkspace_notificationDestinations(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccGrafanaLicenseAssociation_freeTrial(t *testing.T) {
+func testAccLicenseAssociation_freeTrial(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_license_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
