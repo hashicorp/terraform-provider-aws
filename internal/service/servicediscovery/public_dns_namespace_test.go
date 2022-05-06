@@ -26,9 +26,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
@@ -59,9 +59,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
@@ -85,9 +85,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_description(rName, "test"),
@@ -110,9 +110,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_tags1(rName, "key1", "value1"),
