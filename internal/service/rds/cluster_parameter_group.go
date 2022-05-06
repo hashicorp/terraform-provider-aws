@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,14 +98,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
+	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	createOpts := rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
@@ -158,6 +152,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", describeResp.DBClusterParameterGroups[0].Description)
 	d.Set("family", describeResp.DBClusterParameterGroups[0].DBParameterGroupFamily)
 	d.Set("name", describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones
 	describeParametersOpts := rds.DescribeDBClusterParametersInput{
