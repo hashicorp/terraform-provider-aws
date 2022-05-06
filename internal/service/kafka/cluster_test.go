@@ -869,7 +869,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.7.1"),
+				Config: testAccClusterConfig_version(rName, "2.7.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
@@ -884,7 +884,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.8.0"),
+				Config: testAccClusterConfig_version(rName, "2.8.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -907,7 +907,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.8.0"),
+				Config: testAccClusterConfig_version(rName, "2.8.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.8.0"),
@@ -927,7 +927,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.7.1"),
+				Config: testAccClusterConfig_version(rName, "2.7.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
@@ -957,7 +957,7 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterKafkaVersionWithConfigurationInfoConfig(rName, "2.7.1", "config1"),
+				Config: testAccClusterConfig_versionConfigurationInfo(rName, "2.7.1", "config1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
@@ -975,7 +975,7 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterKafkaVersionWithConfigurationInfoConfig(rName, "2.8.0", "config2"),
+				Config: testAccClusterConfig_versionConfigurationInfo(rName, "2.8.0", "config2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -1894,7 +1894,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, cloudwatchLogsEnabled, cloudwatchLogsLogGroup, firehoseEnabled, firehoseDeliveryStream, s3Enabled, s3Bucket))
 }
 
-func testAccClusterKafkaVersionConfig(rName string, kafkaVersion string) string {
+func testAccClusterConfig_version(rName string, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1917,7 +1917,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, kafkaVersion))
 }
 
-func testAccClusterKafkaVersionWithConfigurationInfoConfig(rName string, kafkaVersion string, configResourceName string) string {
+func testAccClusterConfig_versionConfigurationInfo(rName string, kafkaVersion string, configResourceName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "config1" {
   kafka_versions    = ["2.7.1"]

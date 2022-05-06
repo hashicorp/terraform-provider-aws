@@ -118,7 +118,7 @@ func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 		CheckDestroy: testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfigKafkaVersions(rName),
+				Config: testAccConfigurationConfig_versions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "2"),
@@ -257,7 +257,7 @@ PROPERTIES
 `, rName, description)
 }
 
-func testAccConfigurationConfigKafkaVersions(rName string) string {
+func testAccConfigurationConfig_versions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.6.0", "2.7.0"]
