@@ -200,10 +200,10 @@ func TestAccProvider_fipsEndpoint(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { PreCheck(t) },
-		ErrorCheck:   ErrorCheck(t),
-		Providers:    Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { PreCheck(t) },
+		ErrorCheck:        ErrorCheck(t),
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFIPSEndpointConfig(fmt.Sprintf("https://s3-fips.%s.%s", Region(), PartitionDNSSuffix()), rName),
