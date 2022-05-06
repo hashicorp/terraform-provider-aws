@@ -20,10 +20,10 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceShareDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareNameConfig(rName),
@@ -50,10 +50,10 @@ func TestAccRAMResourceShare_allowExternalPrincipals(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceShareDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAllowExternalPrincipalsConfig(rName, false),
@@ -85,10 +85,10 @@ func TestAccRAMResourceShare_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceShareDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareNameConfig(rName),
@@ -119,10 +119,10 @@ func TestAccRAMResourceShare_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceShareDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareTags1Config(rName, "key1", "value1"),
