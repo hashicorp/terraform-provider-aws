@@ -25,9 +25,9 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionHealthCheckAssociationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionHealthCheckAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
@@ -54,9 +54,9 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionHealthCheckAssociationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionHealthCheckAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
