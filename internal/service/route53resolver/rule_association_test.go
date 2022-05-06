@@ -25,12 +25,12 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
+		CheckDestroy: testAccCheckRuleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverRuleAssociationConfig_basic(name),
+				Config: testAccRuleAssociationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverRuleAssociationExists(resourceNameAssoc, &assn),
+					testAccCheckRuleAssociationExists(resourceNameAssoc, &assn),
 					resource.TestCheckResourceAttrPair(resourceNameAssoc, "vpc_id", resourceNameVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameAssoc, "resolver_rule_id", resourceNameRule, "id"),
 					resource.TestCheckResourceAttr(resourceNameAssoc, "name", name),
@@ -45,7 +45,7 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error {
+func testAccCheckRuleAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule_association" {
@@ -68,7 +68,7 @@ func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53resolver.ResolverRuleAssociation) resource.TestCheckFunc {
+func testAccCheckRuleAssociationExists(n string, assn *route53resolver.ResolverRuleAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,7 +93,7 @@ func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53res
 	}
 }
 
-func testAccRoute53ResolverRuleAssociationConfig_basic(name string) string {
+func testAccRuleAssociationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "example" {
   cidr_block           = "10.6.0.0/16"
