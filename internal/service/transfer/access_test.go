@@ -26,9 +26,9 @@ func testAccAccess_s3_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessS3BasicConfig(rName),
@@ -71,9 +71,9 @@ func testAccAccess_efs_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEFSBasicConfig(rName),
@@ -117,9 +117,9 @@ func testAccAccess_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessS3BasicConfig(rName),
@@ -145,9 +145,9 @@ func testAccAccess_s3_policy(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessS3ScopeDownPolicyConfig(rName),
