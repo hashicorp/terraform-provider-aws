@@ -19,10 +19,10 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRailsAppLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRailsAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerVPCCreateConfig(rName),
@@ -49,10 +49,10 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRailsAppLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRailsAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerTags1Config(rName, "key1", "value1"),

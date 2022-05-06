@@ -19,10 +19,10 @@ func TestAccOpsWorksECSClusterLayer_basic(t *testing.T) {
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_ecs_cluster_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckECSClusterLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckECSClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccECSClusterLayerBasic(stackName),
@@ -41,10 +41,10 @@ func TestAccOpsWorksECSClusterLayer_tags(t *testing.T) {
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_ecs_cluster_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckECSClusterLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckECSClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccECSClusterLayerTags1Config(stackName, "key1", "value1"),
