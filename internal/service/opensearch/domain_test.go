@@ -85,7 +85,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -205,7 +205,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -268,7 +268,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -305,7 +305,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -362,7 +362,7 @@ func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -405,7 +405,7 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -445,7 +445,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck: acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:  acctest.Providers,
 		CheckDestroy: func(s *terraform.State) error {
@@ -496,7 +496,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -529,7 +529,7 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -560,7 +560,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -587,7 +587,7 @@ func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -626,7 +626,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -664,7 +664,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -706,7 +706,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -743,7 +743,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -780,7 +780,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -817,7 +817,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -852,7 +852,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -887,7 +887,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -922,7 +922,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -962,7 +962,7 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckCognitoIdentityProvider(t)
-			testAccPreCheckIAMServiceLinkedRoleOpenSearch(t)
+			testAccPreCheckIAMServiceLinkedRole(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
@@ -1005,7 +1005,7 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckCognitoIdentityProvider(t)
-			testAccPreCheckIAMServiceLinkedRoleOpenSearch(t)
+			testAccPreCheckIAMServiceLinkedRole(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
@@ -1045,7 +1045,7 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1076,7 +1076,7 @@ func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1105,7 +1105,7 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1137,7 +1137,7 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1169,7 +1169,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1210,7 +1210,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1243,7 +1243,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1275,7 +1275,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1316,7 +1316,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1356,7 +1356,7 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckELBDestroy,
@@ -1406,7 +1406,7 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1454,7 +1454,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1488,7 +1488,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1534,7 +1534,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDomainDestroy,
@@ -1786,7 +1786,7 @@ func testAccGetValidStartAtTime(t *testing.T, timeUntilStart string) string {
 	return n.Add(d).Format(time.RFC3339)
 }
 
-func testAccPreCheckIAMServiceLinkedRoleOpenSearch(t *testing.T) {
+func testAccPreCheckIAMServiceLinkedRole(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 	dnsSuffix := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
 
