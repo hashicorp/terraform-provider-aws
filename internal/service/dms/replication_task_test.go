@@ -34,14 +34,14 @@ func TestAccReplicationTask_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationTaskConfig_replicationTask(rName, tags),
+				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
 			},
 			{
-				Config:             testAccReplicationTaskConfig_replicationTask(rName, tags),
+				Config:             testAccReplicationTaskConfig_basic(rName, tags),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -52,7 +52,7 @@ func TestAccReplicationTask_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"start_replication_task"},
 			},
 			{
-				Config: testAccReplicationTaskConfig_replicationTask(rName, updatedTags),
+				Config: testAccReplicationTaskConfig_basic(rName, updatedTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 				),
@@ -72,7 +72,7 @@ func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationTaskConfig_replicationTaskCdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
+				Config: testAccReplicationTaskConfig_cdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", "mysql-bin-changelog.000024:373"),
@@ -148,7 +148,7 @@ func TestAccReplicationTask_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationTaskConfig_replicationTask(rName, tags),
+				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
@@ -282,7 +282,7 @@ resource "aws_dms_replication_instance" "test" {
 `, rName))
 }
 
-func testAccReplicationTaskConfig_replicationTask(rName, tags string) string {
+func testAccReplicationTaskConfig_basic(rName, tags string) string {
 	return acctest.ConfigCompose(
 		replicationTaskConfigBase(rName),
 		fmt.Sprintf(`
@@ -304,7 +304,7 @@ resource "aws_dms_replication_task" "test" {
 `, rName, tags))
 }
 
-func testAccReplicationTaskConfig_replicationTaskCdcStartPosition(rName, cdcStartPosition string) string {
+func testAccReplicationTaskConfig_cdcStartPosition(rName, cdcStartPosition string) string {
 	return acctest.ConfigCompose(
 		replicationTaskConfigBase(rName),
 		fmt.Sprintf(`

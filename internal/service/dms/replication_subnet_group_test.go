@@ -25,7 +25,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 		CheckDestroy:      replicationSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSubnetGroupConfig_replicationSubnetGroup(randId),
+				Config: testAccReplicationSubnetGroupConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkReplicationSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
@@ -37,7 +37,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSubnetGroupConfig_replicationSubnetGroupUpdate(randId),
+				Config: testAccReplicationSubnetGroupConfig_update(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkReplicationSubnetGroupExists(resourceName),
 				),
@@ -102,7 +102,7 @@ func replicationSubnetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccReplicationSubnetGroupConfig_replicationSubnetGroup(randId string) string {
+func testAccReplicationSubnetGroupConfig_basic(randId string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
@@ -162,7 +162,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 `, randId))
 }
 
-func testAccReplicationSubnetGroupConfig_replicationSubnetGroupUpdate(randId string) string {
+func testAccReplicationSubnetGroupConfig_update(randId string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
