@@ -27,12 +27,12 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName1)),
 				),
@@ -40,7 +40,7 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 			{
 				Config: testAccGroupConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName2)),
 				),
@@ -63,19 +63,19 @@ func TestAccQuickSightGroup_withDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithDescriptionConfig(rName, "Description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Description 1"),
 				),
 			},
 			{
 				Config: testAccGroupWithDescriptionConfig(rName, "Description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Description 2"),
 				),
 			},
@@ -97,13 +97,13 @@ func TestAccQuickSightGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
-					testAccCheckQuickSightGroupDisappears(&group),
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupDisappears(&group),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +111,7 @@ func TestAccQuickSightGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(resourceName string, group *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -147,7 +147,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 	}
 }
 
-func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
+func testAccCheckGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group" {
@@ -178,7 +178,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
+func testAccCheckGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
