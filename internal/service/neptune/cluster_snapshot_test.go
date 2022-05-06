@@ -21,10 +21,10 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig(rName),
