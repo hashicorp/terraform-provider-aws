@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_subnet: Fixes aws_subnet on creation improperly handling IPv6 CIDR pending association state #24685
+resource/aws_subnet: Fix `InvalidSubnet.Conflict` errors when associating IPv6 CIDR blocks
 ```
