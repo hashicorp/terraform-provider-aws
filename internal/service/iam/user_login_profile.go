@@ -179,7 +179,7 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 
 	var output *iam.GetLoginProfileOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetLoginProfile(input)
@@ -230,7 +230,7 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %s", d.Id(), input)
 	// Handle IAM eventual consistency
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
