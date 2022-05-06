@@ -1826,22 +1826,30 @@ resource "aws_security_group" "sg_for_lambda" {
 `, policyName, roleName, sgName)
 }
 
-func ConfigVpcWithSubnets(subnetCount int) string {
+func ConfigVpcWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
-  count = %[1]d
+  count = %[2]d
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, subnetCount),
+`, rName, subnetCount),
 	)
 }
 

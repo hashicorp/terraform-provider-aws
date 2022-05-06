@@ -44,6 +44,10 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Delete everything but the IAM Role assumed by the IoT service.
+			{
+				Config: testAccTopicRuleRoleConfig(rName),
+			},
 		},
 	})
 }
@@ -106,6 +110,10 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
+			// Delete everything but the IAM Role assumed by the IoT service.
+			{
+				Config: testAccTopicRuleRoleConfig(rName),
+			},
 		},
 	})
 }
@@ -159,7 +167,7 @@ func testAccCheckTopicRuleDestinationExists(n string) resource.TestCheckFunc {
 
 func testAccTopicRuleDestinationBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {

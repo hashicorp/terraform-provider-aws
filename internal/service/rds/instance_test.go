@@ -4819,7 +4819,7 @@ resource "aws_db_instance" "snapshot" {
 
 func testAccInstanceConfig_S3Import_Base(rName, bucketPrefix string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q

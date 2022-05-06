@@ -922,6 +922,10 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Delete everything but the IAM Role assumed by the IoT service.
+			{
+				Config: testAccTopicRuleRoleConfig(rName),
+			},
 		},
 	})
 }
