@@ -54,5 +54,5 @@ The following arguments are required:
 `aws_location_map` resources can be imported using the map name, e.g.:
 
 ```
-$ terraform import aws_imagebuilder_image_pipeline.example example
+$ terraform import aws_location_map.example example
 ```
