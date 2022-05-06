@@ -18,9 +18,9 @@ import (
 
 func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                      testAccNetworkManagerCustomerGatewayAssociation_basic,
-		"disappears":                 testAccNetworkManagerCustomerGatewayAssociation_disappears,
-		"disappears_CustomerGateway": testAccNetworkManagerCustomerGatewayAssociation_disappears_CustomerGateway,
+		"basic":                      testAccCustomerGatewayAssociation_basic,
+		"disappears":                 testAccCustomerGatewayAssociation_disappears,
+		"disappears_CustomerGateway": testAccCustomerGatewayAssociation_Disappears_customerGateway,
 	}
 
 	for name, tc := range testCases {
@@ -31,7 +31,7 @@ func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
 	}
 }
 
-func testAccNetworkManagerCustomerGatewayAssociation_basic(t *testing.T) {
+func testAccCustomerGatewayAssociation_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -56,7 +56,7 @@ func testAccNetworkManagerCustomerGatewayAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerCustomerGatewayAssociation_disappears(t *testing.T) {
+func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -78,7 +78,7 @@ func testAccNetworkManagerCustomerGatewayAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerCustomerGatewayAssociation_disappears_CustomerGateway(t *testing.T) {
+func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) {
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 	customerGatewayResourceName := "aws_customer_gateway.test"
