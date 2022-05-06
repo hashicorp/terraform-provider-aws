@@ -500,7 +500,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for DocDB Cluster (%s) to be available", d.Id())
-		err = waitForDocDBClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DocDB Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -678,7 +678,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		req.CloudwatchLogsExportConfiguration = buildDocDBCloudwatchLogsExportConfiguration(d)
+		req.CloudwatchLogsExportConfiguration = buildCloudWatchLogsExportConfiguration(d)
 		requestUpdate = true
 	}
 
@@ -741,7 +741,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for DocDB Cluster (%s) to be available", d.Id())
-		err = waitForDocDBClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DocDB Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -894,7 +894,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForDocDBClusterUpdate(conn *docdb.DocDB, id string, timeout time.Duration) error {
+func waitForClusterUpdate(conn *docdb.DocDB, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
@@ -907,7 +907,7 @@ func waitForDocDBClusterUpdate(conn *docdb.DocDB, id string, timeout time.Durati
 	return err
 }
 
-func buildDocDBCloudwatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration {
+func buildCloudWatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration {
 
 	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
 	o := oraw.([]interface{})
