@@ -45,9 +45,9 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBuildDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBuildDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBuildBasicConfig(rName, bucketName, key, roleArn),
@@ -115,9 +115,9 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBuildDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBuildDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBuildBasicTags1Config(rName, bucketName, key, roleArn, "key1", "value1"),
@@ -182,9 +182,9 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBuildDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBuildDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBuildBasicConfig(rName, bucketName, key, roleArn),
