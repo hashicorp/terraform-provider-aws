@@ -2554,7 +2554,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccReplicationGroupConfig_Uppercase(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.micro"
@@ -2708,7 +2708,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccReplicationGroupInVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(1),
+		acctest.ConfigVpcWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -2744,7 +2744,7 @@ resource "aws_security_group" "test" {
 
 func testAccReplicationGroupInVPCConfig_DeprecatedAvailabilityZones(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(1),
+		acctest.ConfigVpcWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -2844,7 +2844,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccReplicationGroupMultiAZInVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -2897,7 +2897,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccReplicationGroupNativeRedisClusterErrorConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -3057,7 +3057,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccReplicationGroup_UseCMKKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(1),
+		acctest.ConfigVpcWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -3100,7 +3100,7 @@ resource "aws_kms_key" "test" {
 
 func testAccReplicationGroup_EnableAtRestEncryptionConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(1),
+		acctest.ConfigVpcWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -3138,7 +3138,7 @@ resource "aws_security_group" "test" {
 
 func testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName string, authToken string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(1),
+		acctest.ConfigVpcWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -3177,7 +3177,7 @@ resource "aws_security_group" "test" {
 
 func testAccReplicationGroupConfig_NumberCacheClusters(rName string, numberCacheClusters int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		testAccReplicationGroupClusterData(numberCacheClusters),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -3202,7 +3202,7 @@ resource "aws_elasticache_subnet_group" "test" {
 
 func testAccReplicationGroupConfig_FailoverMultiAZ(rName string, numberCacheClusters int, autoFailover, multiAZ bool) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   # InvalidParameterCombination: Automatic failover is not supported for T1 and T2 cache node types.
@@ -3575,7 +3575,7 @@ resource "aws_elasticache_replication_group" "primary" {
 
 func testAccReplicationGroupConfigDataTiering(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(1),
+		acctest.ConfigVpcWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
