@@ -21,10 +21,10 @@ func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppImageDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageBasicConfig(rName),
@@ -51,10 +51,10 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppImageDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageKernelGatewayImageKernalSpecs1Config(rName),
@@ -94,10 +94,10 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) 
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppImageDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageKernelGatewayImageFileSystem1Config(rName),
@@ -140,10 +140,10 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageTags1Config(rName, "key1", "value1"),
@@ -185,10 +185,10 @@ func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppImageDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageBasicConfig(rName),
