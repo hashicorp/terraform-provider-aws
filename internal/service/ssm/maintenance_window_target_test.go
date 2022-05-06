@@ -21,10 +21,10 @@ func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
@@ -57,10 +57,10 @@ func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetNoNameOrDescriptionConfig(rName),
@@ -88,10 +88,10 @@ func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMaintenanceWindowTargetBasicWithTargetConfig(name, "Bäd Name!@#$%^", "good description"),
@@ -114,10 +114,10 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
@@ -170,10 +170,10 @@ func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetBasicResourceGroupConfig(rName),
@@ -205,10 +205,10 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
@@ -227,10 +227,10 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetBasicConfig(rName),

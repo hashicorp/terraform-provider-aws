@@ -20,10 +20,10 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineBasicConfig(name),
@@ -73,10 +73,10 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineBasicTags1Config(name, "key1", "value1"),
@@ -118,10 +118,10 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineBasicConfig(name),
@@ -140,10 +140,10 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineWithOperatingSystemConfig(name),
@@ -184,10 +184,10 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineWithApproveUntilDateConfig(name),
@@ -233,10 +233,10 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineWithSourceConfig(name),
@@ -285,10 +285,10 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineBasicApprovedPatchesNonSecConfig(name),
@@ -312,10 +312,10 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineBasicRejectPatchesActionConfig(name),

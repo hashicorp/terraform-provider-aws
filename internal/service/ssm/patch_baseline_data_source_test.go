@@ -14,9 +14,9 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPatchBaselineDataSourceConfig_existingBaseline(),
@@ -44,10 +44,10 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPatchBaselineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPatchBaselineDataSourceConfig_newBaseline(rName),
