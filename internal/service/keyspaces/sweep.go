@@ -17,11 +17,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_keyspaces_keyspace", &resource.Sweeper{
 		Name: "aws_keyspaces_keyspace",
-		F:    sweepKeyspaces,
+		F:    sweep,
 	})
 }
 
-func sweepKeyspaces(region string) error {
+func sweep(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
