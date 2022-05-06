@@ -356,10 +356,8 @@ func ResourceFunction() *schema.Resource {
 }
 
 const (
-	PropagationTimeout = 5 * time.Minute
-
-	lambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
-	lambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
+	functionPutConcurrencyTimeout  = 1 * time.Minute
+	functionExtraThrottlingTimeout = 9 * time.Minute
 )
 
 func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -562,7 +560,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -606,7 +604,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating Lambda Function (1): %w", err)
 		}
 
-		err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
+		err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -645,7 +643,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		err := resource.Retry(lambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
+		err := resource.Retry(functionPutConcurrencyTimeout, func() *resource.RetryError {
 			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 
 			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
@@ -1125,7 +1123,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1170,7 +1168,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// Allow more time for EC2 throttling
-			err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+			err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -1284,7 +1282,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 

@@ -693,3 +693,15 @@ rules:
     patterns:
       - pattern: tfawserr.ErrMessageContains(err, ..., "")
     severity: ERROR
+
+  - id: avoid-dependency-for-one-constant
+    languages: [go]
+    message: Use constant in the same package rather than importing iam for a constant
+    paths:
+      include:
+        - internal/
+      exclude:
+        - internal/service/iam
+    patterns:
+      - pattern: tfiam.PropagationTimeout
+    severity: ERROR

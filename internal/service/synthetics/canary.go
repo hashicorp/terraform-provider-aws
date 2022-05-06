@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -318,11 +317,11 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	// timeout. Since the creation process is asynchronous and can take up to
 	// its own timeout, we store a stop time upfront for checking.
 	// Real-life experience shows that double the standard IAM propagation time is required.
-	iamPropagationTimeout := tfiam.PropagationTimeout * 2
-	iamwaiterStopTime := time.Now().Add(iamPropagationTimeout)
+	propagationTimeout := propagationTimeout * 2
+	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		iamPropagationTimeout+canaryCreatedTimeout,
+		propagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
 			return retryCreateCanary(conn, d, input)
 		},

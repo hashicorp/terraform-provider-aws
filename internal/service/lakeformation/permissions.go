@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -306,7 +305,7 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GrantPermissions(input)
 		if err != nil {

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -173,7 +172,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
 	outputRaw, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateScheduledAction(input)
 		},

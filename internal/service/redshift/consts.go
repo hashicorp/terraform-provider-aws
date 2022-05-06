@@ -1,5 +1,7 @@
 package redshift
 
+import "time"
+
 //nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	clusterAvailabilityStatusAvailable   = "Available"
@@ -70,3 +72,7 @@ func clusterAvailabilityZoneRelocationStatus_PendingValues() []string {
 	}
 
 }
+
+const (
+	propagationTimeout = 2 * time.Minute
+)

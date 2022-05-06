@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -651,7 +650,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating Elasticsearch Domain: %s", input)
 
 	outputRaw, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateElasticsearchDomain(input)
 		},

@@ -6,6 +6,10 @@ import (
 	"sort"
 )
 
+const (
+	policyModelMarshallJSONStartSliceSize = 2
+)
+
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
