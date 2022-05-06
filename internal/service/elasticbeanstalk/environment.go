@@ -305,7 +305,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 	}
 
-	err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
+	err = waitForEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 	if err != nil {
 		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment (%s) to become ready: %w", d.Id(), err)
 	}
@@ -448,7 +448,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 		}
 
-		err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
+		err = waitForEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 		if err != nil {
 			return fmt.Errorf(
 				"Error waiting for Elastic Beanstalk Environment (%s) to become ready: %s",
@@ -484,7 +484,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 		}
 
-		err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
+		err = waitForEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 		if err != nil {
 			return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become ready: %w", d.Id(), err)
 		}
@@ -752,7 +752,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// The Environment needs to be in a Ready state before it can be terminated
-	err = waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn, d.Id(), waitForReadyTimeOut, pollInterval)
+	err = waitForEnvironmentReadyIgnoreErrorEvents(conn, d.Id(), waitForReadyTimeOut, pollInterval)
 	if err != nil {
 		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to be ready before terminating: %w", d.Id(), err)
 	}
@@ -779,7 +779,7 @@ func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeo
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{"Terminating"},
 		Target:       []string{"Terminated"},
-		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
+		Refresh:      environmentIgnoreErrorEventsStateRefreshFunc(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -794,14 +794,14 @@ func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeo
 	return nil
 }
 
-func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration, startTime time.Time) error {
+func waitForEnvironmentReady(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration, startTime time.Time) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			elasticbeanstalk.EnvironmentStatusLaunching,
 			elasticbeanstalk.EnvironmentStatusUpdating,
 		},
 		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
-		Refresh:      elasticBeanstalkEnvironmentStateRefreshFunc(conn, id, startTime),
+		Refresh:      environmentStateRefreshFunc(conn, id, startTime),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -812,7 +812,7 @@ func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeans
 	return err
 }
 
-func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
+func waitForEnvironmentReadyIgnoreErrorEvents(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			elasticbeanstalk.EnvironmentStatusLaunching,
@@ -823,7 +823,7 @@ func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeans
 			elasticbeanstalk.EnvironmentStatusReady,
 			elasticbeanstalk.EnvironmentStatusTerminated,
 		},
-		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
+		Refresh:      environmentIgnoreErrorEventsStateRefreshFunc(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -834,9 +834,9 @@ func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeans
 	return err
 }
 
-// elasticBeanstalkEnvironmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// environmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // the creation of the Beanstalk Environment
-func elasticBeanstalkEnvironmentStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string, t time.Time) resource.StateRefreshFunc {
+func environmentStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string, t time.Time) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
 			EnvironmentIds: []*string{aws.String(environmentID)},
@@ -875,7 +875,7 @@ func elasticBeanstalkEnvironmentStateRefreshFunc(conn *elasticbeanstalk.ElasticB
 	}
 }
 
-func elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string) resource.StateRefreshFunc {
+func environmentIgnoreErrorEventsStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
 			EnvironmentIds: []*string{aws.String(environmentID)},
