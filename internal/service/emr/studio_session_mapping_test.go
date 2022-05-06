@@ -27,9 +27,9 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckUserID(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStudioSessionMappingDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStudioSessionMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
@@ -71,9 +71,9 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckUserID(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStudioSessionMappingDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStudioSessionMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),

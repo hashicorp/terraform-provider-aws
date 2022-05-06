@@ -24,10 +24,10 @@ func TestAccGlueJob_basic(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Required(rName),
@@ -61,10 +61,10 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_RequiredStreaming(rName),
@@ -97,10 +97,10 @@ func TestAccGlueJob_command(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Command(rName, "testscriptlocation1"),
@@ -134,10 +134,10 @@ func TestAccGlueJob_defaultArguments(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_DefaultArguments(rName, "job-bookmark-disable", "python"),
@@ -173,10 +173,10 @@ func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobnonOverridableArgumentsConfig(rName, "job-bookmark-disable", "python"),
@@ -212,10 +212,10 @@ func TestAccGlueJob_description(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Description(rName, "First Description"),
@@ -247,10 +247,10 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Version_maxCapacity(rName, "0.9"),
@@ -289,10 +289,10 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_ExecutionProperty(rName, 0),
@@ -330,10 +330,10 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_MaxRetries(rName, 11),
@@ -369,10 +369,10 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_NotificationProperty(rName, 0),
@@ -410,10 +410,10 @@ func TestAccGlueJob_tags(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTags1Config(rName, "key1", "value1"),
@@ -456,10 +456,10 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Timeout(rName, 1),
@@ -490,10 +490,10 @@ func TestAccGlueJob_timeout(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Timeout(rName, 1),
@@ -525,10 +525,10 @@ func TestAccGlueJob_security(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_SecurityConfiguration(rName, "default_encryption"),
@@ -560,10 +560,10 @@ func TestAccGlueJob_workerType(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_WorkerType(rName, "Standard"),
@@ -602,10 +602,10 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_PythonShell(rName),
@@ -658,10 +658,10 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_MaxCapacity(rName, 10),
@@ -696,10 +696,10 @@ func TestAccGlueJob_disappears(t *testing.T) {
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckJobDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_Required(rName),

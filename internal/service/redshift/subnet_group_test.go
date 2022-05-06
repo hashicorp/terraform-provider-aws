@@ -21,10 +21,10 @@ func TestAccRedshiftSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rInt),
@@ -53,10 +53,10 @@ func TestAccRedshiftSubnetGroup_disappears(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rInt),
@@ -76,10 +76,10 @@ func TestAccRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rInt),
@@ -114,10 +114,10 @@ func TestAccRedshiftSubnetGroup_updateSubnetIDs(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rInt),
@@ -152,10 +152,10 @@ func TestAccRedshiftSubnetGroup_tags(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_tags(rInt),

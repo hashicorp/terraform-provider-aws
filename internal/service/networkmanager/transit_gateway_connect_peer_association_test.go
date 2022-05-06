@@ -36,10 +36,10 @@ func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
@@ -61,10 +61,10 @@ func testAccTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
@@ -84,10 +84,10 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),

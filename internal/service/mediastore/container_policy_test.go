@@ -22,10 +22,10 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 	rName = strings.ReplaceAll(rName, "-", "_")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContainerPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContainerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerPolicyConfig_basic(rName),

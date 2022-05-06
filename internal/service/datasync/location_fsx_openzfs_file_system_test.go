@@ -26,9 +26,9 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxOpenZfsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxOpenZfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxOpenZfsConfig(),
@@ -62,9 +62,9 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxOpenZfsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxOpenZfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxOpenZfsConfig(),
@@ -89,9 +89,9 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxOpenZfsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxOpenZfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxOpenZfsSubdirectoryConfig("/fsx/subdirectory1/"),
@@ -120,9 +120,9 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxOpenZfsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxOpenZfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxOpenZfsTags1Config("key1", "value1"),

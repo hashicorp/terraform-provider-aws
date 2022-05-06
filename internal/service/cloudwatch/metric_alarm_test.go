@@ -21,10 +21,10 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmConfig(rName),
@@ -62,10 +62,10 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, "reboot"),
@@ -110,10 +110,10 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmAlarmActionsSNSTopicConfig(rName),
@@ -137,10 +137,10 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmAlarmActionsSWFActionConfig(rName),
@@ -164,10 +164,10 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmDatapointsToAlarmConfig(rName),
@@ -186,10 +186,10 @@ func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmTreatMissingDataConfig(rName),
@@ -227,10 +227,10 @@ func TestAccCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmTreatEvaluateLowSampleCountPercentilesConfig(rName),
@@ -256,10 +256,10 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "IQM(1:2)"), // IQM accepts no args
@@ -408,10 +408,10 @@ func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmWithBadExpressionConfig(rName),
@@ -471,10 +471,10 @@ func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
 func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmMissingStatisticConfig(rName),
@@ -490,10 +490,10 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmTags1Config(rName, "key1", "value1"),
@@ -535,10 +535,10 @@ func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMetricAlarmDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricAlarmConfig(rName),

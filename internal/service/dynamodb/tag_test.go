@@ -17,10 +17,10 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
@@ -44,10 +44,10 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
@@ -97,10 +97,10 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),

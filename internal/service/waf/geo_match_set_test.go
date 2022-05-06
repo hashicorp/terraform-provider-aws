@@ -22,10 +22,10 @@ func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(geoMatchSet),
@@ -60,10 +60,10 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(geoMatchSet),
@@ -96,10 +96,10 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(geoMatchSet),
@@ -119,10 +119,10 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(setName),
@@ -171,10 +171,10 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_noConstraints(setName),

@@ -10,9 +10,9 @@ import (
 
 func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerDataSourceInstanceTypeOfferingsConfig(),

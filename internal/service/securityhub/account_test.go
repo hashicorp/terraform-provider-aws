@@ -14,10 +14,10 @@ import (
 
 func testAccAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig(),

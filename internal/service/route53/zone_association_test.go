@@ -21,10 +21,10 @@ func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckZoneAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneAssociationConfig_basic(domainName),
@@ -47,10 +47,10 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckZoneAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneAssociationConfig_basic(domainName),
@@ -71,10 +71,10 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckZoneAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneAssociationConfig_basic(domainName),
@@ -95,10 +95,10 @@ func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckZoneAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneAssociationConfig_basic(domainName),

@@ -18,10 +18,10 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testAccNLB-basic-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName),

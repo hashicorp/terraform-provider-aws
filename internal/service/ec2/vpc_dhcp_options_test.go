@@ -21,10 +21,10 @@ func TestAccVPCDHCPOptions_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDHCPOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig(rName),
@@ -56,10 +56,10 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDHCPOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfigTags1(rName, "key1", "value1"),
@@ -101,10 +101,10 @@ func TestAccVPCDHCPOptions_disappears(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDHCPOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig(rName),

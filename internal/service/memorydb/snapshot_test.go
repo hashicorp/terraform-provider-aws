@@ -21,10 +21,10 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 	resourceName := "aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
@@ -65,10 +65,10 @@ func TestAccMemoryDBSnapshot_disappears(t *testing.T) {
 	resourceName := "aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
@@ -87,10 +87,10 @@ func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 	resourceName := "aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_withNoName(rName),
@@ -109,10 +109,10 @@ func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 	resourceName := "aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_withNamePrefix(rName, "tftest-"),
@@ -131,10 +131,10 @@ func TestAccMemoryDBSnapshot_create_withKMS(t *testing.T) {
 	resourceName := "aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_withKMS(rName),
@@ -157,10 +157,10 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 	resourceName := "aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_withTags0(rName),

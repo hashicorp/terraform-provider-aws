@@ -18,10 +18,10 @@ func testAccDetector_basic(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyDetectorConfig_basic1,
@@ -68,10 +68,10 @@ func testAccDetector_tags(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorConfig_tags1("key1", "value1"),
@@ -111,10 +111,10 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorConfig_datasourcesS3Logs(true),

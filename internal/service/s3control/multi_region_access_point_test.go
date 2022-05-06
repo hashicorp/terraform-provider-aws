@@ -28,10 +28,10 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
@@ -75,10 +75,10 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
@@ -103,10 +103,10 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_publicAccessBlock(bucketName, rName),
@@ -140,10 +140,10 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName1),

@@ -13,10 +13,10 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostInstanceTypeInstanceTypeDataSourceConfig(),
@@ -32,10 +32,10 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *test
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostInstanceTypePreferredInstanceTypesDataSourceConfig(),

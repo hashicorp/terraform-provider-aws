@@ -18,9 +18,9 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceDataSourceConfig_dataSourceWorkspacebyWorkspaceID(rName, domain),
@@ -53,9 +53,9 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceDataSourceConfig_DataSourceWorkspacebyDirectoryID_userName(rName, domain),
@@ -82,9 +82,9 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 
 func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceDataSourceConfig_workspaceIDAndDirectoryIDConflict(),

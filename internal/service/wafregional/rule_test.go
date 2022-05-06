@@ -24,10 +24,10 @@ func TestAccWAFRegionalRule_basic(t *testing.T) {
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig(wafRuleName),
@@ -54,10 +54,10 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleTags1Config(wafRuleName, "key1", "value1"),
@@ -100,10 +100,10 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig(wafRuleName),
@@ -138,10 +138,10 @@ func TestAccWAFRegionalRule_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig(wafRuleName),
@@ -161,10 +161,10 @@ func TestAccWAFRegionalRule_noPredicates(t *testing.T) {
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRule_noPredicates(wafRuleName),
@@ -193,10 +193,10 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig(ruleName),

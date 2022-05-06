@@ -23,10 +23,10 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodEmail),
@@ -60,10 +60,10 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
@@ -99,10 +99,10 @@ func TestAccACMCertificate_root(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateConfig(rootDomain, acm.ValidationMethodDns),
@@ -139,10 +139,10 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationOptionsConfig(rootDomain, domain),
@@ -178,10 +178,10 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificatePrivateCertConfig(commonName.String(), certificateDomainName),
@@ -215,10 +215,10 @@ func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
 	domain := fmt.Sprintf("%s.", rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
@@ -235,10 +235,10 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(rootDomain, strconv.Quote(wildcardDomain), acm.ValidationMethodDns),
@@ -277,10 +277,10 @@ func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(""), acm.ValidationMethodDns),
@@ -298,10 +298,10 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
@@ -344,10 +344,10 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), acm.ValidationMethodDns),
@@ -394,10 +394,10 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
@@ -439,10 +439,10 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
@@ -483,10 +483,10 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateConfig(wildcardDomain, acm.ValidationMethodDns),
@@ -522,10 +522,10 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(wildcardDomain, strconv.Quote(rootDomain), acm.ValidationMethodDns),
@@ -565,10 +565,10 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateDisableCTLoggingConfig(rootDomain, acm.ValidationMethodDns),
@@ -614,10 +614,10 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificatePrivateKeyConfig(certificate, key, caCertificate),
@@ -660,10 +660,10 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig("1.2.3.4"),
@@ -695,10 +695,10 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateConfigTags1(certificate1, key1, "key1", "value1"),

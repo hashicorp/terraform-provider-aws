@@ -24,10 +24,10 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
@@ -72,10 +72,10 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
@@ -95,10 +95,10 @@ func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_ExcessCapacityTerminationPolicy(rName, "no-termination"),
@@ -133,10 +133,10 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateID(rName, launchTemplateResourceName1),
@@ -177,10 +177,10 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName1),
@@ -221,10 +221,10 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, "t3.micro"),
@@ -270,10 +270,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName, 0),
@@ -310,10 +310,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, "t3.small"),
@@ -352,10 +352,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, "1.01"),
@@ -392,10 +392,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority(rName, 1),
@@ -432,10 +432,10 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName, 1, 2),
@@ -476,10 +476,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_SubnetID(rName, 0),
@@ -516,10 +516,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName, 1),
@@ -556,10 +556,10 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName, 1, 1),
@@ -598,10 +598,10 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_OnDemandOptions_AllocationStrategy(rName, "prioritized"),
@@ -636,10 +636,10 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_ReplaceUnhealthyInstances(rName, true),
@@ -672,10 +672,10 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_SpotOptions_AllocationStrategy(rName, "diversified"),
@@ -710,10 +710,10 @@ func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_SpotOptions_CapacityRebalance(rName, "diversified"),
@@ -740,10 +740,10 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, "stop"),
@@ -778,10 +778,10 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_SpotOptions_InstancePoolsToUseCount(rName, 2),
@@ -816,10 +816,10 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_Tags(rName, "key1", "value1"),
@@ -853,10 +853,10 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "on-demand"),
@@ -885,10 +885,10 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDema
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "on-demand"),
@@ -914,10 +914,10 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
@@ -943,10 +943,10 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TargetCapacitySpecification_TotalTargetCapacity(rName, 1),
@@ -981,10 +981,10 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_TerminateInstancesWithExpiration(rName, true),
@@ -1017,10 +1017,10 @@ func TestAccEC2Fleet_type(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_Type(rName, "maintain"),
@@ -1055,10 +1055,10 @@ func TestAccEC2Fleet_templateMultipleNetworkInterfaces(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_multipleNetworkInterfaces(rName),

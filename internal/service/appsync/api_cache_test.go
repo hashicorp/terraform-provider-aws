@@ -20,10 +20,10 @@ func testAccAPICache_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApiCacheDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApiCacheDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPICacheConfig_basic(rName),
@@ -49,10 +49,10 @@ func testAccAPICache_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApiCacheDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApiCacheDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPICacheConfig_basic(rName),

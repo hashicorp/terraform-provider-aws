@@ -29,10 +29,10 @@ func testAccAccount_basic(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig(name, email),
@@ -72,10 +72,10 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountCloseOnDeletionConfig(name, email),
@@ -117,10 +117,10 @@ func testAccAccount_ParentID(t *testing.T) {
 	parentIdResourceName2 := "aws_organizations_organizational_unit.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountParentId1Config(name, email),
@@ -160,10 +160,10 @@ func testAccAccount_Tags(t *testing.T) {
 	resourceName := "aws_organizations_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountTags1Config(name, email, "key1", "value1"),

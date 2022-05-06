@@ -24,10 +24,10 @@ func TestAccVPCFlowLog_vpcID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_VPCID(rName),
@@ -63,10 +63,10 @@ func TestAccVPCFlowLog_logFormat(t *testing.T) {
 	logFormat := "${version} ${vpc-id} ${subnet-id}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogFormat(rName),
@@ -97,10 +97,10 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_SubnetID(rName),
@@ -131,10 +131,10 @@ func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
@@ -162,10 +162,10 @@ func TestAccVPCFlowLog_LogDestinationType_s3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_S3(rName),
@@ -189,10 +189,10 @@ func TestAccVPCFlowLog_LogDestinationTypeS3_invalid(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
@@ -209,10 +209,10 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText(rName),
@@ -240,10 +240,10 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName),
@@ -273,10 +273,10 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet(rName),
@@ -304,10 +304,10 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible(rName),
@@ -336,10 +336,10 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(rName),
@@ -368,10 +368,10 @@ func TestAccVPCFlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_MaxAggregationInterval(rName),
@@ -395,10 +395,10 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfigTags1(rName, "key1", "value1"),
@@ -440,10 +440,10 @@ func TestAccVPCFlowLog_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowLogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_VPCID(rName),

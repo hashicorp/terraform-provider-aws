@@ -22,10 +22,10 @@ func testAccOrganizationCustomRule_basic(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
@@ -60,10 +60,10 @@ func testAccOrganizationCustomRule_disappears(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
@@ -81,10 +81,10 @@ func testAccOrganizationCustomRule_errorHandling(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrganizationCustomRuleConfigErrorHandling(rName),
@@ -100,10 +100,10 @@ func testAccOrganizationCustomRule_Description(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigDescription(rName, "description1"),
@@ -134,10 +134,10 @@ func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigExcludedAccounts1(rName),
@@ -171,10 +171,10 @@ func testAccOrganizationCustomRule_InputParameters(t *testing.T) {
 	inputParameters2 := `{"tag1Key":"Department", "tag2Key":"Owner"}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigInputParameters(rName, inputParameters1),
@@ -207,10 +207,10 @@ func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigLambdaFunctionArn1(rName),
@@ -241,10 +241,10 @@ func testAccOrganizationCustomRule_MaximumExecutionFrequency(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigMaximumExecutionFrequency(rName, "One_Hour"),
@@ -275,10 +275,10 @@ func testAccOrganizationCustomRule_ResourceIdScope(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigResourceIdScope(rName, "i-12345678"),
@@ -309,10 +309,10 @@ func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigResourceTypesScope1(rName),
@@ -343,10 +343,10 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigTagKeyScope(rName, "key1"),
@@ -377,10 +377,10 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigTagValueScope(rName, "value1"),
@@ -411,10 +411,10 @@ func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomRuleConfigTriggerTypes1(rName, "ScheduledNotification"),

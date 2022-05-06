@@ -25,10 +25,10 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigBasic(name),
@@ -111,10 +111,10 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigPredictiveScalingPredefined(name),
@@ -147,10 +147,10 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp1")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigPredictiveScalingCustom(name),
@@ -201,10 +201,10 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigPredictiveScalingPredefined(name),
@@ -238,10 +238,10 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigPredictiveScalingPredefined(name),
@@ -291,10 +291,10 @@ func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigBasic(name),
@@ -353,10 +353,10 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigSimpleScalingStepAdjustment(name),
@@ -382,10 +382,10 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigTargetTrackingPredefined(name),
@@ -409,10 +409,10 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigTargetTrackingCustom(name),
@@ -438,10 +438,10 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	resourceStepName := "aws_autoscaling_policy.foobar_step"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfigZeroValue(sdkacctest.RandString(5)),

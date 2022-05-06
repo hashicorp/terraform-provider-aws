@@ -15,10 +15,10 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, //lintignore:AT001
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig(true),

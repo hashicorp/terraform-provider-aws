@@ -26,10 +26,10 @@ func TestAccVPCRoute_basic(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr),
@@ -73,10 +73,10 @@ func TestAccVPCRoute_disappears(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr),
@@ -98,10 +98,10 @@ func TestAccVPCRoute_Disappears_routeTable(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr),
@@ -123,10 +123,10 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6EgressOnlyInternetGatewayConfig(rName, destinationCidr),
@@ -174,10 +174,10 @@ func TestAccVPCRoute_ipv6ToInternetGateway(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6InternetGatewayConfig(rName, destinationCidr),
@@ -220,10 +220,10 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6InstanceConfig(rName, destinationCidr),
@@ -266,10 +266,10 @@ func TestAccVPCRoute_IPv6ToNetworkInterface_unattached(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6NetworkInterfaceUnattachedConfig(rName, destinationCidr),
@@ -312,10 +312,10 @@ func TestAccVPCRoute_ipv6ToVPCPeeringConnection(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6VPCPeeringConnectionConfig(rName, destinationCidr),
@@ -358,10 +358,10 @@ func TestAccVPCRoute_ipv6ToVPNGateway(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6VPNGatewayConfig(rName, destinationCidr),
@@ -404,10 +404,10 @@ func TestAccVPCRoute_ipv4ToVPNGateway(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4VPNGatewayConfig(rName, destinationCidr),
@@ -450,10 +450,10 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4InstanceConfig(rName, destinationCidr),
@@ -496,10 +496,10 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_unattached(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4NetworkInterfaceUnattachedConfig(rName, destinationCidr),
@@ -543,10 +543,10 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4NetworkInterfaceAttachedConfig(rName, destinationCidr),
@@ -591,10 +591,10 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4NetworkInterfaceTwoAttachmentsConfig(rName, destinationCidr, eni1ResourceName),
@@ -660,10 +660,10 @@ func TestAccVPCRoute_ipv4ToVPCPeeringConnection(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4VPCPeeringConnectionConfig(rName, destinationCidr),
@@ -706,10 +706,10 @@ func TestAccVPCRoute_ipv4ToNatGateway(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4NatGatewayConfig(rName, destinationCidr),
@@ -752,10 +752,10 @@ func TestAccVPCRoute_ipv6ToNatGateway(t *testing.T) {
 	destinationCidr := "64:ff9b::/96"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6NatGatewayConfig(rName, destinationCidr),
@@ -798,10 +798,10 @@ func TestAccVPCRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteWithVPCEndpointConfig(rName),
@@ -833,10 +833,10 @@ func TestAccVPCRoute_ipv4ToTransitGateway(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4TransitGatewayConfig(rName, destinationCidr),
@@ -883,10 +883,10 @@ func TestAccVPCRoute_ipv6ToTransitGateway(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6TransitGatewayConfig(rName, destinationCidr),
@@ -929,10 +929,10 @@ func TestAccVPCRoute_ipv4ToCarrierGateway(t *testing.T) {
 	destinationCidr := "172.16.1.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4CarrierGatewayConfig(rName, destinationCidr),
@@ -975,10 +975,10 @@ func TestAccVPCRoute_ipv4ToLocalGateway(t *testing.T) {
 	destinationCidr := "172.16.1.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResourceIPv4LocalGatewayConfig(rName, destinationCidr),
@@ -1021,10 +1021,10 @@ func TestAccVPCRoute_ipv6ToLocalGateway(t *testing.T) {
 	destinationCidr := "2002:bc9:1234:1a00::/56"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResourceIPv6LocalGatewayConfig(rName, destinationCidr),
@@ -1067,10 +1067,10 @@ func TestAccVPCRoute_conditionalCIDRBlock(t *testing.T) {
 	destinationIpv6Cidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConditionalIPv4Ipv6Config(rName, destinationCidr, destinationIpv6Cidr, false),
@@ -1117,10 +1117,10 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "instance_id", instanceResourceName),
@@ -1334,10 +1334,10 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "instance_id", instanceResourceName),
@@ -1499,10 +1499,10 @@ func TestAccVPCRoute_ipv4ToVPCEndpoint(t *testing.T) {
 	destinationCidr := "172.16.1.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResourceIPv4VPCEndpointConfig(rName, destinationCidr),
@@ -1547,10 +1547,10 @@ func TestAccVPCRoute_localRoute(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteIPv4NoRouteConfig(rName),
@@ -1585,10 +1585,10 @@ func TestAccVPCRoute_prefixListToInternetGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListInternetGatewayConfig(rName),
@@ -1631,10 +1631,10 @@ func TestAccVPCRoute_prefixListToVPNGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListVPNGatewayConfig(rName),
@@ -1677,10 +1677,10 @@ func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListInstanceConfig(rName),
@@ -1723,10 +1723,10 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_unattached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListNetworkInterfaceUnattachedConfig(rName),
@@ -1770,10 +1770,10 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListNetworkInterfaceAttachedConfig(rName),
@@ -1816,10 +1816,10 @@ func TestAccVPCRoute_prefixListToVPCPeeringConnection(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListVPCPeeringConnectionConfig(rName),
@@ -1862,10 +1862,10 @@ func TestAccVPCRoute_prefixListToNatGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListNatGatewayConfig(rName),
@@ -1912,10 +1912,10 @@ func TestAccVPCRoute_prefixListToTransitGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListTransitGatewayConfig(rName),
@@ -1963,9 +1963,9 @@ func TestAccVPCRoute_prefixListToCarrierGateway(t *testing.T) {
 			testAccPreCheckEc2ManagedPrefixList(t)
 			testAccPreCheckWavelengthZoneAvailable(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListCarrierGatewayConfig(rName),
@@ -2013,9 +2013,9 @@ func TestAccVPCRoute_prefixListToLocalGateway(t *testing.T) {
 			testAccPreCheckEc2ManagedPrefixList(t)
 			acctest.PreCheckOutpostsOutposts(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListLocalGatewayConfig(rName),
@@ -2058,10 +2058,10 @@ func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutePrefixListEgressOnlyInternetGatewayConfig(rName),

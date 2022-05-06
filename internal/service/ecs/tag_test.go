@@ -18,10 +18,10 @@ func TestAccECSTag_basic(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig(rName, "key1", "value1"),
@@ -45,10 +45,10 @@ func TestAccECSTag_disappears(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig(rName, "key1", "value1"),
@@ -68,10 +68,10 @@ func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckBatch(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckBatch(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfigResourceArnBatchComputeEnvironment(rName),
@@ -93,10 +93,10 @@ func TestAccECSTag_value(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig(rName, "key1", "value1"),

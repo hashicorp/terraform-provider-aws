@@ -23,10 +23,10 @@ func TestAccImageBuilderImage_basic(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageRequiredConfig(rName),
@@ -64,10 +64,10 @@ func TestAccImageBuilderImage_disappears(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageRequiredConfig(rName),
@@ -87,10 +87,10 @@ func TestAccImageBuilderImage_distributionARN(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageDistributionConfigurationARNConfig(rName),
@@ -113,10 +113,10 @@ func TestAccImageBuilderImage_enhancedImageMetadataEnabled(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageEnhancedImageMetadataEnabledConfig(rName, false),
@@ -139,10 +139,10 @@ func TestAccImageBuilderImage_ImageTests_imageTestsEnabled(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageImageTestsConfigurationImageTestsEnabledConfig(rName, false),
@@ -166,10 +166,10 @@ func TestAccImageBuilderImage_ImageTests_timeoutMinutes(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageImageTestsConfigurationTimeoutMinutesConfig(rName, 721),
@@ -193,10 +193,10 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageTags1Config(rName, "key1", "value1"),
@@ -238,10 +238,10 @@ func TestAccImageBuilderImage_containerRecipeARN(t *testing.T) {
 	containerRecipeResourceName := "aws_imagebuilder_container_recipe.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageContainerRecipeARNConfig(rName),

@@ -23,10 +23,10 @@ func TestAccFSxOntapStorageVirtualMachine_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
@@ -62,10 +62,10 @@ func TestAccFSxOntapStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineRootVolumeSecurityStyleConfig(rName),
@@ -101,10 +101,10 @@ func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 	pass2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName, pass1),
@@ -137,10 +137,10 @@ func TestAccFSxOntapStorageVirtualMachine_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
@@ -161,10 +161,10 @@ func TestAccFSxOntapStorageVirtualMachine_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
@@ -196,10 +196,10 @@ func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineTags1Config(rName, "key1", "value1"),
@@ -247,10 +247,10 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 	domainPassword1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapStorageVirtualMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapStorageVirtualMachineConfig_ontapStorageVirutalMachineSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),

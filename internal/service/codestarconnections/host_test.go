@@ -23,10 +23,10 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostBasicConfig(rName),
@@ -54,10 +54,10 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostBasicConfig(rName),
@@ -77,10 +77,10 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostVPCConfig(rName),

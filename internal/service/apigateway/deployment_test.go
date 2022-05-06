@@ -23,10 +23,10 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-deployment")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStageNameConfig(rName),
@@ -54,10 +54,10 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-deployment")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStageNameConfig(rName),
@@ -78,10 +78,10 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentTriggersConfig("description1", "https://example.com"),
@@ -134,10 +134,10 @@ func TestAccAPIGatewayDeployment_description(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentDescriptionConfig("description1"),
@@ -163,10 +163,10 @@ func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStageDescriptionConfig("description1"),
@@ -186,10 +186,10 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStageNameConfig("test"),
@@ -214,10 +214,10 @@ func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStageNameConfig(""),
@@ -235,10 +235,10 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentVariablesConfig("key1", "value1"),

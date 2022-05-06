@@ -20,10 +20,10 @@ func testAccRepository_basic(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryBasicConfig(rName),
@@ -54,10 +54,10 @@ func testAccRepository_tags(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
@@ -98,10 +98,10 @@ func testAccRepository_owner(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryOwnerConfig(rName),
@@ -131,10 +131,10 @@ func testAccRepository_description(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryDescConfig(rName, "desc"),
@@ -164,10 +164,10 @@ func testAccRepository_upstreams(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryUpstreams1Config(rName),
@@ -208,10 +208,10 @@ func testAccRepository_externalConnection(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryExternalConnectionConfig(rName),
@@ -254,10 +254,10 @@ func testAccRepository_disappears(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryBasicConfig(rName),

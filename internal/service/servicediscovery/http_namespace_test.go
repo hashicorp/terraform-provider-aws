@@ -26,9 +26,9 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_basic(rName),
@@ -60,9 +60,9 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_basic(rName),
@@ -86,9 +86,9 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_description(rName, "test"),
@@ -116,9 +116,9 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_tags1(rName, "key1", "value1"),

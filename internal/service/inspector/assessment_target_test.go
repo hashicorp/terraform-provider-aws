@@ -20,10 +20,10 @@ func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAssessmentConfig(rName),
@@ -49,10 +49,10 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAssessmentConfig(rName),
@@ -73,10 +73,10 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAssessmentConfig(rName1),
@@ -109,10 +109,10 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetAssessmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),

@@ -19,9 +19,9 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEndpointDataSourceConfig_NonExistent,
@@ -48,9 +48,9 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEndpointDataSourceConfig_NonExistentFilter,

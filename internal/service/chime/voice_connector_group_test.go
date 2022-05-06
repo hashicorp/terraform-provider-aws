@@ -21,10 +21,10 @@ func TestAccChimeVoiceConnectorGroup_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorGroupConfig(vcgName),
@@ -51,10 +51,10 @@ func TestAccChimeVoiceConnectorGroup_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorGroupConfig(vcgName),
@@ -75,10 +75,10 @@ func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorGroupConfig(vcgName),

@@ -26,10 +26,10 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 	resourceName2 := "aws_quicksight_user." + rName2
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig(rName1),
@@ -57,10 +57,10 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks"),
@@ -92,10 +92,10 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserWithNamespaceConfig(rName, namespace),
@@ -114,10 +114,10 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig(rName),

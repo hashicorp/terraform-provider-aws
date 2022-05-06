@@ -15,9 +15,9 @@ func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckGroupsDataSourceConfig(rName),

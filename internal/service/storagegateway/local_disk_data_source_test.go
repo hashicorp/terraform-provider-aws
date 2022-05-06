@@ -17,10 +17,10 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_DiskNode_NonExistent(rName),
@@ -44,10 +44,10 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_DiskPath_NonExistent(rName),

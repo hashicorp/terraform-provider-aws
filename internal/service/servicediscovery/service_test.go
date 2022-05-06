@@ -25,9 +25,9 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_private(rName, 5),
@@ -79,9 +79,9 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_public(rName, 5, "/path"),
@@ -133,10 +133,10 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_http(rName),
@@ -162,10 +162,10 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_http(rName),
@@ -184,10 +184,10 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_tags1(rName, "key1", "value1"),

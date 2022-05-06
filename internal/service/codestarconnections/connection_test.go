@@ -23,10 +23,10 @@ func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionBasicConfig(rName),
@@ -54,10 +54,10 @@ func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionHostARNConfig(rName),
@@ -86,10 +86,10 @@ func TestAccCodeStarConnectionsConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionBasicConfig(rName),
@@ -109,10 +109,10 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionTags1Config(rName, "key1", "value1"),

@@ -21,10 +21,10 @@ func TestAccIoTThing_basic(t *testing.T) {
 	resourceName := "aws_iot_thing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingConfig_basic(thingName),
@@ -55,10 +55,10 @@ func TestAccIoTThing_full(t *testing.T) {
 	resourceName := "aws_iot_thing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingConfig_full(thingName, typeName, "42"),

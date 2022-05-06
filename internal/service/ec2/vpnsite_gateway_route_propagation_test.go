@@ -19,10 +19,10 @@ func TestAccVPNSiteGatewayRoutePropagation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPNGatewayRoutePropagationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayRoutePropagationBasicConfig(rName),
@@ -39,10 +39,10 @@ func TestAccVPNSiteGatewayRoutePropagation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPNGatewayRoutePropagationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayRoutePropagationBasicConfig(rName),

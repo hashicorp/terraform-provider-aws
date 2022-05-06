@@ -22,10 +22,10 @@ func TestAccFSxOntapFileSystem_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemBasicConfig(rName),
@@ -76,10 +76,10 @@ func TestAccFSxOntapFileSystem_fsxSingleAz(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemSingleAzConfig(rName),
@@ -107,10 +107,10 @@ func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 	pass2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemConfig_adminPassword(rName, pass1),
@@ -143,10 +143,10 @@ func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemEndpointIPAddressRangeConfig(rName),
@@ -171,10 +171,10 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemDiskIopsConfigurationConfig(rName, 3072),
@@ -210,10 +210,10 @@ func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemBasicConfig(rName),
@@ -233,10 +233,10 @@ func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemSecurityGroupIds1Config(rName),
@@ -269,10 +269,10 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemRouteTableConfig(rName),
@@ -298,10 +298,10 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemTags1Config(rName, "key1", "value1"),
@@ -346,10 +346,10 @@ func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemWeeklyMaintenanceStartTimeConfig(rName, "1:01:01"),
@@ -382,10 +382,10 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemAutomaticBackupRetentionDaysConfig(rName, 90),
@@ -425,10 +425,10 @@ func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemKMSKeyIDConfig(rName),
@@ -453,10 +453,10 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLustreFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemDailyAutomaticBackupStartTimeConfig(rName, "01:01"),
@@ -489,10 +489,10 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemBasicConfig(rName),
@@ -525,10 +525,10 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOntapFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOntapFileSystemBasicConfig(rName),

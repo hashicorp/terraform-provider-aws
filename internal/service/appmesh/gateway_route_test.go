@@ -23,10 +23,10 @@ func testAccGatewayRoute_basic(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayRouteConfig_httpRoute(meshName, vgName, grName),
@@ -70,10 +70,10 @@ func testAccGatewayRoute_disappears(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayRouteConfig_httpRoute(meshName, vgName, grName),
@@ -97,10 +97,10 @@ func testAccGatewayRoute_GRPCRoute(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayRouteConfig_grpcRoute(meshName, vgName, grName),
@@ -170,10 +170,10 @@ func testAccGatewayRoute_HTTPRoute(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayRouteConfig_httpRoute(meshName, vgName, grName),
@@ -243,10 +243,10 @@ func testAccGatewayRoute_HTTP2Route(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayRouteConfig_http2Route(meshName, vgName, grName),
@@ -314,10 +314,10 @@ func testAccGatewayRoute_Tags(t *testing.T) {
 	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayRouteConfig_tags1(meshName, vgName, grName, "key1", "value1"),

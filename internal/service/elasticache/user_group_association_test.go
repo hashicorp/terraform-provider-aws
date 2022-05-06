@@ -25,10 +25,10 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationBasicConfig(rName),
@@ -56,10 +56,10 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationPreUpdateConfig(rName),
@@ -86,10 +86,10 @@ func TestAccElastiCacheUserGroupAssociation_disappears(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationBasicConfig(rName),

@@ -31,9 +31,9 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -92,9 +92,9 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorSessionConfigTags1(rName, "key1", "value1", session),
@@ -141,9 +141,9 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorSessionConfig(rName, session),

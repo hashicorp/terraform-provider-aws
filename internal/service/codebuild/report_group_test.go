@@ -19,10 +19,10 @@ func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupBasicConfig(rName),
@@ -51,10 +51,10 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupS3ExportConfig(rName),
@@ -101,10 +101,10 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupTags1Config(rName, "key1", "value1"),
@@ -147,10 +147,10 @@ func TestAccCodeBuildReportGroup_deleteReports(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupDeleteReportsConfig(rName),
@@ -175,10 +175,10 @@ func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupBasicConfig(rName),

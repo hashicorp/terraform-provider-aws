@@ -31,9 +31,9 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterActivityStreamDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
@@ -68,9 +68,9 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterActivityStreamDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),

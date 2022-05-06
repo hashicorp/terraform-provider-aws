@@ -208,10 +208,10 @@ func TestAccLambdaPermission_basic(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig(rName),
@@ -244,10 +244,10 @@ func TestAccLambdaPermission_principalOrgId(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionOrgIdConfig(rName),
@@ -276,10 +276,10 @@ func TestAccLambdaPermission_StatementID_duplicate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionStatementIdDuplicateConfig(rName),
@@ -302,10 +302,10 @@ func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_withRawFunctionName(rName),
@@ -334,10 +334,10 @@ func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_withStatementIdPrefix(rName, "AllowExecutionWithStatementIdPrefix-"),
@@ -369,10 +369,10 @@ func TestAccLambdaPermission_withQualifier(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_withQualifier(rName),
@@ -401,10 +401,10 @@ func TestAccLambdaPermission_disappears(t *testing.T) {
 	resourceName := "aws_lambda_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig(rName),
@@ -435,10 +435,10 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_multiplePerms(funcName, roleName),
@@ -506,10 +506,10 @@ func TestAccLambdaPermission_withS3(t *testing.T) {
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_withS3(rName),
@@ -542,10 +542,10 @@ func TestAccLambdaPermission_withSNS(t *testing.T) {
 	snsTopicResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_withSNS(rName),
@@ -578,10 +578,10 @@ func TestAccLambdaPermission_withIAMRole(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_withIAMRole(rName),
@@ -611,10 +611,10 @@ func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_FunctionUrls_AwsIam(rName),
@@ -646,10 +646,10 @@ func TestAccLambdaPermission_FunctionUrls_None(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_FunctionUrls_None(rName),

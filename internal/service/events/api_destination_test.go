@@ -30,10 +30,10 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig(
@@ -103,10 +103,10 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_optional(
@@ -179,10 +179,10 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig(

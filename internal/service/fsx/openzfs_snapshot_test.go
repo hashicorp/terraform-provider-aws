@@ -22,10 +22,10 @@ func TestAccFSxOpenzfsSnapshot_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName),
@@ -53,10 +53,10 @@ func TestAccFSxOpenzfsSnapshot_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName),
@@ -76,10 +76,10 @@ func TestAccFSxOpenzfsSnapshot_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotTags1Config(rName, "key1", "value1"),
@@ -122,10 +122,10 @@ func TestAccFSxOpenzfsSnapshot_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName),
@@ -157,10 +157,10 @@ func TestAccFSxOpenzfsSnapshot_childVolume(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotChildVolumeConfig(rName),
@@ -187,10 +187,10 @@ func TestAccFSxOpenzfsSnapshot_volumeId(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotVolumeId1Config(rName),

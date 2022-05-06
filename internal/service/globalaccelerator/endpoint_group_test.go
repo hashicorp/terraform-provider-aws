@@ -25,10 +25,10 @@ func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_basic(rName),
@@ -62,10 +62,10 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_basic(rName),
@@ -88,10 +88,10 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_albEndpointClientIP(rName, false),
@@ -162,10 +162,10 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_instanceEndpoint(rName),
@@ -255,10 +255,10 @@ func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_portOverrides(rName),
@@ -322,10 +322,10 @@ func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_tcpHealthCheckProtocol(rName),
@@ -365,10 +365,10 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_basic(rName),

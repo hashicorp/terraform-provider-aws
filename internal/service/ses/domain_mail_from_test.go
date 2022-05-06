@@ -20,10 +20,10 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainMailFromDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig(domain, mailFromDomain1),
@@ -59,10 +59,10 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainMailFromDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig(domain, mailFromDomain),
@@ -83,10 +83,10 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainMailFromDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig(domain, mailFromDomain),
@@ -105,10 +105,10 @@ func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainMailFromDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, ses.BehaviorOnMXFailureUseDefaultValue),

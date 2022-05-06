@@ -13,9 +13,9 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayIDDataSourceConfig(),

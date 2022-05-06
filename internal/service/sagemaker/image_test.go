@@ -21,10 +21,10 @@ func TestAccSageMakerImage_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBasicConfig(rName),
@@ -51,10 +51,10 @@ func TestAccSageMakerImage_description(t *testing.T) {
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageDescription(rName),
@@ -92,10 +92,10 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageDisplayName(rName),
@@ -133,10 +133,10 @@ func TestAccSageMakerImage_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageTags1Config(rName, "key1", "value1"),
@@ -178,10 +178,10 @@ func TestAccSageMakerImage_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBasicConfig(rName),

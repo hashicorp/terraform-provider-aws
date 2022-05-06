@@ -21,10 +21,10 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy: testAccCheckGroupMembershipDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		CheckDestroy:      testAccCheckGroupMembershipDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig(groupName, memberName),
@@ -47,10 +47,10 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupMembershipDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig(groupName, memberName),

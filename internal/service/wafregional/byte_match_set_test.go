@@ -22,10 +22,10 @@ func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckByteMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccByteMatchSetConfig(byteMatchSet),
@@ -69,10 +69,10 @@ func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckByteMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccByteMatchSetConfig(byteMatchSet),
@@ -141,10 +141,10 @@ func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckByteMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccByteMatchSetConfig(byteMatchSetName),
@@ -211,10 +211,10 @@ func TestAccWAFRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 	resourceName := "aws_wafregional_byte_match_set.byte_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckByteMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccByteMatchSetConfig_noDescriptors(byteMatchSetName),
@@ -239,10 +239,10 @@ func TestAccWAFRegionalByteMatchSet_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckByteMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccByteMatchSetConfig(byteMatchSet),

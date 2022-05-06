@@ -22,10 +22,10 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig(ipSetName),
@@ -70,10 +70,10 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig(ipSetName),
@@ -93,10 +93,10 @@ func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetIPv6Config(ipSetName),
@@ -129,10 +129,10 @@ func TestAccWAFV2IPSet_minimal(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetMinimalConfig(ipSetName),
@@ -163,10 +163,10 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig(ipSetName),
@@ -202,10 +202,10 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetOneTagConfig(ipSetName, "Tag1", "Value1"),
@@ -251,10 +251,10 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetLargeConfig(ipSetName),

@@ -29,10 +29,10 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig(rName),
@@ -81,10 +81,10 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig(rName),
@@ -103,10 +103,10 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfigTags1(rName, "key1", "value1"),
@@ -147,10 +147,10 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleCloudWatchAlarmConfig(rName),
@@ -198,10 +198,10 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleCloudWatchLogsConfig(rName),
@@ -250,10 +250,10 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleCloudWatchMetricConfig(rName),
@@ -301,10 +301,10 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleDynamoDBConfig(rName),
@@ -390,10 +390,10 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleDynamoDBv2Config(rName),
@@ -434,10 +434,10 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleElasticsearchConfig(rName),
@@ -484,10 +484,10 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleFirehoseConfig(rName),
@@ -538,10 +538,10 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleFirehoseSeparatorConfig(rName, "\n"),
@@ -617,10 +617,10 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleHTTPConfig(rName),
@@ -784,10 +784,10 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_analytics(rName),
@@ -827,10 +827,10 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_events(rName),
@@ -875,10 +875,10 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleKafkaConfig(rName),
@@ -935,10 +935,10 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleKinesisConfig(rName),
@@ -983,10 +983,10 @@ func TestAccIoTTopicRule_lambda(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleLambdaConfig(rName),
@@ -1028,10 +1028,10 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleRepublishConfig(rName),
@@ -1077,10 +1077,10 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleRepublishWithQoSConfig(rName),
@@ -1126,10 +1126,10 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleS3Config(rName),
@@ -1176,10 +1176,10 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleSNSConfig(rName),
@@ -1221,10 +1221,10 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleSQSConfig(rName),
@@ -1270,10 +1270,10 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleStepFunctionsConfig(rName),
@@ -1319,10 +1319,10 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleTimestreamConfig(rName),
@@ -1376,10 +1376,10 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleErrorActionConfig(rName),
@@ -1445,10 +1445,10 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleKinesisConfig(rName),

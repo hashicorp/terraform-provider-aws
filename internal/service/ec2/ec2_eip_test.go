@@ -30,10 +30,10 @@ func TestAccEC2EIP_basic(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPConfig,
@@ -58,10 +58,10 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPConfig,
@@ -80,10 +80,10 @@ func TestAccEC2EIP_instance(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPInstanceConfig(),
@@ -109,10 +109,10 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPInstanceReassociateConfig(rName),
@@ -139,10 +139,10 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPInstanceAssociatedConfig(rName),
@@ -177,10 +177,10 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPInstanceAssociateNotAssociatedConfig(),
@@ -240,10 +240,10 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPNetworkInterfaceConfig(rName),
@@ -272,10 +272,10 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPMultiNetworkInterfaceConfig(rName),
@@ -308,10 +308,10 @@ func TestAccEC2EIP_TagsEC2VPC_withVPCTrue(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPTagsEC2VPCConfig(rName, "vpc = true"),
@@ -351,10 +351,10 @@ func TestAccEC2EIP_TagsEC2VPC_withoutVPCTrue(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPTagsEC2VPCConfig(rName, ""),
@@ -450,10 +450,10 @@ func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPPublicIPv4PoolDefaultConfig,
@@ -484,10 +484,10 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPPublicIPv4PoolCustomConfig(poolName),
@@ -512,10 +512,10 @@ func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPCustomerOwnedIPv4PoolConfig(),
@@ -539,10 +539,10 @@ func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPNetworkBorderGroupConfig,
@@ -568,10 +568,10 @@ func TestAccEC2EIP_carrierIP(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPCarrierIPConfig(rName),
@@ -597,10 +597,10 @@ func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPConfig_BYOIPAddress_custom_default,
@@ -626,10 +626,10 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPConfig_BYOIPAddress_custom(address),
@@ -660,10 +660,10 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEIPDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPConfig_BYOIPAddress_custom_with_PublicIPv4Pool(address, poolName),

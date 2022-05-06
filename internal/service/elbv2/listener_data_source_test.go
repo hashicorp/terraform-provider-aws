@@ -16,9 +16,9 @@ func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbListenerBasicDataSourceConfig(rName),
@@ -51,9 +51,9 @@ func TestAccELBV2ListenerDataSource_backwardsCompatibility(t *testing.T) {
 	dataSourceName2 := "data.aws_alb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbListenerBackwardsCompatibilityDataSourceConfig(rName),
@@ -86,9 +86,9 @@ func TestAccELBV2ListenerDataSource_https(t *testing.T) {
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbListenerHTTPSDataSourceConfig(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
@@ -123,9 +123,9 @@ func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbListenerDefaultActionForwardDataSourceConfig(rName),

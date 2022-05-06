@@ -15,10 +15,10 @@ import (
 
 func TestAccIoTCertificate_csr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificate_csr,
@@ -37,10 +37,10 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 
 func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificate_keys_certificate,
@@ -62,10 +62,10 @@ func TestAccIoTCertificate_Keys_existing_certificate(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccCertificate_existing_certificate, acctest.TLSPEMEscapeNewlines(certificate)),

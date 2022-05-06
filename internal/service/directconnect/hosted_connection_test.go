@@ -32,10 +32,10 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	resourceName := "aws_dx_hosted_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHostedConnectionDestroy(testAccDxHostedConnectionProvider),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHostedConnectionDestroy(testAccDxHostedConnectionProvider),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxHostedConnectionConfig(connectionName, env.ConnectionId, env.OwnerAccountId),

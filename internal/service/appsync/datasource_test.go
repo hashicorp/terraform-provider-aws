@@ -21,10 +21,10 @@ func testAccDataSource_basic(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_none(rName),
@@ -55,10 +55,10 @@ func testAccDataSource_description(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_description(rName, "description1"),
@@ -88,10 +88,10 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_DynamoDBConfig_region(rName, acctest.Region()),
@@ -123,10 +123,10 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_DynamoDBConfig_useCallerCredentials(rName, true),
@@ -159,10 +159,10 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 
 	// Keep this test Parallel as it takes considerably longer to run than any non-Elasticsearch tests.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_ElasticSearchConfig_region(rName, acctest.Region()),
@@ -194,10 +194,10 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_HTTPConfig_endpoint(rName, "http://example.com"),
@@ -231,10 +231,10 @@ func testAccDataSource_type(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_none(rName),
@@ -261,10 +261,10 @@ func testAccDataSource_Type_dynamoDB(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_dynamoDB(rName),
@@ -293,10 +293,10 @@ func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 
 	// Keep this test Parallel as it takes considerably longer to run than any non-Elasticsearch tests.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_elasticSearch(rName),
@@ -323,10 +323,10 @@ func testAccDataSource_Type_http(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_http(rName),
@@ -351,10 +351,10 @@ func testAccDataSource_Type_httpAuth(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_httpAuth(rName, acctest.Region()),
@@ -384,10 +384,10 @@ func testAccDataSource_Type_relationalDatabase(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_typeRelationalDatabase(rName),
@@ -412,10 +412,10 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_typeRelationalDatabaseWithOptions(rName),
@@ -444,10 +444,10 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_lambda(rName),
@@ -473,10 +473,10 @@ func testAccDataSource_Type_none(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroyDataSource,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_Type_none(rName),

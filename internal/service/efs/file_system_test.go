@@ -21,10 +21,10 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig(rName),
@@ -69,10 +69,10 @@ func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemAvailabilityZoneNameConfig(rName),
@@ -97,10 +97,10 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemTags1Config(rName, "key1", "value1"),
@@ -152,10 +152,10 @@ func TestAccEFSFileSystem_pagedTags(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemPagedTagsConfig(rInt),
@@ -180,10 +180,10 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemWithKMSKeyConfig(rInt, true),
@@ -206,10 +206,10 @@ func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFileSystemWithKMSKeyConfig(rInt, false),
@@ -224,10 +224,10 @@ func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_ProvisionedThroughputInMibps(1.0),
@@ -259,10 +259,10 @@ func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_ProvisionedThroughputInMibps(1.0),
@@ -294,10 +294,10 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemWithLifecyclePolicyConfig(
@@ -364,10 +364,10 @@ func TestAccEFSFileSystem_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFileSystemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig(rName),

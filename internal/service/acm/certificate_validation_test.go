@@ -21,10 +21,10 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			// Test that validation succeeds
 			{
@@ -43,10 +43,10 @@ func TestAccACMCertificateValidation_timeout(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateValidationTimeoutConfig(domain),
@@ -63,10 +63,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			// Test that validation fails if given validation_fqdns don't match
 			{
@@ -90,10 +90,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNSEmail(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateValidationValidationRecordFQDNsEmailValidationConfig(domain),
@@ -109,10 +109,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRoot(t *testing.T) {
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, rootDomain),
@@ -132,10 +132,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRootAndWildcard(t *tes
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, rootDomain, strconv.Quote(wildcardDomain)),
@@ -156,10 +156,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNSSan(t *testing.T) {
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, domain, strconv.Quote(sanDomain)),
@@ -179,10 +179,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcard(t *testing.T)
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, wildcardDomain),
@@ -203,10 +203,10 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 	resourceName := "aws_acm_certificate_validation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, wildcardDomain, strconv.Quote(rootDomain)),

@@ -21,9 +21,9 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_self(),

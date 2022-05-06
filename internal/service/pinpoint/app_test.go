@@ -20,10 +20,10 @@ func TestAccPinpointApp_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_withGeneratedName,
@@ -46,10 +46,10 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_CampaignHookLambda(rName),
@@ -74,10 +74,10 @@ func TestAccPinpointApp_limits(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_Limits(rName),
@@ -102,10 +102,10 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_QuietTime(rName),
@@ -130,10 +130,10 @@ func TestAccPinpointApp_tags(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRAMResourceShareDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRAMResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_Tag1(rName, "key1", "value1"),

@@ -21,10 +21,10 @@ func TestAccPullThroughCacheRule_basic(t *testing.T) {
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPullThroughCacheRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPullThroughCacheRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleConfig(repositoryPrefix),
@@ -49,10 +49,10 @@ func TestAccPullThroughCacheRule_disappears(t *testing.T) {
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPullThroughCacheRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPullThroughCacheRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleConfig(repositoryPrefix),
@@ -75,10 +75,10 @@ func TestAccPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPullThroughCacheRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPullThroughCacheRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix),

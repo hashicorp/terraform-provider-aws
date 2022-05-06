@@ -17,10 +17,10 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_emr_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmrSecurityConfigurationConfig,

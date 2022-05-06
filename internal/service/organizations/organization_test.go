@@ -20,10 +20,10 @@ func testAccOrganization_basic(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfig,
@@ -61,10 +61,10 @@ func testAccOrganization_AwsServiceAccessPrincipals(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceAccessPrincipals1Config("config.amazonaws.com"),
@@ -105,10 +105,10 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeServiceControlPolicy),
@@ -190,10 +190,10 @@ func testAccOrganization_FeatureSet(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetConsolidatedBilling),
@@ -216,10 +216,10 @@ func testAccOrganization_FeatureSetForcesNew(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetAll),
@@ -250,10 +250,10 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetConsolidatedBilling),
