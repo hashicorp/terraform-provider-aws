@@ -21,9 +21,9 @@ func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupDataSourceConfig_basic(rName),
@@ -59,9 +59,9 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupDataSourceConfig_ClusterMode(rName),
@@ -92,9 +92,9 @@ func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupDataSourceConfig_MultiAZ(rName),
@@ -110,9 +110,9 @@ func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
 func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupDataSourceConfig_NonExistent,
@@ -131,9 +131,9 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
