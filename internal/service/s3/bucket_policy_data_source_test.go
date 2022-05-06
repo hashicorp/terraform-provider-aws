@@ -21,9 +21,9 @@ func TestAccDataSourceBucketPolicy_basic(t *testing.T) {
 	dataSourceName := "data.aws_s3_bucket_policy.test"
 	resourceName := "aws_s3_bucket_policy.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceBucketPolicyConfigBasicConfig(rName),
