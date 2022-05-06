@@ -22,7 +22,7 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenidConnectProviderDataSourceConfig_openIDConnectProviderDataSourcebasic(rString),
+				Config: testAccOpenIDConnectProviderDataSourceConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -48,7 +48,7 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenidConnectProviderDataSourceConfig_openIDConnectProviderDataSourceurl(rString),
+				Config: testAccOpenidConnectProviderDataSourceConfig_url(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -74,7 +74,7 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenidConnectProviderDataSourceConfig_openIDConnectProviderDataSourcetags(rString),
+				Config: testAccOpenidConnectProviderDataSourceConfig_tags(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -89,7 +89,7 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccOpenidConnectProviderDataSourceConfig_openIDConnectProviderDataSourcebasic(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -107,7 +107,7 @@ data "aws_iam_openid_connect_provider" "test" {
 `, rString)
 }
 
-func testAccOpenidConnectProviderDataSourceConfig_openIDConnectProviderDataSourceurl(rString string) string {
+func testAccOpenidConnectProviderDataSourceConfig_url(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -125,7 +125,7 @@ data "aws_iam_openid_connect_provider" "test" {
 `, rString)
 }
 
-func testAccOpenidConnectProviderDataSourceConfig_openIDConnectProviderDataSourcetags(rString string) string {
+func testAccOpenidConnectProviderDataSourceConfig_tags(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
