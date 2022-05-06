@@ -31,7 +31,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_serverCert(rName, key, certificate),
+				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("server-certificate/%s", rName)),
@@ -70,7 +70,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_serverCertTags1(rName, key, certificate, "key1", "value1"),
+				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -85,7 +85,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_key"},
 			},
 			{
-				Config: testAccServerCertificateConfig_serverCertTags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -94,7 +94,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServerCertificateConfig_serverCertTags1(rName, key, certificate, "key2", "value2"),
+				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -120,7 +120,7 @@ func TestAccIAMServerCertificate_Name_prefix(t *testing.T) {
 		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_serverCertrandom(key, certificate),
+				Config: testAccServerCertificateConfig_random(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 				),
@@ -143,7 +143,7 @@ func TestAccIAMServerCertificate_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_serverCertrandom(key, certificate),
+				Config: testAccServerCertificateConfig_random(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServerCertificate(), resourceName),
@@ -170,7 +170,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_serverCertfile(rInt, unixFile),
+				Config: testAccServerCertificateConfig_file(rInt, unixFile),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 				),
@@ -183,7 +183,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_key"},
 			},
 			{
-				Config: testAccServerCertificateConfig_serverCertfile(rInt, winFile),
+				Config: testAccServerCertificateConfig_file(rInt, winFile),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 				),
@@ -208,7 +208,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 		CheckDestroy: testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_serverCertpath(rName, "/test/", key, certificate),
+				Config: testAccServerCertificateConfig_path(rName, "/test/", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					resource.TestCheckResourceAttr(resourceName, "path", "/test/"),
@@ -277,7 +277,7 @@ func testAccCheckServerCertificateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccServerCertificateConfig_serverCert(rName, key, certificate string) string {
+func testAccServerCertificateConfig_basic(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name             = "%[1]s"
@@ -287,7 +287,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccServerCertificateConfig_serverCertrandom(key, certificate string) string {
+func testAccServerCertificateConfig_random(key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name_prefix      = "tf-acc-test"
@@ -297,7 +297,7 @@ resource "aws_iam_server_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccServerCertificateConfig_serverCertpath(rName, path, key, certificate string) string {
+func testAccServerCertificateConfig_path(rName, path, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name             = "%[1]s"
@@ -309,7 +309,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 // iam-ssl-unix-line-endings
-func testAccServerCertificateConfig_serverCertfile(rInt int, fName string) string {
+func testAccServerCertificateConfig_file(rInt int, fName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name             = "terraform-test-cert-%d"
@@ -336,7 +336,7 @@ EOF
 `, rInt, fName)
 }
 
-func testAccServerCertificateConfig_serverCertTags1(rName, key, certificate, tagKey1, tagValue1 string) string {
+func testAccServerCertificateConfig_tags1(rName, key, certificate, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name             = "%[1]s"
@@ -350,7 +350,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
 }
 
-func testAccServerCertificateConfig_serverCertTags2(rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccServerCertificateConfig_tags2(rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name             = "%[1]s"
