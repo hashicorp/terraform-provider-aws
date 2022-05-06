@@ -241,11 +241,11 @@ func statusHost(conn *codestarconnections.CodeStarConnections, arn string) resou
 }
 
 const (
-	hostStatusAvailable                     = "AVAILABLE"
-	hostStatusPending                       = "PENDING"
-	hostStatusVPCConfigDeleting             = "VPC_CONFIG_DELETING"
-	hostStatusVPCConfigFailedInitialization = "VPC_CONFIG_FAILED_INITIALIZATION"
-	hostStatusVPCConfigInitializing         = "VPC_CONFIG_INITIALIZING"
+	hostStatusAvailable = "AVAILABLE"
+	hostStatusPending   = "PENDING"
+	// hostStatusVPCConfigDeleting             = "VPC_CONFIG_DELETING"
+	// hostStatusVPCConfigFailedInitialization = "VPC_CONFIG_FAILED_INITIALIZATION"
+	hostStatusVPCConfigInitializing = "VPC_CONFIG_INITIALIZING"
 )
 
 func waitHostPendingOrAvailable(conn *codestarconnections.CodeStarConnections, arn string, timeout time.Duration) (*codestarconnections.Host, error) { //nolint:unparam
