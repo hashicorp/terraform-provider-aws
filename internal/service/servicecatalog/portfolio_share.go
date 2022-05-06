@@ -119,6 +119,10 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 		input.ShareTagOptions = aws.Bool(v.(bool))
 	}
 
+	// mutex lock for creation/deletion serialization
+	conns.GlobalMutexKV.Lock("servicecatalog-portfolio-share")
+	defer conns.GlobalMutexKV.Unlock("servicecatalog-portfolio-share")
+
 	var output *servicecatalog.CreatePortfolioShareOutput
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
@@ -277,6 +281,10 @@ func resourcePortfolioShareDelete(d *schema.ResourceData, meta interface{}) erro
 
 		input.OrganizationNode = orgNode
 	}
+
+	// mutex lock for creation/deletion serialization
+	conns.GlobalMutexKV.Lock("servicecatalog-portfolio-share")
+	defer conns.GlobalMutexKV.Unlock("servicecatalog-portfolio-share")
 
 	output, err := conn.DeletePortfolioShare(input)
 
