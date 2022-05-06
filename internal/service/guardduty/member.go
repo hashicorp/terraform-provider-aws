@@ -108,7 +108,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), err)
 	}
 
-	err = inviteGuardDutyMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
+	err = inviteMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
 	if err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Member %q invite: %s", d.Id(), err)
 	}
@@ -191,7 +191,7 @@ func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), aws.StringValue(output.UnprocessedAccounts[0].Result))
 			}
 
-			err = inviteGuardDutyMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
+			err = inviteMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
 			if err != nil {
 				return fmt.Errorf("error waiting for GuardDuty Member %q invite: %s", d.Id(), err)
 			}
@@ -232,7 +232,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Duration, conn *guardduty.GuardDuty) error {
+func inviteMemberWaiter(accountID, detectorID string, timeout time.Duration, conn *guardduty.GuardDuty) error {
 	input := guardduty.GetMembersInput{
 		DetectorId: aws.String(detectorID),
 		AccountIds: []*string{aws.String(accountID)},
@@ -249,7 +249,7 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 			return resource.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
 		}
 
-		retryable, err := guardDutyMemberInvited(out, accountID)
+		retryable, err := memberInvited(out, accountID)
 		if err != nil {
 			if retryable {
 				return resource.RetryableError(err)
@@ -265,7 +265,7 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 		if err != nil {
 			return fmt.Errorf("Error reading GuardDuty member: %s", err)
 		}
-		_, err = guardDutyMemberInvited(out, accountID)
+		_, err = memberInvited(out, accountID)
 		if err != nil {
 			return err // Doesn't need fmt because that happens in the function
 		}
@@ -277,7 +277,7 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 	return nil
 }
 
-func guardDutyMemberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
+func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
 	if out == nil || len(out.Members) == 0 {
 		return true, fmt.Errorf("error reading GuardDuty Member %q: member missing from response", accountID)
 	}
