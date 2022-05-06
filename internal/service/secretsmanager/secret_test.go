@@ -23,10 +23,10 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_Name(rName),
@@ -60,10 +60,10 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_withNamePrefix("tf-acc-test-prefix-"),
@@ -89,10 +89,10 @@ func TestAccSecretsManagerSecret_description(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_Description(rName, "description1"),
@@ -185,10 +185,10 @@ func TestAccSecretsManagerSecret_kmsKeyID(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_KMSKeyID(rName),
@@ -220,10 +220,10 @@ func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_RecoveryWindowInDays(rName, 0),
@@ -257,10 +257,10 @@ func TestAccSecretsManagerSecret_rotationLambdaARN(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			// Test enabling rotation on resource creation
 			{
@@ -309,10 +309,10 @@ func TestAccSecretsManagerSecret_rotationRules(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			// Test creating rotation rules on resource creation
 			{
@@ -363,10 +363,10 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_Tags_Single(rName),
@@ -417,10 +417,10 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyConfig(rName),
