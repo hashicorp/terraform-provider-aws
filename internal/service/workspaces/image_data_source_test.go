@@ -23,8 +23,8 @@ func testAccImageDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccImagePreCheck(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageDataSourceConfig(imageID),
