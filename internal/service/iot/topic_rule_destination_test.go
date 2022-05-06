@@ -44,6 +44,10 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Delete everything but the IAM Role assumed by the IoT service.
+			{
+				Config: testAccTopicRuleRoleConfig(rName),
+			},
 		},
 	})
 }
@@ -105,6 +109,10 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 					testAccCheckTopicRuleDestinationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
+			},
+			// Delete everything but the IAM Role assumed by the IoT service.
+			{
+				Config: testAccTopicRuleRoleConfig(rName),
 			},
 		},
 	})
