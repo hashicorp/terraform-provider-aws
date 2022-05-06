@@ -1,6 +1,6 @@
 # Based on the default .semgrepignore documented here:
 #  https://semgrep.dev/docs/ignoring-files-folders-code/#understanding-semgrep-defaults
-# but including '*_test.go'.
+# but not ignoring '*_test.go'.
 
 # Ignore git items
 .gitignore
