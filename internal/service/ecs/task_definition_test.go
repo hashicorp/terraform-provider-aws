@@ -2486,7 +2486,7 @@ TASK_DEFINITION
 
 func testAccTaskDefinitionFSxVolume(domain, rName string) string {
 	return acctest.ConfigCompose(
-		testAccFSxWindowsFileSystemSubnetIds1Config(domain),
+		testAccFSxWindowsFileSystemSubnetIds1Config(rName, domain),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2584,9 +2584,9 @@ func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.Import
 	}
 }
 
-func testAccFSxWindowsFileSystemBaseConfig(domain string) string {
+func testAccFSxWindowsFileSystemBaseConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
@@ -2603,9 +2603,10 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccFSxWindowsFileSystemSubnetIds1Config(domain string) string {
+func testAccFSxWindowsFileSystemSubnetIds1Config(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccFSxWindowsFileSystemBaseConfig(domain), `
+		testAccFSxWindowsFileSystemBaseConfig(rName, domain),
+		`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
