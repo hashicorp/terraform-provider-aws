@@ -16,11 +16,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkipLex)
+	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"You can't set the enableModelImprovements field to false",
 	)
