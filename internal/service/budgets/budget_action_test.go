@@ -21,10 +21,10 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionBasicConfig(rName),
@@ -61,10 +61,10 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionBasicConfig(rName),
