@@ -379,7 +379,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_outUserNameAndPassword(sdkacctest.RandInt()),
+				Config:      testAccClusterConfig_noUsernameOrPassword(sdkacctest.RandInt()),
 				ExpectError: regexp.MustCompile(`required field is not set`),
 			},
 		},
@@ -1022,7 +1022,7 @@ resource "aws_docdb_cluster" "default" {
 `, n))
 }
 
-func testAccClusterConfig_outUserNameAndPassword(n int) string {
+func testAccClusterConfig_noUsernameOrPassword(n int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier = "tf-docdb-cluster-%d"
