@@ -21,9 +21,9 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionSettings1Config(),
