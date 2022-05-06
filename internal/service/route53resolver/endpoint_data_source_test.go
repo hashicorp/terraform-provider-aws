@@ -28,7 +28,7 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile("The ID provided could not be found"),
 			},
 			{
-				Config: testAccEndpointDataSourceConfig_dataSourceEndpointinitial(rInt, direction, name),
+				Config: testAccEndpointDataSourceConfig_initial(rInt, direction, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
@@ -57,7 +57,7 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 				ExpectError: regexp.MustCompile("Your query returned no results. Please change your search criteria and try again"),
 			},
 			{
-				Config: testAccEndpointDataSourceConfig_dataSourceEndpointfilter(rInt, direction, name),
+				Config: testAccEndpointDataSourceConfig_filter(rInt, direction, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
@@ -131,7 +131,7 @@ resource "aws_security_group" "sg2" {
 `, rInt)
 }
 
-func testAccEndpointDataSourceConfig_dataSourceEndpointinitial(rInt int, direction, name string) string {
+func testAccEndpointDataSourceConfig_initial(rInt int, direction, name string) string {
 	return acctest.ConfigCompose(testAccDataSourceEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
@@ -163,7 +163,7 @@ data "aws_route53_resolver_endpoint" "foo" {
 `, direction, name))
 }
 
-func testAccEndpointDataSourceConfig_dataSourceEndpointfilter(rInt int, direction, name string) string {
+func testAccEndpointDataSourceConfig_filter(rInt int, direction, name string) string {
 	return acctest.ConfigCompose(testAccDataSourceEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
