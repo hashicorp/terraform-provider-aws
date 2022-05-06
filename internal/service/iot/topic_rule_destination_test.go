@@ -167,7 +167,7 @@ func testAccCheckTopicRuleDestinationExists(n string) resource.TestCheckFunc {
 
 func testAccTopicRuleDestinationBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
