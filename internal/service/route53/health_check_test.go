@@ -290,14 +290,14 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHealthCheckConfig_sNI(false),
+				Config: testAccHealthCheckConfig_sni(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "false"),
 				),
 			},
 			{
-				Config: testAccHealthCheckConfig_sNI(true),
+				Config: testAccHealthCheckConfig_sni(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
@@ -614,7 +614,7 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-func testAccHealthCheckConfig_sNI(enable bool) string {
+func testAccHealthCheckConfig_sni(enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
