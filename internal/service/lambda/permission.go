@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -150,7 +149,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
 	// Retry for IAM and Lambda eventual consistency.
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(tfiam.PropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AddPermission(input)
 		},

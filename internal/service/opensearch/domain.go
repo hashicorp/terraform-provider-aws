@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -655,7 +654,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *opensearchservice.CreateDomainOutput
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateDomain(&inputCreateDomain)
 		if err != nil {

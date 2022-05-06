@@ -1,5 +1,7 @@
 package ec2
 
+import "time"
+
 const (
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreditSpecificationRequest.html#API_CreditSpecificationRequest_Contents
 	CPUCreditsStandard  = "standard"
@@ -187,4 +189,8 @@ const (
 const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
+)
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
 )

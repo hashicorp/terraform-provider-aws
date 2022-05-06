@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -416,7 +415,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	var output *apprunner.CreateServiceOutput
 
-	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, iamPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateServiceWithContext(ctx, input)
 

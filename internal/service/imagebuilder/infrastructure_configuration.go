@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -204,7 +203,7 @@ func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	var output *imagebuilder.CreateInfrastructureConfigurationOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateInfrastructureConfiguration(input)
@@ -366,7 +365,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 			input.SubnetId = aws.String(v.(string))
 		}
 
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateInfrastructureConfiguration(input)
 
 			if tfawserr.ErrMessageContains(err, imagebuilder.ErrCodeInvalidParameterValueException, "instance profile does not exist") {

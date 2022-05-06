@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -662,7 +661,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotFleet(input)
 		},

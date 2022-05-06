@@ -1,5 +1,7 @@
 package eks
 
+import "time"
+
 const (
 	IdentityProviderConfigTypeOIDC = "oidc"
 )
@@ -13,3 +15,7 @@ func Resources_Values() []string {
 		ResourcesSecrets,
 	}
 }
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)

@@ -1,5 +1,7 @@
 package backup
 
+import "time"
+
 const (
 	frameworkStatusCompleted          = "COMPLETED"
 	frameworkStatusCreationInProgress = "CREATE_IN_PROGRESS"
@@ -44,3 +46,7 @@ func reportSettingTemplate_Values() []string {
 		reportSettingTemplateRestoreJobReport,
 	}
 }
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)

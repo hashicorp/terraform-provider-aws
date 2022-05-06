@@ -802,7 +802,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RunInstances(input)
 		},
@@ -1285,7 +1285,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							return err
 						}
 					} else {
-						err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+						err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1869,7 +1869,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {

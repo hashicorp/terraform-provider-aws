@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -214,7 +213,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(iamPropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -390,7 +389,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
-			_, err = tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
+			_, err = tfresource.RetryWhenAWSErrMessageContains(iamPropagationTimeout,
 				func() (interface{}, error) {
 					return conn.PutResourcePolicy(input)
 				},

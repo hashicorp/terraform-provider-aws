@@ -1,5 +1,7 @@
 package cloudtrail
 
+import "time"
+
 const (
 	ResCloudTrail = "Trail"
 
@@ -35,3 +37,7 @@ func field_Values() []string {
 		fieldResourcesType,
 	}
 }
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)

@@ -1,5 +1,7 @@
 package lambda
 
+import "time"
+
 const (
 	eventSourceMappingStateCreating  = "Creating"
 	eventSourceMappingStateDeleting  = "Deleting"
@@ -8,4 +10,8 @@ const (
 	eventSourceMappingStateEnabled   = "Enabled"
 	eventSourceMappingStateEnabling  = "Enabling"
 	eventSourceMappingStateUpdating  = "Updating"
+)
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
 )

@@ -1,5 +1,7 @@
 package rds
 
+import "time"
+
 const (
 	ClusterRoleStatusActive  = "ACTIVE"
 	ClusterRoleStatusDeleted = "DELETED"
@@ -149,3 +151,7 @@ func TimeoutAction_Values() []string {
 		TimeoutActionRollbackCapacityChange,
 	}
 }
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)
