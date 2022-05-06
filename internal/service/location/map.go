@@ -35,6 +35,7 @@ func ResourceMap() *schema.Resource {
 						"style": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 100),
 						},
 					},
