@@ -27,7 +27,7 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenidConnectProviderConfig_openIDConnectProvider(rString),
+				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("oidc-provider/%s", url)),
@@ -45,7 +45,7 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpenidConnectProviderConfig_openIDConnectProvidermodified(rString),
+				Config: testAccOpenIDConnectProviderConfig_modified(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
@@ -73,7 +73,7 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenidConnectProviderConfig_openIDConnectProviderTags1(rString, "key1", "value1"),
+				Config: testAccOpenIDConnectProviderConfig_tags1(rString, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -87,7 +87,7 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOpenidConnectProviderConfig_openIDConnectProviderTags2(rString, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOpenIDConnectProviderConfig_tags2(rString, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -96,7 +96,7 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOpenidConnectProviderConfig_openIDConnectProviderTags1(rString, "key2", "value2"),
+				Config: testAccOpenIDConnectProviderConfig_tags1(rString, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -118,7 +118,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenidConnectProviderConfig_openIDConnectProvider(rString),
+				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProvider(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceOpenIDConnectProvider(), resourceName),
@@ -177,7 +177,7 @@ func testAccCheckOpenIDConnectProvider(id string) resource.TestCheckFunc {
 	}
 }
 
-func testAccOpenidConnectProviderConfig_openIDConnectProvider(rString string) string {
+func testAccOpenIDConnectProviderConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -191,7 +191,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rString)
 }
 
-func testAccOpenidConnectProviderConfig_openIDConnectProvidermodified(rString string) string {
+func testAccOpenIDConnectProviderConfig_modified(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -205,7 +205,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rString)
 }
 
-func testAccOpenidConnectProviderConfig_openIDConnectProviderTags1(rString, tagKey1, tagValue1 string) string {
+func testAccOpenIDConnectProviderConfig_tags1(rString, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -223,7 +223,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rString, tagKey1, tagValue1)
 }
 
-func testAccOpenidConnectProviderConfig_openIDConnectProviderTags2(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOpenIDConnectProviderConfig_tags2(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
