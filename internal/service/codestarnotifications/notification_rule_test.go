@@ -24,10 +24,10 @@ func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleBasicConfig(rName),
@@ -55,10 +55,10 @@ func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleStatusConfig(rName, codestarnotifications.NotificationRuleStatusDisabled),
@@ -92,10 +92,10 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleTargets1Config(rName),
@@ -129,10 +129,10 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleTags1Config(rName),
@@ -172,10 +172,10 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleEventTypeIds1Config(rName),
