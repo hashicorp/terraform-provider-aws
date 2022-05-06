@@ -41,10 +41,10 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig(randName),
@@ -131,10 +131,10 @@ func TestAccAutoScalingGroup_Name_generated(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupNameGeneratedConfig(),
@@ -166,10 +166,10 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupNamePrefixConfig("tf-acc-test-prefix-"),
@@ -198,10 +198,10 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 
 func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_terminationPoliciesEmpty(),
@@ -271,10 +271,10 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig(randName),
@@ -334,10 +334,10 @@ func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithAZConfig(),
@@ -383,10 +383,10 @@ func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithLoadBalancerConfig(),
@@ -417,10 +417,10 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 	resourceName := "aws_autoscaling_group.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithLoadBalancerConfig(),
@@ -494,10 +494,10 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 
 	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_withPlacementGroup(randName),
@@ -528,10 +528,10 @@ func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig(randName),
@@ -571,10 +571,10 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig(randName),
@@ -621,10 +621,10 @@ func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricsCollectionConfig_allMetricsCollected(),
@@ -663,10 +663,10 @@ func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_withServiceLinkedRoleARN(),
@@ -697,10 +697,10 @@ func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_withMaxInstanceLifetime(),
@@ -764,10 +764,10 @@ func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_ALB_TargetGroup_pre(rName),
@@ -824,10 +824,10 @@ func TestAccAutoScalingGroup_targetGroupARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_TargetGroupARNs(rName, 11),
@@ -873,10 +873,10 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithHookConfig(randName),
@@ -915,10 +915,10 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_ALB_TargetGroup_ELBCapacity(rInt),
@@ -950,10 +950,10 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_InstanceRefresh_Basic(),
@@ -1022,10 +1022,10 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 	launchConfigurationName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_InstanceRefresh_Start("one"),
@@ -1063,10 +1063,10 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_InstanceRefresh_Basic(),
@@ -1096,10 +1096,10 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_WarmPool_Empty(),
@@ -1408,10 +1408,10 @@ func TestAccAutoScalingGroup_classicVPCZoneIdentifier(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_classicVPCZoneIdentifier(),
@@ -1441,10 +1441,10 @@ func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_withLaunchTemplate(),
@@ -1475,10 +1475,10 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_withLaunchTemplate(),
@@ -1554,10 +1554,10 @@ func TestAccAutoScalingGroup_LaunchTemplate_iamInstanceProfile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName),
@@ -1589,10 +1589,10 @@ func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_LoadBalancers(rName, 11),
@@ -1638,10 +1638,10 @@ func TestAccAutoScalingGroup_mixedInstancesPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy(rName),
@@ -1681,10 +1681,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicy_capacityRebalance(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_CapacityRebalance(rName),
@@ -1725,10 +1725,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandA
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_OnDemandAllocationStrategy(rName, "prioritized"),
@@ -1762,10 +1762,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandB
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_OnDemandBaseCapacity(rName, 1),
@@ -1818,10 +1818,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_updateToZ
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_OnDemandBaseCapacity(rName, 1),
@@ -1877,10 +1877,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandP
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_OnDemandPercentageAboveBaseCapacity(rName, 1),
@@ -1923,10 +1923,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotAlloc
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotAllocationStrategy(rName, "lowest-price"),
@@ -1960,10 +1960,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotInsta
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotInstancePools(rName, 2),
@@ -2006,10 +2006,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotMaxPrice(rName, "0.50"),
@@ -2061,10 +2061,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_LaunchTemplateName(rName),
@@ -2099,10 +2099,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "1"),
@@ -2147,10 +2147,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType(rName, "t3.small"),
@@ -2198,10 +2198,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(rName, rName2),
@@ -2240,10 +2240,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(rName),
@@ -2281,10 +2281,10 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPartitionConfig(randName),
@@ -2315,10 +2315,10 @@ func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(rName),

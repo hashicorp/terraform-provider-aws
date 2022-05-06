@@ -16,9 +16,9 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_basic(rName),
@@ -49,9 +49,9 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_launchTemplate(),
