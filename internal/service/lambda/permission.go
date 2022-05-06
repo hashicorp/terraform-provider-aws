@@ -168,7 +168,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout,
 		func() (interface{}, error) {
 			return FindPolicyStatementByTwoPartKey(conn, functionName, d.Id(), d.Get("qualifier").(string))
 		}, d.IsNewResource())
@@ -263,7 +263,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("removing Lambda Permission (%s/%s): %w", functionName, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindPolicyStatementByTwoPartKey(conn, functionName, d.Id(), d.Get("qualifier").(string))
 	})
 

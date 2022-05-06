@@ -356,7 +356,7 @@ func ResourceFunction() *schema.Resource {
 }
 
 const (
-	PropagationTimeout = 5 * time.Minute
+	propagationTimeout = 5 * time.Minute
 
 	lambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
 	lambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
@@ -562,7 +562,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1125,7 +1125,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1284,7 +1284,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 
