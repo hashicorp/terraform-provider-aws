@@ -200,7 +200,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become associated: %w", d.Id(), associationID, err)
 			}
 
-			subnet.Ipv6CidrBlockAssociationSet[i].SetIpv6CidrBlockState(subnetCidrBlockState)
+			subnet.Ipv6CidrBlockAssociationSet[i].Ipv6CidrBlockState = subnetCidrBlockState
 		}
 	}
 
