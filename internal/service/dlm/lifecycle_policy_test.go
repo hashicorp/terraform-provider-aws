@@ -28,7 +28,7 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyBasic(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
@@ -70,7 +70,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyEvent(rName),
+				Config: testAccLifecyclePolicyConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
@@ -118,7 +118,7 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyCron(rName),
+				Config: testAccLifecyclePolicyConfig_cron(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
@@ -145,7 +145,7 @@ func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyRetainInterval(rName),
+				Config: testAccLifecyclePolicyConfig_retainInterval(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval", "1"),
@@ -172,7 +172,7 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyDeprecate(rName),
+				Config: testAccLifecyclePolicyConfig_deprecate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "0"),
@@ -199,7 +199,7 @@ func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyFastRestore(rName),
+				Config: testAccLifecyclePolicyConfig_fastRestore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.fast_restore_rule.#", "1"),
@@ -227,7 +227,7 @@ func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyShareRule(rName),
+				Config: testAccLifecyclePolicyConfig_shareRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.share_rule.#", "1"),
@@ -254,7 +254,7 @@ func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyParametersInstance(rName),
+				Config: testAccLifecyclePolicyConfig_parametersInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
@@ -282,7 +282,7 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyParametersVolume(rName),
+				Config: testAccLifecyclePolicyConfig_parametersVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
@@ -310,7 +310,7 @@ func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyVariableTags(rName),
+				Config: testAccLifecyclePolicyConfig_variableTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.variable_tags.instance_id", "$(instance-id)"),
@@ -336,7 +336,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyFull(rName),
+				Config: testAccLifecyclePolicyConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
@@ -359,7 +359,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyFullUpdate(rName),
+				Config: testAccLifecyclePolicyConfig_fullUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full-updated"),
@@ -397,7 +397,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyCrossRegionCopyRule(rName),
+				Config: testAccLifecyclePolicyConfig_crossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
@@ -413,7 +413,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyUpdateCrossRegionCopyRule(rName),
+				Config: testAccLifecyclePolicyConfig_updateCrossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
@@ -431,7 +431,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyNoCrossRegionCopyRule(rName),
+				Config: testAccLifecyclePolicyConfig_noCrossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "0"),
@@ -452,7 +452,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyTags1(rName, "key1", "value1"),
+				Config: testAccLifecyclePolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -465,7 +465,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLifecyclePolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -474,7 +474,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyTags1(rName, "key2", "value2"),
+				Config: testAccLifecyclePolicyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -496,7 +496,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_lifecyclePolicyBasic(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
@@ -603,7 +603,7 @@ EOF
 `, rName)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyBasic(rName string) string {
+func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -632,7 +632,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyEvent(rName string) string {
+func testAccLifecyclePolicyConfig_event(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -678,7 +678,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, acctest.AlternateRegion()))
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyCron(rName string) string {
+func testAccLifecyclePolicyConfig_cron(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -707,7 +707,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyRetainInterval(rName string) string {
+func testAccLifecyclePolicyConfig_retainInterval(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -737,7 +737,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyDeprecate(rName string) string {
+func testAccLifecyclePolicyConfig_deprecate(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -771,7 +771,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyFastRestore(rName string) string {
+func testAccLifecyclePolicyConfig_fastRestore(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -806,7 +806,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyShareRule(rName string) string {
+func testAccLifecyclePolicyConfig_shareRule(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 data "aws_caller_identity" "current" {}
 
@@ -842,7 +842,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyParametersInstance(rName string) string {
+func testAccLifecyclePolicyConfig_parametersInstance(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -876,7 +876,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyParametersVolume(rName string) string {
+func testAccLifecyclePolicyConfig_parametersVolume(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -910,7 +910,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyVariableTags(rName string) string {
+func testAccLifecyclePolicyConfig_variableTags(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
@@ -944,7 +944,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyFull(rName string) string {
+func testAccLifecyclePolicyConfig_full(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full"
@@ -982,7 +982,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyFullUpdate(rName string) string {
+func testAccLifecyclePolicyConfig_fullUpdate(rName string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full-updated"
@@ -1020,7 +1020,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyCrossRegionCopyRule(rName string) string {
+func testAccLifecyclePolicyConfig_crossRegionCopyRule(rName string) string {
 	return acctest.ConfigCompose(
 		lifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1060,7 +1060,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName, acctest.AlternateRegion()))
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyUpdateCrossRegionCopyRule(rName string) string {
+func testAccLifecyclePolicyConfig_updateCrossRegionCopyRule(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		lifecyclePolicyBaseConfig(rName),
@@ -1126,7 +1126,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName, acctest.AlternateRegion()))
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyNoCrossRegionCopyRule(rName string) string {
+func testAccLifecyclePolicyConfig_noCrossRegionCopyRule(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		lifecyclePolicyBaseConfig(rName),
@@ -1158,7 +1158,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName))
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyTags1(rName, tagKey1, tagValue1 string) string {
+func testAccLifecyclePolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
@@ -1191,7 +1191,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccLifecyclePolicyConfig_lifecyclePolicyTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccLifecyclePolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
