@@ -212,7 +212,7 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccImagePreCheck(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccImageLatestPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
@@ -269,7 +269,7 @@ func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 	})
 }
 
-func testAccImagePreCheck(t *testing.T) {
+func testAccImageLatestPreCheck(t *testing.T) {
 	if os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "" {
 		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID env var must be set for Lambda Function Data Source Image Support acceptance tests.")
 	}

@@ -953,7 +953,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 	})
 }
 
-func testAccLambdaImagePreCheck(t *testing.T) {
+func testAccImageLatestV1V2PreCheck(t *testing.T) {
 	if (os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V1_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V2_ID") == "") {
 		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID, AWS_LAMBDA_IMAGE_V1_ID and AWS_LAMBDA_IMAGE_V2_ID env vars must be set for Lambda Container Image Support acceptance tests. ")
 	}
@@ -976,7 +976,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccLambdaImagePreCheck(t)
+			testAccImageLatestV1V2PreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
