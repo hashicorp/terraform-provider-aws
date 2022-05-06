@@ -21,10 +21,10 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 	resourceName := "aws_iot_topic_rule_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleDestinationConfig(rName),
@@ -53,10 +53,10 @@ func TestAccIoTTopicRuleDestination_disappears(t *testing.T) {
 	resourceName := "aws_iot_topic_rule_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleDestinationConfig(rName),
@@ -75,10 +75,10 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 	resourceName := "aws_iot_topic_rule_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicRuleDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleDestinationEnabledConfig(rName, false),
