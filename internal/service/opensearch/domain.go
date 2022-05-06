@@ -1058,12 +1058,19 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 // inPlaceEncryptionEnableVersion returns true if, based on version, encryption
 // can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
-	if strings.HasPrefix(strings.ToLower(version), "opensearch") {
-		return true
+	if engineType, version, err := ParseEngineVersion(version); err == nil {
+		switch engineType {
+		case opensearchservice.EngineTypeElasticsearch:
+			if verify.SemVerGreaterThanOrEqual(version, "6.7") {
+				return true
+			}
+		case opensearchservice.EngineTypeOpenSearch:
+			// All OpenSearch versions support enabling encryption in-place.
+			return true
+		}
 	}
 
-	version = strings.TrimPrefix(strings.ToLower(version), "elasticsearch_")
-	return verify.SemVerLessThan(version, "7.9")
+	return false
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
