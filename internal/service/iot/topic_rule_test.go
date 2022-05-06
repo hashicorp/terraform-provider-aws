@@ -790,7 +790,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleIoTAnalyticsConfig(rName),
+				Config: testAccTopicRuleConfig_analytics(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -833,7 +833,7 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleIoTEventsConfig(rName),
+				Config: testAccTopicRuleConfig_events(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1954,7 +1954,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName)
 }
 
-func testAccTopicRuleIoTAnalyticsConfig(rName string) string {
+func testAccTopicRuleConfig_analytics(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
@@ -1972,7 +1972,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName))
 }
 
-func testAccTopicRuleIoTEventsConfig(rName string) string {
+func testAccTopicRuleConfig_events(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
