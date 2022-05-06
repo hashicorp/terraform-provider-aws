@@ -29,10 +29,10 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig(domainName),
+				Config: testAccDirectoryConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
@@ -64,10 +64,10 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryTagsConfig(domainName),
+				Config: testAccDirectoryConfig_tags(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -84,7 +84,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryUpdateTagsConfig(domainName),
+				Config: testAccDirectoryConfig_updateTags(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -94,7 +94,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryRemoveTagsConfig(domainName),
+				Config: testAccDirectoryConfig_removeTags(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -115,10 +115,10 @@ func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_microsoft(domainName),
+				Config: testAccDirectoryConfig_microsoft(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionEnterprise),
@@ -146,10 +146,10 @@ func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard(domainName),
+				Config: testAccDirectoryConfig_microsoftStandard(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionStandard),
@@ -181,10 +181,10 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_connector(domainName),
+				Config: testAccDirectoryConfig_connector(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
@@ -218,10 +218,10 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withAlias(domainName, alias),
+				Config: testAccDirectoryConfig_alias(domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -237,7 +237,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso(domainName, alias),
+				Config: testAccDirectoryConfig_sso(domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -245,7 +245,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(domainName, alias),
+				Config: testAccDirectoryConfig_SSO_modified(domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -256,7 +256,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 	})
 }
 
-func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
+func testAccCheckDirectoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -299,10 +299,10 @@ func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		CheckDestroy: testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig(domainName),
+				Config: testAccDirectoryConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
@@ -406,7 +406,7 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 	}
 }
 
-func testAccDirectoryServiceDirectoryConfig(domain string) string {
+func testAccDirectoryConfig_basic(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -424,7 +424,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryTagsConfig(domain string) string {
+func testAccDirectoryConfig_tags(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -447,7 +447,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryUpdateTagsConfig(domain string) string {
+func testAccDirectoryConfig_updateTags(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -471,7 +471,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryRemoveTagsConfig(domain string) string {
+func testAccDirectoryConfig_removeTags(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -493,7 +493,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_connector(domain string) string {
+func testAccDirectoryConfig_connector(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -525,7 +525,7 @@ resource "aws_directory_service_directory" "base" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_microsoft(domain string) string {
+func testAccDirectoryConfig_microsoft(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -543,7 +543,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_microsoftStandard(domain string) string {
+func testAccDirectoryConfig_microsoftStandard(domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -562,7 +562,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withAlias(domain, alias string) string {
+func testAccDirectoryConfig_alias(domain, alias string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -581,7 +581,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso(domain, alias string) string {
+func testAccDirectoryConfig_sso(domain, alias string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
@@ -601,7 +601,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso_modified(domain, alias string) string {
+func testAccDirectoryConfig_SSO_modified(domain, alias string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
