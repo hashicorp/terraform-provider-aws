@@ -15,10 +15,6 @@ func DataSourceGroup() *schema.Resource {
 		Read: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,6 +79,10 @@ func DataSourceGroup() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"new_instances_protected_from_scale_in": {
 				Type:     schema.TypeBool,
