@@ -38,6 +38,13 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"enabled_metrics": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"health_check_grace_period": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -169,6 +176,9 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
+	if err := d.Set("enabled_metrics", flattenASGEnabledMetrics(group.EnabledMetrics)); err != nil {
+		return fmt.Errorf("error setting enabled_metrics: %w", err)
+	}
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
 	d.Set("launch_configuration", group.LaunchConfigurationName)
