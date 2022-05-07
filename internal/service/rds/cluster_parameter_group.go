@@ -35,6 +35,17 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -51,22 +62,16 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
 			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"apply_method": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "immediate",
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -75,16 +80,10 @@ func ResourceClusterParameterGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"apply_method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "immediate",
-						},
 					},
 				},
 				Set: resourceParameterHash,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
