@@ -45,11 +45,11 @@ func DataSourceMap() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"update_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
