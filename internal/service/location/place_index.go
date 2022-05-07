@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePlaceIndex() *schema.Resource {
@@ -67,12 +69,17 @@ func ResourcePlaceIndex() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LocationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &locationservice.CreatePlaceIndexInput{}
 
@@ -92,6 +99,10 @@ func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
 		input.IndexName = aws.String(v.(string))
 	}
 
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
 	output, err := conn.CreatePlaceIndex(input)
 
 	if err != nil {
@@ -109,6 +120,8 @@ func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LocationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &locationservice.DescribePlaceIndexInput{
 		IndexName: aws.String(d.Id()),
@@ -142,6 +155,17 @@ func resourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
+
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
 	return nil
@@ -169,6 +193,14 @@ func resourcePlaceIndexUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error updating Location Service Place Index (%s): %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("index_arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Location Service Place Index (%s): %w", d.Id(), err)
 		}
 	}
 
