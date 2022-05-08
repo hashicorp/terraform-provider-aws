@@ -21,15 +21,15 @@ func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFirewallConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallConfigConfig(rName),
+				Config: testAccFirewallConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallConfigExists(resourceName, &v),
+					testAccCheckFirewallConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "firewall_fail_open", "ENABLED"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
@@ -49,15 +49,15 @@ func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFirewallConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallConfigConfig(rName),
+				Config: testAccFirewallConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallConfigExists(resourceName, &v),
+					testAccCheckFirewallConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceFirewallConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -66,7 +66,7 @@ func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error {
+func testAccCheckFirewallConfigDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -94,7 +94,7 @@ func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolver.FirewallConfig) resource.TestCheckFunc {
+func testAccCheckFirewallConfigExists(n string, v *route53resolver.FirewallConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -119,7 +119,7 @@ func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolve
 	}
 }
 
-func testAccRoute53ResolverFirewallConfigConfig(rName string) string {
+func testAccFirewallConfigConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

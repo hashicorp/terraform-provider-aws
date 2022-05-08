@@ -221,16 +221,15 @@ func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	if metricsFilter.And != nil {
-		and := *metricsFilter.And
+	if and := metricsFilter.And; and != nil {
 		if and.Prefix != nil {
-			m["prefix"] = *and.Prefix
+			m["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
 			m["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
-		m["prefix"] = *metricsFilter.Prefix
+		m["prefix"] = aws.StringValue(metricsFilter.Prefix)
 	} else if metricsFilter.Tag != nil {
 		tags := []*s3.Tag{
 			metricsFilter.Tag,

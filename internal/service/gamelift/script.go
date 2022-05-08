@@ -12,14 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexGameliftScript = `aws_gamelift_script`
+const awsMutexGameLiftScript = `aws_gamelift_script`
 
 func ResourceScript() *schema.Resource {
 	return &schema.Resource{
@@ -99,7 +98,7 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("storage_location"); ok && len(v.([]interface{})) > 0 {
-		input.StorageLocation = expandGameliftStorageLocation(v.([]interface{}))
+		input.StorageLocation = expandStorageLocation(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -107,8 +106,8 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		conns.GlobalMutexKV.Lock(awsMutexGameliftScript)
-		defer conns.GlobalMutexKV.Unlock(awsMutexGameliftScript)
+		conns.GlobalMutexKV.Lock(awsMutexGameLiftScript)
+		defer conns.GlobalMutexKV.Unlock(awsMutexGameLiftScript)
 
 		file, err := loadFileContent(v.(string))
 		if err != nil {
@@ -117,9 +116,9 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ZipFile = file
 	}
 
-	log.Printf("[INFO] Creating Gamelift Script: %s", input)
+	log.Printf("[INFO] Creating GameLift Script: %s", input)
 	var out *gamelift.CreateScriptOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateScript(&input)
 		if err != nil {
@@ -135,7 +134,7 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 		out, err = conn.CreateScript(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Gamelift script client: %w", err)
+		return fmt.Errorf("Error creating GameLift script client: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.Script.ScriptId))
@@ -148,7 +147,7 @@ func resourceScriptRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[INFO] Reading Gamelift Script: %s", d.Id())
+	log.Printf("[INFO] Reading GameLift Script: %s", d.Id())
 	script, err := FindScriptByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Script (%s) not found, removing from state", d.Id())
@@ -193,7 +192,7 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		log.Printf("[INFO] Updating Gamelift Script: %s", d.Id())
+		log.Printf("[INFO] Updating GameLift Script: %s", d.Id())
 		input := gamelift.UpdateScriptInput{
 			ScriptId: aws.String(d.Id()),
 			Name:     aws.String(d.Get("name").(string)),
@@ -207,14 +206,14 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("storage_location") {
 			if v, ok := d.GetOk("storage_location"); ok {
-				input.StorageLocation = expandGameliftStorageLocation(v.([]interface{}))
+				input.StorageLocation = expandStorageLocation(v.([]interface{}))
 			}
 		}
 
 		if d.HasChange("zip_file") {
 			if v, ok := d.GetOk("zip_file"); ok {
-				conns.GlobalMutexKV.Lock(awsMutexGameliftScript)
-				defer conns.GlobalMutexKV.Unlock(awsMutexGameliftScript)
+				conns.GlobalMutexKV.Lock(awsMutexGameLiftScript)
+				defer conns.GlobalMutexKV.Unlock(awsMutexGameLiftScript)
 
 				file, err := loadFileContent(v.(string))
 				if err != nil {
@@ -226,7 +225,7 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpdateScript(&input)
 		if err != nil {
-			return fmt.Errorf("Error updating Gamelift Script: %w", err)
+			return fmt.Errorf("Error updating GameLift Script: %w", err)
 		}
 	}
 
@@ -245,7 +244,7 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceScriptDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Deleting Gamelift Script: %s", d.Id())
+	log.Printf("[INFO] Deleting GameLift Script: %s", d.Id())
 	_, err := conn.DeleteScript(&gamelift.DeleteScriptInput{
 		ScriptId: aws.String(d.Id()),
 	})
@@ -254,7 +253,7 @@ func resourceScriptDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Gamelift script: %w", err)
+		return fmt.Errorf("Error deleting GameLift script: %w", err)
 	}
 
 	return nil

@@ -17,10 +17,10 @@ import (
 
 func TestAccNetworkManagerConnection_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":               testAccNetworkManagerConnection_basic,
-		"disappears":          testAccNetworkManagerConnection_disappears,
-		"tags":                testAccNetworkManagerConnection_tags,
-		"descriptionAndLinks": testAccNetworkManagerConnection_descriptionAndLinks,
+		"basic":               testAccConnection_basic,
+		"disappears":          testAccConnection_disappears,
+		"tags":                testAccConnection_tags,
+		"descriptionAndLinks": testAccConnection_descriptionAndLinks,
 	}
 
 	for name, tc := range testCases {
@@ -31,15 +31,15 @@ func TestAccNetworkManagerConnection_serial(t *testing.T) {
 	}
 }
 
-func testAccNetworkManagerConnection_basic(t *testing.T) {
+func testAccConnection_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig(rName),
@@ -62,15 +62,15 @@ func testAccNetworkManagerConnection_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_disappears(t *testing.T) {
+func testAccConnection_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig(rName),
@@ -84,15 +84,15 @@ func testAccNetworkManagerConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags(t *testing.T) {
+func testAccConnection_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfigTags1(rName, "key1", "value1"),
@@ -129,17 +129,17 @@ func testAccNetworkManagerConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_descriptionAndLinks(t *testing.T) {
+func testAccConnection_descriptionAndLinks(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	link1ResourceName := "aws_networkmanager_link.test1"
 	link2ResourceName := "aws_networkmanager_link.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionDescriptionAndLinksConfig(rName),

@@ -75,10 +75,10 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBasePathDestroy(name),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),
@@ -105,10 +105,10 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBasePathDestroy(name),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
@@ -134,10 +134,10 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBasePathDestroy(name),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
@@ -185,10 +185,10 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBasePathDestroy(name),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),

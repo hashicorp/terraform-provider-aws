@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAvailability(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByID(conn, id)
 
@@ -19,7 +19,7 @@ func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ClusterStatus), nil
+		return output, aws.StringValue(output.ClusterAvailabilityStatus), nil
 	}
 }
 

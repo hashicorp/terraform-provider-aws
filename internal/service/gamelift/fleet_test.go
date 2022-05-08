@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestDiffGameliftPortSettings(t *testing.T) {
+func TestDiffGameLiftPortSettings(t *testing.T) {
 	testCases := []struct {
 		Old           []interface{}
 		New           []interface{}
@@ -150,6 +150,10 @@ func TestDiffGameliftPortSettings(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -181,9 +185,9 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetBasicConfig(rName, launchPath, params, bucketName, key, roleArn),
@@ -240,6 +244,10 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -270,9 +278,9 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetBasicTags1Config(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1"),
@@ -310,6 +318,10 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_allFields(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -346,9 +358,9 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetAllFieldsConfig(rName, desc, launchPath, params[0], bucketName, key, roleArn),
@@ -452,6 +464,10 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_cert(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -482,9 +498,9 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetCertConfig(rName, launchPath, params, bucketName, key, roleArn),
@@ -505,6 +521,10 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_script(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -517,9 +537,9 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetScriptConfig(rName),
@@ -554,6 +574,10 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -584,9 +608,9 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetBasicConfig(rName, launchPath, params, bucketName, key, roleArn),
@@ -609,7 +633,7 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Fleet ID is set")
+			return fmt.Errorf("No GameLift Fleet ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -620,7 +644,7 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 		}
 
 		if aws.StringValue(fleet.FleetId) != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Fleet not found")
+			return fmt.Errorf("GameLift Fleet not found")
 		}
 
 		*res = *fleet

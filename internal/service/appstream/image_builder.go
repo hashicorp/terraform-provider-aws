@@ -218,7 +218,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandAppStreamImageBuilderVpcConfig(v.([]interface{}))
+		input.VpcConfig = expandImageBuilderVpcConfig(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -347,7 +347,7 @@ func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func expandAppStreamImageBuilderVpcConfig(tfList []interface{}) *appstream.VpcConfig {
+func expandImageBuilderVpcConfig(tfList []interface{}) *appstream.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}

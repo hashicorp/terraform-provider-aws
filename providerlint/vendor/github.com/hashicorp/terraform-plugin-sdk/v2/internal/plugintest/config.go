@@ -78,7 +78,7 @@ func DiscoverConfig(ctx context.Context, sourceDir string) (*Config, error) {
 	installer := install.NewInstaller()
 	tfExec, err := installer.Ensure(context.Background(), sources)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find or install Terraform CLI from %+v: %w", sources, err)
 	}
 
 	ctx = logging.TestTerraformPathContext(ctx, tfExec)

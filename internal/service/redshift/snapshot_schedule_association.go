@@ -105,7 +105,7 @@ func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interf
 
 	var associatedCluster *redshift.ClusterAssociatedToSchedule
 	for _, cluster := range snapshotSchedule.AssociatedClusters {
-		if *cluster.ClusterIdentifier == clusterIdentifier {
+		if aws.StringValue(cluster.ClusterIdentifier) == clusterIdentifier {
 			associatedCluster = cluster
 			break
 		}
@@ -143,7 +143,7 @@ func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error disassociate Redshift Cluster (%s) and Snapshot Schedule (%s) Association: %s", clusterIdentifier, scheduleIdentifier, err)
 	}
 
-	if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, snapshotScheduleAssociationDestroyedTimeout, clusterIdentifier, scheduleIdentifier); err != nil {
+	if err := waitForSnapshotScheduleAssociationDestroy(conn, snapshotScheduleAssociationDestroyedTimeout, clusterIdentifier, scheduleIdentifier); err != nil {
 		return err
 	}
 
@@ -221,7 +221,7 @@ func WaitForSnapshotScheduleAssociationActive(conn *redshift.Redshift, timeout t
 	return nil
 }
 
-func waitForRedshiftSnapshotScheduleAssociationDestroy(conn *redshift.Redshift, timeout time.Duration, clusterIdentifier, scheduleIdentifier string) error {
+func waitForSnapshotScheduleAssociationDestroy(conn *redshift.Redshift, timeout time.Duration, clusterIdentifier, scheduleIdentifier string) error {
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},

@@ -15,7 +15,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -191,8 +190,8 @@ func resourceGameServerGroupCreate(d *schema.ResourceData, meta interface{}) err
 
 	input := &gamelift.CreateGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Get("game_server_group_name").(string)),
-		InstanceDefinitions: expandGameliftInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
-		LaunchTemplate:      expandGameliftLaunchTemplateSpecification(d.Get("launch_template").([]interface{})[0].(map[string]interface{})),
+		InstanceDefinitions: expandInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
+		LaunchTemplate:      expandLaunchTemplateSpecification(d.Get("launch_template").([]interface{})[0].(map[string]interface{})),
 		MaxSize:             aws.Int64(int64(d.Get("max_size").(int))),
 		MinSize:             aws.Int64(int64(d.Get("min_size").(int))),
 		RoleArn:             aws.String(d.Get("role_arn").(string)),
@@ -200,7 +199,7 @@ func resourceGameServerGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("auto_scaling_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AutoScalingPolicy = expandGameliftGameServerGroupAutoScalingPolicy(v.([]interface{})[0].(map[string]interface{}))
+		input.AutoScalingPolicy = expandGameServerGroupAutoScalingPolicy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("balancing_strategy"); ok {
@@ -215,9 +214,9 @@ func resourceGameServerGroupCreate(d *schema.ResourceData, meta interface{}) err
 		input.VpcSubnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[INFO] Creating Gamelift Game Server Group: %s", input)
+	log.Printf("[INFO] Creating GameLift Game Server Group: %s", input)
 	var out *gamelift.CreateGameServerGroupOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateGameServerGroup(input)
 
@@ -257,7 +256,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 
 	gameServerGroupName := d.Id()
 
-	log.Printf("[INFO] Describing Gamelift Game Server Group: %s", gameServerGroupName)
+	log.Printf("[INFO] Describing GameLift Game Server Group: %s", gameServerGroupName)
 	gameServerGroup, err := FindGameServerGroupByName(conn, gameServerGroupName)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Game Server Group (%s) not found, removing from state", gameServerGroupName)
@@ -301,14 +300,14 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("role_arn", gameServerGroup.RoleArn)
 
 	if len(describePoliciesOutput.ScalingPolicies) == 1 {
-		if err := d.Set("auto_scaling_policy", []interface{}{flattenGameliftGameServerGroupAutoScalingPolicy(describePoliciesOutput.ScalingPolicies[0])}); err != nil {
+		if err := d.Set("auto_scaling_policy", []interface{}{flattenGameServerGroupAutoScalingPolicy(describePoliciesOutput.ScalingPolicies[0])}); err != nil {
 			return fmt.Errorf("error setting auto_scaling_policy: %w", err)
 		}
 	} else {
 		d.Set("auto_scaling_policy", nil)
 	}
 
-	if err := d.Set("instance_definition", flattenGameliftInstanceDefinitions(gameServerGroup.InstanceDefinitions)); err != nil {
+	if err := d.Set("instance_definition", flattenInstanceDefinitions(gameServerGroup.InstanceDefinitions)); err != nil {
 		return fmt.Errorf("error setting instance_definition: %s", err)
 	}
 
@@ -343,12 +342,12 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 func resourceGameServerGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Updating Gamelift Game Server Group: %s", d.Id())
+	log.Printf("[INFO] Updating GameLift Game Server Group: %s", d.Id())
 
 	if d.HasChanges("balancing_strategy", "game_server_protection_policy", "instance_definition", "role_arn") {
 		input := gamelift.UpdateGameServerGroupInput{
 			GameServerGroupName: aws.String(d.Id()),
-			InstanceDefinitions: expandGameliftInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
+			InstanceDefinitions: expandInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
 			RoleArn:             aws.String(d.Get("role_arn").(string)),
 		}
 
@@ -381,7 +380,7 @@ func resourceGameServerGroupUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceGameServerGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Deleting Gamelift Game Server Group: %s", d.Id())
+	log.Printf("[INFO] Deleting GameLift Game Server Group: %s", d.Id())
 	input := &gamelift.DeleteGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Id()),
 	}
@@ -403,7 +402,7 @@ func resourceGameServerGroupDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Gamelift game server group: %w", err)
+		return fmt.Errorf("Error deleting GameLift game server group: %w", err)
 	}
 
 	if err := waitGameServerGroupTerminated(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -413,13 +412,13 @@ func resourceGameServerGroupDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandGameliftGameServerGroupAutoScalingPolicy(tfMap map[string]interface{}) *gamelift.GameServerGroupAutoScalingPolicy {
+func expandGameServerGroupAutoScalingPolicy(tfMap map[string]interface{}) *gamelift.GameServerGroupAutoScalingPolicy {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &gamelift.GameServerGroupAutoScalingPolicy{
-		TargetTrackingConfiguration: expandGameliftTargetTrackingConfiguration(tfMap["target_tracking_configuration"].([]interface{})[0].(map[string]interface{})),
+		TargetTrackingConfiguration: expandTargetTrackingConfiguration(tfMap["target_tracking_configuration"].([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := tfMap["estimated_instance_warmup"].(int); ok && v != 0 {
@@ -429,7 +428,7 @@ func expandGameliftGameServerGroupAutoScalingPolicy(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandGameliftInstanceDefinition(tfMap map[string]interface{}) *gamelift.InstanceDefinition {
+func expandInstanceDefinition(tfMap map[string]interface{}) *gamelift.InstanceDefinition {
 	if tfMap == nil {
 		return nil
 	}
@@ -445,7 +444,7 @@ func expandGameliftInstanceDefinition(tfMap map[string]interface{}) *gamelift.In
 	return apiObject
 }
 
-func expandGameliftInstanceDefinitions(tfList []interface{}) []*gamelift.InstanceDefinition {
+func expandInstanceDefinitions(tfList []interface{}) []*gamelift.InstanceDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -459,7 +458,7 @@ func expandGameliftInstanceDefinitions(tfList []interface{}) []*gamelift.Instanc
 			continue
 		}
 
-		apiObject := expandGameliftInstanceDefinition(tfMap)
+		apiObject := expandInstanceDefinition(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -471,7 +470,7 @@ func expandGameliftInstanceDefinitions(tfList []interface{}) []*gamelift.Instanc
 	return apiObjects
 }
 
-func expandGameliftLaunchTemplateSpecification(tfMap map[string]interface{}) *gamelift.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *gamelift.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -493,7 +492,7 @@ func expandGameliftLaunchTemplateSpecification(tfMap map[string]interface{}) *ga
 	return apiObject
 }
 
-func expandGameliftTargetTrackingConfiguration(tfMap map[string]interface{}) *gamelift.TargetTrackingConfiguration {
+func expandTargetTrackingConfiguration(tfMap map[string]interface{}) *gamelift.TargetTrackingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -505,13 +504,13 @@ func expandGameliftTargetTrackingConfiguration(tfMap map[string]interface{}) *ga
 	return apiObject
 }
 
-func flattenGameliftGameServerGroupAutoScalingPolicy(apiObject *autoscaling.ScalingPolicy) map[string]interface{} {
+func flattenGameServerGroupAutoScalingPolicy(apiObject *autoscaling.ScalingPolicy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"target_tracking_configuration": []interface{}{flattenGameliftTargetTrackingConfiguration(apiObject.TargetTrackingConfiguration)},
+		"target_tracking_configuration": []interface{}{flattenTargetTrackingConfiguration(apiObject.TargetTrackingConfiguration)},
 	}
 
 	if v := apiObject.EstimatedInstanceWarmup; v != nil {
@@ -521,7 +520,7 @@ func flattenGameliftGameServerGroupAutoScalingPolicy(apiObject *autoscaling.Scal
 	return tfMap
 }
 
-func flattenGameliftInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[string]interface{} {
+func flattenInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -557,7 +556,7 @@ func flattenAutoscalingLaunchTemplateSpecification(apiObject *autoscaling.Launch
 	return []map[string]interface{}{tfMap}
 }
 
-func flattenGameliftInstanceDefinitions(apiObjects []*gamelift.InstanceDefinition) []interface{} {
+func flattenInstanceDefinitions(apiObjects []*gamelift.InstanceDefinition) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -569,13 +568,13 @@ func flattenGameliftInstanceDefinitions(apiObjects []*gamelift.InstanceDefinitio
 			continue
 		}
 
-		tfList = append(tfList, flattenGameliftInstanceDefinition(apiObject))
+		tfList = append(tfList, flattenInstanceDefinition(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenGameliftTargetTrackingConfiguration(apiObject *autoscaling.TargetTrackingConfiguration) map[string]interface{} {
+func flattenTargetTrackingConfiguration(apiObject *autoscaling.TargetTrackingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

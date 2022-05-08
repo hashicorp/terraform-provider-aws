@@ -1,8 +1,10 @@
 package lightsail
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
 func ResourceKeyPair() *schema.Resource {
@@ -117,12 +119,12 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_key", resp.PublicKeyBase64)
 
 		// encrypt private key if pgp_key is given
-		pgpKey, err := tfiam.RetrieveGPGKey(d.Get("pgp_key").(string))
+		pgpKey, err := retrieveGPGKey(d.Get("pgp_key").(string))
 		if err != nil {
 			return err
 		}
 		if pgpKey != "" {
-			fingerprint, encrypted, err := tfiam.EncryptValue(pgpKey, *resp.PrivateKeyBase64, "Lightsail Private Key")
+			fingerprint, encrypted, err := encryptValue(pgpKey, *resp.PrivateKeyBase64, "Lightsail Private Key")
 			if err != nil {
 				return err
 			}
@@ -223,4 +225,34 @@ func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// retrieveGPGKey returns the PGP key specified as the pgpKey parameter, or queries
+// the public key from the keybase service if the parameter is a keybase username
+// prefixed with the phrase "keybase:"
+func retrieveGPGKey(pgpKey string) (string, error) {
+	const keybasePrefix = "keybase:"
+
+	encryptionKey := pgpKey
+	if strings.HasPrefix(pgpKey, keybasePrefix) {
+		publicKeys, err := pgpkeys.FetchKeybasePubkeys([]string{pgpKey})
+		if err != nil {
+			return "", fmt.Errorf("Error retrieving Public Key for %s: %w", pgpKey, err)
+		}
+		encryptionKey = publicKeys[pgpKey]
+	}
+
+	return encryptionKey, nil
+}
+
+// encryptValue encrypts the given value with the given encryption key. Description
+// should be set such that errors return a meaningful user-facing response.
+func encryptValue(encryptionKey, value, description string) (string, string, error) {
+	fingerprints, encryptedValue, err :=
+		pgpkeys.EncryptShares([][]byte{[]byte(value)}, []string{encryptionKey})
+	if err != nil {
+		return "", "", fmt.Errorf("Error encrypting %s: %w", description, err)
+	}
+
+	return fingerprints[0], base64.StdEncoding.EncodeToString(encryptedValue[0]), nil
 }

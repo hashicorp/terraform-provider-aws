@@ -20,10 +20,10 @@ func TestAccEventsArchive_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckArchiveDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig(archiveName),
@@ -51,10 +51,10 @@ func TestAccEventsArchive_update(t *testing.T) {
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckArchiveDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig(archiveName),
@@ -81,10 +81,10 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckArchiveDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig(archiveName),
@@ -153,10 +153,10 @@ func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckArchiveDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_retentionOnCreation(archiveName),

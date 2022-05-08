@@ -1,9 +1,6 @@
 package storagegateway
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -14,10 +11,9 @@ import (
 const (
 	storageGatewayGatewayStatusConnected = "GatewayConnected"
 	storediSCSIVolumeStatusNotFound      = "NotFound"
-	nfsFileShareStatusNotFound           = "NotFound"
 )
 
-func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -37,7 +33,7 @@ func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN
 	}
 }
 
-func statusStorageGatewayGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeSMBSettingsInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -83,32 +79,23 @@ func statusStorediSCSIVolume(conn *storagegateway.StorageGateway, volumeARN stri
 	}
 }
 
-func statusNFSFileShare(conn *storagegateway.StorageGateway, fileShareArn string) resource.StateRefreshFunc {
+func statusNFSFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeNFSFileSharesInput{
-			FileShareARNList: []*string{aws.String(fileShareArn)},
+		output, err := FindNFSFileShareByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		log.Printf("[DEBUG] Reading Storage Gateway NFS File Share: %s", input)
-		output, err := conn.DescribeNFSFileShares(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				return nil, nfsFileShareStatusNotFound, nil
-			}
-			return nil, "", fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
+			return nil, "", err
 		}
 
-		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
-			return nil, nfsFileShareStatusNotFound, nil
-		}
-
-		fileshare := output.NFSFileShareInfoList[0]
-
-		return fileshare, aws.StringValue(fileshare.FileShareStatus), nil
+		return output, aws.StringValue(output.FileShareStatus), nil
 	}
 }
 
-func statussmBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSMBFileShareByARN(conn, arn)
 

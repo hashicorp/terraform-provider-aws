@@ -25,14 +25,14 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionHealthCheckAssociationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionHealthCheckAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionaHealthCheckAssociationConfig(rName),
+				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionHealthCheckAssociationExists(resourceName),
+					testAccCheckProtectionHealthCheckAssociationExists(resourceName),
 				),
 			},
 			{
@@ -54,14 +54,14 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionHealthCheckAssociationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionHealthCheckAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionaHealthCheckAssociationConfig(rName),
+				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionHealthCheckAssociationExists(resourceName),
+					testAccCheckProtectionHealthCheckAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,7 +70,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSShieldProtectionHealthCheckAssociationDestroy(s *terraform.State) error {
+func testAccCheckProtectionHealthCheckAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -106,7 +106,7 @@ func testAccCheckAWSShieldProtectionHealthCheckAssociationDestroy(s *terraform.S
 	return nil
 }
 
-func testAccCheckAWSShieldProtectionHealthCheckAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProtectionHealthCheckAssociationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -147,7 +147,7 @@ func testAccCheckAWSShieldProtectionHealthCheckAssociationExists(resourceName st
 	}
 }
 
-func testAccShieldProtectionaHealthCheckAssociationConfig(rName string) string {
+func testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

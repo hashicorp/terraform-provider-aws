@@ -22,10 +22,10 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Config(rName),
@@ -60,10 +60,10 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2AllFieldsConfig(rName, name1, description1),
@@ -105,10 +105,10 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Tags1Config(rName, "key1", "value1"),
@@ -152,10 +152,10 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Config(rName),

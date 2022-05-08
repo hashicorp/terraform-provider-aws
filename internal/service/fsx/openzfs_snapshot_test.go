@@ -22,15 +22,15 @@ func TestAccFSxOpenzfsSnapshot_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`snapshot/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "volume_id"),
@@ -53,15 +53,15 @@ func TestAccFSxOpenzfsSnapshot_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOpenzfsSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,15 +76,15 @@ func TestAccFSxOpenzfsSnapshot_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -97,7 +97,7 @@ func TestAccFSxOpenzfsSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccOpenzfsSnapshotTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -106,7 +106,7 @@ func TestAccFSxOpenzfsSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccOpenzfsSnapshotTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -122,15 +122,15 @@ func TestAccFSxOpenzfsSnapshot_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot1),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -142,8 +142,8 @@ func TestAccFSxOpenzfsSnapshot_name(t *testing.T) {
 			{
 				Config: testAccOpenzfsSnapshotBasicConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot2),
-					testAccCheckFsxOpenzfsSnapshotNotRecreated(&snapshot1, &snapshot2),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot2),
+					testAccCheckOpenzfsSnapshotNotRecreated(&snapshot1, &snapshot2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -157,15 +157,15 @@ func TestAccFSxOpenzfsSnapshot_childVolume(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotChildVolumeConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`snapshot/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -187,15 +187,15 @@ func TestAccFSxOpenzfsSnapshot_volumeId(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOpenzfsSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotVolumeId1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot1),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -207,8 +207,8 @@ func TestAccFSxOpenzfsSnapshot_volumeId(t *testing.T) {
 			{
 				Config: testAccOpenzfsSnapshotVolumeId2Config(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOpenzfsSnapshotExists(resourceName, &snapshot2),
-					testAccCheckFsxOpenzfsSnapshotRecreated(&snapshot1, &snapshot2),
+					testAccCheckOpenzfsSnapshotExists(resourceName, &snapshot2),
+					testAccCheckOpenzfsSnapshotRecreated(&snapshot1, &snapshot2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -216,7 +216,7 @@ func TestAccFSxOpenzfsSnapshot_volumeId(t *testing.T) {
 	})
 }
 
-func testAccCheckFsxOpenzfsSnapshotExists(resourceName string, fs *fsx.Snapshot) resource.TestCheckFunc {
+func testAccCheckOpenzfsSnapshotExists(resourceName string, fs *fsx.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -240,7 +240,7 @@ func testAccCheckFsxOpenzfsSnapshotExists(resourceName string, fs *fsx.Snapshot)
 	}
 }
 
-func testAccCheckFsxOpenzfsSnapshotDestroy(s *terraform.State) error {
+func testAccCheckOpenzfsSnapshotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -262,7 +262,7 @@ func testAccCheckFsxOpenzfsSnapshotDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckFsxOpenzfsSnapshotNotRecreated(i, j *fsx.Snapshot) resource.TestCheckFunc {
+func testAccCheckOpenzfsSnapshotNotRecreated(i, j *fsx.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.SnapshotId) != aws.StringValue(j.SnapshotId) {
 			return fmt.Errorf("FSx OpenZFS Snapshot (%s) recreated", aws.StringValue(i.SnapshotId))
@@ -272,7 +272,7 @@ func testAccCheckFsxOpenzfsSnapshotNotRecreated(i, j *fsx.Snapshot) resource.Tes
 	}
 }
 
-func testAccCheckFsxOpenzfsSnapshotRecreated(i, j *fsx.Snapshot) resource.TestCheckFunc {
+func testAccCheckOpenzfsSnapshotRecreated(i, j *fsx.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.SnapshotId) == aws.StringValue(j.SnapshotId) {
 			return fmt.Errorf("FSx OpenZFS Snapshot (%s) not recreated", aws.StringValue(i.SnapshotId))

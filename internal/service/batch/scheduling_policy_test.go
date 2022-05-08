@@ -21,10 +21,10 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchSchedulingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchSchedulingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchSchedulingPolicyConfigBasic(rName),
@@ -68,10 +68,10 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchSchedulingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchSchedulingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchSchedulingPolicyConfigBasic(rName),

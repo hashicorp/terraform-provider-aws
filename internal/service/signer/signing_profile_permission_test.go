@@ -24,10 +24,10 @@ func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccSigningProfilePermissionConfig(profileName),
@@ -58,10 +58,10 @@ func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccSigningProfilePermissionGetSP(profileName),
@@ -100,10 +100,10 @@ func TestAccSignerSigningProfilePermission_StartSigningJob_getSP(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfilePermissionStartSigningJobGetSP(profileName),
@@ -134,10 +134,10 @@ func TestAccSignerSigningProfilePermission_statementPrefix(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName),

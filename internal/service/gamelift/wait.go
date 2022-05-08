@@ -71,7 +71,7 @@ func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Durati
 	outputRaw, err := stateConf.WaitForState()
 
 	if err != nil {
-		events, fErr := getGameliftFleetFailures(conn, id)
+		events, fErr := getFleetFailures(conn, id)
 		if fErr != nil {
 			log.Printf("[WARN] Failed to poll fleet failures: %s", fErr)
 		}
@@ -87,13 +87,13 @@ func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Durati
 	return nil, err
 }
 
-func getGameliftFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
+func getFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
 	var events []*gamelift.Event
-	err := _getGameliftFleetFailures(conn, id, nil, &events)
+	err := _getFleetFailures(conn, id, nil, &events)
 	return events, err
 }
 
-func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
+func _getFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
 	eOut, err := conn.DescribeFleetEvents(&gamelift.DescribeFleetEventsInput{
 		FleetId:   aws.String(id),
 		NextToken: nextToken,
@@ -103,13 +103,13 @@ func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *st
 	}
 
 	for _, e := range eOut.Events {
-		if isGameliftEventFailure(e) {
+		if isEventFailure(e) {
 			*events = append(*events, e)
 		}
 	}
 
 	if eOut.NextToken != nil {
-		err := _getGameliftFleetFailures(conn, id, nextToken, events)
+		err := _getFleetFailures(conn, id, nextToken, events)
 		if err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *st
 	return nil
 }
 
-func isGameliftEventFailure(event *gamelift.Event) bool {
+func isEventFailure(event *gamelift.Event) bool {
 	failureCodes := []string{
 		gamelift.EventCodeFleetActivationFailed,
 		gamelift.EventCodeFleetActivationFailedNoInstances,

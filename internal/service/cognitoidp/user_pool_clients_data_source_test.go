@@ -15,9 +15,9 @@ func TestAccCognitoIDPUserPoolClientsDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_cognito_user_pool_clients.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck: acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolClientsDataSource_basic(rName),

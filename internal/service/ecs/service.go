@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -182,30 +181,23 @@ func ResourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"elb_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-
-						"target_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"container_name": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
-
 						"container_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
+						},
+						"elb_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -222,6 +214,11 @@ func ResourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"assign_public_ip": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -234,11 +231,6 @@ func ResourceService() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 					},
 				},
 			},
@@ -248,11 +240,6 @@ func ResourceService() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ecs.PlacementStrategyType_Values(), false),
-						},
 						"field": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -266,6 +253,11 @@ func ResourceService() *schema.Resource {
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ecs.PlacementStrategyType_Values(), false),
 						},
 					},
 				},
@@ -319,24 +311,20 @@ func ResourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"container_name": {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Optional: true,
 						},
 						"container_port": {
 							Type:         schema.TypeInt,
-							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"port": {
 							Type:         schema.TypeInt,
-							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"registry_arn": {
 							Type:         schema.TypeString,
-							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
@@ -561,14 +549,15 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
-	if d.Get("wait_for_steady_state").(bool) {
-		cluster := ""
-		if v, ok := d.GetOk("cluster"); ok {
-			cluster = v.(string)
-		}
+	cluster := d.Get("cluster").(string)
 
+	if d.Get("wait_for_steady_state").(bool) {
 		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
-			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after creation: %w", d.Id(), err)
+		}
+	} else {
+		if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+			return fmt.Errorf("error waiting for ECS service (%s) to become active after creation: %w", d.Id(), err)
 		}
 	}
 
@@ -619,6 +608,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
+		log.Printf("[DEBUG] Waiting for ECS Service (%s) to become active", d.Id())
 		output, err = waitServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
 	}
 
@@ -629,7 +619,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ECS service: %w", err)
+		return fmt.Errorf("error reading ECS service (%s): %w", d.Id(), err)
 	}
 
 	if len(output.Services) < 1 {
@@ -644,7 +634,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	service := output.Services[0]
 
 	// Status==INACTIVE means deleted service
-	if aws.StringValue(service.Status) == "INACTIVE" {
+	if aws.StringValue(service.Status) == serviceStatusInactive {
 		log.Printf("[WARN] Removing ECS service %q because it's INACTIVE", aws.StringValue(service.ServiceArn))
 		d.SetId("")
 		return nil
@@ -1081,7 +1071,9 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("load_balancer") {
-			input.LoadBalancers = expandLoadBalancers(d.Get("load_balancer").([]interface{}))
+			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
+				input.LoadBalancers = expandLoadBalancers(v.List())
+			}
 		}
 
 		if d.HasChange("propagate_tags") {
@@ -1094,7 +1086,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
-		err := resource.Retry(tfiam.PropagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(input)
 
 			if err != nil {
@@ -1119,14 +1111,14 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating ECS Service (%s): %w", d.Id(), err)
 		}
 
+		cluster := d.Get("cluster").(string)
 		if d.Get("wait_for_steady_state").(bool) {
-			cluster := ""
-			if v, ok := d.GetOk("cluster"); ok {
-				cluster = v.(string)
-			}
-
 			if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
-				return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+				return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after update: %w", d.Id(), err)
+			}
+		} else {
+			if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+				return fmt.Errorf("error waiting for ECS service (%s) to become active after update: %w", d.Id(), err)
 			}
 		}
 	}
@@ -1247,7 +1239,7 @@ func resourceLoadBalancerHash(v interface{}) int {
 
 func retryServiceCreate(conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
 	var output *ecs.CreateServiceOutput
-	err := resource.Retry(tfiam.PropagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateService(&input)
 

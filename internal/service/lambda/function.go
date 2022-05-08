@@ -146,6 +146,22 @@ func ResourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(512, 10240),
+						},
+					},
+				},
+			},
 			"file_system_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -339,6 +355,11 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
+const (
+	functionPutConcurrencyTimeout  = 1 * time.Minute
+	functionExtraThrottlingTimeout = 9 * time.Minute
+)
+
 func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	packageType := d.Get("package_type")
 	_, handlerOk := d.GetOk("handler")
@@ -381,7 +402,8 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
-		d.HasChange("environment")
+		d.HasChange("environment") ||
+		d.HasChange("ephemeral_storage")
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -481,6 +503,14 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
+		ephemeralStorage := v.([]interface{})
+		configMap := ephemeralStorage[0].(map[string]interface{})
+		params.EphemeralStorage = &lambda.EphemeralStorage{
+			Size: aws.Int64(int64(configMap["size"].(int))),
+		}
+	}
+
 	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
 		params.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 	}
@@ -530,7 +560,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(lambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -553,6 +583,11 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -569,7 +604,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating Lambda Function (1): %w", err)
 		}
 
-		err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
+		err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -608,7 +643,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		err := resource.Retry(lambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
+		err := resource.Retry(functionPutConcurrencyTimeout, func() *resource.RetryError {
 			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 
 			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
@@ -792,6 +827,12 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	ephemeralStorage := flattenEphemeralStorage(function.EphemeralStorage)
+	log.Printf("[INFO] Setting Lambda %s ephemeralStorage %#v from API", d.Id(), ephemeralStorage)
+	if err := d.Set("ephemeral_storage", ephemeralStorage); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage for Lambda Function (%s): %w", d.Id(), err)
+	}
+
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
@@ -805,7 +846,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// Assume `PassThrough` on partitions that don't support tracing config
 	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
-		tracingConfigMode = *function.TracingConfig.Mode
+		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
 	}
 	d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
@@ -828,8 +869,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 			if lastPage {
 				last := p.Versions[len(p.Versions)-1]
-				lastVersion = *last.Version
-				lastQualifiedArn = *last.FunctionArn
+				lastVersion = aws.StringValue(last.Version)
+				lastQualifiedArn = aws.StringValue(last.FunctionArn)
 				return false
 			}
 			return true
@@ -983,7 +1024,15 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("description") {
 		configReq.Description = aws.String(d.Get("description").(string))
 	}
-
+	if d.HasChange("ephemeral_storage") {
+		ephemeralStorage := d.Get("ephemeral_storage").([]interface{})
+		if len(ephemeralStorage) == 1 {
+			configMap := ephemeralStorage[0].(map[string]interface{})
+			configReq.EphemeralStorage = &lambda.EphemeralStorage{
+				Size: aws.Int64(int64(configMap["size"].(int))),
+			}
+		}
+	}
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
 	}
@@ -1074,7 +1123,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(lambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1097,6 +1146,11 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 				return resource.RetryableError(err)
 			}
 
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+				return resource.RetryableError(err)
+			}
+
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
@@ -1114,7 +1168,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// Allow more time for EC2 throttling
-			err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+			err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -1228,7 +1282,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(lambdaFunctionPublishTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 
@@ -1395,8 +1449,8 @@ func flattenFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]i
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
 		f := make(map[string]interface{})
-		f["arn"] = *fsc.Arn
-		f["local_mount_path"] = *fsc.LocalMountPath
+		f["arn"] = aws.StringValue(fsc.Arn)
+		f["local_mount_path"] = aws.StringValue(fsc.LocalMountPath)
 
 		results = append(results, f)
 	}
@@ -1443,4 +1497,15 @@ func expandImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}
 	return imageConfig
+}
+
+func flattenEphemeralStorage(response *lambda.EphemeralStorage) []map[string]interface{} {
+	if response == nil {
+		return nil
+	}
+
+	m := make(map[string]interface{})
+	m["size"] = aws.Int64Value(response.Size)
+
+	return []map[string]interface{}{m}
 }

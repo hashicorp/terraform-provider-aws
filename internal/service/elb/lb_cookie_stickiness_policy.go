@@ -128,7 +128,7 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 	// cookie expiration, in these descriptions.
 	policyDesc := getResp.PolicyDescriptions[0]
 	cookieAttr := policyDesc.PolicyAttributeDescriptions[0]
-	if *cookieAttr.AttributeName != "CookieExpirationPeriod" {
+	if aws.StringValue(cookieAttr.AttributeName) != "CookieExpirationPeriod" {
 		return fmt.Errorf("Unable to find cookie expiration period.")
 	}
 	cookieVal, err := strconv.Atoi(aws.StringValue(cookieAttr.AttributeValue))

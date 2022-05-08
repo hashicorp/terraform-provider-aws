@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Comment if maintainers cannot edit
         if: ${{ ( env.IN_MAINTAINER_LIST == 'false' ) && ( env.MAINTAINER_CAN_MODIFY == 'false' ) }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |

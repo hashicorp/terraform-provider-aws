@@ -115,7 +115,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:          aws.String(d.Get("name").(string)),
-		EncryptionConfiguration: expandEcrRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -230,7 +230,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
-	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
@@ -273,7 +273,7 @@ func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []ma
 	}
 }
 
-func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
+func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -290,7 +290,7 @@ func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.Encrypt
 	return config
 }
 
-func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
+func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
 	if ec == nil {
 		return nil
 	}

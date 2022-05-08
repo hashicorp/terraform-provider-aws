@@ -21,10 +21,10 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretRotationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretRotationDestroy,
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
 			{
@@ -42,7 +42,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
 			/*
 				{
-					Config: testAccAWSSecretsManagerSecretConfig_Updated(rName),
+					Config: testAccSecretsManagerSecretConfig_Updated(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSecretRotationExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),

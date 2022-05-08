@@ -21,10 +21,10 @@ func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrincipalAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalAssociationConfig(rName),
@@ -47,10 +47,10 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrincipalAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalAssociationConfig(rName),
