@@ -1114,7 +1114,6 @@ func ResourceFlow() *schema.Resource {
 						"task_properties": {
 							Type:         schema.TypeMap,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.StringInSlice(appflow.OperatorPropertiesKeys_Values(), false),
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
