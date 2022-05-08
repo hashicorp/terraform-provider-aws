@@ -378,6 +378,8 @@ resource "aws_appflow_flow" "example" {
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `arn` - The flow's Amazon Resource Name (ARN).
 
 ## Import
