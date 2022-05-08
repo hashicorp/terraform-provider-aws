@@ -1370,11 +1370,11 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, err := FindFlowByArn(ctx, conn, d.Id())
+	out, _ := FindFlowByArn(ctx, conn, d.Id())
 
 	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
 
-	_, err = conn.DeleteFlowWithContext(ctx, &appflow.DeleteFlowInput{
+	_, err := conn.DeleteFlowWithContext(ctx, &appflow.DeleteFlowInput{
 		FlowName: out.FlowName,
 	})
 
