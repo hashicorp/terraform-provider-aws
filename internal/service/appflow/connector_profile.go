@@ -863,7 +863,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 512),
-														validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+														validation.StringMatch(regexp.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
 													),
 												},
 												"region": {
