@@ -3,7 +3,6 @@ package appflow
 import (
 	"fmt"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
@@ -903,20 +902,12 @@ func ResourceConnectorProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appflow.ConnectorType_Values(), false),
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"kms_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"last_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -964,8 +955,6 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("connector_profile_name", connectorProfile.ConnectorProfileName)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
-	d.Set("created_at", aws.TimeValue(connectorProfile.CreatedAt).Format(time.RFC3339))
-	d.Set("last_updated_at", aws.TimeValue(connectorProfile.LastUpdatedAt).Format(time.RFC3339))
 
 	d.SetId(d.Get("connector_profile_name").(string))
 

@@ -51,8 +51,6 @@ func TestAccAWSAppFlowConnectorProfile_Amplitude(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.amplitude.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -102,8 +100,6 @@ func TestAccAWSAppFlowConnectorProfile_Datadog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.datadog.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.datadog.0.instance_url", instanceUrl),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -151,8 +147,6 @@ func TestAccAWSAppFlowConnectorProfile_Dynatrace(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.dynatrace.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.dynatrace.0.instance_url", instanceUrl),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -206,8 +200,6 @@ func TestAccAWSAppFlowConnectorProfile_Slack(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.slack.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.slack.0.instance_url", instanceUrl),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -265,8 +257,6 @@ func TestAccAWSAppFlowConnectorProfile_Snowflake(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.0.connector_profile_properties.0.snowflake.0.stage"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.snowflake.0.warehouse", warehouse),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -311,8 +301,6 @@ func TestAccAWSAppFlowConnectorProfile_Trendmicro(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_credentials.0.trendmicro.0.api_secret_key", apiSecretKey),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -366,8 +354,6 @@ func TestAccAWSAppFlowConnectorProfile_Zendesk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.zendesk.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.zendesk.0.instance_url", instanceUrl),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
 				),
 			},
 			{
