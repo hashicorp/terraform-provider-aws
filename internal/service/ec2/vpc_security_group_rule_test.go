@@ -124,7 +124,7 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 		}
 
 		rule := group.IpPermissions[0]
-		if *rule.FromPort != int64(80) {
+		if aws.Int64Value(rule.FromPort) != int64(80) {
 			return fmt.Errorf("Wrong Security Group port setting, expected %d, got %d",
 				80, int(*rule.FromPort))
 		}
@@ -205,7 +205,7 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 		rule := group.IpPermissions[0]
 		if *rule.FromPort != int64(80) {
 			return fmt.Errorf("Wrong Security Group port setting, expected %d, got %d",
-				80, int(*rule.FromPort))
+				80, aws.Int64Value(rule.FromPort))
 		}
 
 		return nil
@@ -282,7 +282,7 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 		rule := group.IpPermissions[0]
 		if *rule.FromPort != int64(80) {
 			return fmt.Errorf("Wrong Security Group port setting, expected %d, got %d",
-				80, int(*rule.FromPort))
+				80, aws.Int64Value(rule.FromPort))
 		}
 
 		ipv6Address := rule.Ipv6Ranges[0]
@@ -330,7 +330,7 @@ func TestAccVPCSecurityGroupRule_Ingress_classic(t *testing.T) {
 		rule := group.IpPermissions[0]
 		if *rule.FromPort != int64(80) {
 			return fmt.Errorf("Wrong Security Group port setting, expected %d, got %d",
-				80, int(*rule.FromPort))
+				80, aws.Int64Value(rule.FromPort))
 		}
 
 		return nil
@@ -380,7 +380,7 @@ func TestAccVPCSecurityGroupRule_multiIngress(t *testing.T) {
 
 		if *rule.ToPort != int64(8000) {
 			return fmt.Errorf("Wrong Security Group port 2 setting, expected %d, got %d",
-				8000, int(*rule.ToPort))
+				8000, aws.Int64Value(rule.ToPort))
 		}
 
 		return nil
