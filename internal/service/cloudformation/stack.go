@@ -271,7 +271,6 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", stack.StackName)
 	d.Set("iam_role_arn", stack.RoleARN)
 	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
-	d.Set("description", stack.Description)
 
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)
