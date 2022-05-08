@@ -58,8 +58,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													),
 												},
 												"secret_key": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 256),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -117,8 +118,9 @@ func ResourceConnectorProfile() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -133,8 +135,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													),
 												},
 												"client_secret": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 512),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -183,8 +186,9 @@ func ResourceConnectorProfile() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -249,8 +253,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													),
 												},
 												"secret_access_key": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 512),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -274,8 +279,9 @@ func ResourceConnectorProfile() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -290,8 +296,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													),
 												},
 												"client_secret": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 512),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -334,6 +341,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"password": {
 													Type:         schema.TypeString,
 													Required:     true,
+													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"username": {
@@ -354,8 +362,9 @@ func ResourceConnectorProfile() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -411,6 +420,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"password": {
 													Type:         schema.TypeString,
 													Required:     true,
+													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"username": {
@@ -448,8 +458,9 @@ func ResourceConnectorProfile() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -464,8 +475,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													),
 												},
 												"client_secret": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 512),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -508,6 +520,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"password": {
 													Type:         schema.TypeString,
 													Required:     true,
+													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"username": {
@@ -528,8 +541,9 @@ func ResourceConnectorProfile() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"api_secret_key": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 256),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
@@ -547,6 +561,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"password": {
 													Type:         schema.TypeString,
 													Required:     true,
+													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"username": {
@@ -599,9 +614,8 @@ func ResourceConnectorProfile() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
-																Type:      schema.TypeString,
-																Optional:  true,
-																Sensitive: true,
+																Type:     schema.TypeString,
+																Optional: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(1, 2048),
 																	validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
