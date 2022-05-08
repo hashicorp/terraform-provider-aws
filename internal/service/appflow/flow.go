@@ -84,8 +84,11 @@ func ResourceFlow() *schema.Resource {
 													ValidateDiagFunc: allDiagFunc(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
-														validation.MapValueLenBetween(0, 2048),
-														validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+													),
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+													},
 												},
 												"entity_name": {
 													Type:         schema.TypeString,
@@ -742,8 +745,11 @@ func ResourceFlow() *schema.Resource {
 													ValidateDiagFunc: allDiagFunc(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
-														validation.MapValueLenBetween(0, 2048),
-														validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+													),
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+													},
 												},
 												"entity_name": {
 													Type:         schema.TypeString,
@@ -1106,12 +1112,14 @@ func ResourceFlow() *schema.Resource {
 							},
 						},
 						"task_properties": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Computed: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapValueLenBetween(0, 2048),
-								validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+							Type:         schema.TypeMap,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(appflow.OperatorPropertiesKeys_Values(), false),
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+							},
 						},
 						"task_type": {
 							Type:         schema.TypeString,
