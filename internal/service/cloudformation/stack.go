@@ -38,25 +38,6 @@ func ResourceStack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"template_body": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidStringIsJSONOrYAML,
-				StateFunc: func(v interface{}) string {
-					template, _ := verify.NormalizeJSONOrYAMLString(v)
-					return template
-				},
-			},
-			"template_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -71,6 +52,15 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"iam_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"notification_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -83,14 +73,14 @@ func ResourceStack() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(cloudformation.OnFailure_Values(), false),
 			},
-			"parameters": {
+			"outputs": {
 				Type:     schema.TypeMap,
-				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"outputs": {
+			"parameters": {
 				Type:     schema.TypeMap,
+				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -108,16 +98,26 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"template_body": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidStringIsJSONOrYAML,
+				StateFunc: func(v interface{}) string {
+					template, _ := verify.NormalizeJSONOrYAMLString(v)
+					return template
+				},
+			},
+			"template_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"timeout_in_minutes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"iam_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 		},
 
