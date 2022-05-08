@@ -34,16 +34,19 @@ func ResourceConnectorProfile() *schema.Resource {
 			"connector_profile_config": {
 				Type:     schema.TypeList,
 				Required: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connector_profile_credentials": {
 							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"amplitude": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"api_key": {
@@ -68,6 +71,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"datadog": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"api_key": {
@@ -92,6 +96,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"dynatrace": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"api_token": {
@@ -108,6 +113,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"google_analytics": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
@@ -137,6 +143,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
@@ -172,6 +179,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"honeycode": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
@@ -185,6 +193,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
@@ -220,6 +229,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"infor_nexus": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_key_id": {
@@ -260,6 +270,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"marketo": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
@@ -289,6 +300,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
@@ -316,6 +328,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"redshift": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password": {
@@ -337,6 +350,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"salesforce": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
@@ -355,6 +369,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
@@ -390,6 +405,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"service_now": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password": {
@@ -411,6 +427,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"singular": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"api_key": {
@@ -427,6 +444,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"slack": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
@@ -456,6 +474,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
@@ -483,6 +502,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"snowflake": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password": {
@@ -504,6 +524,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"trendmicro": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"api_secret_key": {
@@ -520,6 +541,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"veeva": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password": {
@@ -541,6 +563,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"zendesk": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"access_token": {
@@ -572,6 +595,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"oauth_request": {
 													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"auth_code": {
@@ -603,11 +627,13 @@ func ResourceConnectorProfile() *schema.Resource {
 						"connector_profile_properties": {
 							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"amplitude": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{},
 										},
@@ -615,6 +641,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"datadog": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -631,6 +658,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"dynatrace": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -647,6 +675,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"google_analytics": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{},
 										},
@@ -654,6 +683,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"honeycode": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{},
 										},
@@ -661,6 +691,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"infor_nexus": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -677,6 +708,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"marketo": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -693,6 +725,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"redshift": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"bucket_name": {
@@ -724,6 +757,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"salesforce": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -744,6 +778,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"service_now": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -760,6 +795,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"singular": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{},
 										},
@@ -767,6 +803,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"slack": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -783,6 +820,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"snowflake": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"account_name": {
@@ -847,6 +885,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"trendmicro": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{},
 										},
@@ -854,6 +893,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"veeva": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
@@ -870,6 +910,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									"zendesk": {
 										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"instance_url": {
