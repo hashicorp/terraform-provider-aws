@@ -267,12 +267,6 @@ func TestAccKMSKey_Policy_iamRoleUpdate(t *testing.T) {
 					testAccCheckKeyExists(resourceName, &key),
 				),
 			},
-			//{
-			//	ResourceName:            resourceName,
-			//	ImportState:             true,
-			//	ImportStateVerify:       true,
-			//	ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
-			//},
 		},
 	})
 }
