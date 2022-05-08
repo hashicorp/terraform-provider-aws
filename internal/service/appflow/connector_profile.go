@@ -114,7 +114,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -143,7 +143,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 512),
+																	validation.StringLenBetween(1, 2048),
 																	validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 																),
 															},
@@ -162,7 +162,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 1024),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -178,7 +178,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -191,7 +191,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 512),
+																	validation.StringLenBetween(1, 2048),
 																	validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 																),
 															},
@@ -210,7 +210,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 1024),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -266,7 +266,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -343,7 +343,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -361,7 +361,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 512),
+																	validation.StringLenBetween(1, 2048),
 																	validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 																),
 															},
@@ -380,7 +380,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 1024),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -433,7 +433,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -462,7 +462,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 512),
+																	validation.StringLenBetween(1, 2048),
 																	validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 																),
 															},
@@ -548,7 +548,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional:  true,
 													Sensitive: true,
 													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 512),
+														validation.StringLenBetween(1, 2048),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 													),
 												},
@@ -579,7 +579,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Optional:  true,
 																Sensitive: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 512),
+																	validation.StringLenBetween(1, 2048),
 																	validation.StringMatch(regexp.MustCompile(`\S+`), "must match \\S+"),
 																),
 															},
