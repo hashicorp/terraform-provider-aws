@@ -384,13 +384,13 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["function_association"] = FlattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
-		m["max_ttl"] = aws.Int64Value(cb.MaxTTL)
+		m["max_ttl"] = int(aws.Int64Value(cb.MaxTTL))
 	}
 	if cb.SmoothStreaming != nil {
 		m["smooth_streaming"] = aws.BoolValue(cb.SmoothStreaming)
 	}
 	if cb.DefaultTTL != nil {
-		m["default_ttl"] = aws.Int64Value(cb.DefaultTTL)
+		m["default_ttl"] = int(aws.Int64Value(cb.DefaultTTL))
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(cb.AllowedMethods)
@@ -1149,7 +1149,7 @@ func FlattenCustomErrorResponse(er *cloudfront.CustomErrorResponse) map[string]i
 	m := make(map[string]interface{})
 	m["error_code"] = int(aws.Int64Value(er.ErrorCode))
 	if er.ErrorCachingMinTTL != nil {
-		m["error_caching_min_ttl"] = aws.Int64Value(er.ErrorCachingMinTTL)
+		m["error_caching_min_ttl"] = int(aws.Int64Value(er.ErrorCachingMinTTL))
 	}
 	if er.ResponseCode != nil {
 		m["response_code"], _ = strconv.Atoi(aws.StringValue(er.ResponseCode))
