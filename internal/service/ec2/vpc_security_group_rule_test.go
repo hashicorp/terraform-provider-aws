@@ -126,7 +126,7 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 		rule := group.IpPermissions[0]
 		if aws.Int64Value(rule.FromPort) != int64(80) {
 			return fmt.Errorf("Wrong Security Group port setting, expected %d, got %d",
-				80, int(*rule.FromPort))
+				80, aws.Int64Value(rule.FromPort))
 		}
 
 		return nil
