@@ -163,6 +163,8 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 
 func testAccConfigFlowBase(rSourceName string, rDestinationName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "test_source" {
   bucket = %[1]q
 }
@@ -183,8 +185,8 @@ resource "aws_s3_bucket_policy" "test_source" {
                 "s3:GetObject"
             ],
             "Resource": [
-                "arn:aws:s3:::%[1]s",
-                "arn:aws:s3:::%[1]s/*"
+                "arn:${data.aws_partition.current.partition}:s3:::%[1]s",
+                "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
             ]
         }
     ],
@@ -224,8 +226,8 @@ resource "aws_s3_bucket_policy" "test_destination" {
                 "s3:PutObjectAcl"
             ],
             "Resource": [
-                "arn:aws:s3:::%[2]s",
-                "arn:aws:s3:::%[2]s/*"
+                "arn:${data.aws_partition.current.partition}:s3:::%[2]s",
+                "arn:${data.aws_partition.current.partition}:s3:::%[2]s/*"
             ]
         }
     ],
