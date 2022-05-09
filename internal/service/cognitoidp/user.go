@@ -466,7 +466,7 @@ func computeUserAttributesUpdate(old interface{}, new interface{}) (map[string]i
 
 	del := make([]*string, 0, len(oldMap))
 	for k := range oldMap {
-		del = append(del, &k)
+		del = append(del, aws.String(k))
 	}
 
 	return upd, del
