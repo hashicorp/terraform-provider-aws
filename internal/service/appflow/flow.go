@@ -231,7 +231,9 @@ func ResourceFlow() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
-										Elem:     &schema.Resource{},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{},
+										},
 									},
 									"marketo": {
 										Type:     schema.TypeList,
@@ -1523,9 +1525,9 @@ func expandDestinationConnectorProperties(tfMap map[string]interface{}) *appflow
 
 	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
 	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
-	//if v, ok := tfMap["lookout_metrics"].(map[string]interface{}); ok && len(v) > 0 {
-	//	a.LookoutMetrics = v
-	//}
+	if v, ok := tfMap["lookout_metrics"].([]interface{}); ok && len(v) > 0 {
+		a.LookoutMetrics = v[0].(*appflow.LookoutMetricsDestinationProperties)
+	}
 
 	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
 		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]interface{}))
@@ -2627,9 +2629,9 @@ func flattenDestinationConnectorProperties(destinationConnectorProperties *appfl
 
 	// API reference does not list valid attributes for LookoutMetricsDestinationProperties
 	// https://docs.aws.amazon.com/appflow/1.0/APIReference/API_LookoutMetricsDestinationProperties.html
-	//if v := destinationConnectorProperties.LookoutMetrics; v != nil {
-	//	m["lookout_metrics"] = v[0].(appflow.LookoutMetricsDestinationProperties)
-	//}
+	if v := destinationConnectorProperties.LookoutMetrics; v != nil {
+		m["lookout_metrics"] = []interface{}{map[string]interface{}{}}
+	}
 
 	if v := destinationConnectorProperties.Marketo; v != nil {
 		m["marketo"] = []interface{}{flattenMarketoDestinationProperties(v)}
