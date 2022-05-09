@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -411,6 +412,105 @@ func ResourceConnectorProfile() *schema.Resource {
 											},
 										},
 									},
+									"sapo_data": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"basic_auth_credentials": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"password": {
+																Type:         schema.TypeString,
+																Required:     true,
+																Sensitive:    true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"username": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 512),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+														},
+													},
+												},
+												"oauth_credentials": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"access_token": {
+																Type:      schema.TypeString,
+																Optional:  true,
+																Sensitive: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 2048),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"client_id": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 512),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"client_secret": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 512),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"oauth_request": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"auth_code": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			ValidateFunc: validation.All(
+																				validation.StringLenBetween(1, 2048),
+																				validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			),
+																		},
+																		"redirect_uri": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			ValidateFunc: validation.All(
+																				validation.StringLenBetween(1, 512),
+																				validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			),
+																		},
+																	},
+																},
+															},
+															"refresh_token": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 1024),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"service_now": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -789,6 +889,96 @@ func ResourceConnectorProfile() *schema.Resource {
 											},
 										},
 									},
+									"sapo_data": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"application_host_url": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 256),
+														validation.StringMatch(regexp.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+													),
+												},
+												"application_service_path": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 512),
+														validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+													),
+												},
+												"client_number": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(3, 3),
+														validation.StringMatch(regexp.MustCompile(`^\d{3}$`), "must consist of exactly three digits"),
+													),
+												},
+												"logon_language": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(0, 2),
+														validation.StringMatch(regexp.MustCompile(` ^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+													),
+												},
+												"oauth_properties": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"auth_code_url": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 256),
+																	validation.StringMatch(regexp.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																),
+															},
+															"oauth_scopes": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(1, 128),
+																		validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																	),
+																},
+															},
+															"token_url": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 256),
+																	validation.StringMatch(regexp.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																),
+															},
+														},
+													},
+												},
+												"port_number": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
+												"private_link_service_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 512),
+														validation.StringMatch(regexp.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
+													),
+												},
+											},
+										},
+									},
 									"service_now": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -1100,6 +1290,9 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *appflow.Connec
 	if v, ok := m["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Salesforce = expandSalesforceConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
+	if v, ok := m["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		cpc.SAPOData = expandSAPODataConnectorProfileCredentials(v[0].(map[string]interface{}))
+	}
 	if v, ok := m["service_now"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.ServiceNow = expandServiceNowConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
@@ -1249,6 +1442,20 @@ func expandSalesforceConnectorProfileCredentials(m map[string]interface{}) *appf
 	return &credentials
 }
 
+func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *appflow.SAPODataConnectorProfileCredentials {
+	credentials := appflow.SAPODataConnectorProfileCredentials{}
+
+	if v, ok := m["basic_auth_credentials"].([]interface{}); ok && len(v) > 0 {
+		credentials.BasicAuthCredentials = expandBasicAuthCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["oauth_credentials"].([]interface{}); ok && len(v) > 0 {
+		credentials.OAuthCredentials = expandOAuthCredentials(v[0].(map[string]interface{}))
+	}
+
+	return &credentials
+}
+
 func expandServiceNowConnectorProfileCredentials(m map[string]interface{}) *appflow.ServiceNowConnectorProfileCredentials {
 	credentials := appflow.ServiceNowConnectorProfileCredentials{
 		Password: aws.String(m["password"].(string)),
@@ -1334,6 +1541,41 @@ func expandOAuthRequest(m map[string]interface{}) *appflow.ConnectorOAuthRequest
 	return &r
 }
 
+func expandBasicAuthCredentials(m map[string]interface{}) *appflow.BasicAuthCredentials {
+	credentials := appflow.BasicAuthCredentials{}
+
+	if v, ok := m["password"].(string); ok && v != "" {
+		credentials.Password = aws.String(v)
+	}
+
+	if v, ok := m["username"].(string); ok && v != "" {
+		credentials.Username = aws.String(v)
+	}
+
+	return &credentials
+}
+
+func expandOAuthCredentials(m map[string]interface{}) *appflow.OAuthCredentials {
+	credentials := appflow.OAuthCredentials{
+		ClientId:     aws.String(m["client_id"].(string)),
+		ClientSecret: aws.String(m["client_secret"].(string)),
+	}
+
+	if v, ok := m["access_token"].(string); ok && v != "" {
+		credentials.AccessToken = aws.String(v)
+	}
+
+	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 {
+		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["refresh_token"].(string); ok && v != "" {
+		credentials.RefreshToken = aws.String(v)
+	}
+
+	return &credentials
+}
+
 func expandConnectorProfileProperties(m map[string]interface{}) *appflow.ConnectorProfileProperties {
 	cpc := appflow.ConnectorProfileProperties{}
 
@@ -1371,6 +1613,10 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 
 	if v, ok := m["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Salesforce = expandSalesforceConnectorProfileProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["sapo_data"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		cpc.SAPOData = expandSAPODataConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := m["service_now"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1475,6 +1721,29 @@ func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *appfl
 	return &properties
 }
 
+func expandSAPODataConnectorProfileProperties(m map[string]interface{}) *appflow.SAPODataConnectorProfileProperties {
+	properties := appflow.SAPODataConnectorProfileProperties{
+		ApplicationHostUrl:     aws.String(m["application_host_url"].(string)),
+		ApplicationServicePath: aws.String(m["application_service_path"].(string)),
+		ClientNumber:           aws.String(m["client_number"].(string)),
+		PortNumber:             aws.Int64(int64(m["port_number"].(int))),
+	}
+
+	if v, ok := m["logon_language"].(string); ok && v != "" {
+		properties.LogonLanguage = aws.String(v)
+	}
+
+	if v, ok := m["oauth_properties"].([]interface{}); ok && len(v) > 0 {
+		properties.OAuthProperties = expandOAuthProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["private_link_service_name"].(string); ok && v != "" {
+		properties.PrivateLinkServiceName = aws.String(v)
+	}
+
+	return &properties
+}
+
 func expandSlackConnectorProfileProperties(m map[string]interface{}) *appflow.SlackConnectorProfileProperties {
 	properties := appflow.SlackConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
@@ -1520,6 +1789,16 @@ func expandVeevaConnectorProfileProperties(m map[string]interface{}) *appflow.Ve
 func expandZendeskConnectorProfileProperties(m map[string]interface{}) *appflow.ZendeskConnectorProfileProperties {
 	properties := appflow.ZendeskConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
+	}
+
+	return &properties
+}
+
+func expandOAuthProperties(m map[string]interface{}) *appflow.OAuthProperties {
+	properties := appflow.OAuthProperties{
+		AuthCodeUrl: aws.String(m["auth_code_url"].(string)),
+		OAuthScopes: flex.ExpandStringList(m["oauth_scopes"].([]interface{})),
+		TokenUrl:    aws.String(m["token_url"].(string)),
 	}
 
 	return &properties
@@ -1571,6 +1850,9 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 	}
 	if cpp.Redshift != nil {
 		result["redshift"] = flattenRedshiftConnectorProfileProperties(cpp.Redshift)
+	}
+	if cpp.SAPOData != nil {
+		result["sapo_data"] = flattenSAPODataConnectorProfileProperties(cpp.SAPOData)
 	}
 	if cpp.Salesforce != nil {
 		result["salesforce"] = flattenSalesforceConnectorProfileProperties(cpp.Salesforce)
@@ -1642,6 +1924,29 @@ func flattenSalesforceConnectorProfileProperties(properties *appflow.SalesforceC
 	return []interface{}{m}
 }
 
+func flattenSAPODataConnectorProfileProperties(properties *appflow.SAPODataConnectorProfileProperties) []interface{} {
+	m := make(map[string]interface{})
+
+	m["application_host_url"] = aws.StringValue(properties.ApplicationHostUrl)
+	m["application_service_path"] = aws.StringValue(properties.ApplicationServicePath)
+	m["client_number"] = aws.StringValue(properties.ClientNumber)
+	m["port_number"] = aws.Int64Value(properties.PortNumber)
+
+	if properties.LogonLanguage != nil {
+		m["logon_language"] = aws.StringValue(properties.LogonLanguage)
+	}
+
+	if properties.OAuthProperties != nil {
+		m["oauth_properties"] = flattenOAuthProperties(properties.OAuthProperties)
+	}
+
+	if properties.PrivateLinkServiceName != nil {
+		m["private_link_service_name"] = aws.StringValue(properties.PrivateLinkServiceName)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenSnowflakeConnectorProfileProperties(properties *appflow.SnowflakeConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 	if properties.AccountName != nil {
@@ -1660,6 +1965,16 @@ func flattenSnowflakeConnectorProfileProperties(properties *appflow.SnowflakeCon
 
 	m["stage"] = aws.StringValue(properties.Stage)
 	m["warehouse"] = aws.StringValue(properties.Warehouse)
+
+	return []interface{}{m}
+}
+
+func flattenOAuthProperties(properties *appflow.OAuthProperties) []interface{} {
+	m := make(map[string]interface{})
+
+	m["auth_code_url"] = aws.StringValue(properties.AuthCodeUrl)
+	m["oauth_scopes"] = aws.StringValueSlice(properties.OAuthScopes)
+	m["token_url"] = aws.StringValue(properties.TokenUrl)
 
 	return []interface{}{m}
 }
