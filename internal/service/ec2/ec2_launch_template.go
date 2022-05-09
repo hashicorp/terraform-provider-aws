@@ -491,7 +491,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						},
 						"memory_mib": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -502,7 +502,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 									},
 									"min": {
 										Type:         schema.TypeInt,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
 								},
@@ -562,7 +562,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						},
 						"vcpu_count": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -573,7 +573,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 									},
 									"min": {
 										Type:         schema.TypeInt,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
 								},
