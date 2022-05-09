@@ -850,7 +850,7 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 			data["number_of_disks"] = aws.Int64Value(config.NumberOfDisks)
 		}
 		if config.RaidLevel != nil {
-			data["raid_level"] = strconv.Itoa(int(*config.RaidLevel))
+			data["raid_level"] = strconv.Itoa(int(aws.Int64Value(config.RaidLevel)))
 		}
 		if config.Size != nil {
 			data["size"] = aws.Int64Value(config.Size)

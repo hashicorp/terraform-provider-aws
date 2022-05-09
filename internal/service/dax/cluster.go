@@ -498,10 +498,10 @@ func setDaxClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		nodeDate = append(nodeDate, map[string]interface{}{
-			"id":                *node.NodeId,
-			"address":           *node.Endpoint.Address,
-			"port":              int(*node.Endpoint.Port),
-			"availability_zone": *node.AvailabilityZone,
+			"id":                aws.StringValue(node.NodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.AvailabilityZone),
 		})
 	}
 
