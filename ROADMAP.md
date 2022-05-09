@@ -114,7 +114,7 @@ Research topics include features, architectural changes, and ideas that we are p
 
 Pull Request: [#23948](https://github.com/hashicorp/terraform-provider-aws/pull/23948)
 
-Prototyping the ability to combine resources and data sources implemented in either Terraform Plugin SDK v2 or Terraform Plugin Framework using `terraform-plugin-mux`.
+Prototyping the ability to [combine](https://www.terraform.io/plugin/mux) resources and data sources implemented in either Terraform Plugin SDK v2 or Terraform Plugin Framework using `terraform-plugin-mux`.
 
 ### AWS Cloud Control Community Documentation 
 
