@@ -22,12 +22,12 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
+				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
@@ -50,12 +50,12 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
+				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceOrganizationAdminAccount(), resourceName),
@@ -84,7 +84,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityHubOrganizationAdminAccountConfigMultiRegion(),
+				Config: testAccOrganizationAdminAccountConfig_multiRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					testAccCheckOrganizationAdminAccountExists(altResourceName),
@@ -148,7 +148,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 	}
 }
 
-func testAccSecurityHubOrganizationAdminAccountConfigSelf() string {
+func testAccOrganizationAdminAccountConfig_self() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -169,7 +169,7 @@ resource "aws_securityhub_organization_admin_account" "test" {
 `
 }
 
-func testAccSecurityHubOrganizationAdminAccountConfigMultiRegion() string {
+func testAccOrganizationAdminAccountConfig_multiRegion() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		`

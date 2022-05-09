@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -318,11 +317,11 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	// timeout. Since the creation process is asynchronous and can take up to
 	// its own timeout, we store a stop time upfront for checking.
 	// Real-life experience shows that double the standard IAM propagation time is required.
-	iamPropagationTimeout := tfiam.PropagationTimeout * 2
-	iamwaiterStopTime := time.Now().Add(iamPropagationTimeout)
+	propagationTimeout := propagationTimeout * 2
+	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		iamPropagationTimeout+canaryCreatedTimeout,
+		propagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
 			return retryCreateCanary(conn, d, input)
 		},
@@ -342,7 +341,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("start_canary").(bool) {
-		if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+		if err := startCanary(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -482,7 +481,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		status := d.Get("status").(string)
 		if status == synthetics.CanaryStateRunning {
-			if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+			if err := stopCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -505,7 +504,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.Get("start_canary").(bool) {
-			if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+			if err := startCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -515,13 +514,13 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		status := d.Get("status").(string)
 		if d.Get("start_canary").(bool) {
 			if status != synthetics.CanaryStateRunning {
-				if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+				if err := startCanary(d.Id(), conn); err != nil {
 					return err
 				}
 			}
 		} else {
 			if status == synthetics.CanaryStateRunning {
-				if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+				if err := stopCanary(d.Id(), conn); err != nil {
 					return err
 				}
 			}
@@ -543,7 +542,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
-		if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+		if err := stopCanary(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -791,7 +790,7 @@ func flattenCanaryTimeline(timeline *synthetics.CanaryTimeline) []interface{} {
 	return []interface{}{m}
 }
 
-func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
+func startCanary(name string, conn *synthetics.Synthetics) error {
 	log.Printf("[DEBUG] Starting Synthetics Canary: (%s)", name)
 	_, err := conn.StartCanary(&synthetics.StartCanaryInput{
 		Name: aws.String(name),
@@ -810,7 +809,7 @@ func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
 	return nil
 }
 
-func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
+func stopCanary(name string, conn *synthetics.Synthetics) error {
 	log.Printf("[DEBUG] Stopping Synthetics Canary: (%s)", name)
 	_, err := conn.StopCanary(&synthetics.StopCanaryInput{
 		Name: aws.String(name),

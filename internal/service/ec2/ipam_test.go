@@ -20,14 +20,14 @@ func testAccIPAMPreCheck(t *testing.T) {
 	acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/ipam.amazonaws.com")
 }
 
-func TestAccVPCIpam_basic(t *testing.T) {
+func TestAccIPAM_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamBase,
@@ -49,7 +49,7 @@ func TestAccVPCIpam_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_modify(t *testing.T) {
+func TestAccIPAM_modify(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam.test"
 
@@ -96,14 +96,14 @@ func TestAccVPCIpam_modify(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_cascade(t *testing.T) {
+func TestAccIPAM_cascade(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamCascade(),
@@ -126,14 +126,14 @@ func TestAccVPCIpam_cascade(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_tags(t *testing.T) {
+func TestAccIPAM_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamTagsConfig("key1", "value1"),

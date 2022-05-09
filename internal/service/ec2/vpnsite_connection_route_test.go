@@ -14,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPNConnectionRoute_basic(t *testing.T) {
+func TestAccVPNSiteConnectionRoute_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccVPNConnectionRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNConnectionRouteConfig(rName, rBgpAsn),
@@ -35,16 +35,16 @@ func TestAccEC2VPNConnectionRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnectionRoute_disappears(t *testing.T) {
+func TestAccVPNSiteConnectionRoute_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccVPNConnectionRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNConnectionRouteConfig(rName, rBgpAsn),

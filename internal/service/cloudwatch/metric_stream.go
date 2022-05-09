@@ -89,7 +89,7 @@ func ResourceMetricStream() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateCloudWatchMetricStreamName,
+				ValidateFunc:  validateMetricStreamName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -97,7 +97,7 @@ func ResourceMetricStream() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateCloudWatchMetricStreamName,
+				ValidateFunc:  validateMetricStreamName,
 			},
 			"output_format": {
 				Type:         schema.TypeString,
@@ -138,11 +138,11 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
-		params.IncludeFilters = expandCloudWatchMetricStreamFilters(v.(*schema.Set))
+		params.IncludeFilters = expandMetricStreamFilters(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
-		params.ExcludeFilters = expandCloudWatchMetricStreamFilters(v.(*schema.Set))
+		params.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Putting CloudWatch Metric Stream: %#v", params)
@@ -213,13 +213,13 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("state", output.State)
 
 	if output.IncludeFilters != nil {
-		if err := d.Set("include_filter", flattenCloudWatchMetricStreamFilters(output.IncludeFilters)); err != nil {
+		if err := d.Set("include_filter", flattenMetricStreamFilters(output.IncludeFilters)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting include_filter error: %w", err))
 		}
 	}
 
 	if output.ExcludeFilters != nil {
-		if err := d.Set("exclude_filter", flattenCloudWatchMetricStreamFilters(output.ExcludeFilters)); err != nil {
+		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting exclude_filter error: %w", err))
 		}
 	}
@@ -270,14 +270,14 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func validateCloudWatchMetricStreamName(v interface{}, k string) (ws []string, errors []error) {
+func validateMetricStreamName(v interface{}, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexp.MustCompile(`^[\-_A-Za-z0-9]*$`), "must match [\\-_A-Za-z0-9]"),
 	)(v, k)
 }
 
-func expandCloudWatchMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
+func expandMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
 	var filters []*cloudwatch.MetricStreamFilter
 
 	for _, filterRaw := range s.List() {
@@ -294,7 +294,7 @@ func expandCloudWatchMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStre
 	return filters
 }
 
-func flattenCloudWatchMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string]interface{} {
+func flattenMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string]interface{} {
 	filters := make([]map[string]interface{}, 0)
 
 	for _, bd := range s {

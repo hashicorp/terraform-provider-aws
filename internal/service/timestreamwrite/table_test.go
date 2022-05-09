@@ -22,10 +22,10 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 	dbResourceName := "aws_timestreamwrite_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBasicConfig(rName),
@@ -55,10 +55,10 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableMagneticStoreWritePropertiesConfig(rName, true),
@@ -101,10 +101,10 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableMagneticStoreWritePropertiesS3Config(rName, rName),
@@ -145,10 +145,10 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KmsConfig(t *tes
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableMagneticStoreWritePropertiesS3KmsConfig(rName),
@@ -178,10 +178,10 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBasicConfig(rName),
@@ -201,10 +201,10 @@ func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableRetentionPropertiesConfig(rName, 30, 120),
@@ -250,10 +250,10 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableTags1Config(rName, "key1", "value1"),

@@ -79,7 +79,7 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayByID(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -193,7 +193,7 @@ func attachInternetGateway(conn *ec2.EC2, internetGatewayID, vpcID string) error
 	}
 
 	log.Printf("[INFO] Attaching EC2 Internet Gateway: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.AttachInternetGateway(input)
 	}, ErrCodeInvalidInternetGatewayIDNotFound)
 

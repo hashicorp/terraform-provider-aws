@@ -21,10 +21,10 @@ func TestAccEventDataStore_basic(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventDataStoreDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventDataStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig(rName),
@@ -61,10 +61,10 @@ func TestAccEventDataStore_disappears(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventDataStoreDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventDataStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig(rName),
@@ -83,10 +83,10 @@ func TestAccEventDataStore_tags(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventDataStoreDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventDataStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreTagsConfig1(rName, "key1", "value1"),
@@ -127,10 +127,10 @@ func TestAccEventDataStore_options(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventDataStoreDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventDataStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreOptionsConfig(rName),
@@ -166,10 +166,10 @@ func TestAccEventDataStore_advancedEventSelector(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventDataStoreDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventDataStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig_advancedEventSelector(rName),

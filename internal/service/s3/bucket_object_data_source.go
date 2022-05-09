@@ -186,7 +186,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("metadata", flex.PointersMapToStringList(out.Metadata))
 	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", out.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(out.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenObjectDate(out.ObjectLockRetainUntilDate))
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)

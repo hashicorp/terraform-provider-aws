@@ -14,9 +14,9 @@ func TestAccRoute53ResolverRulesDataSource_basic(t *testing.T) {
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRulesDataSource_basic,
@@ -37,9 +37,9 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 	ds3ResourceName := "data.aws_route53_resolver_rules.by_invalid_owner_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRulesDataSource_resolverEndpointID(rName1, rName2),
@@ -63,7 +63,7 @@ data "aws_route53_resolver_rules" "test" {
 `
 
 func testAccRulesDataSource_resolverEndpointID(rName1, rName2 string) string {
-	return testAccRoute53ResolverRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
+	return testAccRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "forward" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"

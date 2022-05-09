@@ -187,16 +187,16 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
-				stmt.Actions = iamPolicyDecodeConfigStringList(actions)
+				stmt.Actions = policyDecodeConfigStringList(actions)
 			}
 			if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {
-				stmt.NotActions = iamPolicyDecodeConfigStringList(actions)
+				stmt.NotActions = policyDecodeConfigStringList(actions)
 			}
 
 			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
 				var err error
 				stmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
-					iamPolicyDecodeConfigStringList(resources), doc.Version,
+					policyDecodeConfigStringList(resources), doc.Version,
 				)
 				if err != nil {
 					return fmt.Errorf("error reading resources: %w", err)
@@ -205,7 +205,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 			if notResources := cfgStmt["not_resources"].(*schema.Set).List(); len(notResources) > 0 {
 				var err error
 				stmt.NotResources, err = dataSourcePolicyDocumentReplaceVarsInList(
-					iamPolicyDecodeConfigStringList(notResources), doc.Version,
+					policyDecodeConfigStringList(notResources), doc.Version,
 				)
 				if err != nil {
 					return fmt.Errorf("error reading not_resources: %w", err)
@@ -336,7 +336,7 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 			Type: item["type"].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
-			iamPolicyDecodeConfigStringList(
+			policyDecodeConfigStringList(
 				item["identifiers"].(*schema.Set).List(),
 			), version,
 		)

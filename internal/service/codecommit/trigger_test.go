@@ -19,15 +19,15 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 	resourceName := "aws_codecommit_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeCommitTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeCommitTrigger_basic(rName),
+				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeCommitTriggerExists(resourceName),
+					testAccCheckTriggerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
 				),
 			},
@@ -35,7 +35,7 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCodeCommitTriggerDestroy(s *terraform.State) error {
+func testAccCheckTriggerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -59,7 +59,7 @@ func testAccCheckCodeCommitTriggerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCodeCommitTriggerExists(name string) resource.TestCheckFunc {
+func testAccCheckTriggerExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -87,7 +87,7 @@ func testAccCheckCodeCommitTriggerExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCodeCommitTrigger_basic(rName string) string {
+func testAccTriggerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q

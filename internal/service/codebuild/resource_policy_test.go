@@ -20,10 +20,10 @@ func TestAccCodeBuildResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourcePolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyBasicConfig(rName),
@@ -48,10 +48,10 @@ func TestAccCodeBuildResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourcePolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyBasicConfig(rName),
@@ -72,10 +72,10 @@ func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourcePolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyBasicConfig(rName),

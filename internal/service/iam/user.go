@@ -143,7 +143,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *iam.GetUserOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetUser(request)
@@ -454,7 +454,7 @@ func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {

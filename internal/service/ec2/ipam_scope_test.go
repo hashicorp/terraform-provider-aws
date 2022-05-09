@@ -14,15 +14,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPCIpamScope_basic(t *testing.T) {
+func TestAccIPAMScope_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_scope.test"
 	ipamName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamScopeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamScopeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamScope("test"),
@@ -51,14 +51,14 @@ func TestAccVPCIpamScope_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamScope_tags(t *testing.T) {
+func TestAccIPAMScope_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamScopeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamScopeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamScopeTagsConfig("key1", "value1"),

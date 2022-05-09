@@ -32,7 +32,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
@@ -73,7 +73,7 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
@@ -97,7 +97,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
@@ -192,7 +192,7 @@ func testAccKeySigningKeyExists(resourceName string) resource.TestCheckFunc {
 
 func testAccKeySigningKeyConfig_Base(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccRoute53KeySigningKeyRegionProviderConfig(),
+		testAccKeySigningKeyRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   customer_master_key_spec = "ECC_NIST_P256"
@@ -269,17 +269,17 @@ var testAccRoute53KeySigningKeyRegion string
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckRoute53KeySigningKey(t) must be called before using this provider instance.
+// testAccPreCheckKeySigningKey(t) must be called before using this provider instance.
 var testAccProviderRoute53KeySigningKey *schema.Provider
 
 // testAccProviderRoute53KeySigningKeyConfigure ensures the provider is only configured once
 var testAccProviderRoute53KeySigningKeyConfigure sync.Once
 
-// testAccPreCheckRoute53KeySigningKey verifies AWS credentials and that Route 53 Key Signing Key is supported
-func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
+// testAccPreCheckKeySigningKey verifies AWS credentials and that Route 53 Key Signing Key is supported
+func testAccPreCheckKeySigningKey(t *testing.T) {
 	acctest.PreCheckPartitionHasService(route53.EndpointsID, t)
 
-	region := testAccGetRoute53KeySigningKeyRegion()
+	region := testAccGetKeySigningKeyRegion()
 
 	if region == "" {
 		t.Skip("Route 53 Key Signing Key not available in this AWS Partition")
@@ -306,16 +306,16 @@ func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
 	})
 }
 
-// testAccRoute53KeySigningKeyRegionProviderConfig is the Terraform provider configuration for Route 53 Key Signing Key region testing
+// testAccKeySigningKeyRegionProviderConfig is the Terraform provider configuration for Route 53 Key Signing Key region testing
 //
 // Testing Route 53 Key Signing Key assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccRoute53KeySigningKeyRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetRoute53KeySigningKeyRegion())
+func testAccKeySigningKeyRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetKeySigningKeyRegion())
 }
 
-// testAccGetRoute53KeySigningKeyRegion returns the Route 53 Key Signing Key region for testing
-func testAccGetRoute53KeySigningKeyRegion() string {
+// testAccGetKeySigningKeyRegion returns the Route 53 Key Signing Key region for testing
+func testAccGetKeySigningKeyRegion() string {
 	if testAccRoute53KeySigningKeyRegion != "" {
 		return testAccRoute53KeySigningKeyRegion
 	}

@@ -88,7 +88,7 @@ EOF
 * `enabled` - (Required) Specifies whether the rule is enabled.
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
-* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `iot_analytics`, `iot_events`, `kinesis`, `lambda`, `republish`, `s3`, `step_functions`, `sns`, `sqs` configuration blocks for further configuration details.
+* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `http`, `iot_analytics`, `iot_events`, `kafka`, `kinesis`, `lambda`, `republish`, `s3`, `sns`, `sqs`, `step_functions`, `timestream` configuration blocks for further configuration details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `cloudwatch_alarm` object takes the following arguments:
@@ -145,6 +145,36 @@ The `firehose` object takes the following arguments:
 * `role_arn` - (Required) The IAM role ARN that grants access to the Amazon Kinesis Firehose stream.
 * `separator` - (Optional) A character separator that is used to separate records written to the Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n' (Windows newline), ',' (comma).
 
+The `http` object takes the following arguments:
+
+* `url` - (Required) The HTTPS URL.
+* `confirmation_url` - (Optional) The HTTPS URL used to verify ownership of `url`.
+* `http_header` - (Optional) Custom HTTP header IoT Core should send. It is possible to define more than one custom header.
+
+The `http_header` object takes the following arguments:
+
+* `key` - (Required) The name of the HTTP header.
+* `value` - (Required) The value of the HTTP header.
+
+The `iot_analytics` object takes the following arguments:
+
+* `channel_name` - (Required) Name of AWS IOT Analytics channel.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+
+The `iot_events` object takes the following arguments:
+
+* `input_name` - (Required) The name of the AWS IoT Events input.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
+
+The `kafka` object takes the following arguments:
+
+* `client_properties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
+* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html) .
+* `key` - (Optional) The Kafka message key.
+* `partition` - (Optional) The Kafka message partition.
+* `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.
+
 The `kinesis` object takes the following arguments:
 
 * `partition_key` - (Optional) The partition key.
@@ -164,6 +194,7 @@ The `republish` object takes the following arguments:
 The `s3` object takes the following arguments:
 
 * `bucket_name` - (Required) The Amazon S3 bucket name.
+* `canned_acl` - (Optional) The Amazon S3 canned ACL that controls access to the object identified by the object key. [Valid values](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
 * `key` - (Required) The object key.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 
@@ -185,16 +216,17 @@ The `step_functions` object takes the following arguments:
 * `state_machine_name` - (Required) The name of the Step Functions state machine whose execution will be started.
 * `role_arn` - (Required) The ARN of the IAM role that grants access to start execution of the state machine.
 
-The `iot_analytics` object takes the following arguments:
+The `timestream` object takes the following arguments:
 
-* `channel_name` - (Required) Name of AWS IOT Analytics channel.
-* `role_arn` - (Required) The ARN of the IAM role that grants access.
-
-The `iot_events` object takes the following arguments:
-
-* `input_name` - (Required) The name of the AWS IoT Events input.
-* `role_arn` - (Required) The ARN of the IAM role that grants access.
-* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
+* `database_name` - (Required) The name of an Amazon Timestream database.
+* `dimension` - (Required) Configuration blocks with metadata attributes of the time series that are written in each measure record. Nested arguments below.
+    * `name` - (Required) The metadata dimension name. This is the name of the column in the Amazon Timestream database table record.
+    * `value` - (Required) The value to write in this column of the database record.
+* `role_arn` - (Required) The ARN of the role that grants permission to write to the Amazon Timestream database table.
+* `table_name` - (Required) The name of the database table into which to write the measure records.
+* `timestamp` - (Optional) Configuration block specifying an application-defined value to replace the default value assigned to the Timestream record's timestamp in the time column. Nested arguments below.
+    * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
+    * `value` - (Required) An expression that returns a long epoch time value.
 
 ## Attributes Reference
 

@@ -15,9 +15,9 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceBundleDataSourceConfig("wsb-b0s22j3d7"),
@@ -42,9 +42,9 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
@@ -67,9 +67,9 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 
 func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
@@ -86,10 +86,10 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccWorkspacesBundlePreCheck(t)
+			testAccBundlePreCheck(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceBundleDataSourceConfig_privateOwner(bundleName),
@@ -101,7 +101,7 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	})
 }
 
-func testAccWorkspacesBundlePreCheck(t *testing.T) {
+func testAccBundlePreCheck(t *testing.T) {
 	if os.Getenv("AWS_WORKSPACES_BUNDLE_NAME") == "" {
 		t.Skip("AWS_WORKSPACES_BUNDLE_NAME env var must be set for AWS WorkSpaces private bundle acceptance test. This is required until AWS provides bundle creation API.")
 	}

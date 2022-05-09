@@ -20,7 +20,7 @@ const (
 
 	// General timeout for EC2 resource creations to propagate.
 	// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/query-api-troubleshooting.html#eventual-consistency.
-	PropagationTimeout = 2 * time.Minute
+	propagationTimeout = 2 * time.Minute
 
 	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
@@ -369,11 +369,57 @@ func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destin
 	return nil, err
 }
 
+func WaitImageAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ImageStatePending},
+		Target:     []string{ec2.ImageStateAvailable},
+		Refresh:    StatusImageState(conn, id),
+		Timeout:    timeout,
+		Delay:      AWSAMIRetryDelay,
+		MinTimeout: AMIRetryMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Image); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitImageDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ImageStateAvailable, ec2.ImageStateFailed, ec2.ImageStatePending},
+		Target:     []string{},
+		Refresh:    StatusImageState(conn, id),
+		Timeout:    timeout,
+		Delay:      AWSAMIRetryDelay,
+		MinTimeout: AMIRetryMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Image); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, expectedValue string) (*ec2.Instance, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{expectedValue},
 		Refresh:    StatusInstanceIAMInstanceProfile(conn, instanceID),
-		Timeout:    PropagationTimeout,
+		Timeout:    propagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -517,7 +563,7 @@ func WaitInstanceCapacityReservationSpecificationUpdated(conn *ec2.EC2, instance
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(true)},
 		Refresh:    StatusInstanceCapacityReservationSpecificationEquals(conn, instanceID, expectedValue),
-		Timeout:    PropagationTimeout,
+		Timeout:    propagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -2128,7 +2174,7 @@ func WaitVPCEndpointRouteTableAssociationDeleted(conn *ec2.EC2, vpcEndpointID, r
 		Pending:                   []string{VPCEndpointRouteTableAssociationStatusReady},
 		Target:                    []string{},
 		Refresh:                   StatusVPCEndpointRouteTableAssociation(conn, vpcEndpointID, routeTableID),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   propagationTimeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -2142,7 +2188,7 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 		Pending:                   []string{},
 		Target:                    []string{VPCEndpointRouteTableAssociationStatusReady},
 		Refresh:                   StatusVPCEndpointRouteTableAssociation(conn, vpcEndpointID, routeTableID),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   propagationTimeout,
 		ContinuousTargetOccurence: 2,
 	}
 

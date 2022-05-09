@@ -488,7 +488,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if c.NotificationConfiguration != nil {
-		if *c.NotificationConfiguration.TopicStatus == "active" {
+		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -759,10 +759,10 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			"id":                *node.CacheNodeId,
-			"address":           *node.Endpoint.Address,
-			"port":              int(*node.Endpoint.Port),
-			"availability_zone": *node.CustomerAvailabilityZone,
+			"id":                aws.StringValue(node.CacheNodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
 		})
 	}
 
@@ -775,7 +775,7 @@ func (b byCacheNodeId) Len() int      { return len(b) }
 func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byCacheNodeId) Less(i, j int) bool {
 	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		*b[i].CacheNodeId < *b[j].CacheNodeId
+		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {

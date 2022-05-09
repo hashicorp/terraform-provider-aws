@@ -21,10 +21,10 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowConfig(rName),
@@ -57,10 +57,10 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowDescriptionConfig(rName, "foo"),
@@ -93,10 +93,10 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTags1Config(rName, "key1", "value1"),
@@ -138,10 +138,10 @@ func TestAccSSMMaintenanceWindow_disappears(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowConfig(rName),
@@ -162,10 +162,10 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowConfig(rName1),
@@ -199,10 +199,10 @@ func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowCutoffConfig(rName, 1),
@@ -233,10 +233,10 @@ func TestAccSSMMaintenanceWindow_duration(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowDurationConfig(rName, 3),
@@ -267,10 +267,10 @@ func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowEnabledConfig(rName, false),
@@ -303,10 +303,10 @@ func TestAccSSMMaintenanceWindow_endDate(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowEndDateConfig(rName, endDate1),
@@ -344,10 +344,10 @@ func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowScheduleConfig(rName, "cron(0 16 ? * TUE *)"),
@@ -378,10 +378,10 @@ func TestAccSSMMaintenanceWindow_scheduleTimezone(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowScheduleTimezoneConfig(rName, "America/Los_Angeles"),
@@ -419,10 +419,10 @@ func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowScheduleOffsetConfig(rName, 2),
@@ -455,10 +455,10 @@ func TestAccSSMMaintenanceWindow_startDate(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMaintenanceWindowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowStartDateConfig(rName, startDate1),

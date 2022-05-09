@@ -23,10 +23,10 @@ func testAccIPGroup_basic(t *testing.T) {
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPGroupAConfig(ipGroupName, ipGroupDescription),
@@ -67,10 +67,10 @@ func testAccIPGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPGroupTags1Config(rName, "key1", "value1"),
@@ -113,10 +113,10 @@ func testAccIPGroup_disappears(t *testing.T) {
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPGroupAConfig(ipGroupName, ipGroupDescription),
@@ -142,10 +142,10 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 	directoryResourceName2 := "aws_workspaces_directory.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPGroupMultipleDirectoriesConfig(ipGroupName, domain),

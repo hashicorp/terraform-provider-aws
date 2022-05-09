@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2SubnetDataSource_basic(t *testing.T) {
+func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,10 +25,10 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 	ds6ResourceName := "data.aws_subnet.by_az_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetDataSourceConfig(rName, rInt),
@@ -137,14 +137,14 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
+func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),
@@ -160,14 +160,14 @@ func TestAccEC2SubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2SubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
+func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),

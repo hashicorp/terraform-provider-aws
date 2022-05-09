@@ -25,10 +25,10 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -59,10 +59,10 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -84,10 +84,10 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -110,10 +110,10 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -144,10 +144,10 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),

@@ -26,7 +26,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:         acctest.Providers,
+		ProviderFactories: acctest.ProviderFactories,
 		ExternalProviders: testExternalProviders,
 		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{

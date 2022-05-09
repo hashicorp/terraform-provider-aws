@@ -14,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NATGateway_basic(t *testing.T) {
+func TestAccVPCNATGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNATGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNATGatewayConfig(rName),
@@ -46,16 +46,16 @@ func TestAccEC2NATGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_disappears(t *testing.T) {
+func TestAccVPCNATGateway_disappears(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNATGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNATGatewayConfig(rName),
@@ -69,16 +69,16 @@ func TestAccEC2NATGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_ConnectivityType_private(t *testing.T) {
+func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNATGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNATGatewayConfigConnectivityType(rName, "private"),
@@ -102,16 +102,16 @@ func TestAccEC2NATGateway_ConnectivityType_private(t *testing.T) {
 	})
 }
 
-func TestAccEC2NATGateway_tags(t *testing.T) {
+func TestAccVPCNATGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNATGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNATGatewayConfigTags1(rName, "key1", "value1"),

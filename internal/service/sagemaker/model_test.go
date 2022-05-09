@@ -20,10 +20,10 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig(rName),
@@ -55,10 +55,10 @@ func TestAccSageMakerModel_inferenceExecution(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelInferenceExecutionConfig(rName),
@@ -82,10 +82,10 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfigTags1(rName, "key1", "value1"),
@@ -126,10 +126,10 @@ func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrimaryContainerModelDataUrlConfig(rName),
@@ -152,10 +152,10 @@ func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrimaryContainerHostnameConfig(rName),
@@ -178,10 +178,10 @@ func TestAccSageMakerModel_primaryContainerImage(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrimaryContainerImageConfigConfig(rName),
@@ -205,10 +205,10 @@ func TestAccSageMakerModel_primaryContainerEnvironment(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrimaryContainerEnvironmentConfig(rName),
@@ -232,10 +232,10 @@ func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrimaryContainerModeSingle(rName),
@@ -258,10 +258,10 @@ func TestAccSageMakerModel_containers(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelContainers(rName),
@@ -286,10 +286,10 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelVpcConfig(rName),
@@ -314,10 +314,10 @@ func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelNetworkIsolation(rName),
@@ -340,10 +340,10 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig(rName),

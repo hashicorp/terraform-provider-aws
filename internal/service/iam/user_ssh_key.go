@@ -105,7 +105,7 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetSSHPublicKeyOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetSSHPublicKey(request)
@@ -139,8 +139,8 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM User SSH Key (%s): empty response", d.Id())
 	}
 
-	publicKey := *getResp.SSHPublicKey.SSHPublicKeyBody
-	if encoding == "SSH" {
+	publicKey := aws.StringValue(getResp.SSHPublicKey.SSHPublicKeyBody)
+	if encoding == iam.EncodingTypeSsh {
 		publicKey = cleanSSHKey(publicKey)
 	}
 

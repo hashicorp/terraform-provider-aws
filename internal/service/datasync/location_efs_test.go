@@ -22,10 +22,10 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationEFSDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig(),
@@ -56,10 +56,10 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationEFSDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig(),
@@ -78,10 +78,10 @@ func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationEFSDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSSubdirectoryConfig("/subdirectory1/"),
@@ -105,10 +105,10 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationEFSDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSTags1Config("key1", "value1"),

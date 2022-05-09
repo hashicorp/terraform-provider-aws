@@ -745,7 +745,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// S3 Object Lock can only be enabled on bucket creation.
-	objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+	objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
 		req.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
@@ -1279,7 +1279,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	if output, ok := resp.(*s3.GetObjectLockConfigurationOutput); ok && output.ObjectLockConfiguration != nil {
 		d.Set("object_lock_enabled", aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled)
-		if err := d.Set("object_lock_configuration", flattenS3ObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
+		if err := d.Set("object_lock_configuration", flattenObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
 	} else {
@@ -1431,7 +1431,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
 			var objectLockEnabled bool
-			objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+			objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 			if objectLockConfiguration != nil {
 				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
 			}
@@ -1885,7 +1885,7 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Id()),
-		ObjectLockConfiguration: expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
+		ObjectLockConfiguration: expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
 	}
 
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
@@ -2434,7 +2434,7 @@ func flattenBucketLoggingEnabled(loggingEnabled *s3.LoggingEnabled) []interface{
 
 // Object Lock Configuration functions
 
-func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfiguration {
+func expandObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfiguration {
 	if len(vConf) == 0 || vConf[0] == nil {
 		return nil
 	}
@@ -2472,7 +2472,7 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 	return conf
 }
 
-func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
+func flattenObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
 	if conf == nil {
 		return []interface{}{}
 	}

@@ -26,17 +26,17 @@ var testAccCognitoUserPoolCustomDomainRegion string
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckCognitoUserPoolCustomDomain(t) must be called before using this provider instance.
+// testAccPreCheckUserPoolCustomDomain(t) must be called before using this provider instance.
 var testAccProviderCognitoUserPoolCustomDomain *schema.Provider
 
 // testAccProviderCognitoUserPoolCustomDomainConfigure ensures the provider is only configured once
 var testAccProviderCognitoUserPoolCustomDomainConfigure sync.Once
 
-// testAccPreCheckCognitoUserPoolCustomDomain verifies AWS credentials and that Cognito User Pool Custom Domains is supported
-func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
+// testAccPreCheckUserPoolCustomDomain verifies AWS credentials and that Cognito User Pool Custom Domains is supported
+func testAccPreCheckUserPoolCustomDomain(t *testing.T) {
 	acctest.PreCheckPartitionHasService(cognitoidentityprovider.EndpointsID, t)
 
-	region := testAccGetCognitoUserPoolCustomDomainRegion()
+	region := testAccGetUserPoolCustomDomainRegion()
 
 	if region == "" {
 		t.Skip("Cognito User Pool Custom Domains not available in this AWS Partition")
@@ -63,16 +63,16 @@ func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
 	})
 }
 
-// testAccCognitoUserPoolCustomDomainRegionProviderConfig is the Terraform provider configuration for Cognito User Pool Custom Domains region testing
+// testAccUserPoolCustomDomainRegionProviderConfig is the Terraform provider configuration for Cognito User Pool Custom Domains region testing
 //
 // Testing Cognito User Pool Custom Domains assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccCognitoUserPoolCustomDomainRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetCognitoUserPoolCustomDomainRegion())
+func testAccUserPoolCustomDomainRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetUserPoolCustomDomainRegion())
 }
 
-// testAccGetCognitoUserPoolCustomDomainRegion returns the Cognito User Pool Custom Domains region for testing
-func testAccGetCognitoUserPoolCustomDomainRegion() string {
+// testAccGetUserPoolCustomDomainRegion returns the Cognito User Pool Custom Domains region for testing
+func testAccGetUserPoolCustomDomainRegion() string {
 	if testAccCognitoUserPoolCustomDomainRegion != "" {
 		return testAccCognitoUserPoolCustomDomainRegion
 	}

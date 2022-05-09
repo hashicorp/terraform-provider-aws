@@ -14,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
+func TestAccVPCEgressOnlyInternetGateway_basic(t *testing.T) {
 	var v ec2.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEgressOnlyInternetGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEgressOnlyInternetGatewayConfig(rName),
@@ -41,16 +41,16 @@ func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2EgressOnlyInternetGateway_tags(t *testing.T) {
+func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 	var v ec2.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEgressOnlyInternetGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEgressOnlyInternetGatewayTags1Config(rName, "key1", "value1"),

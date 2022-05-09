@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2LocalGatewayVirtualInterfaceDataSource_filter(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayVirtualInterfaceFilterDataSourceConfig(),
@@ -35,13 +35,13 @@ func TestAccEC2LocalGatewayVirtualInterfaceDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2LocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayVirtualInterfaceIDDataSourceConfig(),
@@ -59,15 +59,15 @@ func TestAccEC2LocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 	})
 }
 
-func TestAccEC2LocalGatewayVirtualInterfaceDataSource_tags(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDataSourceName := "data.aws_ec2_local_gateway_virtual_interface.source"
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayVirtualInterfaceTagsDataSourceConfig(rName),

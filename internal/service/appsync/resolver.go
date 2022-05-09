@@ -159,7 +159,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
-		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
+		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("data_source"); ok {
@@ -182,7 +182,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("caching_config"); ok {
-		input.CachingConfig = expandAppsyncResolverCachingConfig(v.([]interface{}))
+		input.CachingConfig = expandResolverCachingConfig(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
@@ -240,15 +240,15 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kind", resolver.Kind)
 	d.Set("max_batch_size", resolver.MaxBatchSize)
 
-	if err := d.Set("sync_config", flattenAppsyncSyncConfig(resolver.SyncConfig)); err != nil {
+	if err := d.Set("sync_config", flattenSyncConfig(resolver.SyncConfig)); err != nil {
 		return fmt.Errorf("error setting sync_config: %w", err)
 	}
 
-	if err := d.Set("pipeline_config", flattenAppsyncPipelineConfig(resolver.PipelineConfig)); err != nil {
+	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
 		return fmt.Errorf("Error setting pipeline_config: %w", err)
 	}
 
-	if err := d.Set("caching_config", flattenAppsyncCachingConfig(resolver.CachingConfig)); err != nil {
+	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
 		return fmt.Errorf("Error setting caching_config: %w", err)
 	}
 
@@ -285,7 +285,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("caching_config"); ok {
-		input.CachingConfig = expandAppsyncResolverCachingConfig(v.([]interface{}))
+		input.CachingConfig = expandResolverCachingConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOkExists("max_batch_size"); ok {
@@ -293,7 +293,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
-		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
+		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
@@ -349,7 +349,7 @@ func DecodeResolverID(id string) (string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
+func expandResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -367,7 +367,7 @@ func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig 
 	return cachingConfig
 }
 
-func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
+func flattenPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	if c == nil {
 		return nil
 	}
@@ -383,7 +383,7 @@ func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
+func flattenCachingConfig(c *appsync.CachingConfig) []interface{} {
 	if c == nil {
 		return nil
 	}

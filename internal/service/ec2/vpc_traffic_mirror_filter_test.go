@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TrafficMirrorFilter_basic(t *testing.T) {
+func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 	var v ec2.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 	description := "test filter"
@@ -25,9 +25,9 @@ func TestAccEC2TrafficMirrorFilter_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -66,7 +66,7 @@ func TestAccEC2TrafficMirrorFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorFilter_tags(t *testing.T) {
+func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 	var v ec2.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 
@@ -75,9 +75,9 @@ func TestAccEC2TrafficMirrorFilter_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorFilterConfigTags1("key1", "value1"),
@@ -113,7 +113,7 @@ func TestAccEC2TrafficMirrorFilter_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorFilter_disappears(t *testing.T) {
+func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 	description := "test filter"
@@ -123,9 +123,9 @@ func TestAccEC2TrafficMirrorFilter_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),

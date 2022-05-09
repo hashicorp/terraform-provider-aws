@@ -279,47 +279,47 @@ func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]in
 		m := make(map[string]interface{})
 
 		if r.DestinationCidrBlock != nil {
-			m["cidr_block"] = *r.DestinationCidrBlock
+			m["cidr_block"] = aws.StringValue(r.DestinationCidrBlock)
 		}
 		if r.DestinationIpv6CidrBlock != nil {
-			m["ipv6_cidr_block"] = *r.DestinationIpv6CidrBlock
+			m["ipv6_cidr_block"] = aws.StringValue(r.DestinationIpv6CidrBlock)
 		}
 		if r.DestinationPrefixListId != nil {
-			m["destination_prefix_list_id"] = *r.DestinationPrefixListId
+			m["destination_prefix_list_id"] = aws.StringValue(r.DestinationPrefixListId)
 		}
 		if r.CarrierGatewayId != nil {
-			m["carrier_gateway_id"] = *r.CarrierGatewayId
+			m["carrier_gateway_id"] = aws.StringValue(r.CarrierGatewayId)
 		}
 		if r.CoreNetworkArn != nil {
-			m["core_network_arn"] = *r.CoreNetworkArn
+			m["core_network_arn"] = aws.StringValue(r.CoreNetworkArn)
 		}
 		if r.EgressOnlyInternetGatewayId != nil {
-			m["egress_only_gateway_id"] = *r.EgressOnlyInternetGatewayId
+			m["egress_only_gateway_id"] = aws.StringValue(r.EgressOnlyInternetGatewayId)
 		}
 		if r.GatewayId != nil {
 			if strings.HasPrefix(*r.GatewayId, "vpce-") {
-				m["vpc_endpoint_id"] = *r.GatewayId
+				m["vpc_endpoint_id"] = aws.StringValue(r.GatewayId)
 			} else {
-				m["gateway_id"] = *r.GatewayId
+				m["gateway_id"] = aws.StringValue(r.GatewayId)
 			}
 		}
 		if r.NatGatewayId != nil {
-			m["nat_gateway_id"] = *r.NatGatewayId
+			m["nat_gateway_id"] = aws.StringValue(r.NatGatewayId)
 		}
 		if r.LocalGatewayId != nil {
-			m["local_gateway_id"] = *r.LocalGatewayId
+			m["local_gateway_id"] = aws.StringValue(r.LocalGatewayId)
 		}
 		if r.InstanceId != nil {
-			m["instance_id"] = *r.InstanceId
+			m["instance_id"] = aws.StringValue(r.InstanceId)
 		}
 		if r.TransitGatewayId != nil {
-			m["transit_gateway_id"] = *r.TransitGatewayId
+			m["transit_gateway_id"] = aws.StringValue(r.TransitGatewayId)
 		}
 		if r.VpcPeeringConnectionId != nil {
-			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId
+			m["vpc_peering_connection_id"] = aws.StringValue(r.VpcPeeringConnectionId)
 		}
 		if r.NetworkInterfaceId != nil {
-			m["network_interface_id"] = *r.NetworkInterfaceId
+			m["network_interface_id"] = aws.StringValue(r.NetworkInterfaceId)
 		}
 
 		routes = append(routes, m)
@@ -333,16 +333,16 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 	for _, a := range ec2Assocations {
 
 		m := make(map[string]interface{})
-		m["route_table_id"] = *a.RouteTableId
-		m["route_table_association_id"] = *a.RouteTableAssociationId
+		m["route_table_id"] = aws.StringValue(a.RouteTableId)
+		m["route_table_association_id"] = aws.StringValue(a.RouteTableAssociationId)
 		// GH[11134]
 		if a.SubnetId != nil {
-			m["subnet_id"] = *a.SubnetId
+			m["subnet_id"] = aws.StringValue(a.SubnetId)
 		}
 		if a.GatewayId != nil {
-			m["gateway_id"] = *a.GatewayId
+			m["gateway_id"] = aws.StringValue(a.GatewayId)
 		}
-		m["main"] = *a.Main
+		m["main"] = aws.BoolValue(a.Main)
 		associations = append(associations, m)
 	}
 	return associations

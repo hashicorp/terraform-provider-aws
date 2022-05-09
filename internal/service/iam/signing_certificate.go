@@ -93,7 +93,7 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindSigningCertificate(conn, userName, certId)
 	}, d.IsNewResource())
 

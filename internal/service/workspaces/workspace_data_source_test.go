@@ -18,12 +18,12 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain),
+				Config: testAccWorkspaceDataSourceConfig_dataSourceWorkspacebyWorkspaceID(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -53,12 +53,12 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain),
+				Config: testAccWorkspaceDataSourceConfig_DataSourceWorkspacebyDirectoryID_userName(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -82,9 +82,9 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 
 func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceDataSourceConfig_workspaceIDAndDirectoryIDConflict(),
@@ -94,7 +94,7 @@ func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) 
 	})
 }
 
-func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain string) string {
+func testAccWorkspaceDataSourceConfig_dataSourceWorkspacebyWorkspaceID(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		`
@@ -122,7 +122,7 @@ data "aws_workspaces_workspace" "test" {
 `)
 }
 
-func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain string) string {
+func testAccWorkspaceDataSourceConfig_DataSourceWorkspacebyDirectoryID_userName(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		`

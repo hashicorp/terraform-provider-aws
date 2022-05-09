@@ -23,10 +23,10 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig(rName, rName2, originalDescription),
@@ -81,10 +81,10 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig(rName, rName2, description),
@@ -165,10 +165,10 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig(rName, rName2, description),
@@ -224,10 +224,10 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig(rName, rName2, description),

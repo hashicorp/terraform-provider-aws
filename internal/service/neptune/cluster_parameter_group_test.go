@@ -24,10 +24,10 @@ func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig(parameterGroupName),
@@ -57,10 +57,10 @@ func TestAccNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_namePrefix,
@@ -85,10 +85,10 @@ func TestAccNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_generatedName,
@@ -113,10 +113,10 @@ func TestAccNeptuneClusterParameterGroup_description(t *testing.T) {
 	parameterGroupName := sdkacctest.RandomWithPrefix("cluster-parameter-group-test-terraform")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_Description(parameterGroupName, "custom description"),
@@ -143,10 +143,10 @@ func TestAccNeptuneClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 	prefix := acctest.ResourcePrefix
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_NamePrefix_Parameter(prefix, "neptune_enable_audit_log", "1"),
@@ -190,10 +190,10 @@ func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 	parameterGroupName := sdkacctest.RandomWithPrefix("cluster-parameter-group-test-tf")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_Parameter(parameterGroupName, "neptune_enable_audit_log", "1"),
@@ -238,10 +238,10 @@ func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 	parameterGroupName := sdkacctest.RandomWithPrefix("cluster-parameter-group-test-tf")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value1"),
