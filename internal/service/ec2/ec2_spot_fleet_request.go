@@ -2088,31 +2088,6 @@ func hashLaunchSpecification(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func hashLaunchTemplateOverrides(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if m["availability_zone"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
-	}
-	if m["subnet_id"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
-	}
-	if m["spot_price"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
-	}
-	if m["instance_type"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
-	}
-	if m["weighted_capacity"] != nil {
-		buf.WriteString(fmt.Sprintf("%f-", m["weighted_capacity"].(float64)))
-	}
-	if m["priority"] != nil {
-		buf.WriteString(fmt.Sprintf("%f-", m["priority"].(float64)))
-	}
-
-	return create.StringHashcode(buf.String())
-}
-
 func hashEbsBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
