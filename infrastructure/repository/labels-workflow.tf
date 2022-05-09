@@ -138,6 +138,10 @@ variable "workflow_labels" {
       color       = "008196", # color:lightest-darkest waypoint gradient
       description = "Managed by automation to categorize the size of a PR."
     },
+    "skaff" = {
+      color       = "63d0ff", # color:packer
+      description = "Issues and pull requested related to the skaff tool"
+    }
     "stale" = {
       color       = "828a90", # color:stale grey
       description = "Old or inactive issues managed by automation, if no further action taken these will get closed."

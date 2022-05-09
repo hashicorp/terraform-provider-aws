@@ -21,10 +21,10 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	clusterResourceName := "aws_redshift_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotScheduleAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),

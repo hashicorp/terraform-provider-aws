@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceRepositoryPermissionsPolicy() *schema.Resource {
@@ -112,13 +113,14 @@ func resourceRepositoryPermissionsPolicyRead(d *schema.ResourceData, meta interf
 		DomainOwner: aws.String(domainOwner),
 		Repository:  aws.String(repoName),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResRepositoryPermissionsPolicy, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] CodeArtifact Repository Permissions Policy %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeArtifact Repository Permissions Policy (%s): %w", d.Id(), err)
+		return names.Error(names.CodeArtifact, names.ErrActionReading, ResRepositoryPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)

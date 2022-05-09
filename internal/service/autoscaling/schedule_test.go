@@ -27,10 +27,10 @@ func TestAccAutoScalingSchedule_basic(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig(rName, start, end),
@@ -62,10 +62,10 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 	end := testAccScheduleValidEnd(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig(rName, start, end),
@@ -101,10 +101,10 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_recurrence(rName),
@@ -135,10 +135,10 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_zeroValues(rName, start, end),
@@ -168,10 +168,10 @@ func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_negativeOne(rName, start, end),

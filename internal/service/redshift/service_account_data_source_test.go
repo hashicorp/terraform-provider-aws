@@ -15,9 +15,9 @@ func TestAccRedshiftServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_redshift_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRedshiftServiceAccountConfig,
@@ -36,9 +36,9 @@ func TestAccRedshiftServiceAccountDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_redshift_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRedshiftServiceAccountExplicitRegionConfig,

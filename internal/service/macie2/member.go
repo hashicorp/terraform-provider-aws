@@ -20,10 +20,10 @@ import (
 
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2MemberCreate,
-		ReadWithoutTimeout:   resourceMacie2MemberRead,
-		UpdateWithoutTimeout: resourceMacie2MemberUpdate,
-		DeleteWithoutTimeout: resourceMacie2MemberDelete,
+		CreateWithoutTimeout: resourceMemberCreate,
+		ReadWithoutTimeout:   resourceMemberRead,
+		UpdateWithoutTimeout: resourceMemberUpdate,
+		DeleteWithoutTimeout: resourceMemberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -76,7 +76,7 @@ func ResourceMember() *schema.Resource {
 				Computed: true,
 			},
 			"invitation_disable_email_notification": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"invitation_message": {
@@ -91,7 +91,7 @@ func ResourceMember() *schema.Resource {
 	}
 }
 
-func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -135,7 +135,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(accountId)
 
 	if !d.Get("invite").(bool) {
-		return resourceMacie2MemberRead(ctx, d, meta)
+		return resourceMemberRead(ctx, d, meta)
 	}
 
 	// Invitation workflow
@@ -184,10 +184,10 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
 	}
 
-	return resourceMacie2MemberRead(ctx, d, meta)
+	return resourceMemberRead(ctx, d, meta)
 }
 
-func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -250,7 +250,7 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	// Invitation workflow
@@ -331,10 +331,10 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	}
 
-	return resourceMacie2MemberRead(ctx, d, meta)
+	return resourceMemberRead(ctx, d, meta)
 }
 
-func resourceMacie2MemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.DeleteMemberInput{

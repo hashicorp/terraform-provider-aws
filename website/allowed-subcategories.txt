@@ -1,133 +1,246 @@
 
-Account Management
 ACM (Certificate Manager)
 ACM PCA (Certificate Manager Private Certificate Authority)
 AMP (Managed Prometheus)
-Amplify
 API Gateway
+API Gateway Management API
 API Gateway V2
+Account Management
+Alexa for Business
+Amplify
+Amplify Backend
+Amplify UI Builder
 App Mesh
 App Runner
 AppConfig
+AppConfig Data
+AppFlow
 AppIntegrations
-Application Auto Scaling
 AppStream 2.0
 AppSync
+Application Auto Scaling
+Application Cost Profiler
+Application Discovery
+Application Migration (Mgn)
 Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
 Backup
+Backup Gateway
 Batch
+Billing Conductor
+Braket
+CE (Cost Explorer)
 Chime
+Chime SDK Identity
+Chime SDK Meetings
+Chime SDK Messaging
 Cloud Control API
+Cloud Directory
 Cloud Map
 Cloud9
 CloudFormation
 CloudFront
 CloudHSM
 CloudSearch
+CloudSearch Domain
 CloudTrail
 CloudWatch
+CloudWatch Application Insights
 CloudWatch Evidently
+CloudWatch Logs
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
 CodeBuild
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
+CodeGuru Reviewer
 CodePipeline
+CodeStar
 CodeStar Connections
 CodeStar Notifications
-Cognito Identity
 Cognito IDP (Identity Provider)
+Cognito Identity
+Cognito Sync
+Comprehend
+Comprehend Medical
+Compute Optimizer
 Config
 Connect
+Connect Contact Lens
+Connect Customer Profiles
+Connect Participant
+Connect Voice ID
+Connect Wisdom
 Cost and Usage Report
+DLM (Data Lifecycle Manager)
+DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
+DS (Directory Service)
 Data Exchange
 Data Pipeline
 DataSync
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
-DLM (Data Lifecycle Manager)
-DMS (Database Migration)
 DocDB (DocumentDB)
-DS (Directory Service)
 DynamoDB
 DynamoDB Accelerator (DAX)
+DynamoDB Streams
 EBS (EC2)
+EBS (Elastic Block Store)
 EC2 (Elastic Compute Cloud)
 EC2 Image Builder
+EC2 Instance Connect
 ECR (Elastic Container Registry)
 ECR Public
 ECS (Elastic Container)
 EFS (Elastic File System)
 EKS (Elastic Kubernetes)
-Elastic Beanstalk
-Elastic Transcoder
-ElastiCache
-Elasticsearch
 ELB (Elastic Load Balancing)
 ELB Classic
-Elemental MediaConvert
-Elemental MediaPackage
-Elemental MediaStore
-Elemental MediaTailor
 EMR
 EMR Containers
+ElastiCache
+Elastic Beanstalk
+Elastic Inference
+Elastic Transcoder
+Elasticsearch
+Elemental MediaConnect
+Elemental MediaConvert
+Elemental MediaLive
+Elemental MediaPackage
+Elemental MediaPackage VOD
+Elemental MediaStore
+Elemental MediaStore Data
+Elemental MediaTailor
 EventBridge
 EventBridge Schemas
 FMS (Firewall Manager)
 FSx
+Fault Injection Simulator
+FinSpace
+FinSpace Data
+Forecast
+Forecast Query
+Fraud Detector
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
+Ground Station
 GuardDuty
+Health
+HealthLake
+Honeycode
 IAM (Identity & Access Management)
 IAM Access Analyzer
+IVS (Interactive Video)
 Inspector
+Inspector V2
+IoT 1-Click Devices
+IoT 1-Click Projects
+IoT Analytics
 IoT Core
+IoT Data Plane
+IoT Device Management
+IoT Events
+IoT Events Data
+IoT Fleet Hub
+IoT Greengrass
+IoT Greengrass V2
+IoT Jobs Data Plane
+IoT Secure Tunneling
+IoT SiteWise
+IoT Things Graph
+IoT TwinMaker
+IoT Wireless
+KMS (Key Management)
+Kendra
 Keyspaces (for Apache Cassandra)
 Kinesis
 Kinesis Analytics
 Kinesis Analytics V2
 Kinesis Firehose
 Kinesis Video
-KMS (Key Management)
+Kinesis Video Archived Media
+Kinesis Video Media
+Kinesis Video Signaling
 Lake Formation
 Lambda
 Lex Model Building
+Lex Models V2
+Lex Runtime
+Lex Runtime V2
 License Manager
 Lightsail
 Location
+Lookout for Equipment
+Lookout for Metrics
+Lookout for Vision
+MQ
+MTurk (Mechanical Turk)
+MWAA (Managed Workflows for Apache Airflow)
+Machine Learning
 Macie
 Macie Classic
+Managed Blockchain
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
+Marketplace Catalog
+Marketplace Commerce Analytics
+Marketplace Entitlement
+Marketplace Metering
 MemoryDB for Redis
-MQ
-MWAA (Managed Workflows for Apache Airflow)
+Meta Data Sources
+MgH (Migration Hub)
+Migration Hub Config
+Migration Hub Refactor Spaces
+Migration Hub Strategy
+Mobile
 Neptune
 Network Firewall
 Network Manager
+Nimble Studio
 OpenSearch
 OpsWorks
+OpsWorks CM
 Organizations
 Outposts
 Outposts (EC2)
+Panorama
+Personalize
+Personalize Events
+Personalize Runtime
 Pinpoint
+Pinpoint Email
+Pinpoint SMS and Voice
+Polly
 Pricing Calculator
+Proton
 QLDB (Quantum Ledger Database)
+QLDB Session
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
+RDS Performance Insights (PI)
+Recycle Bin (RBin)
 Redshift
+Redshift Data
+Rekognition
+Resilience Hub
 Resource Groups
 Resource Groups Tagging
+RoboMaker
 Route 53
 Route 53 Domains
+Route 53 Recovery Cluster
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
@@ -135,27 +248,48 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 on Outposts
-Sagemaker
 SDB (SimpleDB)
+SES (Simple Email)
+SESv2 (Simple Email V2)
+SFN (Step Functions)
+SMS (Server Migration)
+SNS (Simple Notification)
+SQS (Simple Queue)
+SSM (Systems Manager)
+SSM Incident Manager Contacts
+SSM Incident Manager Incidents
+SSO (Single Sign-On)
+SSO Admin
+SSO Identity Store
+SSO OIDC
+STS (Security Token)
+SWF (Simple Workflow)
+SageMaker
+SageMaker A2I (Augmented AI)
+SageMaker Edge Manager
+SageMaker Feature Store Runtime
+SageMaker Runtime
+Savings Plans
 Secrets Manager
 Security Hub
 Serverless Application Repository
 Service Catalog
+Service Catalog AppRegistry
 Service Quotas
-SES (Simple Email)
-SFN (Step Functions)
 Shield
 Signer
-SNS (Simple Notification)
-SQS (Simple Queue)
-SSM (Systems Manager)
-SSO Admin
-SSO Identity Store
+Snow Device Management
+Snow Family
 Storage Gateway
-SWF (Simple Workflow)
+Support
+Textract
+Timestream Query
 Timestream Write
+Transcribe
+Transcribe Streaming
 Transfer Family
 Transit Gateway
+Translate
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPN (Client)
@@ -165,7 +299,11 @@ WAF Classic
 WAF Classic Regional
 Wavelength
 Web Services Budgets
+Well-Architected Tool
+WorkDocs
 WorkLink
 WorkMail
+WorkMail Message Flow
 WorkSpaces
+WorkSpaces Web
 X-Ray

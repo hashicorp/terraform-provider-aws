@@ -13,10 +13,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
-	testing "github.com/mitchellh/go-testing-interface"
+	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -49,7 +50,7 @@ var flagSweepAllowFailures = flag.Bool("sweep-allow-failures", false, "Enable to
 var flagSweepRun = flag.String("sweep-run", "", "Comma seperated list of Sweeper Tests to run")
 var sweeperFuncs map[string]*Sweeper
 
-// type SweeperFunc is a signature for a function that acts as a sweeper. It
+// SweeperFunc is a signature for a function that acts as a sweeper. It
 // accepts a string for the region that the sweeper is to be ran in. This
 // function must be able to construct a valid client for that region.
 type SweeperFunc func(r string) error
@@ -957,6 +958,68 @@ func testCheckResourceAttr(is *terraform.InstanceState, name string, key string,
 	}
 
 	return nil
+}
+
+// CheckResourceAttrWithFunc is the callback type used to apply a custom checking logic
+// when using TestCheckResourceAttrWith and a value is found for the given name and key.
+//
+// When this function returns an error, TestCheckResourceAttrWith will fail the check.
+type CheckResourceAttrWithFunc func(value string) error
+
+// TestCheckResourceAttrWith ensures a value stored in state for the
+// given name and key combination, is checked against a custom logic.
+// State value checking is only recommended for testing Computed attributes
+// and attribute defaults.
+//
+// For managed resources, the name parameter is combination of the resource
+// type, a period (.), and the name label. The name for the below example
+// configuration would be "myprovider_thing.example".
+//
+//     resource "myprovider_thing" "example" { ... }
+//
+// For data sources, the name parameter is a combination of the keyword "data",
+// a period (.), the data source type, a period (.), and the name label. The
+// name for the below example configuration would be
+// "data.myprovider_thing.example".
+//
+//     data "myprovider_thing" "example" { ... }
+//
+// The key parameter is an attribute path in Terraform CLI 0.11 and earlier
+// "flatmap" syntax. Keys start with the attribute name of a top-level
+// attribute. Use the following special key syntax to inspect list, map, and
+// set attributes:
+//
+//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
+//        Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
+//        for sets.
+//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//        value.
+//     - .#: Number of elements in list or set.
+//     - .%: Number of elements in map.
+//
+// The checkValueFunc parameter is a CheckResourceAttrWithFunc,
+// and it's provided with the attribute value to apply a custom checking logic,
+// if it was found in the state. The function must return an error for the
+// check to fail, or `nil` to succeed.
+func TestCheckResourceAttrWith(name, key string, checkValueFunc CheckResourceAttrWithFunc) TestCheckFunc {
+	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
+		is, err := primaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		err = testCheckResourceAttrSet(is, name, key)
+		if err != nil {
+			return err
+		}
+
+		err = checkValueFunc(is.Attributes[key])
+		if err != nil {
+			return fmt.Errorf("%s: Attribute %q value: %w", name, key, err)
+		}
+
+		return nil
+	})
 }
 
 // TestCheckNoResourceAttr ensures no value exists in the state for the

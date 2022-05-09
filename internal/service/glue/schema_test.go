@@ -23,10 +23,10 @@ func TestAccGlueSchema_basic(t *testing.T) {
 	registryResourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaBasicConfig(rName),
@@ -62,10 +62,10 @@ func TestAccGlueSchema_json(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaJsonConfig(rName),
@@ -91,10 +91,10 @@ func TestAccGlueSchema_protobuf(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaProtobufConfig(rName),
@@ -120,10 +120,10 @@ func TestAccGlueSchema_description(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaDescriptionConfig(rName, "First Description"),
@@ -155,10 +155,10 @@ func TestAccGlueSchema_compatibility(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaCompatibillityConfig(rName, "DISABLED"),
@@ -189,10 +189,10 @@ func TestAccGlueSchema_tags(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaTags1Config(rName, "key1", "value1"),
@@ -235,10 +235,10 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaBasicConfig(rName),
@@ -274,10 +274,10 @@ func TestAccGlueSchema_disappears(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaBasicConfig(rName),
@@ -298,10 +298,10 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaBasicConfig(rName),

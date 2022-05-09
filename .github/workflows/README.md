@@ -18,3 +18,11 @@ steps:
 The tool [`act`](https://github.com/nektos/act) can be used to test GitHub workflows locally. The default container [intentionally does not have feature parity](https://github.com/nektos/act#default-runners-are-intentionally-incomplete) with the containers used in GitHub due to the size of a full container.
 
 The file `./actrc` configures `act` to use a fully-featured container.
+
+## Running the static checker on workflows
+
+Check your code for errors in syntax, usage, etc. using the following directive found in the `GNUMakefile` in this repository.
+
+```console
+% make gh-workflows-lint
+```

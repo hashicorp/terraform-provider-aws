@@ -175,7 +175,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 	var endpoints strings.Builder
 
 	// Initialize each endpoint configuration with matching name and value
-	for _, serviceKey := range names.ServiceKeys() {
+	for _, serviceKey := range names.ProviderPackages() {
 		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
 	}
 
@@ -200,10 +200,10 @@ func TestAccProvider_fipsEndpoint(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { PreCheck(t) },
-		ErrorCheck:   ErrorCheck(t),
-		Providers:    Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { PreCheck(t) },
+		ErrorCheck:        ErrorCheck(t),
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFIPSEndpointConfig(fmt.Sprintf("https://s3-fips.%s.%s", Region(), PartitionDNSSuffix()), rName),
@@ -830,7 +830,7 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 			return func(name string) bool {
 				serviceUpper := ""
 				var err error
-				if serviceUpper, err = names.ServiceProviderNameUpper(key); err != nil {
+				if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 					return false
 				}
 
@@ -845,7 +845,7 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 
 			providerClient := provo.Meta().(*conns.AWSClient)
 
-			for _, serviceKey := range names.ServiceKeys() {
+			for _, serviceKey := range names.ProviderPackages() {
 				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(serviceKey))
 
 				if !providerClientField.IsValid() {
@@ -880,7 +880,7 @@ func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusu
 			return func(name string) bool {
 				serviceUpper := ""
 				var err error
-				if serviceUpper, err = names.ServiceProviderNameUpper(key); err != nil {
+				if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 					return false
 				}
 

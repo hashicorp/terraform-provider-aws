@@ -32,15 +32,15 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
+		CheckDestroy:      testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
+					testAccCheckQueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", cloudwatchLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", route53ZoneResourceName, "zone_id"),
@@ -63,15 +63,15 @@ func TestAccRoute53QueryLog_disappears(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
+		CheckDestroy:      testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
+					testAccCheckQueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -89,15 +89,15 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
+		CheckDestroy:      testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
+					testAccCheckQueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -106,7 +106,7 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
+func testAccCheckQueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProviderRoute53QueryLog.Meta().(*conns.AWSClient).Route53Conn
 		rs, ok := s.RootModule().Resources[pr]
@@ -134,7 +134,7 @@ func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.Qu
 	}
 }
 
-func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
+func testAccCheckQueryLogDestroy(s *terraform.State) error {
 	conn := testAccProviderRoute53QueryLog.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -164,7 +164,7 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 
 func testAccCheckQueryLogResourceBasic1Config(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccRoute53QueryLogRegionProviderConfig(),
+		testAccQueryLogRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name              = "/aws/route53/${aws_route53_zone.test.name}"
@@ -219,17 +219,17 @@ var testAccRoute53QueryLogRegion string
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckRoute53QueryLog(t) must be called before using this provider instance.
+// testAccPreCheckQueryLog(t) must be called before using this provider instance.
 var testAccProviderRoute53QueryLog *schema.Provider
 
 // testAccProviderRoute53QueryLogConfigure ensures the provider is only configured once
 var testAccProviderRoute53QueryLogConfigure sync.Once
 
-// testAccPreCheckRoute53QueryLog verifies AWS credentials and that Route 53 Query Logging is supported
-func testAccPreCheckRoute53QueryLog(t *testing.T) {
+// testAccPreCheckQueryLog verifies AWS credentials and that Route 53 Query Logging is supported
+func testAccPreCheckQueryLog(t *testing.T) {
 	acctest.PreCheckPartitionHasService(route53.EndpointsID, t)
 
-	region := testAccGetRoute53QueryLogRegion()
+	region := testAccGetQueryLogRegion()
 
 	if region == "" {
 		t.Skip("Route 53 Query Log not available in this AWS Partition")
@@ -256,16 +256,16 @@ func testAccPreCheckRoute53QueryLog(t *testing.T) {
 	})
 }
 
-// testAccRoute53QueryLogRegionProviderConfig is the Terraform provider configuration for Route 53 Query Logging region testing
+// testAccQueryLogRegionProviderConfig is the Terraform provider configuration for Route 53 Query Logging region testing
 //
 // Testing Route 53 Query Logging assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccRoute53QueryLogRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetRoute53QueryLogRegion())
+func testAccQueryLogRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetQueryLogRegion())
 }
 
-// testAccGetRoute53QueryLogRegion returns the Route 53 Query Logging region for testing
-func testAccGetRoute53QueryLogRegion() string {
+// testAccGetQueryLogRegion returns the Route 53 Query Logging region for testing
+func testAccGetQueryLogRegion() string {
 	if testAccRoute53QueryLogRegion != "" {
 		return testAccRoute53QueryLogRegion
 	}

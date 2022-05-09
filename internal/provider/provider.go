@@ -8,11 +8,13 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -33,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
@@ -42,11 +45,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
@@ -59,6 +60,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
@@ -80,6 +82,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -108,6 +111,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -197,7 +202,8 @@ func Provider() *schema.Provider {
 				ConflictsWith: []string{"forbidden_account_ids"},
 				Set:           schema.HashString,
 			},
-			"assume_role": assumeRoleSchema(),
+			"assume_role":                   assumeRoleSchema(),
+			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
 			"custom_ca_bundle": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -361,9 +367,9 @@ func Provider() *schema.Provider {
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
 			"skip_metadata_api_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 				Description: "Skip the AWS Metadata API check. " +
 					"Used for AWS API implementations that do not have a metadata api endpoint.",
 			},
@@ -444,6 +450,9 @@ func Provider() *schema.Provider {
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
 			"aws_batch_scheduling_policy":   batch.DataSourceSchedulingPolicy(),
 
+			"aws_ce_cost_category": ce.DataSourceCostCategory(),
+			"aws_ce_tags":          ce.DataSourceTags(),
+
 			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(),
 
 			"aws_cloudformation_export": cloudformation.DataSourceExport(),
@@ -454,6 +463,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_distribution":                   cloudfront.DataSourceDistribution(),
 			"aws_cloudfront_function":                       cloudfront.DataSourceFunction(),
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
+			"aws_cloudfront_origin_access_identities":       cloudfront.DataSourceOriginAccessIdentities(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.DataSourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
 			"aws_cloudfront_realtime_log_config":            cloudfront.DataSourceRealtimeLogConfig(),
@@ -467,8 +477,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
-			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
+			"aws_cloudwatch_log_group":  logs.DataSourceGroup(),
+			"aws_cloudwatch_log_groups": logs.DataSourceGroups(),
 
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
@@ -630,6 +640,8 @@ func Provider() *schema.Provider {
 
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
 
+			"aws_emrcontainers_virtual_cluster": emrcontainers.DataSourceVirtualCluster(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
@@ -645,6 +657,7 @@ func Provider() *schema.Provider {
 			"aws_iam_account_alias":           iam.DataSourceAccountAlias(),
 			"aws_iam_group":                   iam.DataSourceGroup(),
 			"aws_iam_instance_profile":        iam.DataSourceInstanceProfile(),
+			"aws_iam_instance_profiles":       iam.DataSourceInstanceProfiles(),
 			"aws_iam_openid_connect_provider": iam.DataSourceOpenIDConnectProvider(),
 			"aws_iam_policy":                  iam.DataSourcePolicy(),
 			"aws_iam_policy_document":         iam.DataSourcePolicyDocument(),
@@ -713,6 +726,8 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
+			"aws_location_map": location.DataSourceMap(),
+
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
@@ -729,7 +744,8 @@ func Provider() *schema.Provider {
 			"aws_memorydb_subnet_group":    memorydb.DataSourceSubnetGroup(),
 			"aws_memorydb_user":            memorydb.DataSourceUser(),
 
-			"aws_mq_broker": mq.DataSourceBroker(),
+			"aws_mq_broker":                         mq.DataSourceBroker(),
+			"aws_mq_broker_instance_type_offerings": mq.DataSourceBrokerInstanceTypeOfferings(),
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
@@ -801,12 +817,14 @@ func Provider() *schema.Provider {
 			"aws_s3_objects":        s3.DataSourceObjects(),
 			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),  // DEPRECATED: use aws_s3_object instead
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
+			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
+			"aws_secretsmanager_secrets":         secretsmanager.DataSourceSecrets(),
 
 			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
@@ -970,9 +988,10 @@ func Provider() *schema.Provider {
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
 
-			"aws_athena_database":    athena.ResourceDatabase(),
-			"aws_athena_named_query": athena.ResourceNamedQuery(),
-			"aws_athena_workgroup":   athena.ResourceWorkGroup(),
+			"aws_athena_database":     athena.ResourceDatabase(),
+			"aws_athena_data_catalog": athena.ResourceDataCatalog(),
+			"aws_athena_named_query":  athena.ResourceNamedQuery(),
+			"aws_athena_workgroup":    athena.ResourceWorkGroup(),
 
 			"aws_autoscaling_attachment":     autoscaling.ResourceAttachment(),
 			"aws_autoscaling_group":          autoscaling.ResourceGroup(),
@@ -1003,6 +1022,8 @@ func Provider() *schema.Provider {
 
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
+
+			"aws_ce_cost_category": ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1058,14 +1079,14 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               cloudwatchlogs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       cloudwatchlogs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     cloudwatchlogs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              cloudwatchlogs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        cloudwatchlogs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_destination":         logs.ResourceDestination(),
+			"aws_cloudwatch_log_destination_policy":  logs.ResourceDestinationPolicy(),
+			"aws_cloudwatch_log_group":               logs.ResourceGroup(),
+			"aws_cloudwatch_log_metric_filter":       logs.ResourceMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":     logs.ResourceResourcePolicy(),
+			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
+			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
+			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
@@ -1083,9 +1104,9 @@ func Provider() *schema.Provider {
 			"aws_codecommit_repository":                         codecommit.ResourceRepository(),
 			"aws_codecommit_trigger":                            codecommit.ResourceTrigger(),
 
-			"aws_codedeploy_app":               codedeploy.ResourceApp(),
-			"aws_codedeploy_deployment_config": codedeploy.ResourceDeploymentConfig(),
-			"aws_codedeploy_deployment_group":  codedeploy.ResourceDeploymentGroup(),
+			"aws_codedeploy_app":               deploy.ResourceApp(),
+			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
+			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
 
 			"aws_codepipeline":         codepipeline.ResourceCodePipeline(),
 			"aws_codepipeline_webhook": codepipeline.ResourceWebhook(),
@@ -1199,6 +1220,7 @@ func Provider() *schema.Provider {
 			"aws_docdb_cluster_instance":        docdb.ResourceClusterInstance(),
 			"aws_docdb_cluster_parameter_group": docdb.ResourceClusterParameterGroup(),
 			"aws_docdb_cluster_snapshot":        docdb.ResourceClusterSnapshot(),
+			"aws_docdb_event_subscription":      docdb.ResourceEventSubscription(),
 			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 
@@ -1411,6 +1433,8 @@ func Provider() *schema.Provider {
 			"aws_emr_studio":                 emr.ResourceStudio(),
 			"aws_emr_studio_session_mapping": emr.ResourceStudioSessionMapping(),
 
+			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
@@ -1528,6 +1552,7 @@ func Provider() *schema.Provider {
 			"aws_iot_thing_principal_attachment": iot.ResourceThingPrincipalAttachment(),
 			"aws_iot_thing_type":                 iot.ResourceThingType(),
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
+			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
@@ -1586,6 +1611,8 @@ func Provider() *schema.Provider {
 			"aws_lightsail_key_pair":              lightsail.ResourceKeyPair(),
 			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
+
+			"aws_location_map": location.ResourceMap(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
@@ -1943,10 +1970,11 @@ func Provider() *schema.Provider {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
-			"aws_transfer_access":  transfer.ResourceAccess(),
-			"aws_transfer_server":  transfer.ResourceServer(),
-			"aws_transfer_ssh_key": transfer.ResourceSSHKey(),
-			"aws_transfer_user":    transfer.ResourceUser(),
+			"aws_transfer_access":   transfer.ResourceAccess(),
+			"aws_transfer_server":   transfer.ResourceServer(),
+			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
+			"aws_transfer_user":     transfer.ResourceUser(),
+			"aws_transfer_workflow": transfer.ResourceWorkflow(),
 
 			"aws_waf_byte_match_set":          waf.ResourceByteMatchSet(),
 			"aws_waf_geo_match_set":           waf.ResourceGeoMatchSet(),
@@ -2026,7 +2054,6 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
-		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
@@ -2060,6 +2087,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
+	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
+	}
+
 	endpointsSet := d.Get("endpoints").(*schema.Set)
 	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
@@ -2077,6 +2109,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+		if v {
+			config.EC2MetadataServiceEnableState = imds.ClientDisabled
+		} else {
+			config.EC2MetadataServiceEnableState = imds.ClientEnabled
+		}
+	}
+
 	return config.Client(ctx)
 }
 
@@ -2091,13 +2131,13 @@ func assumeRoleSchema() *schema.Schema {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  ValidAssumeRoleDuration,
+					ValidateFunc:  validAssumeRoleDuration,
 					ConflictsWith: []string{"assume_role.0.duration_seconds"},
 				},
 				"duration_seconds": {
 					Type:          schema.TypeInt,
 					Optional:      true,
-					Deprecated:    "Use assume_role.0.duration instead",
+					Deprecated:    "Use assume_role.duration instead",
 					Description:   "The duration, in seconds, of the role session.",
 					ValidateFunc:  validation.IntBetween(900, 43200),
 					ConflictsWith: []string{"assume_role.0.duration"},
@@ -2129,17 +2169,14 @@ func assumeRoleSchema() *schema.Schema {
 				"role_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					Description:  "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
 				"session_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "An identifier for the assumed role session.",
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(2, 64),
-						validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
-					),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "An identifier for the assumed role session.",
+					ValidateFunc: validAssumeRoleSessionName,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2158,10 +2195,66 @@ func assumeRoleSchema() *schema.Schema {
 	}
 }
 
+func assumeRoleWithWebIdentitySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"duration": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
+				},
+				"policy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"policy_arns": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
+					ValidateFunc: verify.ValidARN,
+				},
+				"session_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "An identifier for the assumed role session.",
+					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"web_identity_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(4, 20000),
+					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+				},
+				"web_identity_token_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+				},
+			},
+		},
+	}
+}
+
 func endpointsSchema() *schema.Schema {
 	endpointsAttributes := make(map[string]*schema.Schema)
 
-	for _, serviceKey := range names.HCLKeys() {
+	for _, serviceKey := range names.Aliases() {
 		endpointsAttributes[serviceKey] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -2248,6 +2341,53 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 	return &assumeRole
 }
 
+func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := m["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	}
+
+	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+		assumeRole.Duration = time.Duration(v) * time.Second
+	}
+
+	if v, ok := m["policy"].(string); ok && v != "" {
+		assumeRole.Policy = v
+	}
+
+	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+		for _, policyARNRaw := range policyARNSet.List() {
+			policyARN, ok := policyARNRaw.(string)
+
+			if !ok {
+				continue
+			}
+
+			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
+		}
+	}
+
+	if v, ok := m["role_arn"].(string); ok && v != "" {
+		assumeRole.RoleARN = v
+	}
+
+	if v, ok := m["session_name"].(string); ok && v != "" {
+		assumeRole.SessionName = v
+	}
+
+	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+		assumeRole.WebIdentityToken = v
+	}
+
+	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+		assumeRole.WebIdentityTokenFile = v
+	}
+
+	return &assumeRole
+}
+
 func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -2285,10 +2425,10 @@ func expandEndpoints(endpointsSetList []interface{}, out map[string]string) erro
 	for _, endpointsSetI := range endpointsSetList {
 		endpoints := endpointsSetI.(map[string]interface{})
 
-		for _, hclKey := range names.HCLKeys() {
+		for _, hclKey := range names.Aliases() {
 			var serviceKey string
 			var err error
-			if serviceKey, err = names.ServiceForHCLKey(hclKey); err != nil {
+			if serviceKey, err = names.ProviderPackageForAlias(hclKey); err != nil {
 				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
 			}
 
@@ -2298,19 +2438,19 @@ func expandEndpoints(endpointsSetList []interface{}, out map[string]string) erro
 		}
 	}
 
-	for _, service := range names.ServiceKeys() {
+	for _, service := range names.ProviderPackages() {
 		if out[service] != "" {
 			continue
 		}
 
-		envvar := names.ServiceEnvVar(service)
+		envvar := names.EnvVar(service)
 		if envvar != "" {
 			if v := os.Getenv(envvar); v != "" {
 				out[service] = v
 				continue
 			}
 		}
-		if envvarDeprecated := names.ServiceDeprecatedEnvVar(service); envvarDeprecated != "" {
+		if envvarDeprecated := names.DeprecatedEnvVar(service); envvarDeprecated != "" {
 			if v := os.Getenv(envvarDeprecated); v != "" {
 				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
 				out[service] = v

@@ -21,10 +21,10 @@ func testAccOrganizationManagedRule_basic(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
@@ -58,10 +58,10 @@ func testAccOrganizationManagedRule_disappears(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
@@ -79,10 +79,10 @@ func testAccOrganizationManagedRule_errorHandling(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrganizationManagedRuleConfigErrorHandling(rName),
@@ -98,10 +98,10 @@ func testAccOrganizationManagedRule_Description(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigDescription(rName, "description1"),
@@ -132,10 +132,10 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigExcludedAccounts1(rName),
@@ -169,10 +169,10 @@ func testAccOrganizationManagedRule_InputParameters(t *testing.T) {
 	inputParameters2 := `{"tag1Key":"Department", "tag2Key":"Owner"}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigInputParameters(rName, inputParameters1),
@@ -203,10 +203,10 @@ func testAccOrganizationManagedRule_MaximumExecutionFrequency(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigMaximumExecutionFrequency(rName, "One_Hour"),
@@ -237,10 +237,10 @@ func testAccOrganizationManagedRule_ResourceIdScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigResourceIdScope(rName, "i-12345678"),
@@ -271,10 +271,10 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigResourceTypesScope1(rName),
@@ -305,10 +305,10 @@ func testAccOrganizationManagedRule_RuleIdentifier(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigRuleIdentifier(rName, "EC2_INSTANCE_DETAILED_MONITORING_ENABLED"),
@@ -339,10 +339,10 @@ func testAccOrganizationManagedRule_TagKeyScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigTagKeyScope(rName, "key1"),
@@ -373,10 +373,10 @@ func testAccOrganizationManagedRule_TagValueScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationManagedRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfigTagValueScope(rName, "value1"),

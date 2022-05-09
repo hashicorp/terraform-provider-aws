@@ -22,10 +22,10 @@ func TestAccGlueTrigger_basic(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_OnDemand(rName),
@@ -63,10 +63,10 @@ func TestAccGlueTrigger_crawler(t *testing.T) {
 	resourceName := "aws_glue_trigger.test_trigger"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_Crawler(rName, "SUCCEEDED"),
@@ -111,10 +111,10 @@ func TestAccGlueTrigger_description(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_Description(rName, "description1"),
@@ -147,10 +147,10 @@ func TestAccGlueTrigger_enabled(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_Enabled(rName, true),
@@ -190,10 +190,10 @@ func TestAccGlueTrigger_predicate(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_Predicate(rName, "SUCCEEDED"),
@@ -234,10 +234,10 @@ func TestAccGlueTrigger_schedule(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_Schedule(rName, "cron(1 2 * * ? *)"),
@@ -270,10 +270,10 @@ func TestAccGlueTrigger_startOnCreate(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_ScheduleStart(rName, "cron(1 2 * * ? *)"),
@@ -299,10 +299,10 @@ func TestAccGlueTrigger_tags(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerTags1Config(rName, "key1", "value1"),
@@ -346,10 +346,10 @@ func TestAccGlueTrigger_workflowName(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_WorkflowName(rName),
@@ -375,10 +375,10 @@ func TestAccGlueTrigger_Actions_notify(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerActionsNotificationConfig(rName, 1),
@@ -427,10 +427,10 @@ func TestAccGlueTrigger_Actions_security(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerActionsSecurityConfigurationConfig(rName),
@@ -458,10 +458,10 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_OnDemand(rName),
@@ -504,10 +504,10 @@ func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfigEvent(rName),
@@ -546,10 +546,10 @@ func TestAccGlueTrigger_disappears(t *testing.T) {
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTriggerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_OnDemand(rName),
@@ -710,7 +710,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccTriggerConfig_Crawler(rName, state string) string {
-	return acctest.ConfigCompose(testAccGlueCrawlerConfig_S3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
 resource "aws_glue_crawler" "test2" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 

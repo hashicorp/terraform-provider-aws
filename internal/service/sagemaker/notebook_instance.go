@@ -200,7 +200,7 @@ func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] sagemaker notebook instance create config: %#v", *createOpts)
 	_, err := conn.CreateNotebookInstance(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Sagemaker Notebook Instance: %s", err)
+		return fmt.Errorf("Error creating SageMaker Notebook Instance: %s", err)
 	}
 
 	d.SetId(name)
@@ -296,7 +296,7 @@ func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	tags, err := ListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Notebook Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Notebook Instance (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -320,7 +320,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Notebook Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -380,7 +380,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 	if hasChanged {
 
 		// Stop notebook
-		_, previousStatus, _ := sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
+		_, previousStatus, _ := notebookInstanceStateRefreshFunc(conn, d.Id())()
 		if previousStatus != sagemaker.NotebookInstanceStatusStopped {
 			if err := StopNotebookInstance(conn, d.Id()); err != nil {
 				return fmt.Errorf("error stopping sagemaker notebook instance prior to updating: %s", err)
@@ -405,7 +405,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 					sagemaker.NotebookInstanceStatusStopped,
 				},
 				Target:  []string{sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusPending},
-				Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
+				Refresh: notebookInstanceStateRefreshFunc(conn, d.Id()),
 				Timeout: 30 * time.Second,
 			}
 			// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
@@ -513,7 +513,7 @@ func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	return nil
 }
 
-func sagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func notebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
 			NotebookInstanceName: aws.String(name),

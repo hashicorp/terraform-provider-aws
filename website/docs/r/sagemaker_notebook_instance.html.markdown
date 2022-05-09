@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_notebook_instance"
 description: |-
-  Provides a Sagemaker Notebook Instance resource.
+  Provides a SageMaker Notebook Instance resource.
 ---
 
 # Resource: aws_sagemaker_notebook_instance
 
-Provides a Sagemaker Notebook Instance resource.
+Provides a SageMaker Notebook Instance resource.
 
 ## Example Usage
 
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Notebook Instances can be imported using the `name`, e.g.,
+SageMaker Notebook Instances can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance

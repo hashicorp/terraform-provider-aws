@@ -242,7 +242,7 @@ func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) 
 	assigned := false
 	for _, backendServer := range lb.BackendServerDescriptions {
 		for _, name := range backendServer.PolicyNames {
-			if policyName == *name {
+			if policyName == aws.StringValue(name) {
 				assigned = true
 				break
 			}
@@ -251,7 +251,7 @@ func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) 
 
 	for _, listener := range lb.ListenerDescriptions {
 		for _, name := range listener.PolicyNames {
-			if policyName == *name {
+			if policyName == aws.StringValue(name) {
 				assigned = true
 				break
 			}
@@ -294,7 +294,7 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 		policies := []*string{}
 
 		for _, name := range backendServer.PolicyNames {
-			if policyName != *name {
+			if policyName != aws.StringValue(name) {
 				policies = append(policies, name)
 			}
 		}
@@ -325,7 +325,7 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 		policies := []*string{}
 
 		for _, name := range listener.PolicyNames {
-			if policyName != *name {
+			if policyName != aws.StringValue(name) {
 				policies = append(policies, name)
 			}
 		}

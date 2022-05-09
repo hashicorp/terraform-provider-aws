@@ -45,6 +45,20 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
+### Custom Domain Validation Options
+
+```terraform
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "testing.example.com"
+  validation_method = "EMAIL"
+
+  validation_option {
+    domain_name       = "testing.example.com"
+    validation_domain = "example.com"
+  }
+}
+```
+
 ### Existing Certificate Body Import
 
 ```terraform
@@ -108,6 +122,7 @@ The following arguments are supported:
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
     * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
+    * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
     * `private_key` - (Required) The certificate's PEM-formatted private key
     * `certificate_body` - (Required) The certificate's PEM-formatted public key
@@ -123,6 +138,13 @@ The following arguments are supported:
 Supported nested arguments for the `options` configuration block:
 
 * `certificate_transparency_logging_preference` - (Optional) Specifies whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+
+## validation_option Configuration Block
+
+Supported nested arguments for the `validation_option` configuration block:
+
+* `domain_name` - (Required) A fully qualified domain name (FQDN) in the certificate.
+* `validation_domain` - (Required) The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
 ## Attributes Reference
 

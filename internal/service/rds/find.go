@@ -205,7 +205,16 @@ func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.DBProxies[0], nil
+	dbProxy := output.DBProxies[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbProxy.DBProxyName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbProxy, nil
 }
 
 func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {

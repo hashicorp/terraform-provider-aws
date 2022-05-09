@@ -20,10 +20,10 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkAppConfig(rName),
@@ -45,10 +45,10 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkAppConfig(rName),
@@ -106,10 +106,10 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkAppConfigWithTags(rName, "test1", "test2"),

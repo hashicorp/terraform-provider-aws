@@ -93,6 +93,7 @@ The following arguments are supported:
 * `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
+
 * `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
 
 -> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
@@ -116,6 +117,7 @@ The following arguments are supported:
 * `key_name` - (Optional) Key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
 * `launch_template` - (Optional) Specifies a Launch Template to configure the instance. Parameters configured on this resource will override the corresponding parameters in the Launch Template.
   See [Launch Template Specification](#launch-template-specification) below for more details.
+* `maintenance_options` - (Optional) The maintenance and recovery options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
@@ -171,6 +173,7 @@ Describes a target Capacity Reservation.
 This `capacity_reservation_target` block supports the following:
 
 * `capacity_reservation_id` - (Optional) The ID of the Capacity Reservation in which to run the instance.
+* `capacity_reservation_resource_group_arn` - (Optional) The ARN of the Capacity Reservation resource group in which to run the instance.
 
 ### Credit Specification
 
@@ -230,6 +233,12 @@ The `enclave_options` block supports the following:
 
 For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
 
+### Maintenance Options
+
+The `maintenance_options` block supports the following:
+
+* `auto_recovery` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"disabled"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
+
 ### Metadata Options
 
 Metadata options can be applied/modified to the EC2 Instance at any time.
@@ -253,6 +262,7 @@ Each `network_interface` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
+* `network_card_index` - (Optional) Integer index of the network card. Limited by instance type. The default index is `0`.
 * `network_interface_id` - (Required) ID of the network interface to attach.
 
 ### Launch Template Specification

@@ -20,10 +20,10 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: testAccCheckCustomPluginDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      testAccCheckCustomPluginDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig(rName),
@@ -56,10 +56,10 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: testAccCheckCustomPluginDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      testAccCheckCustomPluginDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig(rName),
@@ -78,10 +78,10 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: testAccCheckCustomPluginDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      testAccCheckCustomPluginDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfigDescription(rName),
@@ -104,10 +104,10 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: testAccCheckCustomPluginDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      testAccCheckCustomPluginDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfigObjectVersion(rName),

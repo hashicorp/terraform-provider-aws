@@ -69,7 +69,7 @@ func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error
 
 	var ul []string
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		err := conn.GetGroupPages(input, func(page *iam.GetGroupOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage

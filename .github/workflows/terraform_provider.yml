@@ -20,6 +20,7 @@ on:
       - go.sum
       - GNUmakefile
       - main.go
+      - names/**
       - staticcheck.conf
       - tools/**
       - website/**
@@ -107,7 +108,7 @@ jobs:
         path: terraform-plugin-dir
         key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
     - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-      uses: hashicorp/setup-terraform@v1
+      uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: ${{ env.TERRAFORM_VERSION }}
         terraform_wrapper: false
@@ -218,14 +219,19 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v18
+      uses: tj-actions/changed-files@v19
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
         for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          if [[ "${file}" == internal/* ]]; then
-            echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
+          if [ "${file}" = "" ]; then
+            continue
           fi
+          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.* ]]; then
+            echo "Skipping changed file: ${file}"
+            continue
+          fi
+          echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
         done
         cat /tmp/dirs_changed_all | sort | uniq > /tmp/pkgs_changed
         echo "All packages changed:"
@@ -234,39 +240,43 @@ jobs:
           if [ "${pkg}" = "" ]; then
             continue
           fi
-          if [[ "${pkg}" == */test-fixtures ]]; then
+          echo -n "Finding dependents for ${pkg}? "
+          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+            echo "No"
             continue
           fi
-          if [[ "${pkg}" == internal/generate/* ]]; then
-            continue
-          fi          
+          c=0
           while read file; do
             if [ "${file}" = "" ]; then
               continue
             fi
+            if [[ "${file}" != *.go ]]; then
+              continue
+            fi
+            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+              continue
+            fi
+            c=$((c+1))
             echo $( dirname "${file}" | xargs ) >> /tmp/dep_dirs_all
-          done <<< $( grep -l "github.com/hashicorp/terraform-provider-aws/${pkg}" internal/**/*.go )
+          done <<< $( grep -rl "\"github.com/hashicorp/terraform-provider-aws/${pkg}\"" internal/* )
+          echo "Yes, ${c} found"
         done </tmp/pkgs_changed
+        echo "Just dependents:"
+        cat /tmp/dep_dirs_all | sort | uniq
         cat /tmp/pkgs_changed >> /tmp/dep_dirs_all
         cat /tmp/dep_dirs_all | sort | uniq > /tmp/dep_pkgs
-        echo "All dependent packages:"
+        echo "All packages to test:"
         cat /tmp/dep_pkgs
       id: changed-packages
     - name: Run tests for changed packages
       run: |
-        while read pkg; do
-          if [ "${pkg}" = "internal/sweep" ]; then
-            continue
-          fi
-          if [[ "${pkg}" == */test-fixtures ]]; then
-            continue
-          fi
-          if [[ "${pkg}" == internal/generate/* ]]; then
-            continue
-          fi
-          go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
-        done </tmp/dep_pkgs
-
+        if [ $( cat /tmp/dep_pkgs | wc -l | xargs ) -gt 150 ]; then
+          go test ./...
+        else
+          while read pkg; do
+            go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
+          done </tmp/dep_pkgs
+        fi
   golangci-lint:
     needs: [go_build]
     runs-on: ubuntu-latest
@@ -399,3 +409,36 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: Try building
         run: go build -tags=sweep
+
+  compile_skaff:
+    name: Compile compile_skaff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      # See also: https://github.com/actions/setup-go/pull/62
+      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: Try building
+        run: |
+          cd skaff
+          go build

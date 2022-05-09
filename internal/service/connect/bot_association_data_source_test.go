@@ -17,9 +17,9 @@ func TestAccConnectBotAssociationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationDataSource_ConfigBasic(rName, rName2),

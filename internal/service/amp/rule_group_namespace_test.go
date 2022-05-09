@@ -18,10 +18,10 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPRuleGroupNamespaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPRuleGroupNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
@@ -56,10 +56,10 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPRuleGroupNamespaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPRuleGroupNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),

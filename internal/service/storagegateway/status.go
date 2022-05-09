@@ -13,7 +13,7 @@ const (
 	storediSCSIVolumeStatusNotFound      = "NotFound"
 )
 
-func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -33,7 +33,7 @@ func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN
 	}
 }
 
-func statusStorageGatewayGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeSMBSettingsInput{
 			GatewayARN: aws.String(gatewayARN),

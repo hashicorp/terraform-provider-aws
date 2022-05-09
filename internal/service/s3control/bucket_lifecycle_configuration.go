@@ -136,7 +136,7 @@ func resourceBucketLifecycleConfigurationCreate(d *schema.ResourceData, meta int
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(bucket),
 		LifecycleConfiguration: &s3control.LifecycleConfiguration{
-			Rules: expandS3controlLifecycleRules(d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(d.Get("rule").(*schema.Set).List()),
 		},
 	}
 
@@ -199,7 +199,7 @@ func resourceBucketLifecycleConfigurationRead(d *schema.ResourceData, meta inter
 
 	d.Set("bucket", d.Id())
 
-	if err := d.Set("rule", flattenS3controlLifecycleRules(output.Rules)); err != nil {
+	if err := d.Set("rule", flattenLifecycleRules(output.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
@@ -223,7 +223,7 @@ func resourceBucketLifecycleConfigurationUpdate(d *schema.ResourceData, meta int
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
 		LifecycleConfiguration: &s3control.LifecycleConfiguration{
-			Rules: expandS3controlLifecycleRules(d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(d.Get("rule").(*schema.Set).List()),
 		},
 	}
 
@@ -275,7 +275,7 @@ func resourceBucketLifecycleConfigurationDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandS3controlAbortIncompleteMultipartUpload(tfList []interface{}) *s3control.AbortIncompleteMultipartUpload {
+func expandAbortIncompleteMultipartUpload(tfList []interface{}) *s3control.AbortIncompleteMultipartUpload {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -295,7 +295,7 @@ func expandS3controlAbortIncompleteMultipartUpload(tfList []interface{}) *s3cont
 	return apiObject
 }
 
-func expandS3controlLifecycleExpiration(tfList []interface{}) *s3control.LifecycleExpiration {
+func expandLifecycleExpiration(tfList []interface{}) *s3control.LifecycleExpiration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -327,7 +327,7 @@ func expandS3controlLifecycleExpiration(tfList []interface{}) *s3control.Lifecyc
 	return apiObject
 }
 
-func expandS3controlLifecycleRules(tfList []interface{}) []*s3control.LifecycleRule {
+func expandLifecycleRules(tfList []interface{}) []*s3control.LifecycleRule {
 	var apiObjects []*s3control.LifecycleRule
 
 	for _, tfMapRaw := range tfList {
@@ -337,7 +337,7 @@ func expandS3controlLifecycleRules(tfList []interface{}) []*s3control.LifecycleR
 			continue
 		}
 
-		apiObject := expandS3controlLifecycleRule(tfMap)
+		apiObject := expandLifecycleRule(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -349,7 +349,7 @@ func expandS3controlLifecycleRules(tfList []interface{}) []*s3control.LifecycleR
 	return apiObjects
 }
 
-func expandS3controlLifecycleRule(tfMap map[string]interface{}) *s3control.LifecycleRule {
+func expandLifecycleRule(tfMap map[string]interface{}) *s3control.LifecycleRule {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -357,15 +357,15 @@ func expandS3controlLifecycleRule(tfMap map[string]interface{}) *s3control.Lifec
 	apiObject := &s3control.LifecycleRule{}
 
 	if v, ok := tfMap["abort_incomplete_multipart_upload"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AbortIncompleteMultipartUpload = expandS3controlAbortIncompleteMultipartUpload(v)
+		apiObject.AbortIncompleteMultipartUpload = expandAbortIncompleteMultipartUpload(v)
 	}
 
 	if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Expiration = expandS3controlLifecycleExpiration(v)
+		apiObject.Expiration = expandLifecycleExpiration(v)
 	}
 
 	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Filter = expandS3controlLifecycleRuleFilter(v)
+		apiObject.Filter = expandLifecycleRuleFilter(v)
 	}
 
 	if v, ok := tfMap["id"].(string); ok && v != "" {
@@ -387,7 +387,7 @@ func expandS3controlLifecycleRule(tfMap map[string]interface{}) *s3control.Lifec
 	return apiObject
 }
 
-func expandS3controlLifecycleRuleFilter(tfList []interface{}) *s3control.LifecycleRuleFilter {
+func expandLifecycleRuleFilter(tfList []interface{}) *s3control.LifecycleRuleFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -420,7 +420,7 @@ func expandS3controlLifecycleRuleFilter(tfList []interface{}) *s3control.Lifecyc
 	return apiObject
 }
 
-func flattenS3controlAbortIncompleteMultipartUpload(apiObject *s3control.AbortIncompleteMultipartUpload) []interface{} {
+func flattenAbortIncompleteMultipartUpload(apiObject *s3control.AbortIncompleteMultipartUpload) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -434,7 +434,7 @@ func flattenS3controlAbortIncompleteMultipartUpload(apiObject *s3control.AbortIn
 	return []interface{}{tfMap}
 }
 
-func flattenS3controlLifecycleExpiration(apiObject *s3control.LifecycleExpiration) []interface{} {
+func flattenLifecycleExpiration(apiObject *s3control.LifecycleExpiration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -456,7 +456,7 @@ func flattenS3controlLifecycleExpiration(apiObject *s3control.LifecycleExpiratio
 	return []interface{}{tfMap}
 }
 
-func flattenS3controlLifecycleRules(apiObjects []*s3control.LifecycleRule) []interface{} {
+func flattenLifecycleRules(apiObjects []*s3control.LifecycleRule) []interface{} {
 	var tfMaps []interface{}
 
 	for _, apiObject := range apiObjects {
@@ -464,13 +464,13 @@ func flattenS3controlLifecycleRules(apiObjects []*s3control.LifecycleRule) []int
 			continue
 		}
 
-		tfMaps = append(tfMaps, flattenS3controlLifecycleRule(apiObject))
+		tfMaps = append(tfMaps, flattenLifecycleRule(apiObject))
 	}
 
 	return tfMaps
 }
 
-func flattenS3controlLifecycleRule(apiObject *s3control.LifecycleRule) map[string]interface{} {
+func flattenLifecycleRule(apiObject *s3control.LifecycleRule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -478,15 +478,15 @@ func flattenS3controlLifecycleRule(apiObject *s3control.LifecycleRule) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AbortIncompleteMultipartUpload; v != nil {
-		tfMap["abort_incomplete_multipart_upload"] = flattenS3controlAbortIncompleteMultipartUpload(v)
+		tfMap["abort_incomplete_multipart_upload"] = flattenAbortIncompleteMultipartUpload(v)
 	}
 
 	if v := apiObject.Expiration; v != nil {
-		tfMap["expiration"] = flattenS3controlLifecycleExpiration(v)
+		tfMap["expiration"] = flattenLifecycleExpiration(v)
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = flattenS3controlLifecycleRuleFilter(v)
+		tfMap["filter"] = flattenLifecycleRuleFilter(v)
 	}
 
 	if v := apiObject.ID; v != nil {
@@ -500,7 +500,7 @@ func flattenS3controlLifecycleRule(apiObject *s3control.LifecycleRule) map[strin
 	return tfMap
 }
 
-func flattenS3controlLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilter) []interface{} {
+func flattenLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilter) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

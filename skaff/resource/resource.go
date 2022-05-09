@@ -14,10 +14,17 @@ import (
 )
 
 //go:embed resource.tmpl
-var body string
+var resourceTmpl string
+
+//go:embed resourcetest.tmpl
+var resourceTestTmpl string
+
+//go:embed websitedoc.tmpl
+var websiteTmpl string
 
 type TemplateData struct {
 	Resource        string
+	ResourceLower   string
 	IncludeComments bool
 	ServicePackage  string
 	Service         string
@@ -57,26 +64,19 @@ func Create(resName, snakeName string, comments, force bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	filename := fmt.Sprintf("%s.go", toSnakeCase(resName, snakeName))
-
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
-		return fmt.Errorf("file (%s) already exists and force is not set", filename)
-	}
-
-	s, err := names.ServiceProviderNameUpper(servicePackage)
-
+	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
 	}
 
-	sn, err := names.AWSServiceName(servicePackage)
-
+	sn, err := names.FullHumanFriendly(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
 	templateData := TemplateData{
 		Resource:        resName,
+		ResourceLower:   strings.ToLower(resName),
 		IncludeComments: comments,
 		ServicePackage:  servicePackage,
 		Service:         s,
@@ -84,16 +84,36 @@ func Create(resName, snakeName string, comments, force bool) error {
 		AWSServiceName:  sn,
 	}
 
-	return writeTemplate("newres", filename, templateData)
+	f := fmt.Sprintf("%s.go", toSnakeCase(resName, snakeName))
+	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
+		return fmt.Errorf("writing resource template: %w", err)
+	}
+
+	tf := fmt.Sprintf("%s_test.go", toSnakeCase(resName, snakeName))
+	if err = writeTemplate("restest", tf, resourceTestTmpl, force, templateData); err != nil {
+		return fmt.Errorf("writing resource test template: %w", err)
+	}
+
+	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, toSnakeCase(resName, snakeName))
+	wf = filepath.Join("..", "..", "..", "website", "docs", "r", wf)
+	if err = writeTemplate("webdoc", wf, websiteTmpl, force, templateData); err != nil {
+		return fmt.Errorf("writing resource website doc template: %w", err)
+	}
+
+	return nil
 }
 
-func writeTemplate(templateName string, filename string, td TemplateData) error {
+func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
+	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+		return fmt.Errorf("file (%s) already exists and force is not set", filename)
+	}
+
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("error opening file (%s): %s", filename, err)
 	}
 
-	tplate, err := template.New(templateName).Parse(body)
+	tplate, err := template.New(templateName).Parse(tmpl)
 	if err != nil {
 		return fmt.Errorf("error parsing template: %s", err)
 	}
