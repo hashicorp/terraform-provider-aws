@@ -1094,6 +1094,9 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *appflow.Connec
 	if v, ok := m["marketo"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Marketo = expandMarketoConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
+	if v, ok := m["redshift"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		cpc.Redshift = expandRedshiftConnectorProfileCredentials(v[0].(map[string]interface{}))
+	}
 	if v, ok := m["salesforce"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Salesforce = expandSalesforceConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
@@ -1210,6 +1213,15 @@ func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *appflow
 
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
+	}
+
+	return &credentials
+}
+
+func expandRedshiftConnectorProfileCredentials(m map[string]interface{}) *appflow.RedshiftConnectorProfileCredentials {
+	credentials := appflow.RedshiftConnectorProfileCredentials{
+		Password: aws.String(m["password"].(string)),
+		Username: aws.String(m["username"].(string)),
 	}
 
 	return &credentials
