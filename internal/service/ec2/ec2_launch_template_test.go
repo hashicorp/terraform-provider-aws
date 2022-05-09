@@ -3774,7 +3774,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccLaunchTemplateConfig_instanceRequirements(rName string, instanceRequirements string) string {
+func testAccLaunchTemplateConfig_instanceRequirements(rName, instanceRequirements string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
@@ -3787,11 +3787,11 @@ data "aws_ami" "test" {
 }
 
 resource "aws_launch_template" "test" {
-  name     = %q
+  name     = %[1]q
   image_id = data.aws_ami.test.id
 
   instance_requirements {
-    %s
+    %[2]s
   }
 }
 `, rName, instanceRequirements)
