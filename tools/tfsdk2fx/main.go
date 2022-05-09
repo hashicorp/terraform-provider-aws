@@ -13,7 +13,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
 	"github.com/mitchellh/cli"
 )
 
@@ -50,7 +50,7 @@ func main() {
 		Ui: ui,
 	}
 
-	p := provider.Provider()
+	p := tf5provider.Provider()
 
 	if *migrateProvider {
 		migrator.ProviderSchema = p.Schema
@@ -154,8 +154,8 @@ func (m *migrator) applyTemplate(filename, templateBody string, templateData *te
 func (m *migrator) generateTemplateData() (*templateData, error) {
 	sb := strings.Builder{}
 	emitter := &emitter{
-		Ui:     m.Ui,
-		Writer: &sb,
+		Ui:           m.Ui,
+		SchemaWriter: &sb,
 	}
 
 	var err error
@@ -183,13 +183,13 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
-	Ui     cli.Ui
-	Writer io.Writer
+	Ui           cli.Ui
+	SchemaWriter io.Writer
 }
 
 // emitSchemaForProvider generates the Plugin Framework code for a Plugin SDK Provider schema and emits the generated code to the emitter's Writer.
 func (e emitter) emitSchemaForProvider(schema map[string]*schema.Schema) error {
-	e.printf("tfsdk.Schema{\n")
+	fprintf(e.SchemaWriter, "tfsdk.Schema{\n")
 
 	err := e.emitAttributesAndBlocks(nil, schema)
 
@@ -197,7 +197,7 @@ func (e emitter) emitSchemaForProvider(schema map[string]*schema.Schema) error {
 		return err
 	}
 
-	e.printf("}")
+	fprintf(e.SchemaWriter, "}")
 
 	return nil
 }
@@ -214,7 +214,7 @@ func (e emitter) emitSchemaForResource(resource *schema.Resource) error {
 		}
 	}
 
-	e.printf("tfsdk.Schema{\n")
+	fprintf(e.SchemaWriter, "tfsdk.Schema{\n")
 
 	err := e.emitAttributesAndBlocks(nil, resource.Schema)
 
@@ -223,18 +223,18 @@ func (e emitter) emitSchemaForResource(resource *schema.Resource) error {
 	}
 
 	if version := resource.SchemaVersion; version > 0 {
-		e.printf("Version:%d,\n", version)
+		fprintf(e.SchemaWriter, "Version:%d,\n", version)
 	}
 
 	if description := resource.Description; description != "" {
-		e.printf("Description:%q,\n", description)
+		fprintf(e.SchemaWriter, "Description:%q,\n", description)
 	}
 
 	if deprecationMessage := resource.DeprecationMessage; deprecationMessage != "" {
-		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
-	e.printf("}")
+	fprintf(e.SchemaWriter, "}")
 
 	return nil
 }
@@ -258,11 +258,11 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 		}
 
 		if !emittedFieldName {
-			e.printf("Attributes: map[string]tfsdk.Attribute{\n")
+			fprintf(e.SchemaWriter, "Attributes: map[string]tfsdk.Attribute{\n")
 			emittedFieldName = true
 		}
 
-		e.printf("%q:", name)
+		fprintf(e.SchemaWriter, "%q:", name)
 
 		err := e.emitAttribute(append(path, name), property)
 
@@ -270,10 +270,10 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 			return err
 		}
 
-		e.printf(",\n")
+		fprintf(e.SchemaWriter, ",\n")
 	}
 	if emittedFieldName {
-		e.printf("},\n")
+		fprintf(e.SchemaWriter, "},\n")
 	}
 
 	emittedFieldName = false
@@ -285,11 +285,11 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 		}
 
 		if !emittedFieldName {
-			e.printf("Blocks: map[string]tfsdk.Block{\n")
+			fprintf(e.SchemaWriter, "Blocks: map[string]tfsdk.Block{\n")
 			emittedFieldName = true
 		}
 
-		e.printf("%q:", name)
+		fprintf(e.SchemaWriter, "%q:", name)
 
 		err := e.emitBlock(append(path, name), property)
 
@@ -297,10 +297,10 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 			return err
 		}
 
-		e.printf(",\n")
+		fprintf(e.SchemaWriter, ",\n")
 	}
 	if emittedFieldName {
-		e.printf("},\n")
+		fprintf(e.SchemaWriter, "},\n")
 	}
 
 	return nil
@@ -309,23 +309,23 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 // emitAttribute generates the Plugin Framework code for a Plugin SDK Attribute property
 // and emits the generated code to the emitter's Writer.
 func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
-	e.printf("{\n")
+	fprintf(e.SchemaWriter, "{\n")
 
 	switch v := property.Type; v {
 	//
 	// Primitive types.
 	//
 	case schema.TypeBool:
-		e.printf("Type:types.BoolType,\n")
+		fprintf(e.SchemaWriter, "Type:types.BoolType,\n")
 
 	case schema.TypeFloat:
-		e.printf("Type:types.Float64Type,\n")
+		fprintf(e.SchemaWriter, "Type:types.Float64Type,\n")
 
 	case schema.TypeInt:
-		e.printf("Type:types.Int64Type,\n")
+		fprintf(e.SchemaWriter, "Type:types.Int64Type,\n")
 
 	case schema.TypeString:
-		e.printf("Type:types.StringType,\n")
+		fprintf(e.SchemaWriter, "Type:types.StringType,\n")
 
 	//
 	// Complex types.
@@ -355,7 +355,7 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				return unsupportedTypeError(path, fmt.Sprintf("list of %s", v.String()))
 			}
 
-			e.printf("Type:types.ListType{ElemType:%s},\n", elementType)
+			fprintf(e.SchemaWriter, "Type:types.ListType{ElemType:%s},\n", elementType)
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("list of %T", v))
@@ -386,7 +386,7 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				return unsupportedTypeError(path, fmt.Sprintf("map of %s", v.String()))
 			}
 
-			e.printf("Type:types.MapType{ElemType:%s},\n", elementType)
+			fprintf(e.SchemaWriter, "Type:types.MapType{ElemType:%s},\n", elementType)
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("map of %T", v))
@@ -417,7 +417,7 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				return unsupportedTypeError(path, fmt.Sprintf("set of %s", v.String()))
 			}
 
-			e.printf("Type:types.SetType{ElemType:%s},\n", elementType)
+			fprintf(e.SchemaWriter, "Type:types.SetType{ElemType:%s},\n", elementType)
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("set of %T", v))
@@ -428,58 +428,58 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 	}
 
 	if property.Required {
-		e.printf("Required:true,\n")
+		fprintf(e.SchemaWriter, "Required:true,\n")
 	}
 
 	if property.Optional {
-		e.printf("Optional:true,\n")
+		fprintf(e.SchemaWriter, "Optional:true,\n")
 	}
 
 	if property.Computed {
-		e.printf("Computed:true,\n")
+		fprintf(e.SchemaWriter, "Computed:true,\n")
 	}
 
 	if property.Sensitive {
-		e.printf("Sensitive:true,\n")
+		fprintf(e.SchemaWriter, "Sensitive:true,\n")
 	}
 
 	if description := property.Description; description != "" {
-		e.printf("Description:%q,\n", description)
+		fprintf(e.SchemaWriter, "Description:%q,\n", description)
 	}
 
 	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
-		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
 	// Features that we can't (yet) migrate:
 
 	if property.ForceNew {
-		e.printf("// TODO ForceNew:true,\n")
+		fprintf(e.SchemaWriter, "// TODO ForceNew:true,\n")
 	}
 
 	if def := property.Default; def != nil {
 		switch v := def.(type) {
 		case bool:
 			if v {
-				e.printf("// TODO Default:%#v,\n", def)
+				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 			} else {
 				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
 			}
 		case int:
 			if v != 0 {
-				e.printf("// TODO Default:%#v,\n", def)
+				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 			} else {
 				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
 			}
 		case float64:
 			if v != 0 {
-				e.printf("// TODO Default:%#v,\n", def)
+				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 			} else {
 				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
 			}
 		case string:
 			if v != "" {
-				e.printf("// TODO Default:%#v,\n", def)
+				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 			} else {
 				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
 			}
@@ -487,7 +487,7 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 		}
 	}
 
-	e.printf("}")
+	fprintf(e.SchemaWriter, "}")
 
 	return nil
 }
@@ -495,7 +495,7 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 // emitBlock generates the Plugin Framework code for a Plugin SDK Block property
 // and emits the generated code to the emitter's Writer.
 func (e emitter) emitBlock(path []string, property *schema.Schema) error {
-	e.printf("{\n")
+	fprintf(e.SchemaWriter, "{\n")
 
 	switch v := property.Type; v {
 	//
@@ -510,7 +510,7 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 				return err
 			}
 
-			e.printf("NestingMode:tfsdk.BlockNestingModeList,\n")
+			fprintf(e.SchemaWriter, "NestingMode:tfsdk.BlockNestingModeList,\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("list of %T", v))
@@ -525,7 +525,7 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 				return err
 			}
 
-			e.printf("NestingMode:tfsdk.BlockNestingModeSet,\n")
+			fprintf(e.SchemaWriter, "NestingMode:tfsdk.BlockNestingModeSet,\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("set of %T", v))
@@ -536,33 +536,28 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 	}
 
 	if maxItems := property.MaxItems; maxItems > 0 {
-		e.printf("MaxItems:%d,\n", maxItems)
+		fprintf(e.SchemaWriter, "MaxItems:%d,\n", maxItems)
 	}
 
 	if minItems := property.MinItems; minItems > 0 {
-		e.printf("MinItems:%d,\n", minItems)
+		fprintf(e.SchemaWriter, "MinItems:%d,\n", minItems)
 	}
 
 	if description := property.Description; description != "" {
-		e.printf("Description:%q,\n", description)
+		fprintf(e.SchemaWriter, "Description:%q,\n", description)
 	}
 
 	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
-		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
 	if def := property.Default; def != nil {
 		e.warnf("Block %s has non-nil Default: %v", strings.Join(path, "/"), def)
 	}
 
-	e.printf("}")
+	fprintf(e.SchemaWriter, "}")
 
 	return nil
-}
-
-// printf emits a formatted string to the underlying writer.
-func (e emitter) printf(format string, a ...interface{}) (int, error) {
-	return fprintf(e.Writer, format, a...)
 }
 
 // warnf emits a formatted warning message to the UI.
