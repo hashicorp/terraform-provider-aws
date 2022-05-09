@@ -581,10 +581,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"instance_type"},
 			},
 			"instance_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"instance_requirements"},
 			},
 			"kernel_id": {
 				Type:     schema.TypeString,
