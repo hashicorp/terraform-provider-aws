@@ -19,10 +19,10 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: dmsReplicationSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      dmsReplicationSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsReplicationSubnetGroupConfig(randId),

@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NetworkInterfaceSgAttachment_basic(t *testing.T) {
+func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkInterfaceSGAttachmentConfig(rName),
@@ -38,15 +38,15 @@ func TestAccEC2NetworkInterfaceSgAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterfaceSgAttachment_disappears(t *testing.T) {
+func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkInterfaceSGAttachmentConfig(rName),
@@ -60,17 +60,17 @@ func TestAccEC2NetworkInterfaceSgAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterfaceSgAttachment_instance(t *testing.T) {
+func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkInterfaceSGAttachmentViaInstanceConfig(rName),
@@ -84,7 +84,7 @@ func TestAccEC2NetworkInterfaceSgAttachment_instance(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterfaceSgAttachment_multiple(t *testing.T) {
+func TestAccVPCNetworkInterfaceSgAttachment_multiple(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName1 := "aws_security_group.test.0"
 	securityGroupResourceName2 := "aws_security_group.test.1"
@@ -97,10 +97,10 @@ func TestAccEC2NetworkInterfaceSgAttachment_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkInterfaceSGAttachmentMultipleConfig(rName),

@@ -22,10 +22,10 @@ func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_Cached(rName),
@@ -65,10 +65,10 @@ func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_FileFSxSMB(rName),
@@ -107,10 +107,10 @@ func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_FileS3(rName),
@@ -149,10 +149,10 @@ func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_Stored(rName),
@@ -191,10 +191,10 @@ func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_Vtl(rName),
@@ -231,10 +231,10 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTags1Config(rName, "key1", "value1"),
@@ -279,10 +279,10 @@ func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_FileS3(rName1),
@@ -315,10 +315,10 @@ func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 	resourceName2 := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_Log_Group(rName1),
@@ -343,10 +343,10 @@ func TestAccStorageGatewayGateway_gatewayTimezone(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayTimezone(rName, "GMT-1:00"),
@@ -379,10 +379,10 @@ func TestAccStorageGatewayGateway_gatewayVPCEndpoint(t *testing.T) {
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayVPCEndpoint(rName),
@@ -408,10 +408,10 @@ func TestAccStorageGatewayGateway_smbActiveDirectorySettings(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_SMBActiveDirectorySettings(rName, domainName),
@@ -440,10 +440,10 @@ func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_SMBActiveDirectorySettingsTimeout(rName, domainName, 50),
@@ -472,10 +472,10 @@ func TestAccStorageGatewayGateway_smbMicrosoftActiveDirectorySettings(t *testing
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_SMBMicrosoftActiveDirectorySettings(rName, domainName),
@@ -504,10 +504,10 @@ func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t 
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_SMBMicrosoftActiveDirectorySettingsTimeout(rName, domainName, 50),
@@ -534,10 +534,10 @@ func TestAccStorageGatewayGateway_smbGuestPassword(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_SMBGuestPassword(rName, "myguestpassword1"),
@@ -569,10 +569,10 @@ func TestAccStorageGatewayGateway_smbSecurityStrategy(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewaySMBSecurityStrategyConfig(rName, "ClientSpecified"),
@@ -605,10 +605,10 @@ func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewaySMBVisibilityConfig(rName, true),
@@ -647,10 +647,10 @@ func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_GatewayType_Cached(rName),
@@ -670,10 +670,10 @@ func TestAccStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayBandwidthUploadConfig(rName, 102400),
@@ -712,10 +712,10 @@ func TestAccStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayBandwidthDownloadConfig(rName, 102400),
@@ -754,10 +754,10 @@ func TestAccStorageGatewayGateway_bandwidthAll(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayBandwidthAllConfig(rName, 102400),
@@ -799,10 +799,10 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayMaintenanceStartTimeConfig(rName, 22, 0, "3", ""),

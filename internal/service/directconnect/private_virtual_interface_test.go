@@ -30,10 +30,10 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
@@ -102,10 +102,10 @@ func TestAccDirectConnectPrivateVirtualInterface_tags(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_tags(connectionId, rName, bgpAsn, vlan),
@@ -181,10 +181,10 @@ func TestAccDirectConnectPrivateVirtualInterface_dxGateway(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_dxGateway(connectionId, rName, amzAsn, bgpAsn, vlan),
@@ -233,10 +233,10 @@ func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),

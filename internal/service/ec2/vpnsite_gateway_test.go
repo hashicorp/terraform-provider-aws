@@ -18,7 +18,7 @@ import (
 
 // add sweeper to delete known test VPN Gateways
 
-func TestAccEC2VPNGateway_basic(t *testing.T) {
+func TestAccVPNSiteGateway_basic(t *testing.T) {
 	var v1, v2 ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -39,10 +39,10 @@ func TestAccEC2VPNGateway_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayConfig(rName),
@@ -68,17 +68,17 @@ func TestAccEC2VPNGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
+func TestAccVPNSiteGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	azDataSourceName := "data.aws_availability_zones.available"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayConfigWithAZ(rName),
@@ -97,16 +97,16 @@ func TestAccEC2VPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGateway_withAmazonSideASN(t *testing.T) {
+func TestAccVPNSiteGateway_withAmazonSideASN(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayConfigWithASN(rName),
@@ -125,16 +125,16 @@ func TestAccEC2VPNGateway_withAmazonSideASN(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGateway_disappears(t *testing.T) {
+func TestAccVPNSiteGateway_disappears(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayConfig(rName),
@@ -148,7 +148,7 @@ func TestAccEC2VPNGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGateway_reattach(t *testing.T) {
+func TestAccVPNSiteGateway_reattach(t *testing.T) {
 	var vpc1, vpc2 ec2.Vpc
 	var vgw1, vgw2 ec2.VpnGateway
 	vpcResourceName1 := "aws_vpc.test1"
@@ -190,10 +190,10 @@ func TestAccEC2VPNGateway_reattach(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVpnGatewayConfigReattach(rName),
@@ -238,16 +238,16 @@ func TestAccEC2VPNGateway_reattach(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGateway_tags(t *testing.T) {
+func TestAccVPNSiteGateway_tags(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVpnGatewayConfigTags1(rName, "key1", "value1"),

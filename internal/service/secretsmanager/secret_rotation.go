@@ -64,7 +64,7 @@ func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 		input := &secretsmanager.RotateSecretInput{
 			RotationLambdaARN: aws.String(v.(string)),
-			RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
+			RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:          aws.String(secretID),
 		}
 
@@ -146,7 +146,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-		if err := d.Set("rotation_rules", flattenSecretsManagerRotationRules(output.RotationRules)); err != nil {
+		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 			return fmt.Errorf("error setting rotation_rules: %s", err)
 		}
 	} else {
@@ -165,7 +165,7 @@ func resourceSecretRotationUpdate(d *schema.ResourceData, meta interface{}) erro
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 			input := &secretsmanager.RotateSecretInput{
 				RotationLambdaARN: aws.String(v.(string)),
-				RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
+				RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
 				SecretId:          aws.String(secretID),
 			}
 
@@ -222,7 +222,7 @@ func resourceSecretRotationDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandSecretsManagerRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
+func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
 	if len(l) == 0 {
 		return nil
 	}
@@ -236,7 +236,7 @@ func expandSecretsManagerRotationRules(l []interface{}) *secretsmanager.Rotation
 	return rules
 }
 
-func flattenSecretsManagerRotationRules(rules *secretsmanager.RotationRulesType) []interface{} {
+func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{} {
 	if rules == nil {
 		return []interface{}{}
 	}

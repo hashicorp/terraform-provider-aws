@@ -28,10 +28,10 @@ func TestAccReplicationTask_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationTaskDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsReplicationTaskConfig(rName, tags),
@@ -66,10 +66,10 @@ func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
 	resourceName := "aws_dms_replication_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationTaskDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsReplicationTaskConfig_CdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
@@ -97,10 +97,10 @@ func TestAccReplicationTask_startReplicationTask(t *testing.T) {
 	resourceName := "aws_dms_replication_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationTaskDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfigStartReplicationTask(rName, true, "testrule"),
@@ -142,10 +142,10 @@ func TestAccReplicationTask_disappears(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationTaskDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsReplicationTaskConfig(rName, tags),

@@ -20,10 +20,10 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig(rstring),
@@ -53,10 +53,10 @@ func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyOrderConfig(rName),
@@ -78,10 +78,10 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig(rstring),

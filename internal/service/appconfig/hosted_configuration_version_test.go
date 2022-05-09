@@ -21,10 +21,10 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedConfigurationVersion(rName),
@@ -53,10 +53,10 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedConfigurationVersion(rName),
@@ -70,7 +70,7 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigHostedConfigurationVersionDestroy(s *terraform.State) error {
+func testAccCheckHostedConfigurationVersionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {

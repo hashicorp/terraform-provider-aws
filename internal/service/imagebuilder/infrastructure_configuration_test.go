@@ -118,10 +118,10 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceMetadataOptions(t *t
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInfrastructureConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInfrastructureConfigurationInstanceMetadataOptionsConfig(rName),

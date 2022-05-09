@@ -962,6 +962,29 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	})
 
+	// Refresh our ETag if it is out of date and attempt update again
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+		var getDistributionOutput *cloudfront.GetDistributionOutput
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
+		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
+		}
+
+		params.IfMatch = getDistributionOutput.ETag
+
+		_, err = conn.UpdateDistribution(params)
+	}
+
 	// Propagate AWS Go SDK retried error, if any
 	if tfresource.TimedOut(err) {
 		_, err = conn.UpdateDistribution(params)

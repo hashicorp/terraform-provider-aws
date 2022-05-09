@@ -95,7 +95,7 @@ func resourceSubnetCIDRReservationCreate(d *schema.ResourceData, meta interface{
 func resourceSubnetCIDRReservationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	output, err := FindSubnetCidrReservationBySubnetIDAndReservationID(conn, d.Get("subnet_id").(string), d.Id())
+	output, err := FindSubnetCIDRReservationBySubnetIDAndReservationID(conn, d.Get("subnet_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet CIDR Reservation (%s) not found, removing from state", d.Id())
@@ -124,7 +124,7 @@ func resourceSubnetCIDRReservationDelete(d *schema.ResourceData, meta interface{
 		SubnetCidrReservationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetCidrReservationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetCIDRReservationIDNotFound) {
 		return nil
 	}
 

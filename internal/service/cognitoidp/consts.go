@@ -1,5 +1,7 @@
 package cognitoidp
 
+import "time"
+
 const (
 	ResIdentityProvider = "Identity Provider"
 	ResResourceServer   = "Resource Server"
@@ -8,4 +10,8 @@ const (
 	ResUserPoolDomain   = "User Pool Domain"
 	ResUserPool         = "User Pool"
 	ResUser             = "User"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

@@ -37,10 +37,10 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 	resourceName := "aws_connect_quick_connect.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickConnectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Created", "+12345678912"),
@@ -116,10 +116,10 @@ func testAccQuickConnect_disappears(t *testing.T) {
 	resourceName := "aws_connect_quick_connect.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickConnectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Disappear", "+12345678912"),

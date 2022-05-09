@@ -11,15 +11,15 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2DefaultVPCDHCPOptions_basic(t *testing.T) {
+func TestAccVPCDefaultVPCDHCPOptions_basic(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultVPCDHCPOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultVPCDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultVPCDHCPOptionsBasicConfig,
@@ -37,15 +37,15 @@ func TestAccEC2DefaultVPCDHCPOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultVPCDHCPOptions_owner(t *testing.T) {
+func TestAccVPCDefaultVPCDHCPOptions_owner(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultVPCDHCPOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultVPCDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultVPCDHCPOptionsOwnerConfig,

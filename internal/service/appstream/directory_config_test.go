@@ -19,6 +19,7 @@ import (
 func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 	var v1, v2 appstream.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
 	rPassword := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -33,7 +34,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfigConfig(domain, rUserName, rPassword, orgUnitDN),
+				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -46,7 +47,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryConfigConfig(domain, rUserNameUpdated, rPasswordUpdated, orgUnitDN),
+				Config: testAccDirectoryConfigConfig(rName, domain, rUserNameUpdated, rPasswordUpdated, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v2),
 					testAccCheckDirectoryConfigNotRecreated(&v1, &v2),
@@ -72,6 +73,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 	var v appstream.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
 	rPassword := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,7 +86,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfigConfig(domain, rUserName, rPassword, orgUnitDN),
+				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceDirectoryConfig(), resourceName),
@@ -98,6 +100,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *testing.T) {
 	var v1, v2, v3 appstream.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
 	rPassword := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,7 +114,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfigConfig(domain, rUserName, rPassword, orgUnitDN1),
+				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -120,7 +123,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(domain, rUserName, rPassword, orgUnitDN1, orgUnitDN2),
+				Config: testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(rName, domain, rUserName, rPassword, orgUnitDN1, orgUnitDN2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -130,7 +133,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				),
 			},
 			{
-				Config: testAccDirectoryConfigConfig(domain, rUserName, rPassword, orgUnitDN2),
+				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -211,9 +214,9 @@ func orgUnitFromDomain(orgUnit, domainName string) string {
 	return sb.String()
 }
 
-func testAccDirectoryConfigConfig(domain, userName, password, orgUnitDN string) string {
+func testAccDirectoryConfigConfig(rName, domain, userName, password, orgUnitDN string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q
@@ -243,9 +246,9 @@ resource "aws_directory_service_directory" "test" {
 `, domain, userName, password, orgUnitDN))
 }
 
-func testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(domain, userName, password, orgUnitDN1, orgUnitDN2 string) string {
+func testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(rName, domain, userName, password, orgUnitDN1, orgUnitDN2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q

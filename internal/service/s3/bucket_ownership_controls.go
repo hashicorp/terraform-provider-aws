@@ -57,7 +57,7 @@ func resourceBucketOwnershipControlsCreate(d *schema.ResourceData, meta interfac
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
 		OwnershipControls: &s3.OwnershipControls{
-			Rules: expandS3OwnershipControlsRules(d.Get("rule").([]interface{})),
+			Rules: expandOwnershipControlsRules(d.Get("rule").([]interface{})),
 		},
 	}
 
@@ -106,7 +106,7 @@ func resourceBucketOwnershipControlsRead(d *schema.ResourceData, meta interface{
 	if output.OwnershipControls == nil {
 		d.Set("rule", nil)
 	} else {
-		if err := d.Set("rule", flattenS3OwnershipControlsRules(output.OwnershipControls.Rules)); err != nil {
+		if err := d.Set("rule", flattenOwnershipControlsRules(output.OwnershipControls.Rules)); err != nil {
 			return fmt.Errorf("error setting rule: %w", err)
 		}
 	}
@@ -120,7 +120,7 @@ func resourceBucketOwnershipControlsUpdate(d *schema.ResourceData, meta interfac
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
 		OwnershipControls: &s3.OwnershipControls{
-			Rules: expandS3OwnershipControlsRules(d.Get("rule").([]interface{})),
+			Rules: expandOwnershipControlsRules(d.Get("rule").([]interface{})),
 		},
 	}
 
@@ -157,7 +157,7 @@ func resourceBucketOwnershipControlsDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func expandS3OwnershipControlsRules(tfList []interface{}) []*s3.OwnershipControlsRule {
+func expandOwnershipControlsRules(tfList []interface{}) []*s3.OwnershipControlsRule {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -171,13 +171,13 @@ func expandS3OwnershipControlsRules(tfList []interface{}) []*s3.OwnershipControl
 			continue
 		}
 
-		apiObjects = append(apiObjects, expandS3OwnershipControlsRule(tfMap))
+		apiObjects = append(apiObjects, expandOwnershipControlsRule(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandS3OwnershipControlsRule(tfMap map[string]interface{}) *s3.OwnershipControlsRule {
+func expandOwnershipControlsRule(tfMap map[string]interface{}) *s3.OwnershipControlsRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -191,7 +191,7 @@ func expandS3OwnershipControlsRule(tfMap map[string]interface{}) *s3.OwnershipCo
 	return apiObject
 }
 
-func flattenS3OwnershipControlsRules(apiObjects []*s3.OwnershipControlsRule) []interface{} {
+func flattenOwnershipControlsRules(apiObjects []*s3.OwnershipControlsRule) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -203,13 +203,13 @@ func flattenS3OwnershipControlsRules(apiObjects []*s3.OwnershipControlsRule) []i
 			continue
 		}
 
-		tfList = append(tfList, flattenS3OwnershipControlsRule(apiObject))
+		tfList = append(tfList, flattenOwnershipControlsRule(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenS3OwnershipControlsRule(apiObject *s3.OwnershipControlsRule) map[string]interface{} {
+func flattenOwnershipControlsRule(apiObject *s3.OwnershipControlsRule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

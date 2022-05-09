@@ -21,10 +21,10 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFleetBasicConfig(rName),
@@ -55,10 +55,10 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFleetDescription(rName, rName),
@@ -89,10 +89,10 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFleetTags1Config(rName, "key1", "value1"),
@@ -134,10 +134,10 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFleetBasicConfig(rName),

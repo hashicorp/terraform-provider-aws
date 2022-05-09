@@ -40,7 +40,7 @@ func TestAccMemoryDBSubnetGroupDataSource_basic(t *testing.T) {
 
 func testAccSubnetGroupDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q

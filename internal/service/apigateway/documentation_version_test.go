@@ -25,10 +25,10 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocumentationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationVersionBasicConfig(version, apiName),
@@ -60,10 +60,10 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocumentationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationVersionAllFieldsConfig(version, apiName, stageName, description),
@@ -102,10 +102,10 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocumentationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationVersionBasicConfig(version, apiName),

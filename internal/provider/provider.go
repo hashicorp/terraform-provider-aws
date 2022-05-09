@@ -111,6 +111,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
@@ -656,6 +657,7 @@ func Provider() *schema.Provider {
 			"aws_iam_account_alias":           iam.DataSourceAccountAlias(),
 			"aws_iam_group":                   iam.DataSourceGroup(),
 			"aws_iam_instance_profile":        iam.DataSourceInstanceProfile(),
+			"aws_iam_instance_profiles":       iam.DataSourceInstanceProfiles(),
 			"aws_iam_openid_connect_provider": iam.DataSourceOpenIDConnectProvider(),
 			"aws_iam_policy":                  iam.DataSourcePolicy(),
 			"aws_iam_policy_document":         iam.DataSourcePolicyDocument(),
@@ -723,6 +725,8 @@ func Provider() *schema.Provider {
 			"aws_lex_bot_alias": lexmodels.DataSourceBotAlias(),
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
+
+			"aws_location_map": location.DataSourceMap(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -820,6 +824,7 @@ func Provider() *schema.Provider {
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
+			"aws_secretsmanager_secrets":         secretsmanager.DataSourceSecrets(),
 
 			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
@@ -1547,6 +1552,7 @@ func Provider() *schema.Provider {
 			"aws_iot_thing_principal_attachment": iot.ResourceThingPrincipalAttachment(),
 			"aws_iot_thing_type":                 iot.ResourceThingType(),
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
+			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
@@ -1605,6 +1611,8 @@ func Provider() *schema.Provider {
 			"aws_lightsail_key_pair":              lightsail.ResourceKeyPair(),
 			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
+
+			"aws_location_map": location.ResourceMap(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),

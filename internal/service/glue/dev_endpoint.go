@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -227,7 +226,7 @@ func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDevEndpoint(input)
 		if err != nil {
 			// Retry for IAM eventual consistency
@@ -257,7 +256,7 @@ func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become available", d.Id())
-	if _, err := waitGlueDevEndpointCreated(conn, d.Id()); err != nil {
+	if _, err := waitDevEndpointCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -420,7 +419,7 @@ func resourceDevEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {
-			removeKeys = append(removeKeys, &k)
+			removeKeys = append(removeKeys, aws.String(k))
 		}
 
 		input.AddArguments = add
@@ -523,7 +522,7 @@ func resourceDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become terminated", d.Id())
-	if _, err := waitGlueDevEndpointDeleted(conn, d.Id()); err != nil {
+	if _, err := waitDevEndpointDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become terminated: %w", d.Id(), err)
 	}
 

@@ -20,10 +20,10 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig(rName),
@@ -53,10 +53,10 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig(rName),
@@ -75,10 +75,10 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfigTags1(rName, "key1", "value1"),
@@ -120,10 +120,10 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogTypeLambdaConfig(rName),
@@ -151,10 +151,10 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogTypeHiveConfig(rName),
@@ -181,10 +181,10 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogTypeGlueConfig(rName),
@@ -211,10 +211,10 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogParametersConfig(rName),

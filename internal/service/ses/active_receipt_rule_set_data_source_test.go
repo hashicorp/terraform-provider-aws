@@ -18,11 +18,11 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActiveReceiptRuleSetDataSourceConfig(rName),

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,18 +17,18 @@ import (
 func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
 	resourceName := "aws_directory_service_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLogSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLogSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			// test create
 			{
-				Config: testAccDirectoryServiceLogSubscriptionConfig(domainName, logGroupName),
+				Config: testAccDirectoryServiceLogSubscriptionConfig(rName, domainName, logGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(
 						resourceName,
@@ -106,9 +107,9 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 	}
 }
 
-func testAccDirectoryServiceLogSubscriptionConfig(domain, logGroupName string) string {
+func testAccDirectoryServiceLogSubscriptionConfig(rName, domain, logGroupName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_log_subscription" "subscription" {
   directory_id   = aws_directory_service_directory.test.id

@@ -26,10 +26,10 @@ func TestAccCodeDeployDeploymentGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroup(rName, false),
@@ -99,10 +99,10 @@ func TestAccCodeDeployDeploymentGroup_Basic_tagSet(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroup(rName, true),
@@ -170,10 +170,10 @@ func TestAccCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroupOnPremiseTags(rName),
@@ -211,10 +211,10 @@ func TestAccCodeDeployDeploymentGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroup(rName, false),
@@ -234,10 +234,10 @@ func TestAccCodeDeployDeploymentGroup_Disappears_app(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroup(rName, false),
@@ -258,10 +258,10 @@ func TestAccCodeDeployDeploymentGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroupTags1Config(rName, "key1", "value1"),
@@ -305,10 +305,10 @@ func TestAccCodeDeployDeploymentGroup_Trigger_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroup_triggerConfiguration_create(rName),
@@ -354,10 +354,10 @@ func TestAccCodeDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroup_triggerConfiguration_createMultiple(rName),
@@ -415,10 +415,10 @@ func TestAccCodeDeployDeploymentGroup_AutoRollback_create(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -450,10 +450,10 @@ func TestAccCodeDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -499,10 +499,10 @@ func TestAccCodeDeployDeploymentGroup_AutoRollback_delete(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -542,10 +542,10 @@ func TestAccCodeDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -590,10 +590,10 @@ func TestAccCodeDeployDeploymentGroup_Alarm_create(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -627,10 +627,10 @@ func TestAccCodeDeployDeploymentGroup_Alarm_update(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -680,10 +680,10 @@ func TestAccCodeDeployDeploymentGroup_Alarm_delete(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -725,10 +725,10 @@ func TestAccCodeDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -778,10 +778,10 @@ func TestAccCodeDeployDeploymentGroup_DeploymentStyle_default(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_deployment_style_default(rName),
@@ -812,10 +812,10 @@ func TestAccCodeDeployDeploymentGroup_DeploymentStyle_create(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_deployment_style_create(rName),
@@ -854,10 +854,10 @@ func TestAccCodeDeployDeploymentGroup_DeploymentStyle_update(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_deployment_style_create(rName),
@@ -901,10 +901,10 @@ func TestAccCodeDeployDeploymentGroup_DeploymentStyle_delete(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_deployment_style_create(rName),
@@ -947,10 +947,10 @@ func TestAccCodeDeployDeploymentGroup_LoadBalancerInfo_create(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_create(rName),
@@ -982,10 +982,10 @@ func TestAccCodeDeployDeploymentGroup_LoadBalancerInfo_update(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_create(rName),
@@ -1030,10 +1030,10 @@ func TestAccCodeDeployDeploymentGroup_LoadBalancerInfo_delete(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_create(rName),
@@ -1073,10 +1073,10 @@ func TestAccCodeDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_create(t *
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_target_group_info_create(rName),
@@ -1109,10 +1109,10 @@ func TestAccCodeDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_update(t *
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_target_group_info_create(rName),
@@ -1157,10 +1157,10 @@ func TestAccCodeDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_target_group_info_create(rName),
@@ -1200,10 +1200,10 @@ func TestAccCodeDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
@@ -1242,10 +1242,10 @@ func TestAccCodeDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_update
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
@@ -1318,10 +1318,10 @@ func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_create(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_blue_green_deployment_config_create_with_asg(rName),
@@ -1374,10 +1374,10 @@ func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_updateWithASG(t *testi
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_blue_green_deployment_config_create_with_asg(rName),
@@ -1442,10 +1442,10 @@ func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_update(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_blue_green_deployment_config_create_no_asg(rName),
@@ -1524,10 +1524,10 @@ func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_delete(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_blue_green_deployment_config_create_no_asg(rName),
@@ -1592,10 +1592,10 @@ func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_complete(t *testing.T)
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_blue_green_deployment_complete(rName),
@@ -1699,10 +1699,10 @@ func TestAccCodeDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 	resourceName := "aws_codedeploy_deployment_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeploymentGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentGroupECSBlueGreenConfig(rName),

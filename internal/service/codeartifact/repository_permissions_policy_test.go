@@ -21,10 +21,10 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
@@ -61,10 +61,10 @@ func testAccRepositoryPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyOrderConfig(rName),
@@ -89,10 +89,10 @@ func testAccRepositoryPermissionsPolicy_owner(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyOwnerConfig(rName),
@@ -118,10 +118,10 @@ func testAccRepositoryPermissionsPolicy_disappears(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
@@ -140,10 +140,10 @@ func testAccRepositoryPermissionsPolicy_Disappears_domain(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),

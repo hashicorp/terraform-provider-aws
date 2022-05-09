@@ -17,10 +17,10 @@ func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig(),
@@ -39,10 +39,10 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyTags1Config("key1", "value1"),
@@ -78,10 +78,10 @@ func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyWithDescriptionConfig(),
@@ -125,10 +125,10 @@ func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyWithKMSConfig(),
@@ -146,10 +146,10 @@ func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyStorageTierConfig(),
@@ -167,10 +167,10 @@ func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig(),

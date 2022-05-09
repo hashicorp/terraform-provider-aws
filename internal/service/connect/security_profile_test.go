@@ -38,10 +38,10 @@ func testAccSecurityProfile_basic(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Created"),
@@ -87,10 +87,10 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileBasicConfig(rName, rName2, "TestPermissionsUpdate"),
@@ -137,10 +137,10 @@ func testAccSecurityProfile_disappears(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Disappear"),

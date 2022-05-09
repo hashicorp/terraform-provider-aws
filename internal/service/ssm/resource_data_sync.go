@@ -76,7 +76,7 @@ func resourceResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) er
 	name := d.Get("name").(string)
 
 	input := &ssm.CreateResourceDataSyncInput{
-		S3Destination: expandSsmResourceDataSyncS3Destination(d),
+		S3Destination: expandResourceDataSyncS3Destination(d),
 		SyncName:      aws.String(name),
 	}
 
@@ -118,7 +118,7 @@ func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("name", syncItem.SyncName)
-	d.Set("s3_destination", flattenSsmResourceDataSyncS3Destination(syncItem.S3Destination))
+	d.Set("s3_destination", flattenResourceDataSyncS3Destination(syncItem.S3Destination))
 	return nil
 }
 
@@ -171,7 +171,7 @@ func FindResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSync
 	return result, nil
 }
 
-func flattenSsmResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
+func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
 	result := make(map[string]interface{})
 	result["bucket_name"] = aws.StringValue(dest.BucketName)
 	result["region"] = aws.StringValue(dest.Region)
@@ -185,7 +185,7 @@ func flattenSsmResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destina
 	return []interface{}{result}
 }
 
-func expandSsmResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDataSyncS3Destination {
+func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDataSyncS3Destination {
 	raw := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
 	s3dest := &ssm.ResourceDataSyncS3Destination{
 		BucketName: aws.String(raw["bucket_name"].(string)),

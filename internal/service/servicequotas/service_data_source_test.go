@@ -13,9 +13,9 @@ func TestAccServiceQuotasServiceDataSource_serviceName(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceServiceNameDataSourceConfig("Amazon Virtual Private Cloud (Amazon VPC)"),

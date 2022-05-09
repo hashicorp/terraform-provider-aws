@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
+func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 	rtResourceName := "aws_route_table.test"
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -25,9 +25,9 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableBasicDataSourceConfig(rName),
@@ -98,14 +98,14 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTableDataSource_main(t *testing.T) {
+func TestAccVPCRouteTableDataSource_main(t *testing.T) {
 	datasourceName := "data.aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableMainDataSourceConfig(rName),

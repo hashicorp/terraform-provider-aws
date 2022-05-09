@@ -125,11 +125,11 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("pgp_key"); ok {
 		pgpKey := v.(string)
-		encryptionKey, err := RetrieveGPGKey(pgpKey)
+		encryptionKey, err := retrieveGPGKey(pgpKey)
 		if err != nil {
 			return err
 		}
-		fingerprint, encrypted, err := EncryptValue(encryptionKey, *createResp.AccessKey.SecretAccessKey, "IAM Access Key Secret")
+		fingerprint, encrypted, err := encryptValue(encryptionKey, *createResp.AccessKey.SecretAccessKey, "IAM Access Key Secret")
 		if err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_secret", encrypted)
 
-		_, encrypted, err = EncryptValue(encryptionKey, sesSMTPPasswordV4, "SES SMTP password")
+		_, encrypted, err = encryptValue(encryptionKey, sesSMTPPasswordV4, "SES SMTP password")
 		if err != nil {
 			return err
 		}

@@ -44,10 +44,10 @@ func testAccQueue_basic(t *testing.T) {
 	updatedDescription := "Updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueBasicConfig(rName, rName2, originalDescription),
@@ -96,10 +96,10 @@ func testAccQueue_disappears(t *testing.T) {
 	resourceName := "aws_connect_queue.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueBasicConfig(rName, rName2, "Disappear"),
@@ -120,10 +120,10 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 	resourceName := "aws_connect_queue.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueHoursOfOperationConfig(rName, rName2, "first"),
@@ -194,10 +194,10 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 	updatedMaxContacts := "2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueMaxContactsConfig(rName, rName2, originalMaxContacts),
@@ -249,10 +249,10 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 	updatedOutboundCallerIdName := "updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueOutboundCallerConfig(rName, rName2, originalOutboundCallerIdName),
@@ -306,10 +306,10 @@ func testAccQueue_updateStatus(t *testing.T) {
 	updatedStatus := connect.QueueStatusDisabled
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueStatusConfig(rName, rName2, originalStatus),
@@ -360,10 +360,10 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 	description := "test queue integrations with quick connects"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				// start with no quick connects associated with the queue

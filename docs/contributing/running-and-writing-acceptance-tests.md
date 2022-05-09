@@ -228,10 +228,10 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDashboardDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig(rInt),
@@ -541,10 +541,10 @@ func TestAccExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -739,10 +739,10 @@ func TestAccExampleThing_disappears(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -782,10 +782,10 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
   resourceName := "aws_example_child_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleChildThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleChildThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -812,10 +812,10 @@ func TestAccExampleThing_Description(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
@@ -858,7 +858,7 @@ When testing requires AWS infrastructure in a second AWS account, the below chan
 
 - In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
+- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
 - Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -922,7 +922,7 @@ When testing requires AWS infrastructure in a second or third AWS region, the be
 
 - In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
+- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -1154,10 +1154,10 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+    ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),

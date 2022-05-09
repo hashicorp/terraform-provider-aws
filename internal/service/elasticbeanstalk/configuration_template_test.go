@@ -18,10 +18,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_basic(t *testing.T) 
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkConfigurationTemplateConfig(sdkacctest.RandString(5)),
@@ -37,10 +37,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_vpc(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkConfigurationTemplateConfig_VPC(sdkacctest.RandString(5)),
@@ -56,10 +56,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkConfigurationTemplateConfig_Setting(sdkacctest.RandString(5)),

@@ -74,10 +74,10 @@ func TestAccLogsQueryDefinition_disappears(t *testing.T) {
 	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueryDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryDefinitionConfig_Basic(queryName),

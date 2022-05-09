@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -204,7 +203,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
 	_, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(resource.UniqueId())
 

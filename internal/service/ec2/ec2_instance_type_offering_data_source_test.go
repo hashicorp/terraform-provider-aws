@@ -14,10 +14,10 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOffering(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOffering(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingFilterDataSourceConfig(),
@@ -33,10 +33,10 @@ func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOffering(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOffering(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingLocationTypeDataSourceConfig(),
@@ -52,10 +52,10 @@ func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOffering(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOffering(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingPreferredInstanceTypesDataSourceConfig(),
