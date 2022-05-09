@@ -59,7 +59,7 @@ _[Amazon Textract](https://aws.amazon.com/textract/) is a machine learning (ML) 
 
 New Resource(s):
 
-- 
+- TBD
 
 ### Amazon Kendra
 
