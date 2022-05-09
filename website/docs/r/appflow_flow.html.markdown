@@ -276,6 +276,19 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 
 * `amplitude` - (Optional) Specifies the information that is required for querying Amplitude. See [Generic Source Properties](#generic-source-properties) for more details.
 * `custom_connector` - (Optional) The properties that are applied when the custom connector is being used as a source. See [Custom Connector Source Properties](#custom-connector-source-properties).
+* `datadog` - (Optional) Specifies the information that is required for querying Datadog. See [Generic Source Properties](#generic-source-properties) for more details.
+* `dynratrace` - (Optional) Specifies the information that is required for querying Dynatrace. See [Generic Source Properties](#generic-source-properties) for more details.
+* `infor_nexus` - (Optional) Specifies the information that is required for querying Infor Nexus. See [Generic Source Properties](#generic-source-properties) for more details.
+* `marketo` - (Optional) Specifies the information that is required for querying Marketo. See [Generic Source Properties](#generic-source-properties) for more details.
+* `s3` - (Optional) Specifies the information that is required for querying Amazon S3. See [S3 Source Properties](#s3-source-properties) for more details.
+* `salesforce` - (Optional) Specifies the information that is required for querying Salesforce. See [Salesforce Source Properties](#s3-source-properties) for more details.
+* `sapo_data` - (Optional) Specifies the information that is required for querying SAPOData as a flow source. See [SAPO Source Properties](#sapodata-source-properties) for more details.
+* `service_now` - (Optional) Specifies the information that is required for querying ServiceNow. See [Generic Source Properties](#generic-source-properties) for more details.
+* `singular` - (Optional) Specifies the information that is required for querying Singular. See [Generic Source Properties](#generic-source-properties) for more details.
+* `slack` - (Optional) Specifies the information that is required for querying Slack. See [Generic Source Properties](#generic-source-properties) for more details.
+* `trend_micro` - (Optional) Specifies the information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
+* `veeva` - (Optional) Specifies the information that is required for querying Veeva. See [Veeva Source Properties](#veeva-source-properties) for more details.
+* `zendesk` - (Optional) Specifies the information that is required for querying Zendesk. See [Generic Source Properties](#generic-source-properties) for more details.
 
 ##### Generic Source Properties
 
