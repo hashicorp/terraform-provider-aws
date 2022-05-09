@@ -12,7 +12,6 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -895,12 +894,8 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.ElasticsearchClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if want, err := gversion.NewVersion("7.9"); err == nil {
-						if got, err := gversion.NewVersion(d.Get("elasticsearch_version").(string)); err == nil {
-							if got.LessThan(want) {
-								input.ElasticsearchClusterConfig.ColdStorageOptions = nil
-							}
-						}
+					if verify.SemVerLessThan(d.Get("elasticsearch_version").(string), "7.9") {
+						input.ElasticsearchClusterConfig.ColdStorageOptions = nil
 					}
 				}
 			}
@@ -1043,17 +1038,7 @@ func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 // inPlaceEncryptionEnableVersion returns true if, based on version, encryption
 // can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
-	var want, got *gversion.Version
-	var err error
-	if want, err = gversion.NewVersion("6.7"); err != nil {
-		return false
-	}
-
-	if got, err = gversion.NewVersion(version); err != nil || got.LessThan(want) {
-		return false
-	}
-
-	return true
+	return verify.SemVerGreaterThanOrEqual(version, "6.7")
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
