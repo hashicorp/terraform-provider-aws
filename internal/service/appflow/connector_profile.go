@@ -27,7 +27,7 @@ func ResourceConnectorProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appflow.ConnectionMode_Values(), false),
 			},
-			"connector_profile_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
