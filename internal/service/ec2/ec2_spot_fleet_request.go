@@ -565,7 +565,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 												},
 												"memory_mib": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
 													ForceNew: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
@@ -578,7 +578,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 															},
 															"min": {
 																Type:         schema.TypeInt,
-																Required:     true,
+																Optional:     true,
 																ForceNew:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
@@ -648,7 +648,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 												},
 												"vcpu_count": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
 													ForceNew: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
@@ -661,7 +661,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 															},
 															"min": {
 																Type:         schema.TypeInt,
-																Required:     true,
+																Optional:     true,
 																ForceNew:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
