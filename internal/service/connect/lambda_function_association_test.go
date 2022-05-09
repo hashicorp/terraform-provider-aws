@@ -36,10 +36,10 @@ func testAccLambdaFunctionAssociation_basic(t *testing.T) {
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLambdaFunctionAssociationConfigBasic(rName, rName2),
@@ -64,10 +64,10 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLambdaFunctionAssociationConfigBasic(rName, rName2),

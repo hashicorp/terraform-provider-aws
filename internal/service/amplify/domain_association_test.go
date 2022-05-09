@@ -28,10 +28,10 @@ func testAccDomainAssociation_basic(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig(rName, domainName, false),
@@ -69,10 +69,10 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig(rName, domainName, false),
@@ -98,10 +98,10 @@ func testAccDomainAssociation_update(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig(rName, domainName, true),

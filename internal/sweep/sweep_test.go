@@ -36,6 +36,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/connect"

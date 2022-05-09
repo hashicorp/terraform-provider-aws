@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccPreCheckRoute53TrafficPolicy(t *testing.T) {
+func testAccPreCheckTrafficPolicy(t *testing.T) {
 	acctest.PreCheckPartitionHasService(route53.EndpointsID, t)
 
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
@@ -31,15 +31,15 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53TrafficPolicyInstanceDestroy,
+		CheckDestroy:      testAccCheckTrafficPolicyInstanceDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
+					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s.%s", rName, zoneName)),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "3600"),
 				),
@@ -60,15 +60,15 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53TrafficPolicyInstanceDestroy,
+		CheckDestroy:      testAccCheckTrafficPolicyInstanceDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 360),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
+					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceTrafficPolicyInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,22 +84,22 @@ func TestAccRoute53TrafficPolicyInstance_update(t *testing.T) {
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53TrafficPolicyInstanceDestroy,
+		CheckDestroy:      testAccCheckTrafficPolicyInstanceDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
+					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "3600"),
 				),
 			},
 			{
 				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 7200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
+					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "7200"),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccRoute53TrafficPolicyInstance_update(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53TrafficPolicyInstanceExists(n string, v *route53.TrafficPolicyInstance) resource.TestCheckFunc {
+func testAccCheckTrafficPolicyInstanceExists(n string, v *route53.TrafficPolicyInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,7 +137,7 @@ func testAccCheckRoute53TrafficPolicyInstanceExists(n string, v *route53.Traffic
 	}
 }
 
-func testAccCheckRoute53TrafficPolicyInstanceDestroy(s *terraform.State) error {
+func testAccCheckTrafficPolicyInstanceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {

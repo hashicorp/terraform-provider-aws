@@ -377,12 +377,12 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
-				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(level),
+				"managed_rule_group_statement":          managedRuleGroupStatementSchema(level),
 				"not_statement":                         statementSchema(level),
 				"or_statement":                          statementSchema(level),
-				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
+				"rate_based_statement":                  rateBasedStatementSchema(level),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
+				"rule_group_reference_statement":        ruleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
 				"xss_match_statement":                   xssMatchStatementSchema(),
@@ -391,20 +391,20 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
+func managedRuleGroupStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"excluded_rule": wafv2ExcludedRuleSchema(),
+				"excluded_rule": excludedRuleSchema(),
 				"name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -420,7 +420,7 @@ func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2ExcludedRuleSchema() *schema.Schema {
+func excludedRuleSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -436,7 +436,7 @@ func wafv2ExcludedRuleSchema() *schema.Schema {
 	}
 }
 
-func wafv2RateBasedStatementSchema(level int) *schema.Schema {
+func rateBasedStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -456,13 +456,13 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(100, 2000000000),
 				},
-				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
 			},
 		},
 	}
 }
 
-func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
+func scopeDownStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -485,7 +485,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
+func ruleGroupReferenceStatementSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -497,7 +497,7 @@ func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"excluded_rule": wafv2ExcludedRuleSchema(),
+				"excluded_rule": excludedRuleSchema(),
 			},
 		},
 	}

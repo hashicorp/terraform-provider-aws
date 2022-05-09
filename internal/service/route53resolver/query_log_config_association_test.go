@@ -22,15 +22,15 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueryLogConfigAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfigAssociationConfig(rName),
+				Config: testAccQueryLogConfigAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigAssociationExists(resourceName, &v),
+					testAccCheckQueryLogConfigAssociationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_query_log_config_id", queryLogConfigResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
 				),
@@ -50,15 +50,15 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T) {
 	resourceName := "aws_route53_resolver_query_log_config_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueryLogConfigAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfigAssociationConfig(rName),
+				Config: testAccQueryLogConfigAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigAssociationExists(resourceName, &v),
+					testAccCheckQueryLogConfigAssociationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceQueryLogConfigAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -67,7 +67,7 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy(s *terraform.State) error {
+func testAccCheckQueryLogConfigAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -90,7 +90,7 @@ func testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy(s *terraform.St
 	return nil
 }
 
-func testAccCheckRoute53ResolverQueryLogConfigAssociationExists(n string, v *route53resolver.ResolverQueryLogConfigAssociation) resource.TestCheckFunc {
+func testAccCheckQueryLogConfigAssociationExists(n string, v *route53resolver.ResolverQueryLogConfigAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -113,7 +113,7 @@ func testAccCheckRoute53ResolverQueryLogConfigAssociationExists(n string, v *rou
 	}
 }
 
-func testAccRoute53ResolverQueryLogConfigAssociationConfig(rName string) string {
+func testAccQueryLogConfigAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q

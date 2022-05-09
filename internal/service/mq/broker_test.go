@@ -240,9 +240,9 @@ func TestAccMQBroker_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig(rName, testAccBrokerVersionNewer),
@@ -317,9 +317,9 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerEBSConfig(rName, testAccBrokerVersionNewer),
@@ -400,9 +400,9 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
@@ -528,9 +528,9 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
@@ -648,9 +648,9 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfigEncryptionOptionsKmsKeyId(rName, testAccBrokerVersionNewer),
@@ -686,9 +686,9 @@ func TestAccMQBroker_EncryptionOptions_awsOwnedKeyDisabled(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerEncryptionOptionsUseAWSOwnedKeyConfig(rName, testAccBrokerVersionNewer, false),
@@ -723,9 +723,9 @@ func TestAccMQBroker_EncryptionOptions_awsOwnedKeyEnabled(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerEncryptionOptionsUseAWSOwnedKeyConfig(rName, testAccBrokerVersionNewer, true),
@@ -760,9 +760,9 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig_updateUsers1(rName, testAccBrokerVersionNewer),
@@ -837,9 +837,9 @@ func TestAccMQBroker_Update_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfigTags1(rName, testAccBrokerVersionNewer, "key1", "value1"),
@@ -891,9 +891,9 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig(rName, testAccBrokerVersionNewer),
@@ -948,9 +948,9 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig(rName, testAccBrokerVersionOlder),
@@ -991,9 +991,9 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfigInstanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
@@ -1029,9 +1029,9 @@ func TestAccMQBroker_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig(rName, testAccBrokerVersionNewer),
@@ -1060,9 +1060,9 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfigRabbit(rName, testAccRabbitMQVersion),
@@ -1105,9 +1105,9 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfigRabbitLogs(rName, testAccRabbitMQVersion),
@@ -1150,9 +1150,9 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBrokerConfigRabbitAuditLog(rName, testAccRabbitMQVersion, true),
@@ -1188,9 +1188,9 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRabbitClusterBrokerConfig(rName, testAccRabbitMQVersion),
@@ -1254,9 +1254,9 @@ func TestAccMQBroker_ldap(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBrokerDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerConfig_ldap(rName, testAccBrokerVersionNewer, "anyusername"),

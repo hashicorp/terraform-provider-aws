@@ -30,7 +30,7 @@ func statusBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, nam
 	}
 }
 
-func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
+func statusSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSlotTypeVersionByName(conn, name, version)
 
@@ -46,7 +46,7 @@ func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, na
 	}
 }
 
-func statusLexIntent(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusIntent(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetIntentVersions(&lexmodelbuildingservice.GetIntentVersionsInput{
 			Name: aws.String(id),
@@ -66,7 +66,7 @@ func statusLexIntent(conn *lexmodelbuildingservice.LexModelBuildingService, id s
 	}
 }
 
-func statusLexBotAlias(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
+func statusBotAlias(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),

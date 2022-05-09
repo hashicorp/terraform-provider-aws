@@ -86,7 +86,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRouteTableAssociationByID(conn, d.Id())
 	}, d.IsNewResource())
 

@@ -26,11 +26,11 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
@@ -72,11 +72,11 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleS3ActionConfig(rName),
@@ -109,11 +109,11 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleSNSActionConfig(rName),
@@ -146,11 +146,11 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleSNSActionEncodingConfig(rName),
@@ -183,11 +183,11 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleLambdaActionConfig(rName),
@@ -220,11 +220,11 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleStopActionConfig(rName),
@@ -256,11 +256,11 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleOrderConfig(rName),
@@ -289,11 +289,11 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleActionsConfig(rName),
@@ -332,11 +332,11 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
@@ -358,7 +358,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESReceiptRuleDestroy(s *terraform.State) error {
+func testAccCheckReceiptRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -428,7 +428,7 @@ func testAccReceiptRuleImportStateIdFunc(resourceName string) resource.ImportSta
 	}
 }
 
-func testAccPreCheckSESReceiptRule(t *testing.T) {
+func testAccPreCheckReceiptRule(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	input := &ses.DescribeReceiptRuleInput{

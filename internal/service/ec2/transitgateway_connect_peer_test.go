@@ -21,10 +21,10 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig(rName),
@@ -53,10 +53,10 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig(rName),
@@ -76,10 +76,10 @@ func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerBgpAsnConfig(rName, "4294967294"),
@@ -98,10 +98,10 @@ func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerInsideCidrBlocks2Config(rName),
@@ -127,10 +127,10 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfigTags1(rName, "key1", "value1"),
@@ -172,10 +172,10 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayConnectPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayConnect(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerTransitGatewayAddressConfig(rName, "10.20.30.200"),

@@ -70,7 +70,7 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return nil, FindVPCDHCPOptionsAssociation(conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 

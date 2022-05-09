@@ -9,13 +9,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2CoIPPoolDataSource_filter(t *testing.T) {
+func TestAccEC2OutpostsCoIPPoolDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoIPPoolDataSourceFilterDataSourceConfig(),
@@ -29,13 +29,13 @@ func TestAccEC2CoIPPoolDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2CoIPPoolDataSource_id(t *testing.T) {
+func TestAccEC2OutpostsCoIPPoolDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoIPPoolDataSourceIDDataSourceConfig(),

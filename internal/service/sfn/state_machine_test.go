@@ -22,10 +22,10 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig(rName, 5),
@@ -83,10 +83,10 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineTypedConfig(rName, "EXPRESS", 5),
@@ -123,10 +123,10 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineTypedConfig(rName, "STANDARD", 5),
@@ -163,10 +163,10 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineTags1Config(rName, "key1", "value1"),
@@ -208,10 +208,10 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineTracingDisableConfig(rName),
@@ -244,10 +244,10 @@ func TestAccSFNStateMachine_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig(rName, 5),
@@ -267,10 +267,10 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStateMachineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineExpressLogConfigurationConfig(rName, sfn.LogLevelError),

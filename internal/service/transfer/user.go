@@ -166,7 +166,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandTransferUserPosixUser(v.([]interface{}))
+		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -223,7 +223,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("policy", policyToSet)
 
-	if err := d.Set("posix_profile", flattenTransferUserPosixUser(user.PosixProfile)); err != nil {
+	if err := d.Set("posix_profile", flattenUserPOSIXUser(user.PosixProfile)); err != nil {
 		return fmt.Errorf("error setting posix_profile: %w", err)
 	}
 	d.Set("role", user.Role)
@@ -281,7 +281,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("posix_profile") {
-			input.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
+			input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 		}
 
 		if d.HasChange("role") {
@@ -315,11 +315,11 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing Transfer User ID: %w", err)
 	}
 
-	return transferUserDelete(conn, serverID, userName)
+	return userDelete(conn, serverID, userName)
 }
 
-// transferUserDelete attempts to delete a transfer user.
-func transferUserDelete(conn *transfer.Transfer, serverID, userName string) error {
+// userDelete attempts to delete a transfer user.
+func userDelete(conn *transfer.Transfer, serverID, userName string) error {
 	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.DeleteUserInput{
 		ServerId: aws.String(serverID),
@@ -374,7 +374,7 @@ func flattenHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []
 	return l
 }
 
-func expandTransferUserPosixUser(pUser []interface{}) *transfer.PosixProfile {
+func expandUserPOSIXUser(pUser []interface{}) *transfer.PosixProfile {
 	if len(pUser) < 1 || pUser[0] == nil {
 		return nil
 	}
@@ -393,7 +393,7 @@ func expandTransferUserPosixUser(pUser []interface{}) *transfer.PosixProfile {
 	return posixUser
 }
 
-func flattenTransferUserPosixUser(posixUser *transfer.PosixProfile) []interface{} {
+func flattenUserPOSIXUser(posixUser *transfer.PosixProfile) []interface{} {
 	if posixUser == nil {
 		return []interface{}{}
 	}

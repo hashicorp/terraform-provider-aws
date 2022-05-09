@@ -37,10 +37,10 @@ func TestAccResourceGroupsGroup_Resource_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
@@ -75,10 +75,10 @@ func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGroupTags1Config(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),

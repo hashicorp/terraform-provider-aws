@@ -14,15 +14,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccEC2VPCEndpointConnectionNotification_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testAccAWSnlb-basic-%s", sdkacctest.RandString(10))
+func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
+	lbName := fmt.Sprintf("testAccNLB-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_vpc_endpoint_connection_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointConnectionNotificationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConnectionNotificationBasicConfig(lbName),

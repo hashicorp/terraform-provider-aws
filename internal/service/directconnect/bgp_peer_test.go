@@ -24,10 +24,10 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBGPPeerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBGPPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxBgpPeerConfig(vifId, bgpAsn),
@@ -56,9 +56,9 @@ func testAccCheckBGPPeerDestroy(s *terraform.State) error {
 			return err
 		}
 		for _, peer := range resp.VirtualInterfaces[0].BgpPeers {
-			if *peer.AddressFamily == rs.Primary.Attributes["address_family"] &&
-				strconv.Itoa(int(*peer.Asn)) == rs.Primary.Attributes["bgp_asn"] &&
-				*peer.BgpPeerState != directconnect.BGPPeerStateDeleted {
+			if aws.StringValue(peer.AddressFamily) == rs.Primary.Attributes["address_family"] &&
+				strconv.Itoa(int(aws.Int64Value(peer.Asn))) == rs.Primary.Attributes["bgp_asn"] &&
+				aws.StringValue(peer.BgpPeerState) != directconnect.BGPPeerStateDeleted {
 				return fmt.Errorf("[DESTROY ERROR] Dx BGP peer (%s) not deleted", rs.Primary.ID)
 			}
 		}

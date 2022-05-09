@@ -17,7 +17,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TransitGateway_serial(t *testing.T) {
+func TestAccTransitGateway_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Connect": {
 			"basic":      testAccTransitGatewayConnect_basic,
@@ -146,10 +146,10 @@ func testAccTransitGateway_basic(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConfig(),
@@ -184,10 +184,10 @@ func testAccTransitGateway_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConfig(),
@@ -206,10 +206,10 @@ func testAccTransitGateway_AmazonSideASN(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayAmazonSideASNConfig(64513),
@@ -240,10 +240,10 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayAutoAcceptSharedAttachmentsConfig(ec2.AutoAcceptSharedAttachmentsValueEnable),
@@ -275,10 +275,10 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayCidrBlocks2Config(rName),
@@ -322,10 +322,10 @@ func testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t 
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig(),
@@ -349,10 +349,10 @@ func testAccTransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDefaultRouteTableAssociationConfig(ec2.DefaultRouteTableAssociationValueDisable),
@@ -391,10 +391,10 @@ func testAccTransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDefaultRouteTablePropagationConfig(ec2.DefaultRouteTablePropagationValueDisable),
@@ -433,10 +433,10 @@ func testAccTransitGateway_DNSSupport(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDNSSupportConfig(ec2.DnsSupportValueDisable),
@@ -467,10 +467,10 @@ func testAccTransitGateway_VPNECMPSupport(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPNECMPSupportConfig(ec2.VpnEcmpSupportValueDisable),
@@ -501,10 +501,10 @@ func testAccTransitGateway_Description(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDescriptionConfig("description1"),
@@ -535,10 +535,10 @@ func testAccTransitGateway_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayTags1Config("key1", "value1"),

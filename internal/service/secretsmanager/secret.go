@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -168,7 +167,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
-		input.AddReplicaRegions = expandSecretsManagerSecretReplicas(v.(*schema.Set).List())
+		input.AddReplicaRegions = expandSecretReplicas(v.(*schema.Set).List())
 	}
 
 	if len(tags) > 0 {
@@ -214,7 +213,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -236,7 +235,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 		input := &secretsmanager.RotateSecretInput{
 			RotationLambdaARN: aws.String(v.(string)),
-			RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
+			RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:          aws.String(d.Id()),
 		}
 
@@ -290,7 +289,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 
-	if err := d.Set("replica", flattenSecretsManagerSecretReplicas(output.ReplicationStatus)); err != nil {
+	if err := d.Set("replica", flattenSecretReplicas(output.ReplicationStatus)); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
@@ -314,7 +313,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-		if err := d.Set("rotation_rules", flattenSecretsManagerRotationRules(output.RotationRules)); err != nil {
+		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 			return fmt.Errorf("error setting rotation_rules: %w", err)
 		}
 	} else {
@@ -345,13 +344,13 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		err := removeSecretsManagerSecretReplicas(conn, d.Id(), os.Difference(ns).List())
+		err := removeSecretReplicas(conn, d.Id(), os.Difference(ns).List())
 
 		if err != nil {
 			return fmt.Errorf("deleting Secrets Manager Secret (%s) replica: %w", d.Id(), err)
 		}
 
-		err = addSecretsManagerSecretReplicas(conn, d.Id(), d.Get("force_overwrite_replica_secret").(bool), ns.Difference(os).List())
+		err = addSecretReplicas(conn, d.Id(), d.Get("force_overwrite_replica_secret").(bool), ns.Difference(os).List())
 
 		if err != nil {
 			return fmt.Errorf("adding Secrets Manager Secret (%s) replica: %w", d.Id(), err)
@@ -390,7 +389,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
-			_, err = tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
+			_, err = tfresource.RetryWhenAWSErrMessageContains(PropagationTimeout,
 				func() (interface{}, error) {
 					return conn.PutResourcePolicy(input)
 				},
@@ -415,7 +414,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 			input := &secretsmanager.RotateSecretInput{
 				RotationLambdaARN: aws.String(v.(string)),
-				RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
+				RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
 				SecretId:          aws.String(d.Id()),
 			}
 
@@ -465,7 +464,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
-		err := removeSecretsManagerSecretReplicas(conn, d.Id(), v.(*schema.Set).List())
+		err := removeSecretReplicas(conn, d.Id(), v.(*schema.Set).List())
 
 		if err != nil {
 			return fmt.Errorf("deleting Secrets Manager Secret (%s) replica: %w", d.Id(), err)
@@ -505,7 +504,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
+func removeSecretReplicas(conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -543,7 +542,7 @@ func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id 
 	return nil
 }
 
-func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
+func addSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -551,7 +550,7 @@ func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id str
 	input := &secretsmanager.ReplicateSecretToRegionsInput{
 		SecretId:                    aws.String(id),
 		ForceOverwriteReplicaSecret: aws.Bool(forceOverwrite),
-		AddReplicaRegions:           expandSecretsManagerSecretReplicas(tfList),
+		AddReplicaRegions:           expandSecretReplicas(tfList),
 	}
 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %s", input)
@@ -565,7 +564,7 @@ func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id str
 	return nil
 }
 
-func expandSecretsManagerSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {
+func expandSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {
 	if tfMap == nil {
 		return nil
 	}
@@ -583,7 +582,7 @@ func expandSecretsManagerSecretReplica(tfMap map[string]interface{}) *secretsman
 	return apiObject
 }
 
-func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionType {
+func expandSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionType {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -597,7 +596,7 @@ func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.
 			continue
 		}
 
-		apiObject := expandSecretsManagerSecretReplica(tfMap)
+		apiObject := expandSecretReplica(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -609,7 +608,7 @@ func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.
 	return apiObjects
 }
 
-func flattenSecretsManagerSecretReplica(apiObject *secretsmanager.ReplicationStatusType) map[string]interface{} {
+func flattenSecretReplica(apiObject *secretsmanager.ReplicationStatusType) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -639,7 +638,7 @@ func flattenSecretsManagerSecretReplica(apiObject *secretsmanager.ReplicationSta
 	return tfMap
 }
 
-func flattenSecretsManagerSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) []interface{} {
+func flattenSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -651,7 +650,7 @@ func flattenSecretsManagerSecretReplicas(apiObjects []*secretsmanager.Replicatio
 			continue
 		}
 
-		tfList = append(tfList, flattenSecretsManagerSecretReplica(apiObject))
+		tfList = append(tfList, flattenSecretReplica(apiObject))
 	}
 
 	return tfList

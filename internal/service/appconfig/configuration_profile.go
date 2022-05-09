@@ -129,7 +129,7 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
-		input.Validators = expandAppconfigValidators(v.(*schema.Set).List())
+		input.Validators = expandValidators(v.(*schema.Set).List())
 	}
 
 	profile, err := conn.CreateConfigurationProfile(input)
@@ -248,7 +248,7 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		if d.HasChange("validator") {
-			updateInput.Validators = expandAppconfigValidators(d.Get("validator").(*schema.Set).List())
+			updateInput.Validators = expandValidators(d.Get("validator").(*schema.Set).List())
 		}
 
 		_, err = conn.UpdateConfigurationProfile(updateInput)
@@ -305,7 +305,7 @@ func ConfigurationProfileParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandAppconfigValidator(tfMap map[string]interface{}) *appconfig.Validator {
+func expandValidator(tfMap map[string]interface{}) *appconfig.Validator {
 	if tfMap == nil {
 		return nil
 	}
@@ -324,7 +324,7 @@ func expandAppconfigValidator(tfMap map[string]interface{}) *appconfig.Validator
 	return validator
 }
 
-func expandAppconfigValidators(tfList []interface{}) []*appconfig.Validator {
+func expandValidators(tfList []interface{}) []*appconfig.Validator {
 	// AppConfig API requires a 0 length slice instead of a nil value
 	// when updating from N validators to 0/nil validators
 	validators := make([]*appconfig.Validator, 0)
@@ -336,7 +336,7 @@ func expandAppconfigValidators(tfList []interface{}) []*appconfig.Validator {
 			continue
 		}
 
-		validator := expandAppconfigValidator(tfMap)
+		validator := expandValidator(tfMap)
 
 		if validator == nil {
 			continue

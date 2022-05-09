@@ -18,10 +18,10 @@ func testAccHSM_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHSMDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHSMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMSubnetIDConfig(),
@@ -49,10 +49,10 @@ func testAccHSM_disappears(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMSubnetIDConfig(),
@@ -73,10 +73,10 @@ func testAccHSM_disappears_Cluster(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMSubnetIDConfig(),
@@ -95,10 +95,10 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHSMDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHSMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMAvailabilityZoneConfig(),
@@ -120,10 +120,10 @@ func testAccHSM_IPAddress(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHSMDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHSMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMIPAddressConfig(),

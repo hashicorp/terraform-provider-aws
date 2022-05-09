@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -150,7 +149,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
 	// Retry for IAM and Lambda eventual consistency.
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(tfiam.PropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.AddPermission(input)
 		},
@@ -169,7 +168,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout,
 		func() (interface{}, error) {
 			return FindPolicyStatementByTwoPartKey(conn, functionName, d.Id(), d.Get("qualifier").(string))
 		}, d.IsNewResource())
@@ -264,7 +263,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("removing Lambda Permission (%s/%s): %w", functionName, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindPolicyStatementByTwoPartKey(conn, functionName, d.Id(), d.Get("qualifier").(string))
 	})
 

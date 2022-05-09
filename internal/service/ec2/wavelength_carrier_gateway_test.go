@@ -16,17 +16,17 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2CarrierGateway_basic(t *testing.T) {
+func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2CarrierGatewayConfig(rName),
@@ -47,16 +47,16 @@ func TestAccEC2CarrierGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2CarrierGateway_disappears(t *testing.T) {
+func TestAccWavelengthCarrierGateway_disappears(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2CarrierGatewayConfig(rName),
@@ -70,16 +70,16 @@ func TestAccEC2CarrierGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2CarrierGateway_tags(t *testing.T) {
+func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2CarrierGatewayConfigTags1(rName, "key1", "value1"),

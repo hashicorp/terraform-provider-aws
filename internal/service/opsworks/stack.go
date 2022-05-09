@@ -287,7 +287,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
-		conn, conErr = opsworksConnForRegion(v, meta)
+		conn, conErr = connForRegion(v, meta)
 		if conErr != nil {
 			return conErr
 		}
@@ -319,7 +319,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 						// If we haven't already, try us-east-1, legacy connection
 						notFound++
 						var connErr error
-						conn, connErr = opsworksConnForRegion("us-east-1", meta) //lintignore:AWSAT003
+						conn, connErr = connForRegion("us-east-1", meta) //lintignore:AWSAT003
 						if connErr != nil {
 							return connErr
 						}
@@ -413,7 +413,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 // See:
 //  - https://github.com/hashicorp/terraform/pull/12688
 //  - https://github.com/hashicorp/terraform/issues/12842
-func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
+func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
 	originalConn := meta.(*conns.AWSClient).OpsWorksConn
 
 	// Regions are the same, no need to reconfigure
@@ -515,7 +515,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
-		conn, conErr = opsworksConnForRegion(v, meta)
+		conn, conErr = connForRegion(v, meta)
 		if conErr != nil {
 			return conErr
 		}
@@ -597,7 +597,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
-		conn, conErr = opsworksConnForRegion(v, meta)
+		conn, conErr = connForRegion(v, meta)
 		if conErr != nil {
 			return conErr
 		}

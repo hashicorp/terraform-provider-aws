@@ -20,10 +20,10 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 	policyName2 := sdkacctest.RandomWithPrefix("PolicyName2-")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyAttchmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyAttchmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig(policyName),

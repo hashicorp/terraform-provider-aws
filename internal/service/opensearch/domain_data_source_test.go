@@ -21,9 +21,9 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
-		ErrorCheck: acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainWithDataSourceConfig(rName, autoTuneStartAtTime),
@@ -63,9 +63,9 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
-		ErrorCheck: acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAdvancedWithDataSourceConfig(rName, autoTuneStartAtTime),

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NetworkACLAssociation_basic(t *testing.T) {
+func TestAccVPCNetworkACLAssociation_basic(t *testing.T) {
 	var v ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
@@ -22,10 +22,10 @@ func TestAccEC2NetworkACLAssociation_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLAssociationConfig(rName),
@@ -44,16 +44,16 @@ func TestAccEC2NetworkACLAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLAssociation_disappears(t *testing.T) {
+func TestAccVPCNetworkACLAssociation_disappears(t *testing.T) {
 	var v ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLAssociationConfig(rName),
@@ -67,17 +67,17 @@ func TestAccEC2NetworkACLAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLAssociation_disappears_NACL(t *testing.T) {
+func TestAccVPCNetworkACLAssociation_disappears_NACL(t *testing.T) {
 	var v ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	naclResourceName := "aws_network_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLAssociationConfig(rName),
@@ -91,17 +91,17 @@ func TestAccEC2NetworkACLAssociation_disappears_NACL(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLAssociation_disappears_Subnet(t *testing.T) {
+func TestAccVPCNetworkACLAssociation_disappears_Subnet(t *testing.T) {
 	var v ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLAssociationConfig(rName),
@@ -115,7 +115,7 @@ func TestAccEC2NetworkACLAssociation_disappears_Subnet(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLAssociation_twoAssociations(t *testing.T) {
+func TestAccVPCNetworkACLAssociation_twoAssociations(t *testing.T) {
 	var v1, v2 ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_network_acl_association.test1"
@@ -125,10 +125,10 @@ func TestAccEC2NetworkACLAssociation_twoAssociations(t *testing.T) {
 	subnet2ResourceName := "aws_subnet.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLAssociationTwoAssociationsConfig(rName),
@@ -155,17 +155,17 @@ func TestAccEC2NetworkACLAssociation_twoAssociations(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
+func TestAccVPCNetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
 	var v ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLAssociationDefaultNACLConfig(rName),

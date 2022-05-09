@@ -13,16 +13,16 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2DefaultSecurityGroup_VPC_basic(t *testing.T) {
+func TestAccVPCDefaultSecurityGroup_VPC_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSecurityGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSecurityGroupConfig_VPC,
@@ -67,15 +67,15 @@ func TestAccEC2DefaultSecurityGroup_VPC_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultSecurityGroup_VPC_empty(t *testing.T) {
+func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultSecurityGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultSecurityGroupConfig_VPC_empty,
@@ -95,7 +95,7 @@ func TestAccEC2DefaultSecurityGroup_VPC_empty(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultSecurityGroup_Classic_basic(t *testing.T) {
+func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 
@@ -142,7 +142,7 @@ func TestAccEC2DefaultSecurityGroup_Classic_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultSecurityGroup_Classic_empty(t *testing.T) {
+func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
 
 	acctest.Skip(t, "This resource does not currently clear tags when adopting the resource")
 	// Additional references:

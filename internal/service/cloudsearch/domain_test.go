@@ -20,10 +20,10 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig(rName),
@@ -58,10 +58,10 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig(rName),
@@ -81,10 +81,10 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIndexFieldsConfig(rName),
@@ -145,10 +145,10 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAllOptionsConfig(rName),

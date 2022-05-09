@@ -39,6 +39,11 @@ type LoggerOpts struct {
 	// tfsdklog; providers and SDKs should always include the time logs
 	// were written as part of the log.
 	IncludeTime bool
+
+	// IncludeRootFields indicates whether a new subsystem logger should
+	// copy existing fields from the root logger. This is only performed
+	// at the time of new subsystem creation.
+	IncludeRootFields bool
 }
 
 // ApplyLoggerOpts generates a LoggerOpts out of a list of Option
@@ -77,6 +82,15 @@ func WithAdditionalLocationOffset(additionalLocationOffset int) Option {
 func WithOutput(output io.Writer) Option {
 	return func(l LoggerOpts) LoggerOpts {
 		l.Output = output
+		return l
+	}
+}
+
+// WithRootFields enables the copying of root logger fields to a new subsystem
+// logger during creation.
+func WithRootFields() Option {
+	return func(l LoggerOpts) LoggerOpts {
+		l.IncludeRootFields = true
 		return l
 	}
 }

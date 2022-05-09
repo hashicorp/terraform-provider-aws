@@ -17,9 +17,9 @@ func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
 	phoneNumber := "+12345678912"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuickConnectDataSourceConfig_id(rName, resourceName, phoneNumber),
@@ -48,9 +48,9 @@ func TestAccConnectQuickConnectDataSource_name(t *testing.T) {
 	phoneNumber := "+12345678912"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuickConnectDataSourceConfig_Name(rName, rName2, phoneNumber),

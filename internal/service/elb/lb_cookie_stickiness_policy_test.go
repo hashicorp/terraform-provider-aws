@@ -19,10 +19,10 @@ func TestAccELBCookieStickinessPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
@@ -110,10 +110,10 @@ func TestAccELBCookieStickinessPolicy_disappears(t *testing.T) {
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
@@ -133,10 +133,10 @@ func TestAccELBCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),

@@ -30,9 +30,9 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmUploadDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmUploadDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmUploadConfig(rName),
@@ -79,9 +79,9 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmUploadDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmUploadDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmUploadConfig(rName),
@@ -109,9 +109,9 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmUploadDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmUploadDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmUploadConfig(rName),

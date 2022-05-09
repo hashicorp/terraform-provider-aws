@@ -175,7 +175,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 	naclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindNetworkACLEntryByThreePartKey(conn, naclID, egress, ruleNumber)
 	}, d.IsNewResource())
 

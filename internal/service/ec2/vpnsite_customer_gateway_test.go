@@ -17,16 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2CustomerGateway_basic(t *testing.T) {
+func TestAccVPNSiteCustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rBgpAsn),
@@ -49,16 +49,16 @@ func TestAccEC2CustomerGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_disappears(t *testing.T) {
+func TestAccVPNSiteCustomerGateway_disappears(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rBgpAsn),
@@ -72,16 +72,16 @@ func TestAccEC2CustomerGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_tags(t *testing.T) {
+func TestAccVPNSiteCustomerGateway_tags(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfigTags1(rBgpAsn, "key1", "value1"),
@@ -114,17 +114,17 @@ func TestAccEC2CustomerGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
+func TestAccVPNSiteCustomerGateway_deviceName(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfigDeviceName(rName, rBgpAsn),
@@ -142,17 +142,17 @@ func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
+func TestAccVPNSiteCustomerGateway_4ByteASN(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := strconv.FormatInt(int64(sdkacctest.RandIntRange(64512, 65534))*10000, 10)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig4ByteAsn(rName, rBgpAsn),
@@ -170,7 +170,7 @@ func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_certificate(t *testing.T) {
+func TestAccVPNSiteCustomerGateway_certificate(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	var caRoot acmpca.CertificateAuthority
 	var caSubordinate acmpca.CertificateAuthority
@@ -183,10 +183,10 @@ func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			// We need to create and activate the CAs before issuing a certificate.
 			{

@@ -169,7 +169,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 			aws.StringValue(fs.FileSystemId), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return fmt.Errorf("error setting lifecycle_policy: %w", err)
 	}
 

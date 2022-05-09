@@ -16,7 +16,7 @@ import (
 // multiple steps in order to share the dependencies
 
 // IPAM IPv6 BYOIP Tests
-func TestAccVPCIpam_ByoipIPv6(t *testing.T) {
+func TestAccIPAM_byoipIPv6(t *testing.T) {
 	if os.Getenv("IPAM_BYOIP_IPV6_MESSAGE") == "" || os.Getenv("IPAM_BYOIP_IPV6_SIGNATURE") == "" || os.Getenv("IPAM_BYOIP_IPV6_PROVISIONED_CIDR") == "" {
 		t.Skip("Environment variable IPAM_BYOIP_IPV6_MESSAGE, IPAM_BYOIP_IPV6_SIGNATURE, or IPAM_BYOIP_IPV6_PROVISIONED_CIDR is not set")
 	}
@@ -48,10 +48,10 @@ func TestAccVPCIpam_ByoipIPv6(t *testing.T) {
 	netmaskLength := 56
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: ipv4VPCIpamByoipIPv6DefaultNetmask(p, m, s),

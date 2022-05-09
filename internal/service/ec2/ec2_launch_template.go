@@ -1231,8 +1231,8 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 		apiObject.KeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("license_specification"); ok && len(v.([]interface{})) > 0 {
-		apiObject.LicenseSpecifications = expandLaunchTemplateLicenseConfigurationRequests(v.([]interface{}))
+	if v, ok := d.GetOk("license_specification"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.LicenseSpecifications = expandLaunchTemplateLicenseConfigurationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

@@ -36,9 +36,9 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasBasicConfig(aliasName, description, message),
@@ -87,9 +87,9 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasBasicTags1Config(aliasName, "key1", "value1"),
@@ -164,9 +164,9 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasAllFieldsConfig(aliasName, description,
@@ -206,9 +206,9 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasBasicConfig(aliasName, description, message),

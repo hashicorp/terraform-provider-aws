@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPNGatewayDataSource_unattached(t *testing.T) {
+func TestAccVPNSiteGatewayDataSource_unattached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_vpn_gateway.test_by_id"
 	dataSourceNameByTags := "data.aws_vpn_gateway.test_by_tags"
@@ -19,9 +19,9 @@ func TestAccEC2VPNGatewayDataSource_unattached(t *testing.T) {
 	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayUnattachedDataSourceConfig(rName),
@@ -40,14 +40,14 @@ func TestAccEC2VPNGatewayDataSource_unattached(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGatewayDataSource_attached(t *testing.T) {
+func TestAccVPNSiteGatewayDataSource_attached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNGatewayAttachedDataSourceConfig(rName),

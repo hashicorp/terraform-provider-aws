@@ -227,7 +227,7 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("revocation_record", flattenSignerSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
+	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
 		return fmt.Errorf("error setting signer signing profile revocation record: %s", err)
 	}
 
@@ -267,7 +267,7 @@ func resourceSigningProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func flattenSignerSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
+func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}

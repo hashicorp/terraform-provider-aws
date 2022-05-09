@@ -20,10 +20,10 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeSigningBasicConfig(),
@@ -50,10 +50,10 @@ func TestAccLambdaCodeSigningConfig_updatePolicy(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeSigningBasicConfig(),
@@ -86,10 +86,10 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeSigningBasicConfig(),
