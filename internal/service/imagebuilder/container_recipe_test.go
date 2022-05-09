@@ -45,6 +45,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-x86-2/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
+					resource.TestCheckResourceAttr(resourceName, "platform_override", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_repository.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_repository.0.repository_name", "aws_ecr_repository.test", "name"),
@@ -540,6 +541,39 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderContainerRecipe_platform_override(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContainerRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipePlatformOverrideLinuxConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformLinux),
+				),
+			},
+			{
+				Config: testAccContainerRecipePlatformOverrideWindowsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformWindows),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -755,7 +789,7 @@ parameters:
   - Parameter1:
       type: string
   - Parameter2:
-      type: string  
+      type: string
 schemaVersion: 1.0
 EOF
 
@@ -1423,6 +1457,68 @@ EOF
   }
 
   working_directory = "/tmp"
+}
+`, rName))
+}
+
+func testAccContainerRecipePlatformOverrideLinuxConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/centos:7.9.2009"
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+	platform_override = "Linux"
+}
+`, rName))
+}
+
+func testAccContainerRecipePlatformOverrideWindowsConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/windows:20HC"
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+	platform_override = "Windows"
 }
 `, rName))
 }

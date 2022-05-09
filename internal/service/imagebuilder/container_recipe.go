@@ -232,6 +232,12 @@ func ResourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"platform_override": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{imagebuilder.PlatformLinux, imagebuilder.PlatformWindows}, false),
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"target_repository": {
@@ -285,6 +291,15 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("container_type"); ok {
 		input.ContainerType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("platform_override"); ok {
+		switch v.(string) {
+		case imagebuilder.PlatformLinux:
+			input.PlatformOverride = aws.String(imagebuilder.PlatformLinux)
+		case imagebuilder.PlatformWindows:
+			input.PlatformOverride = aws.String(imagebuilder.PlatformWindows)
+		}
 	}
 
 	if v, ok := d.GetOk("description"); ok {
