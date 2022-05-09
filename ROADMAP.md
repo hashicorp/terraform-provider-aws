@@ -53,7 +53,7 @@ New Resource(s):
 
 ### Amazon Textract
 
-Issue: [#XXXX]()
+Issue: [#24478](https://github.com/hashicorp/terraform-provider-aws/issues/24478)
 
 _[Amazon Textract](https://aws.amazon.com/textract/) is a machine learning (ML) service that automatically extracts text, handwriting, and data from scanned documents._
 
