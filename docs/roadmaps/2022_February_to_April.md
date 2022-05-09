@@ -12,8 +12,8 @@ In the period spanning November 2021 to Janury 2022, 668 Pull Requests were open
 
 - Managing Amazon CloudSearch Domains
 - ECS Task Sets
-- S3 Intelligent Tiering Archive Configuration 
-- IoT Thing Group 
+- S3 Intelligent Tiering Archive Configuration
+- IoT Thing Group
 - Lambda Access Points for S3
 - ECR Public Repositories
 
@@ -114,7 +114,7 @@ New Resource(s):
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-### Scaffolding for new resources, datasources and associated tests. 
+### Scaffolding for new resources, datasources and associated tests
 
 Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
 
