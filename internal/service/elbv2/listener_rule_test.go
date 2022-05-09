@@ -435,7 +435,7 @@ func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 }
 
 func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
-	var rule elbv2.Rule
+	var before, after elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
@@ -450,14 +450,15 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_basic(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(resourceName, &rule),
+					testAccCheckListenerRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_updateRulePriority(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(resourceName, &rule),
+					testAccCheckListenerRuleExists(resourceName, &after),
+					testAccCheckListenerRuleNotRecreated(t, &before, &after),
 					resource.TestCheckResourceAttr(resourceName, "priority", "101"),
 				),
 			},
@@ -1320,12 +1321,22 @@ func testAccCheckListenerRuleActionOrderDisappears(rule *elbv2.Rule, actionOrder
 	}
 }
 
-func testAccCheckListenerRuleRecreated(t *testing.T,
-	before, after *elbv2.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleNotRecreated(t *testing.T, before, after *elbv2.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.RuleArn == *after.RuleArn {
-			t.Fatalf("Expected change of Listener Rule ARNs, but both were %v", before.RuleArn)
+		if before, after := aws.StringValue(before.RuleArn), aws.StringValue(after.RuleArn); before != after {
+			t.Fatalf("ELBv2 Listener Rule (%s) was recreated: %s", before, after)
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckListenerRuleRecreated(t *testing.T, before, after *elbv2.Rule) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.RuleArn), aws.StringValue(after.RuleArn); before == after {
+			t.Fatalf("ELBv2 Listener Rule (%s) was not recreated", before)
+		}
+
 		return nil
 	}
 }
