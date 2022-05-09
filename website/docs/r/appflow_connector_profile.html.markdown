@@ -245,17 +245,17 @@ The AppFlow connector profile argument layout is a complex structure.
 
 ##### Connector Profile Properties Arguments
 
-* `amplitude` (Optional) - The connector-specific [properties](#amplitude-connector-profile-properties-arguments) required by Amplitude. Configure as an empty block `{}`.
+* `amplitude` (Optional) - The connector-specific properties required by Amplitude. Configure as an empty block `{}`.
 
 * `datadog` (Optional) - The connector-specific [properties](#datadog-connector-profile-properties-arguments) required by Datadog.
 
 * `dynatrace` (Optional) - The connector-specific [properties](#dynatrace-connector-profile-properties-arguments) required by Dynatrace.
 
-* `google_analytics` (Optional) - The connector-specific [properties](#google-connector-profile-properties-arguments) required by Google Analytics. Configure as an empty block `{}`.
+* `google_analytics` (Optional) - The connector-specific properties required by Google Analytics. Configure as an empty block `{}`.
 
-* `honeycode` (Optional) - The connector-specific [properties](#honeycode-connector-profile-properties-arguments) required by Amazon Honeycode. Configure as an empty block `{}`.
+* `honeycode` (Optional) - The connector-specific properties required by Amazon Honeycode. Configure as an empty block `{}`.
 
-* `infor_nexus` (Optional) - The connector-specific [properties](#infor-connector-profile-properties-arguments) required by Infor Nexus.
+* `infor_nexus` (Optional) - The connector-specific [properties](#infor-nexus-connector-profile-properties-arguments) required by Infor Nexus.
 
 * `marketo` (Optional) - The connector-specific [properties](#marketo-connector-profile-properties-arguments) required by Marketo.
 
@@ -265,13 +265,13 @@ The AppFlow connector profile argument layout is a complex structure.
 
 * `service_now` (Optional) - The connector-specific [properties](#servicenow-connector-profile-properties-arguments) required by ServiceNow.
 
-* `singular` (Optional) - The connector-specific [properties](#singular-connector-profile-properties-arguments) required by Singular. Configure as an empty block `{}`.
+* `singular` (Optional) - The connector-specific properties required by Singular. Configure as an empty block `{}`.
 
 * `slack` (Optional) - The connector-specific [properties](#slack-connector-profile-properties-arguments) required by Slack.
 
 * `snowflake` (Optional) - The connector-specific [properties](#snowflake-connector-profile-properties-arguments) required by Snowflake.
 
-* `trendmicro` (Optional) - The connector-specific [properties](#trendmicro-connector-profile-properties-arguments) required by Trend Micro. Configure as an empty block `{}`.
+* `trendmicro` (Optional) - The connector-specific properties required by Trend Micro. Configure as an empty block `{}`.
 
 * `veeva` (Optional) - The connector-specific [properties](#veeva-connector-profile-properties-arguments) required by Veeva.
 
