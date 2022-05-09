@@ -14,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPNGatewayAttachment_basic(t *testing.T) {
+func TestAccVPNSiteGatewayAttachment_basic(t *testing.T) {
 	var v ec2.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayAttachmentConfig(rName),
@@ -35,16 +35,16 @@ func TestAccEC2VPNGatewayAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNGatewayAttachment_disappears(t *testing.T) {
+func TestAccVPNSiteGatewayAttachment_disappears(t *testing.T) {
 	var v ec2.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpnGatewayAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpnGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayAttachmentConfig(rName),

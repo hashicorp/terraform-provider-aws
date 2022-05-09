@@ -16,16 +16,16 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccVPCIpamPoolAllocation_ipv4Basic(t *testing.T) {
+func TestAccIPAMPoolAllocation_ipv4Basic(t *testing.T) {
 	var allocation ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	cidr := "172.2.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamPoolAllocationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamPoolAllocationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamPoolAllocationIpv4(cidr),
@@ -46,16 +46,16 @@ func TestAccVPCIpamPoolAllocation_ipv4Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPoolAllocation_ipv4BasicNetmask(t *testing.T) {
+func TestAccIPAMPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 	var allocation ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	netmask := "28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamPoolAllocationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamPoolAllocationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamPoolAllocationIpv4Netmask(netmask),
@@ -74,17 +74,17 @@ func TestAccVPCIpamPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPoolAllocation_ipv4DisallowedCidr(t *testing.T) {
+func TestAccIPAMPoolAllocation_ipv4DisallowedCidr(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	disallowedCidr := "172.2.0.0/28"
 	netmaskLength := "28"
 	expectedCidr := "172.2.0.16/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamPoolAllocationIpv4DisallowedCidr(netmaskLength, disallowedCidr),

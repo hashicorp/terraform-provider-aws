@@ -23,7 +23,7 @@ func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
@@ -52,7 +52,7 @@ func TestAccRoute53HostedZoneDNSSEC_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
@@ -76,7 +76,7 @@ func TestAccRoute53HostedZoneDNSSEC_signingStatus(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
@@ -171,7 +171,7 @@ func testAccHostedZoneDNSSECExists(resourceName string) resource.TestCheckFunc {
 
 func testAccHostedZoneDNSSECConfig_Base(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccRoute53KeySigningKeyRegionProviderConfig(),
+		testAccKeySigningKeyRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   customer_master_key_spec = "ECC_NIST_P256"

@@ -101,7 +101,7 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindVPNGatewayByID(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -215,7 +215,7 @@ func attachVPNGatewayToVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	}
 
 	log.Printf("[INFO] Attaching EC2 VPN Gateway (%s) to VPC (%s)", vpnGatewayID, vpcID)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.AttachVpnGateway(input)
 	}, ErrCodeInvalidVpnGatewayIDNotFound)
 

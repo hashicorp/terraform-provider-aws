@@ -40,7 +40,7 @@ func testAccMember_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberBasicConfig(acctest.DefaultEmailAddress),
+				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
@@ -53,7 +53,7 @@ func testAccMember_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccMacieMemberBasicConfig(acctest.DefaultEmailAddress),
+				Config:            testAccMemberConfig_basic(acctest.DefaultEmailAddress),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -77,7 +77,7 @@ func testAccMember_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberBasicConfig(acctest.DefaultEmailAddress),
+				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceMember(), resourceName),
@@ -104,19 +104,19 @@ func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, "true", true),
+				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "true", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 				),
 			},
 			{
-				Config: testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, "false", false),
+				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "false", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 				),
 			},
 			{
-				Config:            testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, "false", false),
+				Config:            testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "false", false),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -146,7 +146,7 @@ func testAccMember_invite(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberInviteConfig(email, false),
+				Config: testAccMemberConfig_invite(email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
@@ -160,7 +160,7 @@ func testAccMember_invite(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieMemberInviteConfig(email, true),
+				Config: testAccMemberConfig_invite(email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
@@ -174,7 +174,7 @@ func testAccMember_invite(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccMacieMemberInviteConfig(email, true),
+				Config:                  testAccMemberConfig_invite(email, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -201,7 +201,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberInviteConfig(email, true),
+				Config: testAccMemberConfig_invite(email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
@@ -215,7 +215,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieMemberInviteConfig(email, false),
+				Config: testAccMemberConfig_invite(email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusRemoved),
@@ -229,7 +229,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccMacieMemberInviteConfig(email, false),
+				Config:                  testAccMemberConfig_invite(email, false),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -256,7 +256,7 @@ func testAccMember_status(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberStatusConfig(email, macie2.MacieStatusEnabled, true),
+				Config: testAccMemberConfig_status(email, macie2.MacieStatusEnabled, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
@@ -270,7 +270,7 @@ func testAccMember_status(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieMemberStatusConfig(email, macie2.MacieStatusPaused, true),
+				Config: testAccMemberConfig_status(email, macie2.MacieStatusPaused, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
@@ -284,7 +284,7 @@ func testAccMember_status(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccMacieMemberStatusConfig(email, macie2.MacieStatusPaused, true),
+				Config:                  testAccMemberConfig_status(email, macie2.MacieStatusPaused, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -310,7 +310,7 @@ func testAccMember_withTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieMemberWithTagsConfig(acctest.DefaultEmailAddress),
+				Config: testAccMemberConfig_tags(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName, &macie2Output),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
@@ -390,7 +390,7 @@ func testAccCheckMemberDestroy(s *terraform.State) error {
 
 }
 
-func testAccMacieMemberBasicConfig(email string) string {
+func testAccMemberConfig_basic(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -406,7 +406,7 @@ resource "aws_macie2_member" "member" {
 `, email)
 }
 
-func testAccMacieMemberWithTagsConfig(email string) string {
+func testAccMemberConfig_tags(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -425,7 +425,7 @@ resource "aws_macie2_member" "member" {
 `, email)
 }
 
-func testAccMacieMemberInviteConfig(email string, invite bool) string {
+func testAccMemberConfig_invite(email string, invite bool) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -449,7 +449,7 @@ resource "aws_macie2_member" "member" {
 `, email, invite)
 }
 
-func testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, disable string, invite bool) string {
+func testAccMemberConfig_inviteInvitationDisableEmailNotification(email, disable string, invite bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -476,7 +476,7 @@ resource "aws_macie2_member" "member" {
 `, email, disable, invite))
 }
 
-func testAccMacieMemberStatusConfig(email, memberStatus string, invite bool) string {
+func testAccMemberConfig_status(email, memberStatus string, invite bool) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"

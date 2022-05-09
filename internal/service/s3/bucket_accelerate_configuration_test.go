@@ -25,9 +25,9 @@ func TestAccS3BucketAccelerateConfiguration_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketAccelerateConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusEnabled),
@@ -55,9 +55,9 @@ func TestAccS3BucketAccelerateConfiguration_update(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketAccelerateConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusEnabled),
@@ -93,9 +93,9 @@ func TestAccS3BucketAccelerateConfiguration_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketAccelerateConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusEnabled),

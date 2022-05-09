@@ -18,15 +18,15 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, xray.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptionBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayEncryptionConfigExists(resourceName, &EncryptionConfig),
+					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
 			},
@@ -38,7 +38,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			{
 				Config: testAccEncryptionWithKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayEncryptionConfigExists(resourceName, &EncryptionConfig),
+					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, "arn"),
 				),
@@ -46,7 +46,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			{
 				Config: testAccEncryptionBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayEncryptionConfigExists(resourceName, &EncryptionConfig),
+					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
 			},
@@ -54,7 +54,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.EncryptionConfig) resource.TestCheckFunc {
+func testAccCheckEncryptionConfigExists(n string, EncryptionConfig *xray.EncryptionConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

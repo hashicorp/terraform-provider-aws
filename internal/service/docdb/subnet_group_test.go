@@ -22,15 +22,15 @@ func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBSubnetGroupExists(
+					testAccCheckSubnetGroupExists(
 						"aws_docdb_subnet_group.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_docdb_subnet_group.foo", "name", rName),
@@ -53,15 +53,15 @@ func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBSubnetGroupExists(
+					testAccCheckSubnetGroupExists(
 						"aws_docdb_subnet_group.foo", &v),
 					testAccCheckSubnetGroupDisappears(&v),
 				),
@@ -75,15 +75,15 @@ func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBSubnetGroupConfig_namePrefix(),
+				Config: testAccSubnetGroupConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBSubnetGroupExists(
+					testAccCheckSubnetGroupExists(
 						"aws_docdb_subnet_group.test", &v),
 					resource.TestMatchResourceAttr(
 						"aws_docdb_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
@@ -103,15 +103,15 @@ func TestAccDocDBSubnetGroup_generatedName(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBSubnetGroupConfig_generatedName(),
+				Config: testAccSubnetGroupConfig_generatedName(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBSubnetGroupExists(
+					testAccCheckSubnetGroupExists(
 						"aws_docdb_subnet_group.test", &v),
 				),
 			},
@@ -130,15 +130,15 @@ func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBSubnetGroupExists(
+					testAccCheckSubnetGroupExists(
 						"aws_docdb_subnet_group.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_docdb_subnet_group.foo", "description", "Managed by Terraform"),
@@ -146,9 +146,9 @@ func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 			},
 
 			{
-				Config: testAccDocDBSubnetGroupConfig_updatedDescription(rName),
+				Config: testAccSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocDBSubnetGroupExists(
+					testAccCheckSubnetGroupExists(
 						"aws_docdb_subnet_group.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_docdb_subnet_group.foo", "description", "foo description updated"),
@@ -163,7 +163,7 @@ func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 	})
 }
 
-func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
+func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -211,7 +211,7 @@ func testAccCheckSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.Test
 	}
 }
 
-func testAccCheckDocDBSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -238,7 +238,7 @@ func testAccCheckDocDBSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resour
 	}
 }
 
-func testAccDocDBSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -279,7 +279,7 @@ resource "aws_docdb_subnet_group" "foo" {
 `, rName))
 }
 
-func testAccDocDBSubnetGroupConfig_updatedDescription(rName string) string {
+func testAccSubnetGroupConfig_updatedDescription(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -321,7 +321,7 @@ resource "aws_docdb_subnet_group" "foo" {
 `, rName))
 }
 
-func testAccDocDBSubnetGroupConfig_namePrefix() string {
+func testAccSubnetGroupConfig_namePrefix() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -357,7 +357,7 @@ resource "aws_docdb_subnet_group" "test" {
 }`)
 }
 
-func testAccDocDBSubnetGroupConfig_generatedName() string {
+func testAccSubnetGroupConfig_generatedName() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

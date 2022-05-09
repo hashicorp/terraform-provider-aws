@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -390,7 +389,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(serviceName),
-		SourceConfiguration: expandAppRunnerServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
+		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
 		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
@@ -399,24 +398,24 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionConfiguration = expandAppRunnerServiceEncryptionConfiguration(v.([]interface{}))
+		input.EncryptionConfiguration = expandServiceEncryptionConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("health_check_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.HealthCheckConfiguration = expandAppRunnerServiceHealthCheckConfiguration(v.([]interface{}))
+		input.HealthCheckConfiguration = expandServiceHealthCheckConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("instance_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InstanceConfiguration = expandAppRunnerServiceInstanceConfiguration(v.([]interface{}))
+		input.InstanceConfiguration = expandServiceInstanceConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandAppRunnerNetworkConfiguration(v.([]interface{}))
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
 	var output *apprunner.CreateServiceOutput
 
-	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateServiceWithContext(ctx, input)
 
@@ -500,23 +499,23 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_name", service.ServiceName)
 	d.Set("service_url", service.ServiceUrl)
 	d.Set("status", service.Status)
-	if err := d.Set("encryption_configuration", flattenAppRunnerServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
+	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting encryption_configuration: %w", err))
 	}
 
-	if err := d.Set("health_check_configuration", flattenAppRunnerServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
+	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting health_check_configuration: %w", err))
 	}
 
-	if err := d.Set("instance_configuration", flattenAppRunnerServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
+	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting instance_configuration: %w", err))
 	}
 
-	if err := d.Set("network_configuration", flattenAppRunnerNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting network_configuration: %w", err))
 	}
 
-	if err := d.Set("source_configuration", flattenAppRunnerServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
+	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
 
@@ -558,15 +557,15 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("instance_configuration") {
-			input.InstanceConfiguration = expandAppRunnerServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
+			input.InstanceConfiguration = expandServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
 		}
 
 		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandAppRunnerNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 		}
 
 		if d.HasChange("source_configuration") {
-			input.SourceConfiguration = expandAppRunnerServiceSourceConfiguration(d.Get("source_configuration").([]interface{}))
+			input.SourceConfiguration = expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{}))
 		}
 
 		_, err := conn.UpdateServiceWithContext(ctx, input)
@@ -619,7 +618,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandAppRunnerServiceEncryptionConfiguration(l []interface{}) *apprunner.EncryptionConfiguration {
+func expandServiceEncryptionConfiguration(l []interface{}) *apprunner.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -639,7 +638,7 @@ func expandAppRunnerServiceEncryptionConfiguration(l []interface{}) *apprunner.E
 	return result
 }
 
-func expandAppRunnerServiceHealthCheckConfiguration(l []interface{}) *apprunner.HealthCheckConfiguration {
+func expandServiceHealthCheckConfiguration(l []interface{}) *apprunner.HealthCheckConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -679,7 +678,7 @@ func expandAppRunnerServiceHealthCheckConfiguration(l []interface{}) *apprunner.
 	return result
 }
 
-func expandAppRunnerServiceInstanceConfiguration(l []interface{}) *apprunner.InstanceConfiguration {
+func expandServiceInstanceConfiguration(l []interface{}) *apprunner.InstanceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -707,7 +706,7 @@ func expandAppRunnerServiceInstanceConfiguration(l []interface{}) *apprunner.Ins
 	return result
 }
 
-func expandAppRunnerNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration {
+func expandNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -721,13 +720,13 @@ func expandAppRunnerNetworkConfiguration(l []interface{}) *apprunner.NetworkConf
 	result := &apprunner.NetworkConfiguration{}
 
 	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.EgressConfiguration = expandAppRunnerNetworkEgressConfiguration(v)
+		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
 	return result
 }
 
-func expandAppRunnerServiceSourceConfiguration(l []interface{}) *apprunner.SourceConfiguration {
+func expandServiceSourceConfiguration(l []interface{}) *apprunner.SourceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -741,7 +740,7 @@ func expandAppRunnerServiceSourceConfiguration(l []interface{}) *apprunner.Sourc
 	result := &apprunner.SourceConfiguration{}
 
 	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.AuthenticationConfiguration = expandAppRunnerServiceAuthenticationConfiguration(v)
+		result.AuthenticationConfiguration = expandServiceAuthenticationConfiguration(v)
 	}
 
 	if v, ok := tfMap["auto_deployments_enabled"].(bool); ok {
@@ -749,17 +748,17 @@ func expandAppRunnerServiceSourceConfiguration(l []interface{}) *apprunner.Sourc
 	}
 
 	if v, ok := tfMap["code_repository"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.CodeRepository = expandAppRunnerServiceCodeRepository(v)
+		result.CodeRepository = expandServiceCodeRepository(v)
 	}
 
 	if v, ok := tfMap["image_repository"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ImageRepository = expandAppRunnerServiceImageRepository(v)
+		result.ImageRepository = expandServiceImageRepository(v)
 	}
 
 	return result
 }
 
-func expandAppRunnerServiceAuthenticationConfiguration(l []interface{}) *apprunner.AuthenticationConfiguration {
+func expandServiceAuthenticationConfiguration(l []interface{}) *apprunner.AuthenticationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -783,7 +782,7 @@ func expandAppRunnerServiceAuthenticationConfiguration(l []interface{}) *apprunn
 	return result
 }
 
-func expandAppRunnerNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfiguration {
+func expandNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -807,7 +806,7 @@ func expandAppRunnerNetworkEgressConfiguration(l []interface{}) *apprunner.Egres
 	return result
 }
 
-func expandAppRunnerServiceImageConfiguration(l []interface{}) *apprunner.ImageConfiguration {
+func expandServiceImageConfiguration(l []interface{}) *apprunner.ImageConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -835,7 +834,7 @@ func expandAppRunnerServiceImageConfiguration(l []interface{}) *apprunner.ImageC
 	return result
 }
 
-func expandAppRunnerServiceCodeRepository(l []interface{}) *apprunner.CodeRepository {
+func expandServiceCodeRepository(l []interface{}) *apprunner.CodeRepository {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -849,11 +848,11 @@ func expandAppRunnerServiceCodeRepository(l []interface{}) *apprunner.CodeReposi
 	result := &apprunner.CodeRepository{}
 
 	if v, ok := tfMap["source_code_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.SourceCodeVersion = expandAppRunnerServiceSourceCodeVersion(v)
+		result.SourceCodeVersion = expandServiceSourceCodeVersion(v)
 	}
 
 	if v, ok := tfMap["code_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.CodeConfiguration = expandAppRunnerServiceCodeConfiguration(v)
+		result.CodeConfiguration = expandServiceCodeConfiguration(v)
 	}
 
 	if v, ok := tfMap["repository_url"].(string); ok && v != "" {
@@ -863,7 +862,7 @@ func expandAppRunnerServiceCodeRepository(l []interface{}) *apprunner.CodeReposi
 	return result
 }
 
-func expandAppRunnerServiceImageRepository(l []interface{}) *apprunner.ImageRepository {
+func expandServiceImageRepository(l []interface{}) *apprunner.ImageRepository {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -877,7 +876,7 @@ func expandAppRunnerServiceImageRepository(l []interface{}) *apprunner.ImageRepo
 	result := &apprunner.ImageRepository{}
 
 	if v, ok := tfMap["image_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ImageConfiguration = expandAppRunnerServiceImageConfiguration(v)
+		result.ImageConfiguration = expandServiceImageConfiguration(v)
 	}
 
 	if v, ok := tfMap["image_identifier"].(string); ok && v != "" {
@@ -891,7 +890,7 @@ func expandAppRunnerServiceImageRepository(l []interface{}) *apprunner.ImageRepo
 	return result
 }
 
-func expandAppRunnerServiceCodeConfiguration(l []interface{}) *apprunner.CodeConfiguration {
+func expandServiceCodeConfiguration(l []interface{}) *apprunner.CodeConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -909,13 +908,13 @@ func expandAppRunnerServiceCodeConfiguration(l []interface{}) *apprunner.CodeCon
 	}
 
 	if v, ok := tfMap["code_configuration_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.CodeConfigurationValues = expandAppRunnerServiceCodeConfigurationValues(v)
+		result.CodeConfigurationValues = expandServiceCodeConfigurationValues(v)
 	}
 
 	return result
 }
 
-func expandAppRunnerServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfigurationValues {
+func expandServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfigurationValues {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -951,7 +950,7 @@ func expandAppRunnerServiceCodeConfigurationValues(l []interface{}) *apprunner.C
 	return result
 }
 
-func expandAppRunnerServiceSourceCodeVersion(l []interface{}) *apprunner.SourceCodeVersion {
+func expandServiceSourceCodeVersion(l []interface{}) *apprunner.SourceCodeVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -975,7 +974,7 @@ func expandAppRunnerServiceSourceCodeVersion(l []interface{}) *apprunner.SourceC
 	return result
 }
 
-func flattenAppRunnerServiceEncryptionConfiguration(config *apprunner.EncryptionConfiguration) []interface{} {
+func flattenServiceEncryptionConfiguration(config *apprunner.EncryptionConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -987,7 +986,7 @@ func flattenAppRunnerServiceEncryptionConfiguration(config *apprunner.Encryption
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceHealthCheckConfiguration(config *apprunner.HealthCheckConfiguration) []interface{} {
+func flattenServiceHealthCheckConfiguration(config *apprunner.HealthCheckConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1004,7 +1003,7 @@ func flattenAppRunnerServiceHealthCheckConfiguration(config *apprunner.HealthChe
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceInstanceConfiguration(config *apprunner.InstanceConfiguration) []interface{} {
+func flattenServiceInstanceConfiguration(config *apprunner.InstanceConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1018,19 +1017,19 @@ func flattenAppRunnerServiceInstanceConfiguration(config *apprunner.InstanceConf
 	return []interface{}{m}
 }
 
-func flattenAppRunnerNetworkConfiguration(config *apprunner.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(config *apprunner.NetworkConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"egress_configuration": flattenAppRunnerNetworkEgressConfiguration(config.EgressConfiguration),
+		"egress_configuration": flattenNetworkEgressConfiguration(config.EgressConfiguration),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAppRunnerNetworkEgressConfiguration(config *apprunner.EgressConfiguration) []interface{} {
+func flattenNetworkEgressConfiguration(config *apprunner.EgressConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1043,34 +1042,34 @@ func flattenAppRunnerNetworkEgressConfiguration(config *apprunner.EgressConfigur
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceCodeRepository(r *apprunner.CodeRepository) []interface{} {
+func flattenServiceCodeRepository(r *apprunner.CodeRepository) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"code_configuration":  flattenAppRunnerServiceCodeConfiguration(r.CodeConfiguration),
+		"code_configuration":  flattenServiceCodeConfiguration(r.CodeConfiguration),
 		"repository_url":      aws.StringValue(r.RepositoryUrl),
-		"source_code_version": flattenAppRunnerServiceSourceCodeVersion(r.SourceCodeVersion),
+		"source_code_version": flattenServiceSourceCodeVersion(r.SourceCodeVersion),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceCodeConfiguration(config *apprunner.CodeConfiguration) []interface{} {
+func flattenServiceCodeConfiguration(config *apprunner.CodeConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"code_configuration_values": flattenAppRunnerServiceCodeConfigurationValues(config.CodeConfigurationValues),
+		"code_configuration_values": flattenServiceCodeConfigurationValues(config.CodeConfigurationValues),
 		"configuration_source":      aws.StringValue(config.ConfigurationSource),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceCodeConfigurationValues(values *apprunner.CodeConfigurationValues) []interface{} {
+func flattenServiceCodeConfigurationValues(values *apprunner.CodeConfigurationValues) []interface{} {
 	if values == nil {
 		return []interface{}{}
 	}
@@ -1086,7 +1085,7 @@ func flattenAppRunnerServiceCodeConfigurationValues(values *apprunner.CodeConfig
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceSourceCodeVersion(v *apprunner.SourceCodeVersion) []interface{} {
+func flattenServiceSourceCodeVersion(v *apprunner.SourceCodeVersion) []interface{} {
 	if v == nil {
 		return []interface{}{}
 	}
@@ -1099,22 +1098,22 @@ func flattenAppRunnerServiceSourceCodeVersion(v *apprunner.SourceCodeVersion) []
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceSourceConfiguration(config *apprunner.SourceConfiguration) []interface{} {
+func flattenServiceSourceConfiguration(config *apprunner.SourceConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"authentication_configuration": flattenAppRunnerServiceAuthenticationConfiguration(config.AuthenticationConfiguration),
+		"authentication_configuration": flattenServiceAuthenticationConfiguration(config.AuthenticationConfiguration),
 		"auto_deployments_enabled":     aws.BoolValue(config.AutoDeploymentsEnabled),
-		"code_repository":              flattenAppRunnerServiceCodeRepository(config.CodeRepository),
-		"image_repository":             flattenAppRunnerServiceImageRepository(config.ImageRepository),
+		"code_repository":              flattenServiceCodeRepository(config.CodeRepository),
+		"image_repository":             flattenServiceImageRepository(config.ImageRepository),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceAuthenticationConfiguration(config *apprunner.AuthenticationConfiguration) []interface{} {
+func flattenServiceAuthenticationConfiguration(config *apprunner.AuthenticationConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1127,7 +1126,7 @@ func flattenAppRunnerServiceAuthenticationConfiguration(config *apprunner.Authen
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceImageConfiguration(config *apprunner.ImageConfiguration) []interface{} {
+func flattenServiceImageConfiguration(config *apprunner.ImageConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1141,13 +1140,13 @@ func flattenAppRunnerServiceImageConfiguration(config *apprunner.ImageConfigurat
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceImageRepository(r *apprunner.ImageRepository) []interface{} {
+func flattenServiceImageRepository(r *apprunner.ImageRepository) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"image_configuration":   flattenAppRunnerServiceImageConfiguration(r.ImageConfiguration),
+		"image_configuration":   flattenServiceImageConfiguration(r.ImageConfiguration),
 		"image_identifier":      aws.StringValue(r.ImageIdentifier),
 		"image_repository_type": aws.StringValue(r.ImageRepositoryType),
 	}

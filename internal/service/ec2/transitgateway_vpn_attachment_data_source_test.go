@@ -21,9 +21,9 @@ func testAccTransitGatewayVPNAttachmentDataSource_TransitGatewayIdAndVpnConnecti
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPNAttachmentTransitGatewayIdAndVpnConnectionIDDataSourceConfig(rBgpAsn),
@@ -48,9 +48,9 @@ func testAccTransitGatewayVPNAttachmentDataSource_filter(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPNAttachmentFilterDataSourceConfig(rBgpAsn),

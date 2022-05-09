@@ -313,7 +313,7 @@ func expandCloudformationLoggingConfig(tfMap map[string]interface{}) *cloudforma
 	return apiObject
 }
 
-func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
+func expandOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
 	if tfMap == nil {
 		return nil
 	}

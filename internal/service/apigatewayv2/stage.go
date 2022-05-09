@@ -209,13 +209,13 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:       Tags(tags.IgnoreAWS()),
 	}
 	if v, ok := d.GetOk("access_log_settings"); ok {
-		req.AccessLogSettings = expandApiGatewayV2AccessLogSettings(v.([]interface{}))
+		req.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("client_certificate_id"); ok {
 		req.ClientCertificateId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("default_route_settings"); ok {
-		req.DefaultRouteSettings = expandApiGatewayV2DefaultRouteSettings(v.([]interface{}), protocolType)
+		req.DefaultRouteSettings = expandDefaultRouteSettings(v.([]interface{}), protocolType)
 	}
 	if v, ok := d.GetOk("deployment_id"); ok {
 		req.DeploymentId = aws.String(v.(string))
@@ -224,7 +224,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_settings"); ok {
-		req.RouteSettings = expandApiGatewayV2RouteSettings(v.(*schema.Set).List(), protocolType)
+		req.RouteSettings = expandRouteSettings(v.(*schema.Set).List(), protocolType)
 	}
 	if v, ok := d.GetOk("stage_variables"); ok {
 		req.StageVariables = flex.ExpandStringMap(v.(map[string]interface{}))
@@ -261,7 +261,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stageName := aws.StringValue(resp.StageName)
-	err = d.Set("access_log_settings", flattenApiGatewayV2AccessLogSettings(resp.AccessLogSettings))
+	err = d.Set("access_log_settings", flattenAccessLogSettings(resp.AccessLogSettings))
 	if err != nil {
 		return fmt.Errorf("error setting access_log_settings: %s", err)
 	}
@@ -275,7 +275,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resourceArn)
 	d.Set("auto_deploy", resp.AutoDeploy)
 	d.Set("client_certificate_id", resp.ClientCertificateId)
-	err = d.Set("default_route_settings", flattenApiGatewayV2DefaultRouteSettings(resp.DefaultRouteSettings))
+	err = d.Set("default_route_settings", flattenDefaultRouteSettings(resp.DefaultRouteSettings))
 	if err != nil {
 		return fmt.Errorf("error setting default_route_settings: %s", err)
 	}
@@ -290,7 +290,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("execution_arn", executionArn)
 	d.Set("name", stageName)
-	err = d.Set("route_settings", flattenApiGatewayV2RouteSettings(resp.RouteSettings))
+	err = d.Set("route_settings", flattenRouteSettings(resp.RouteSettings))
 	if err != nil {
 		return fmt.Errorf("error setting route_settings: %s", err)
 	}
@@ -353,7 +353,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 			StageName: aws.String(d.Id()),
 		}
 		if d.HasChange("access_log_settings") {
-			req.AccessLogSettings = expandApiGatewayV2AccessLogSettings(d.Get("access_log_settings").([]interface{}))
+			req.AccessLogSettings = expandAccessLogSettings(d.Get("access_log_settings").([]interface{}))
 		}
 		if d.HasChange("auto_deploy") {
 			req.AutoDeploy = aws.Bool(d.Get("auto_deploy").(bool))
@@ -362,7 +362,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 			req.ClientCertificateId = aws.String(d.Get("client_certificate_id").(string))
 		}
 		if d.HasChange("default_route_settings") {
-			req.DefaultRouteSettings = expandApiGatewayV2DefaultRouteSettings(d.Get("default_route_settings").([]interface{}), protocolType)
+			req.DefaultRouteSettings = expandDefaultRouteSettings(d.Get("default_route_settings").([]interface{}), protocolType)
 		}
 		if d.HasChange("deployment_id") {
 			req.DeploymentId = aws.String(d.Get("deployment_id").(string))
@@ -392,7 +392,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			req.RouteSettings = expandApiGatewayV2RouteSettings(ns.List(), protocolType)
+			req.RouteSettings = expandRouteSettings(ns.List(), protocolType)
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
@@ -472,7 +472,7 @@ func resourceStageImport(d *schema.ResourceData, meta interface{}) ([]*schema.Re
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandApiGatewayV2AccessLogSettings(vSettings []interface{}) *apigatewayv2.AccessLogSettings {
+func expandAccessLogSettings(vSettings []interface{}) *apigatewayv2.AccessLogSettings {
 	settings := &apigatewayv2.AccessLogSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
@@ -490,7 +490,7 @@ func expandApiGatewayV2AccessLogSettings(vSettings []interface{}) *apigatewayv2.
 	return settings
 }
 
-func flattenApiGatewayV2AccessLogSettings(settings *apigatewayv2.AccessLogSettings) []interface{} {
+func flattenAccessLogSettings(settings *apigatewayv2.AccessLogSettings) []interface{} {
 	if settings == nil {
 		return []interface{}{}
 	}
@@ -501,7 +501,7 @@ func flattenApiGatewayV2AccessLogSettings(settings *apigatewayv2.AccessLogSettin
 	}}
 }
 
-func expandApiGatewayV2DefaultRouteSettings(vSettings []interface{}, protocolType string) *apigatewayv2.RouteSettings {
+func expandDefaultRouteSettings(vSettings []interface{}, protocolType string) *apigatewayv2.RouteSettings {
 	routeSettings := &apigatewayv2.RouteSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
@@ -528,7 +528,7 @@ func expandApiGatewayV2DefaultRouteSettings(vSettings []interface{}, protocolTyp
 	return routeSettings
 }
 
-func flattenApiGatewayV2DefaultRouteSettings(routeSettings *apigatewayv2.RouteSettings) []interface{} {
+func flattenDefaultRouteSettings(routeSettings *apigatewayv2.RouteSettings) []interface{} {
 	if routeSettings == nil {
 		return []interface{}{}
 	}
@@ -542,7 +542,7 @@ func flattenApiGatewayV2DefaultRouteSettings(routeSettings *apigatewayv2.RouteSe
 	}}
 }
 
-func expandApiGatewayV2RouteSettings(vSettings []interface{}, protocolType string) map[string]*apigatewayv2.RouteSettings {
+func expandRouteSettings(vSettings []interface{}, protocolType string) map[string]*apigatewayv2.RouteSettings {
 	settings := map[string]*apigatewayv2.RouteSettings{}
 
 	for _, v := range vSettings {
@@ -572,7 +572,7 @@ func expandApiGatewayV2RouteSettings(vSettings []interface{}, protocolType strin
 	return settings
 }
 
-func flattenApiGatewayV2RouteSettings(settings map[string]*apigatewayv2.RouteSettings) []interface{} {
+func flattenRouteSettings(settings map[string]*apigatewayv2.RouteSettings) []interface{} {
 	vSettings := []interface{}{}
 
 	for k, routeSetting := range settings {

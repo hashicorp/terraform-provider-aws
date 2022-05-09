@@ -20,10 +20,10 @@ func TestAccChimeVoiceConnectorOrigination_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_origination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorOriginationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorOriginationConfig(name),
@@ -50,10 +50,10 @@ func TestAccChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_origination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorOriginationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorOriginationConfig(name),
@@ -72,10 +72,10 @@ func TestAccChimeVoiceConnectorOrigination_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_origination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorOriginationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorOriginationConfig(name),

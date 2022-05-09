@@ -24,9 +24,9 @@ func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_basic(rName),
@@ -54,9 +54,9 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_multiple(rName),
@@ -89,9 +89,9 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_cidrs(rName),

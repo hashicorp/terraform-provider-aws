@@ -29,16 +29,16 @@ func testAccDirectory_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig(rName, domain),
+				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
@@ -96,16 +96,16 @@ func testAccDirectory_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig(rName, domain),
+				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfworkspaces.ResourceDirectory(), resourceName),
@@ -127,16 +127,16 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig_subnetIds(rName, domain),
+				Config: testAccDirectoryConfig_subnetIDs(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -162,16 +162,16 @@ func testAccDirectory_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfigTags1(rName, domain, "key1", "value1"),
+				Config: testAccDirectoryConfig_tags1(rName, domain, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -184,7 +184,7 @@ func testAccDirectory_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspacesDirectoryConfigTags2(rName, domain, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDirectoryConfig_tags2(rName, domain, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -193,7 +193,7 @@ func testAccDirectory_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkspacesDirectoryConfigTags1(rName, domain, "key2", "value2"),
+				Config: testAccDirectoryConfig_tags1(rName, domain, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -215,16 +215,16 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectory_selfServicePermissions(rName, domain),
+				Config: testAccDirectoryConfig_selfServicePermissions(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
@@ -250,16 +250,16 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectory_workspaceAccessProperties(rName, domain),
+				Config: testAccDirectoryConfig_workspaceAccessProperties(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
@@ -289,16 +289,16 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName, domain),
+				Config: testAccDirectoryConfig_workspaceCreationProperties(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -325,16 +325,16 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName, domain),
+				Config: testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_absent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -343,7 +343,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				),
 			},
 			{
-				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Present(rName, domain),
+				Config: testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_present(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -352,7 +352,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				),
 			},
 			{
-				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName, domain),
+				Config: testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_absent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -374,13 +374,13 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig_ipGroupIds_create(rName, domain),
+				Config: testAccDirectoryConfig_IPGroupIds_create(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "1"),
@@ -393,7 +393,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspacesDirectoryConfig_ipGroupIds_update(rName, domain),
+				Config: testAccDirectoryConfig_IPGroupIds_update(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "2"),
@@ -724,7 +724,7 @@ func testAccCheckDirectoryExists(n string, v *workspaces.WorkspaceDirectory) res
 	}
 }
 
-func testAccPreCheckWorkspacesDirectory(t *testing.T) {
+func testAccPreCheckDirectory(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
@@ -800,7 +800,7 @@ resource "aws_directory_service_directory" "main" {
 `, rName, domain))
 }
 
-func testAccWorkspacesDirectoryConfig(rName, domain string) string {
+func testAccDirectoryConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -818,7 +818,7 @@ data "aws_iam_role" "workspaces-default" {
 `, rName))
 }
 
-func testAccWorkspacesDirectory_selfServicePermissions(rName, domain string) string {
+func testAccDirectoryConfig_selfServicePermissions(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -840,7 +840,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfig_subnetIds(rName, domain string) string {
+func testAccDirectoryConfig_subnetIDs(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -855,7 +855,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfigTags1(rName, domain, tagKey1, tagValue1 string) string {
+func testAccDirectoryConfig_tags1(rName, domain, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -869,7 +869,7 @@ resource "aws_workspaces_directory" "main" {
 `, tagKey1, tagValue1))
 }
 
-func testAccWorkspacesDirectoryConfigTags2(rName, domain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDirectoryConfig_tags2(rName, domain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -884,7 +884,7 @@ resource "aws_workspaces_directory" "main" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccWorkspacesDirectory_workspaceAccessProperties(rName, domain string) string {
+func testAccDirectoryConfig_workspaceAccessProperties(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -909,7 +909,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName, domain string) string {
+func testAccDirectoryConfig_workspaceCreationProperties(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -936,7 +936,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName, domain string) string {
+func testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_absent(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -956,7 +956,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Present(rName, domain string) string {
+func testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_present(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -983,7 +983,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfig_ipGroupIds_create(rName, domain string) string {
+func testAccDirectoryConfig_IPGroupIds_create(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -1005,7 +1005,7 @@ resource "aws_workspaces_directory" "test" {
 `, rName))
 }
 
-func testAccWorkspacesDirectoryConfig_ipGroupIds_update(rName, domain string) string {
+func testAccDirectoryConfig_IPGroupIds_update(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`

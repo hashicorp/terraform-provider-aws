@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,6 +27,8 @@ const (
 
 	taskSetCreateTimeout = 10 * time.Minute
 	taskSetDeleteTimeout = 10 * time.Minute
+
+	serviceStableRetryCount = 3
 )
 
 func waitCapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
@@ -63,6 +66,7 @@ func waitCapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvid
 }
 
 func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
+	var err error
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -71,10 +75,25 @@ func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
 		input.Cluster = aws.String(cluster)
 	}
 
-	if err := conn.WaitUntilServicesStable(input); err != nil {
-		return err
+	// Here we retry the following operation a set number of times as
+	// described in https://github.com/hashicorp/terraform-provider-aws/pull/23747.
+	// Previously, handling was attempted in the ECSConn.Handlers in conns/config.go, but did not work as expected.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/24223.
+	// The waiter within the "WaitUntilServicesStable" request will poll until the service is either
+	// in a failure state ('MISSING', 'DRAINING', or 'INACTIVE') or reaches the successful stable state.
+	// Reference: https://github.com/aws/aws-sdk-go/blob/f377248cbb3037d1989004ba26f6d73f620461df/service/ecs/waiters.go#L79-L105
+	// Thus, since the waiter will return an error when one of the 'MISSING', 'DRAINING', 'INACTIVE' states is met,
+	// we make up to 3 repetitive calls, hoping the service reaches a stable state by the end.
+	for i := 1; i <= serviceStableRetryCount; i++ {
+		log.Printf("[DEBUG] WaitUntilServicesStable attempt %d/%d", i, serviceStableRetryCount)
+		err = conn.WaitUntilServicesStable(input)
+		if err == nil {
+			return nil
+		}
+		log.Printf("[DEBUG] error received from WaitUntilServicesStable: %s", err)
 	}
-	return nil
+
+	return err
 }
 
 func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {

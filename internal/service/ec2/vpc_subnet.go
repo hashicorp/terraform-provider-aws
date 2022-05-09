@@ -190,15 +190,17 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) create: %w", d.Id(), err)
 	}
 
-	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+	for i, v := range subnet.Ipv6CidrBlockAssociationSet {
 		if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociating { //we can only ever have 1 IPv6 block associated at once
 			associationID := aws.StringValue(v.AssociationId)
 
-			_, err = WaitSubnetIPv6CIDRBlockAssociationCreated(conn, associationID)
+			subnetCidrBlockState, err := WaitSubnetIPv6CIDRBlockAssociationCreated(conn, associationID)
 
 			if err != nil {
 				return fmt.Errorf("error waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become associated: %w", d.Id(), associationID, err)
 			}
+
+			subnet.Ipv6CidrBlockAssociationSet[i].Ipv6CidrBlockState = subnetCidrBlockState
 		}
 	}
 

@@ -27,12 +27,12 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionGlobalAcceleratorConfig(rName),
+				Config: testAccProtectionConfig_globalAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -58,12 +58,12 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
+				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -89,12 +89,12 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
+				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtection(), resourceName),
@@ -115,12 +115,12 @@ func TestAccShieldProtection_alb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionAlbConfig(rName),
+				Config: testAccProtectionConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -146,12 +146,12 @@ func TestAccShieldProtection_elb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionElbConfig(rName),
+				Config: testAccProtectionConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -178,12 +178,12 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionCloudfrontConfig(rName, testAccShieldProtectionCloudfrontRetainConfig()),
+				Config: testAccProtectionConfig_cloudFront(rName, testAccProtectionCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -210,12 +210,12 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionCloudfrontConfigTags1(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key1", "value1"),
+				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -229,7 +229,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccShieldProtectionCloudfrontConfigTags2(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key1", "value1updated", "Key2", "value2"),
+				Config: testAccProtectionConfig_cloudFrontTags2(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1updated", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -239,7 +239,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccShieldProtectionCloudfrontConfigTags1(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key2", "value2"),
+				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -261,12 +261,12 @@ func TestAccShieldProtection_route53(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionRoute53HostedZoneConfig(rName),
+				Config: testAccProtectionConfig_route53HostedZone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(resourceName),
 				),
@@ -352,14 +352,14 @@ func testAccPreCheck(t *testing.T) {
 // Set the environment variable TF_TEST_CLOUDFRONT_RETAIN
 // when doing manual tests so that the test is not waiting for
 // the distribution to be removed completely.
-func testAccShieldProtectionCloudfrontRetainConfig() string {
+func testAccProtectionCloudFrontRetainConfig() string {
 	if _, ok := os.LookupEnv("TF_TEST_CLOUDFRONT_RETAIN"); ok {
 		return "retain_on_delete = true"
 	}
 	return ""
 }
 
-func testAccShieldProtectionRoute53HostedZoneConfig(rName string) string {
+func testAccProtectionConfig_route53HostedZone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name    = "%[1]s.com."
@@ -380,7 +380,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionElbConfig(rName string) string {
+func testAccProtectionConfig_elb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -446,7 +446,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionAlbConfig(rName string) string {
+func testAccProtectionConfig_alb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -531,7 +531,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionCloudfrontConfig(rName, retainOnDelete string) string {
+func testAccProtectionConfig_cloudFront(rName, retainOnDelete string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -601,7 +601,7 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete)
 }
 
-func testAccShieldProtectionCloudfrontConfigTags1(rName, retainOnDelete, tagKey string, tagValue string) string {
+func testAccProtectionConfig_cloudFrontTags1(rName, retainOnDelete, tagKey string, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -674,7 +674,7 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete, tagKey, tagValue)
 }
 
-func testAccShieldProtectionCloudfrontConfigTags2(rName, retainOnDelete, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccProtectionConfig_cloudFrontTags2(rName, retainOnDelete, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -748,7 +748,7 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccShieldProtectionElasticIPAddressConfig(rName string) string {
+func testAccProtectionConfig_elasticIPAddress(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -781,7 +781,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionGlobalAcceleratorConfig(rName string) string {
+func testAccProtectionConfig_globalAccelerator(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_shield_protection" "test" {
   name         = %[1]q

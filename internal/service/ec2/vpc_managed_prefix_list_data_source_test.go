@@ -36,7 +36,7 @@ func testAccManagedPrefixListGetIdByNameDataSource(name string, id *string, arn 
 	}
 }
 
-func TestAccEC2ManagedPrefixListDataSource_basic(t *testing.T) {
+func TestAccVPCManagedPrefixListDataSource_basic(t *testing.T) {
 	prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())
 	prefixListId := ""
 	prefixListArn := ""
@@ -46,9 +46,9 @@ func TestAccEC2ManagedPrefixListDataSource_basic(t *testing.T) {
 	prefixListResourceName := "data.aws_prefix_list.s3_by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPrefixListDataSourceConfig_basic,
@@ -92,7 +92,7 @@ data "aws_prefix_list" "s3_by_id" {
 }
 `
 
-func TestAccEC2ManagedPrefixListDataSource_filter(t *testing.T) {
+func TestAccVPCManagedPrefixListDataSource_filter(t *testing.T) {
 	prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())
 	prefixListId := ""
 	prefixListArn := ""
@@ -101,9 +101,9 @@ func TestAccEC2ManagedPrefixListDataSource_filter(t *testing.T) {
 	resourceById := "data.aws_ec2_managed_prefix_list.s3_by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPrefixListDataSourceConfig_filter,
@@ -151,11 +151,11 @@ data "aws_ec2_managed_prefix_list" "s3_by_id" {
 }
 `
 
-func TestAccEC2ManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
+func TestAccVPCManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPrefixListDataSourceConfig_matchesTooMany,

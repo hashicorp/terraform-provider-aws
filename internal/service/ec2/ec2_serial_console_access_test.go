@@ -16,10 +16,10 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 	resourceName := "aws_ec2_serial_console_access.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSerialConsoleAccessDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSerialConsoleAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSerialConsoleAccessConfig(false),

@@ -95,7 +95,7 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] EIP association configuration: %#v", request)
 
 	var resp *ec2.AssociateAddressOutput
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.AssociateAddress(request)
 
@@ -159,7 +159,7 @@ func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var response *ec2.DescribeAddressesOutput
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		response, err = conn.DescribeAddresses(request)
 

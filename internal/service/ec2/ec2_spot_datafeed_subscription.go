@@ -72,7 +72,7 @@ func resourceSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error describing Spot Datafeed Subscription (%s): %w", d.Id(), err)
 	}
 
-	if resp == nil {
+	if resp == nil || resp.SpotDatafeedSubscription == nil {
 		if d.IsNewResource() {
 			return fmt.Errorf("error describing Spot Datafeed Subscription (%s): empty output after creation", d.Id())
 		}
@@ -81,7 +81,7 @@ func resourceSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface
 		return nil
 	}
 
-	subscription := *resp.SpotDatafeedSubscription
+	subscription := resp.SpotDatafeedSubscription
 	d.Set("bucket", subscription.Bucket)
 	d.Set("prefix", subscription.Prefix)
 

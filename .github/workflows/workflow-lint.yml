@@ -1,0 +1,23 @@
+name: Workflow Linting
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - .github/workflows/*
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # See also: https://github.com/actions/setup-go/pull/62
+      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Install actionlint
+        run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
+      - name: Run actionlint on workflow files
+        run: actionlint -shellcheck=

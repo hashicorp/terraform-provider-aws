@@ -16,16 +16,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoUser_basic(t *testing.T) {
+func TestAccCognitoIDPUser_basic(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfigBasic(rUserPoolName, rUserName),
@@ -57,16 +57,16 @@ func TestAccCognitoUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_disappears(t *testing.T) {
+func TestAccCognitoIDPUser_disappears(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfigBasic(rUserPoolName, rUserName),
@@ -80,7 +80,7 @@ func TestAccCognitoUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_temporaryPassword(t *testing.T) {
+func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,10 +90,10 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfigTemporaryPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
@@ -136,7 +136,7 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_password(t *testing.T) {
+func TestAccCognitoIDPUser_password(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -146,10 +146,10 @@ func TestAccCognitoUser_password(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfigPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
@@ -192,16 +192,16 @@ func TestAccCognitoUser_password(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_attributes(t *testing.T) {
+func TestAccCognitoIDPUser_attributes(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfigAttributes(rUserPoolName, rUserName),
@@ -240,16 +240,16 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_enabled(t *testing.T) {
+func TestAccCognitoIDPUser_enabled(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfigEnable(rUserPoolName, rUserName, false),

@@ -20,10 +20,10 @@ func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHumanTaskUIDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHumanTaskUIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUICognitoBasicConfig(rName),
@@ -51,10 +51,10 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHumanTaskUIDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHumanTaskUIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUITags1Config(rName, "key1", "value1"),
@@ -97,10 +97,10 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHumanTaskUIDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHumanTaskUIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUICognitoBasicConfig(rName),

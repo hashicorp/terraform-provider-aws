@@ -259,7 +259,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
 	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
 
 	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
 		return fmt.Errorf("object KMS: %w", err)
@@ -305,7 +305,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	if hasS3ObjectContentChanges(d) {
+	if hasObjectContentChanges(d) {
 		return resourceObjectUpload(d, meta)
 	}
 
@@ -344,15 +344,15 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			Key:    aws.String(key),
 			Retention: &s3.ObjectLockRetention{
 				Mode:            aws.String(d.Get("object_lock_mode").(string)),
-				RetainUntilDate: expandS3ObjectDate(d.Get("object_lock_retain_until_date").(string)),
+				RetainUntilDate: expandObjectDate(d.Get("object_lock_retain_until_date").(string)),
 			},
 		}
 
 		// Bypass required to lower or clear retain-until date.
 		if d.HasChange("object_lock_retain_until_date") {
 			oraw, nraw := d.GetChange("object_lock_retain_until_date")
-			o := expandS3ObjectDate(oraw.(string))
-			n := expandS3ObjectDate(nraw.(string))
+			o := expandObjectDate(oraw.(string))
+			n := expandObjectDate(nraw.(string))
 			if n == nil || (o != nil && n.Before(*o)) {
 				req.BypassGovernanceRetention = aws.Bool(true)
 			}
@@ -389,7 +389,7 @@ func resourceObjectDelete(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("version_id"); ok {
 		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(conn, bucket, key, "", false)
 	}
 
 	if err != nil {
@@ -529,7 +529,7 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		input.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
+		input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
 	}
 
 	if _, err := uploader.Upload(input); err != nil {
@@ -573,7 +573,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 }
 
 func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if hasS3ObjectContentChanges(d) {
+	if hasObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
 
@@ -585,7 +585,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 	return nil
 }
 
-func hasS3ObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
@@ -639,7 +639,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 				continue
 			}
 
-			err := deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
+			err := deleteObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
 
 			if err == nil {
 				nObjects++
@@ -676,7 +676,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 					}
 
 					// Attempt to delete again.
-					err = deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
+					err = deleteObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
 
 					if err != nil {
 						lastErr = err
@@ -730,7 +730,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 			}
 
 			// Delete markers have no object lock protections.
-			err := deleteS3ObjectVersion(conn, bucketName, deleteMarkerKey, deleteMarkerVersionID, false)
+			err := deleteObjectVersion(conn, bucketName, deleteMarkerKey, deleteMarkerVersionID, false)
 
 			if err != nil {
 				lastErr = err
@@ -761,9 +761,9 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 	return nObjects, nil
 }
 
-// deleteS3ObjectVersion deletes a specific object version.
+// deleteObjectVersion deletes a specific object version.
 // Set force to true to override any S3 object lock protections.
-func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
+func deleteObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(b),
 		Key:    aws.String(k),
@@ -791,7 +791,7 @@ func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 	return err
 }
 
-func expandS3ObjectDate(v string) *time.Time {
+func expandObjectDate(v string) *time.Time {
 	t, err := time.Parse(time.RFC3339, v)
 	if err != nil {
 		return nil
@@ -800,7 +800,7 @@ func expandS3ObjectDate(v string) *time.Time {
 	return aws.Time(t)
 }
 
-func flattenS3ObjectDate(t *time.Time) string {
+func flattenObjectDate(t *time.Time) string {
 	if t == nil {
 		return ""
 	}

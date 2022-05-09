@@ -22,10 +22,10 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig(rName1),
@@ -57,10 +57,10 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineWithDescriptionConfig(rName, "test description"),
@@ -92,10 +92,10 @@ func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig(rName),
@@ -115,10 +115,10 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineWithTagsConfig(rName, "foo", "bar", "fizz", "buzz"),

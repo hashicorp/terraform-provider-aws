@@ -6,6 +6,10 @@ import (
 	"sort"
 )
 
+const (
+	policyModelMarshallJSONStartSliceSize = 2
+)
+
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
@@ -209,7 +213,7 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func iamPolicyDecodeConfigStringList(lI []interface{}) interface{} {
+func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	if len(lI) == 1 {
 		return lI[0].(string)
 	}

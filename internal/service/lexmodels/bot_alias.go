@@ -130,7 +130,7 @@ func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("conversation_logs"); ok {
-		conversationLogs, err := expandLexConversationLogs(v)
+		conversationLogs, err := expandConversationLogs(v)
 		if err != nil {
 			return err
 		}
@@ -202,7 +202,7 @@ func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Name)
 
 	if resp.ConversationLogs != nil {
-		d.Set("conversation_logs", flattenLexConversationLogs(resp.ConversationLogs))
+		d.Set("conversation_logs", flattenConversationLogs(resp.ConversationLogs))
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("conversation_logs"); ok {
-		conversationLogs, err := expandLexConversationLogs(v)
+		conversationLogs, err := expandConversationLogs(v)
 		if err != nil {
 			return err
 		}
@@ -290,7 +290,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting bot alias '%s': %w", d.Id(), err)
 	}
 
-	_, err = waitLexBotAliasDeleted(conn, botAliasName, botName)
+	_, err = waitBotAliasDeleted(conn, botAliasName, botName)
 
 	return err
 }
@@ -342,19 +342,19 @@ var lexLogSettings = &schema.Resource{
 	},
 }
 
-func flattenLexConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
+func flattenConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
 	return []map[string]interface{}{
 		{
 			"iam_role_arn": aws.StringValue(response.IamRoleArn),
-			"log_settings": flattenLexLogSettings(response.LogSettings),
+			"log_settings": flattenLogSettings(response.LogSettings),
 		},
 	}
 }
 
-func expandLexConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.ConversationLogsRequest, error) {
+func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.ConversationLogsRequest, error) {
 	request := rawObject.([]interface{})[0].(map[string]interface{})
 
-	logSettings, err := expandLexLogSettings(request["log_settings"].(*schema.Set).List())
+	logSettings, err := expandLogSettings(request["log_settings"].(*schema.Set).List())
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func expandLexConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.
 	}, nil
 }
 
-func flattenLexLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
+func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
 			"destination":     response.Destination,
@@ -377,7 +377,7 @@ func flattenLexLogSettings(responses []*lexmodelbuildingservice.LogSettingsRespo
 	return
 }
 
-func expandLexLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogSettingsRequest, error) {
+func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogSettingsRequest, error) {
 	requests := make([]*lexmodelbuildingservice.LogSettingsRequest, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {

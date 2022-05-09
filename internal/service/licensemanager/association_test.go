@@ -17,15 +17,15 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_association.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLicenseManagerAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseManagerAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseManagerAssociationExists(resourceName, &licenseSpecification),
+					testAccCheckAssociationExists(resourceName, &licenseSpecification),
 					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.example", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_instance.example", "arn"),
 				),
@@ -39,7 +39,7 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
+func testAccCheckAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
@@ -71,7 +71,7 @@ func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpe
 	}
 }
 
-func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
+func testAccCheckAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
 	for _, rs := range s.RootModule().Resources {
