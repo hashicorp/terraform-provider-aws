@@ -48,6 +48,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
