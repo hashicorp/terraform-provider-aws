@@ -389,6 +389,288 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
+									"instance_requirements": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"accelerator_count": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"accelerator_manufacturers": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ec2.AcceleratorManufacturer_Values(), false),
+													},
+												},
+												"accelerator_names": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ec2.AcceleratorName_Values(), false),
+													},
+												},
+												"accelerator_total_memory_mib": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"accelerator_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
+													},
+												},
+												"bare_metal": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(ec2.BareMetal_Values(), false),
+												},
+												"baseline_ebs_bandwidth_mbps": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"burstable_performance": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(ec2.BurstablePerformance_Values(), false),
+												},
+												"cpu_manufacturers": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ec2.CpuManufacturer_Values(), false),
+													},
+												},
+												"excluded_instance_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 400,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"instance_generations": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ec2.InstanceGeneration_Values(), false),
+													},
+												},
+												"local_storage": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(ec2.LocalStorage_Values(), false),
+												},
+												"local_storage_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ec2.LocalStorageType_Values(), false),
+													},
+												},
+												"memory_gib_per_vcpu": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+														},
+													},
+												},
+												"memory_mib": {
+													Type:     schema.TypeList,
+													Required: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"min": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"network_interface_count": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"min": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"on_demand_max_price_percentage_over_lowest_price": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"require_hibernate_support": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													ForceNew: true,
+												},
+												"spot_max_price_percentage_over_lowest_price": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"total_local_storage_gb": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+														},
+													},
+												},
+												"vcpu_count": {
+													Type:     schema.TypeList,
+													Required: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"min": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"instance_type": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -546,7 +828,6 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
-	_, launchTemplateConfigsOk := d.GetOk("launch_template_config")
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{
@@ -568,9 +849,8 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		spotFleetConfig.LaunchSpecifications = launchSpecs
 	}
 
-	if launchTemplateConfigsOk {
-		launchTemplates := buildLaunchTemplateConfigs(d)
-		spotFleetConfig.LaunchTemplateConfigs = launchTemplates
+	if v, ok := d.GetOk("launch_template_config"); ok && v.(*schema.Set).Len() > 0 {
+		spotFleetConfig.LaunchTemplateConfigs = expandLaunchTemplateConfigs(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -1172,81 +1452,372 @@ func buildSpotFleetLaunchSpecifications(d *schema.ResourceData, meta interface{}
 	return specs, nil
 }
 
-func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateConfig {
-	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
-	configs := make([]*ec2.LaunchTemplateConfig, 0)
-
-	for _, launchTemplateConfig := range launchTemplateConfigs.List() {
-
-		ltc := &ec2.LaunchTemplateConfig{}
-
-		ltcMap := launchTemplateConfig.(map[string]interface{})
-
-		//launch template spec
-		if v, ok := ltcMap["launch_template_specification"]; ok {
-			vL := v.([]interface{})
-			lts := vL[0].(map[string]interface{})
-
-			flts := &ec2.FleetLaunchTemplateSpecification{}
-
-			if v, ok := lts["id"].(string); ok && v != "" {
-				flts.LaunchTemplateId = aws.String(v)
-			}
-
-			if v, ok := lts["name"].(string); ok && v != "" {
-				flts.LaunchTemplateName = aws.String(v)
-			}
-
-			if v, ok := lts["version"].(string); ok && v != "" {
-				flts.Version = aws.String(v)
-			}
-
-			ltc.LaunchTemplateSpecification = flts
-
-		}
-
-		if v, ok := ltcMap["overrides"]; ok && v.(*schema.Set).Len() > 0 {
-			vL := v.(*schema.Set).List()
-			overrides := make([]*ec2.LaunchTemplateOverrides, 0)
-
-			for _, v := range vL {
-				ors := v.(map[string]interface{})
-				lto := &ec2.LaunchTemplateOverrides{}
-
-				if v, ok := ors["availability_zone"].(string); ok && v != "" {
-					lto.AvailabilityZone = aws.String(v)
-				}
-
-				if v, ok := ors["instance_type"].(string); ok && v != "" {
-					lto.InstanceType = aws.String(v)
-				}
-
-				if v, ok := ors["spot_price"].(string); ok && v != "" {
-					lto.SpotPrice = aws.String(v)
-				}
-
-				if v, ok := ors["subnet_id"].(string); ok && v != "" {
-					lto.SubnetId = aws.String(v)
-				}
-
-				if v, ok := ors["weighted_capacity"].(float64); ok && v > 0 {
-					lto.WeightedCapacity = aws.Float64(v)
-				}
-
-				if v, ok := ors["priority"].(float64); ok {
-					lto.Priority = aws.Float64(v)
-				}
-
-				overrides = append(overrides, lto)
-			}
-
-			ltc.Overrides = overrides
-		}
-
-		configs = append(configs, ltc)
+func expandLaunchTemplateConfig(tfMap map[string]interface{}) *ec2.LaunchTemplateConfig {
+	if tfMap == nil {
+		return nil
 	}
 
-	return configs
+	apiObject := &ec2.LaunchTemplateConfig{}
+
+	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandFleetLaunchTemplateSpecification(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["overrides"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Overrides = expandLaunchTemplateOverrideses(v.List())
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateConfigs(tfList []interface{}) []*ec2.LaunchTemplateConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.LaunchTemplateConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandLaunchTemplateConfig(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandFleetLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.FleetLaunchTemplateSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.FleetLaunchTemplateSpecification{}
+
+	if v, ok := tfMap["id"].(string); ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v)
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v)
+	}
+
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *ec2.LaunchTemplateOverrides {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.LaunchTemplateOverrides{}
+
+	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+		apiObject.AvailabilityZone = aws.String(v)
+	}
+
+	if v, ok := tfMap["instance_requirements"].([]interface{}); ok && len(v) > 0 {
+		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["priority"].(float64); ok && v != 0.0 {
+		apiObject.Priority = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["spot_price"].(string); ok && v != "" {
+		apiObject.SpotPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+		apiObject.SubnetId = aws.String(v)
+	}
+
+	if v, ok := tfMap["weighted_capacity"].(float64); ok && v != 0.0 {
+		apiObject.WeightedCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateOverrideses(tfList []interface{}) []*ec2.LaunchTemplateOverrides {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.LaunchTemplateOverrides
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandLaunchTemplateOverrides(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandInstanceRequirements(tfMap map[string]interface{}) *ec2.InstanceRequirements {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.InstanceRequirements{}
+
+	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AcceleratorCount = expandAcceleratorCount(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["accelerator_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AcceleratorManufacturers = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["accelerator_names"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AcceleratorNames = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiB(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
+		apiObject.BareMetal = aws.String(v)
+	}
+
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEbsBandwidthMbps(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
+		apiObject.BurstablePerformance = aws.String(v)
+	}
+
+	if v, ok := tfMap["cpu_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CpuManufacturers = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["excluded_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ExcludedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["instance_generations"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.InstanceGenerations = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["local_storage"].(string); ok && v != "" {
+		apiObject.LocalStorage = aws.String(v)
+	}
+
+	if v, ok := tfMap["local_storage_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LocalStorageTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCpu(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MemoryMiB = expandMemoryMiB(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCount(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["on_demand_max_price_percentage_over_lowest_price"].(int); ok && v != 0 {
+		apiObject.OnDemandMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["require_hibernate_support"].(bool); ok && v {
+		apiObject.RequireHibernateSupport = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["spot_max_price_percentage_over_lowest_price"].(int); ok && v != 0 {
+		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
+		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGB(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
+		apiObject.VCpuCount = expandVCpuCountRange(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAcceleratorCount(tfMap map[string]interface{}) *ec2.AcceleratorCount {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.AcceleratorCount{}
+
+	if v, ok := tfMap["max"].(int); ok {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min"].(int); ok {
+		apiObject.Min = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandAcceleratorTotalMemoryMiB(tfMap map[string]interface{}) *ec2.AcceleratorTotalMemoryMiB {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.AcceleratorTotalMemoryMiB{}
+
+	if v, ok := tfMap["max"].(int); ok {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min"].(int); ok {
+		apiObject.Min = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandBaselineEbsBandwidthMbps(tfMap map[string]interface{}) *ec2.BaselineEbsBandwidthMbps {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.BaselineEbsBandwidthMbps{}
+
+	if v, ok := tfMap["max"].(int); ok {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min"].(int); ok {
+		apiObject.Min = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandMemoryGiBPerVCpu(tfMap map[string]interface{}) *ec2.MemoryGiBPerVCpu {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.MemoryGiBPerVCpu{}
+
+	if v, ok := tfMap["max"].(float64); ok {
+		apiObject.Max = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["min"].(float64); ok {
+		apiObject.Min = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func expandMemoryMiB(tfMap map[string]interface{}) *ec2.MemoryMiB {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.MemoryMiB{}
+
+	if v, ok := tfMap["max"].(int); ok {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min"].(int); ok {
+		apiObject.Min = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandNetworkInterfaceCount(tfMap map[string]interface{}) *ec2.NetworkInterfaceCount {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.NetworkInterfaceCount{}
+
+	if v, ok := tfMap["max"].(int); ok {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min"].(int); ok {
+		apiObject.Min = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandTotalLocalStorageGB(tfMap map[string]interface{}) *ec2.TotalLocalStorageGB {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.TotalLocalStorageGB{}
+
+	if v, ok := tfMap["max"].(float64); ok {
+		apiObject.Max = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["min"].(float64); ok {
+		apiObject.Min = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func expandVCpuCountRange(tfMap map[string]interface{}) *ec2.VCpuCountRange {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.VCpuCountRange{}
+
+	if v, ok := tfMap["max"].(int); ok {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min"].(int); ok {
+		apiObject.Min = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
 func expandSpotMaintenanceStrategies(l []interface{}) *ec2.SpotMaintenanceStrategies {
