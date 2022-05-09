@@ -265,6 +265,18 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*", map[string]string{
+						"overrides.#": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*.overrides.*", map[string]string{
+						"instance_type":     "t1.micro",
+						"weighted_capacity": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*.overrides.*", map[string]string{
+						"instance_type": "m3.medium",
+						"priority":      "1",
+						"spot_price":    "0.26",
+					}),
 				),
 			},
 			{

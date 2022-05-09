@@ -702,7 +702,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 									},
 								},
 							},
-							Set: hashLaunchTemplateOverrides,
 						},
 					},
 				},
@@ -1055,10 +1054,8 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
-	if len(config.LaunchTemplateConfigs) > 0 {
-		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
-			return fmt.Errorf("setting launch_template_config: %w", err)
-		}
+	if err := d.Set("launch_template_config", flattenLaunchTemplateConfigs(config.LaunchTemplateConfigs)); err != nil {
+		return fmt.Errorf("setting launch_template_config: %w", err)
 	}
 
 	d.Set("on_demand_target_capacity", config.OnDemandTargetCapacity)
@@ -1850,35 +1847,6 @@ func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
 	return capacityRebalance
 }
 
-func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplateOverrides) map[string]interface{} {
-	m := make(map[string]interface{})
-
-	if override.AvailabilityZone != nil {
-		m["availability_zone"] = aws.StringValue(override.AvailabilityZone)
-	}
-	if override.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(override.InstanceType)
-	}
-
-	if override.SpotPrice != nil {
-		m["spot_price"] = aws.StringValue(override.SpotPrice)
-	}
-
-	if override.SubnetId != nil {
-		m["subnet_id"] = aws.StringValue(override.SubnetId)
-	}
-
-	if override.WeightedCapacity != nil {
-		m["weighted_capacity"] = aws.Float64Value(override.WeightedCapacity)
-	}
-
-	if override.Priority != nil {
-		m["priority"] = aws.Float64Value(override.Priority)
-	}
-
-	return m
-}
-
 func launchSpecsToSet(conn *ec2.EC2, launchSpecs []*ec2.SpotFleetLaunchSpecification) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
@@ -2157,57 +2125,118 @@ func hashEbsBlockDevice(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenFleetLaunchTemplateConfig(ltcs []*ec2.LaunchTemplateConfig) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-
-	for _, ltc := range ltcs {
-		ltcRes := map[string]interface{}{}
-
-		if ltc.LaunchTemplateSpecification != nil {
-			ltcRes["launch_template_specification"] = flattenFleetLaunchTemplateSpecification(ltc.LaunchTemplateSpecification)
-		}
-
-		if ltc.Overrides != nil {
-			ltcRes["overrides"] = flattenLaunchTemplateOverrides(ltc.Overrides)
-		}
-
-		result = append(result, ltcRes)
+func flattenLaunchTemplateConfig(apiObject *ec2.LaunchTemplateConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return result
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateSpecification; v != nil {
+		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecification(v)}
+	}
+
+	if v := apiObject.Overrides; v != nil {
+		tfMap["overrides"] = flattenLaunchTemplateOverrideses(v)
+	}
+
+	return tfMap
 }
 
-func flattenFleetLaunchTemplateSpecification(flt *ec2.FleetLaunchTemplateSpecification) []map[string]interface{} {
-	attrs := map[string]interface{}{}
-	result := make([]map[string]interface{}, 0)
-
-	// unlike autoscaling.LaunchTemplateConfiguration, FleetLaunchTemplateSpecs only return what was set
-	if flt.LaunchTemplateId != nil {
-		attrs["id"] = aws.StringValue(flt.LaunchTemplateId)
+func flattenLaunchTemplateConfigs(apiObjects []*ec2.LaunchTemplateConfig) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	if flt.LaunchTemplateName != nil {
-		attrs["name"] = aws.StringValue(flt.LaunchTemplateName)
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenLaunchTemplateConfig(apiObject))
 	}
 
-	// version is returned only if it was previously set
-	if flt.Version != nil {
-		attrs["version"] = aws.StringValue(flt.Version)
-	} else {
-		attrs["version"] = nil
-	}
-
-	result = append(result, attrs)
-
-	return result
+	return tfList
 }
 
-func flattenLaunchTemplateOverrides(overrides []*ec2.LaunchTemplateOverrides) *schema.Set {
-	overrideSet := &schema.Set{F: hashLaunchTemplateOverrides}
-	for _, override := range overrides {
-		overrideSet.Add(flattenSpotFleetRequestLaunchTemplateOverrides(override))
+func flattenFleetLaunchTemplateSpecification(apiObject *ec2.FleetLaunchTemplateSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
-	return overrideSet
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateName; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Version; v != nil {
+		tfMap["version"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateOverrides(apiObject *ec2.LaunchTemplateOverrides) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZone; v != nil {
+		tfMap["availability_zone"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.InstanceRequirements; v != nil {
+		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap["instance_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Priority; v != nil {
+		tfMap["priority"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.SpotPrice; v != nil {
+		tfMap["spot_price"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SubnetId; v != nil {
+		tfMap["subnet_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.WeightedCapacity; v != nil {
+		tfMap["weighted_capacity"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateOverrideses(apiObjects []*ec2.LaunchTemplateOverrides) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenLaunchTemplateOverrides(apiObject))
+	}
+
+	return tfList
 }
 
 func flattenSpotMaintenanceStrategies(spotMaintenanceStrategies *ec2.SpotMaintenanceStrategies) []interface{} {
