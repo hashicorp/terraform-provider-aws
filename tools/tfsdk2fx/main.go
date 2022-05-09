@@ -352,13 +352,17 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				elementType = "types.StringType"
 
 			default:
-				return unsupportedTypeError(path, fmt.Sprintf("list of %s", v.String()))
+				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %s", v.String()))
 			}
 
 			fprintf(e.SchemaWriter, "Type:types.ListType{ElemType:%s},\n", elementType)
 
+		case *schema.Resource:
+			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
+
 		default:
-			return unsupportedTypeError(path, fmt.Sprintf("list of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
 		}
 
 	case schema.TypeMap:
@@ -383,13 +387,17 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				elementType = "types.StringType"
 
 			default:
-				return unsupportedTypeError(path, fmt.Sprintf("map of %s", v.String()))
+				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) map of %s", v.String()))
 			}
 
 			fprintf(e.SchemaWriter, "Type:types.MapType{ElemType:%s},\n", elementType)
 
+		case *schema.Resource:
+			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
+
 		default:
-			return unsupportedTypeError(path, fmt.Sprintf("map of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) map of %T", v))
 		}
 
 	case schema.TypeSet:
@@ -414,13 +422,17 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				elementType = "types.StringType"
 
 			default:
-				return unsupportedTypeError(path, fmt.Sprintf("set of %s", v.String()))
+				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) set of %s", v.String()))
 			}
 
 			fprintf(e.SchemaWriter, "Type:types.SetType{ElemType:%s},\n", elementType)
 
+		case *schema.Resource:
+			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
+
 		default:
-			return unsupportedTypeError(path, fmt.Sprintf("set of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) set of %T", v))
 		}
 
 	default:
@@ -513,7 +525,7 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 			fprintf(e.SchemaWriter, "NestingMode:tfsdk.BlockNestingModeList,\n")
 
 		default:
-			return unsupportedTypeError(path, fmt.Sprintf("list of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Block) list of %T", v))
 		}
 
 	case schema.TypeSet:
@@ -528,7 +540,7 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 			fprintf(e.SchemaWriter, "NestingMode:tfsdk.BlockNestingModeSet,\n")
 
 		default:
-			return unsupportedTypeError(path, fmt.Sprintf("set of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Block) set of %T", v))
 		}
 
 	default:
