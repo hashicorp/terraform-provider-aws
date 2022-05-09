@@ -2,7 +2,7 @@
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](docs/contributing/core-services.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](../contributing/core-services.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
 
@@ -12,8 +12,8 @@ In the period spanning November 2021 to Janury 2022, 668 Pull Requests were open
 
 - Managing Amazon CloudSearch Domains
 - ECS Task Sets
-- S3 Intelligent Tiering Archive Configuration 
-- IoT Thing Group 
+- S3 Intelligent Tiering Archive Configuration
+- IoT Thing Group
 - Lambda Access Points for S3
 - ECR Public Repositories
 
@@ -114,7 +114,7 @@ New Resource(s):
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-### Scaffolding for new resources, datasources and associated tests. 
+### Scaffolding for new resources, datasources and associated tests
 
 Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
 
