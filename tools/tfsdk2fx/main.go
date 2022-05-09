@@ -330,47 +330,23 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 	//
 	// Complex types.
 	//
-	case schema.TypeList:
-		switch v := property.Elem.(type) {
-		case *schema.Schema:
-			//
-			// List of primitives.
-			//
-			var elementType string
+	case schema.TypeList, schema.TypeMap, schema.TypeSet:
+		var aggregateType, typeName string
 
-			switch v := v.Type; v {
-			case schema.TypeBool:
-				elementType = "types.BoolType"
-
-			case schema.TypeFloat:
-				elementType = "types.Float64Type"
-
-			case schema.TypeInt:
-				elementType = "types.Int64Type"
-
-			case schema.TypeString:
-				elementType = "types.StringType"
-
-			default:
-				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %s", v.String()))
-			}
-
-			fprintf(e.SchemaWriter, "Type:types.ListType{ElemType:%s},\n", elementType)
-
-		case *schema.Resource:
-			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
-
-		default:
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
+		switch v {
+		case schema.TypeList:
+			aggregateType = "types.ListType"
+			typeName = "list"
+		case schema.TypeMap:
+			aggregateType = "types.MapType"
+			typeName = "map"
+		case schema.TypeSet:
+			aggregateType = "types.SetType"
+			typeName = "set"
 		}
 
-	case schema.TypeMap:
 		switch v := property.Elem.(type) {
 		case *schema.Schema:
-			//
-			// Map of primitives.
-			//
 			var elementType string
 
 			switch v := v.Type; v {
@@ -387,52 +363,17 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 				elementType = "types.StringType"
 
 			default:
-				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) map of %s", v.String()))
+				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %s", typeName, v.String()))
 			}
 
-			fprintf(e.SchemaWriter, "Type:types.MapType{ElemType:%s},\n", elementType)
+			fprintf(e.SchemaWriter, "Type:%s{ElemType:%s},\n", aggregateType, elementType)
 
 		case *schema.Resource:
 			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %T", typeName, v))
 
 		default:
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) map of %T", v))
-		}
-
-	case schema.TypeSet:
-		switch v := property.Elem.(type) {
-		case *schema.Schema:
-			//
-			// Set of primitives.
-			//
-			var elementType string
-
-			switch v := v.Type; v {
-			case schema.TypeBool:
-				elementType = "types.BoolType"
-
-			case schema.TypeFloat:
-				elementType = "types.Float64Type"
-
-			case schema.TypeInt:
-				elementType = "types.Int64Type"
-
-			case schema.TypeString:
-				elementType = "types.StringType"
-
-			default:
-				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) set of %s", v.String()))
-			}
-
-			fprintf(e.SchemaWriter, "Type:types.SetType{ElemType:%s},\n", elementType)
-
-		case *schema.Resource:
-			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) list of %T", v))
-
-		default:
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) set of %T", v))
+			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %T", typeName, v))
 		}
 
 	default:
