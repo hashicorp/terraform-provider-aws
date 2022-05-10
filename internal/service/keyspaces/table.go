@@ -318,10 +318,51 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", table.ResourceArn)
+	if table.CapacitySpecification != nil {
+		if err := d.Set("capacity_specification", []interface{}{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
+			return diag.Errorf("setting capacity_specification: %s", err)
+		}
+	} else {
+		d.Set("capacity_specification", nil)
+	}
+	if table.Comment != nil {
+		if err := d.Set("comment", []interface{}{flattenComment(table.Comment)}); err != nil {
+			return diag.Errorf("setting comment: %s", err)
+		}
+	} else {
+		d.Set("comment", nil)
+	}
+	d.Set("default_time_to_live", table.DefaultTimeToLive)
+	if table.EncryptionSpecification != nil {
+		if err := d.Set("encryption_specification", []interface{}{flattenEncryptionSpecification(table.EncryptionSpecification)}); err != nil {
+			return diag.Errorf("setting encryption_specification: %s", err)
+		}
+	} else {
+		d.Set("encryption_specification", nil)
+	}
 	d.Set("keyspace_name", table.KeyspaceName)
+	if table.PointInTimeRecovery != nil {
+		if err := d.Set("point_in_time_recovery", []interface{}{flattenPointInTimeRecoverySummary(table.PointInTimeRecovery)}); err != nil {
+			return diag.Errorf("setting point_in_time_recovery: %s", err)
+		}
+	} else {
+		d.Set("point_in_time_recovery", nil)
+	}
+	if table.SchemaDefinition != nil {
+		if err := d.Set("schema_definition", []interface{}{flattenSchemaDefinition(table.SchemaDefinition)}); err != nil {
+			return diag.Errorf("setting schema_definition: %s", err)
+		}
+	} else {
+		d.Set("schema_definition", nil)
+	}
 	d.Set("table_name", table.TableName)
-
-	// TODO More attributes.
+	if table.Ttl != nil {
+		if err := d.Set("ttl", []interface{}{flattenTimeToLive(table.Ttl)}); err != nil {
+			return diag.Errorf("setting ttl: %s", err)
+		}
+	} else {
+		d.Set("ttl", nil)
+	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
@@ -771,4 +812,248 @@ func expandStaticColumns(tfList []interface{}) []*keyspaces.StaticColumn {
 	}
 
 	return apiObjects
+}
+
+func flattenCapacitySpecificationSummary(apiObject *keyspaces.CapacitySpecificationSummary) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ReadCapacityUnits; v != nil {
+		tfMap["read_capacity_units"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.ThroughputMode; v != nil {
+		tfMap["throughput_mode"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.WriteCapacityUnits; v != nil {
+		tfMap["write_capacity_units"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenComment(apiObject *keyspaces.Comment) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Message; v != nil {
+		tfMap["message"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEncryptionSpecification(apiObject *keyspaces.EncryptionSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.KmsKeyIdentifier; v != nil {
+		tfMap["kms_key_identifier"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenPointInTimeRecoverySummary(apiObject *keyspaces.PointInTimeRecoverySummary) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenSchemaDefinition(apiObject *keyspaces.SchemaDefinition) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllColumns; v != nil {
+		tfMap["all_column"] = flattenColumnDefinitions(v)
+	}
+
+	if v := apiObject.ClusteringKeys; v != nil {
+		tfMap["clustering_key"] = flattenClusteringKeys(v)
+	}
+
+	if v := apiObject.PartitionKeys; v != nil {
+		tfMap["partition_key"] = flattenPartitionKeys(v)
+	}
+
+	if v := apiObject.StaticColumns; v != nil {
+		tfMap["static_column"] = flattenStaticColumns(v)
+	}
+
+	return tfMap
+}
+
+func flattenTimeToLive(apiObject *keyspaces.TimeToLive) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenColumnDefinition(apiObject *keyspaces.ColumnDefinition) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenColumnDefinitions(apiObjects []*keyspaces.ColumnDefinition) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenColumnDefinition(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenClusteringKey(apiObject *keyspaces.ClusteringKey) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OrderBy; v != nil {
+		tfMap["order_by"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenClusteringKeys(apiObjects []*keyspaces.ClusteringKey) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenClusteringKey(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenPartitionKey(apiObject *keyspaces.PartitionKey) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenPartitionKeys(apiObjects []*keyspaces.PartitionKey) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenPartitionKey(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenStaticColumn(apiObject *keyspaces.StaticColumn) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenStaticColumns(apiObjects []*keyspaces.StaticColumn) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenStaticColumn(apiObject))
+	}
+
+	return tfList
 }
