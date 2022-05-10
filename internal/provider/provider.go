@@ -1539,7 +1539,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
 			"aws_keyspaces_keyspace": keyspaces.ResourceKeyspace(),
-			"aws_keyspaces_table": keyspaces.ResourceTable(),
+			"aws_keyspaces_table":    keyspaces.ResourceTable(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
