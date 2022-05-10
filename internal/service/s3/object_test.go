@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1387,13 +1387,13 @@ func testAccCheckObjectExists(n string, obj *s3.GetObjectOutput) resource.TestCh
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			var err error
 			out, err = conn.GetObject(input)
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "NoSuchKey" {
-					return resource.RetryableError(
-						fmt.Errorf("getting object %s, retrying: %w", rs.Primary.Attributes["bucket"], err),
-					)
-				}
+
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
+				return resource.RetryableError(
+					fmt.Errorf("getting object %s, retrying: %w", rs.Primary.Attributes["bucket"], err),
+				)
 			}
+
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}

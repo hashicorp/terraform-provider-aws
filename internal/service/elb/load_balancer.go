@@ -325,16 +325,14 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.CreateLoadBalancer(elbOpts)
 
+		if tfawserr.ErrCodeEquals(err, elb.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %w", err))
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// Check for IAM SSL Cert error, eventual consistancy issue
-				if awsErr.Code() == elb.ErrCodeCertificateNotFoundException {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 	if tfresource.TimedOut(err) {

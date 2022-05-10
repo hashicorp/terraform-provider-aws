@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1111,18 +1111,19 @@ func testAccCheckRecordDestroy(s *terraform.State) error {
 		}
 
 		resp, err := conn.ListResourceRecordSets(lopts)
+
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+			continue
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// if NoSuchHostedZone, then all the things are destroyed
-				if awsErr.Code() == "NoSuchHostedZone" {
-					return nil
-				}
-			}
 			return err
 		}
+
 		if len(resp.ResourceRecordSets) == 0 {
 			return nil
 		}
+
 		rec := resp.ResourceRecordSets[0]
 		if tfroute53.FQDN(*rec.Name) == tfroute53.FQDN(name) && *rec.Type == rType {
 			return fmt.Errorf("Record still exists: %#v", rec)

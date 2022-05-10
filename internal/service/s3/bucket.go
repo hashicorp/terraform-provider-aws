@@ -13,7 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -752,11 +751,11 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateBucket(req)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == ErrCodeOperationAborted {
-				return resource.RetryableError(fmt.Errorf("error creating S3 Bucket (%s), retrying: %w", bucket, err))
-			}
+
+		if tfawserr.ErrCodeEquals(err, ErrCodeOperationAborted) {
+			return resource.RetryableError(fmt.Errorf("error creating S3 Bucket (%s), retrying: %w", bucket, err))
 		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
