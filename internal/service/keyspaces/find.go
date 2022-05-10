@@ -58,5 +58,12 @@ func FindTableByTwoPartKey(ctx context.Context, conn *keyspaces.Keyspaces, keysp
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if status := aws.StringValue(output.Status); status == keyspaces.TableStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
 	return output, nil
 }

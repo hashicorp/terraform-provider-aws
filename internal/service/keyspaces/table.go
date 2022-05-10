@@ -6,11 +6,13 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,7 +32,12 @@ func ResourceTable() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		// To be updated
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
@@ -95,7 +102,9 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	// TODO: Wait until ACTIVE.
+	if _, err := waitTableCreated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Keyspaces Table (%s) create: %s", d.Id(), err)
+	}
 
 	return resourceTableRead(ctx, d, meta)
 }
@@ -124,6 +133,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", table.ResourceArn)
+	d.Set("keyspace_name", table.KeyspaceName)
+	d.Set("table_name", table.TableName)
 
 	// TODO More attributes.
 
@@ -169,7 +180,9 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return diag.Errorf("updating Keyspaces Table (%s): %s", d.Id(), err)
 		}
 
-		// TODO Wait
+		if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Keyspaces Table (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -206,7 +219,9 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("deleting Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
-	// TODO: Wait until DELETED.
+	if _, err := waitTableDeleted(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for Keyspaces Table (%s) delete: %s", d.Id(), err)
+	}
 
 	return nil
 }
@@ -228,4 +243,71 @@ func TableParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected KEYSPACE-NAME%[2]sTABLE-NAME", id, tableIDSeparator)
+}
+
+func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitTableCreated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{keyspaces.TableStatusCreating},
+		Target:  []string{keyspaces.TableStatusActive},
+		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*keyspaces.GetTableOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{keyspaces.TableStatusDeleting},
+		Target:  []string{},
+		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*keyspaces.GetTableOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{keyspaces.TableStatusUpdating},
+		Target:  []string{keyspaces.TableStatusActive},
+		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*keyspaces.GetTableOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
