@@ -659,7 +659,7 @@ func testAccCheckDocumentDestroy(s *terraform.State) error {
 		return nil
 	}
 
-	return fmt.Errorf("Default error in SSM Document Test")
+	return nil
 }
 
 /*
