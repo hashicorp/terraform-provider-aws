@@ -30,6 +30,14 @@ func ResourceConnectorProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appflow.ConnectionMode_Values(), false),
 			},
+			"connector_label": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
+					validation.StringLenBetween(1, 256),
+				),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -1401,6 +1409,10 @@ func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) er
 		ConnectorType:          aws.String(d.Get("connector_type").(string)),
 	}
 
+	if v, ok := d.Get("connector_label").(string); ok && len(v) > 0 {
+		createConnectorProfileInput.ConnectorLabel = aws.String(v)
+	}
+
 	if v, ok := d.Get("kms_arn").(string); ok && len(v) > 0 {
 		createConnectorProfileInput.KmsArn = aws.String(v)
 	}
@@ -1428,6 +1440,7 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 	credentials := d.Get("connector_profile_config.0.connector_profile_credentials").([]interface{})
 
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
+	d.Set("connector_label", connectorProfile.ConnectorLabel)
 	d.Set("connector_profile_arn", connectorProfile.ConnectorProfileArn)
 	d.Set("connector_profile_name", connectorProfile.ConnectorProfileName)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
