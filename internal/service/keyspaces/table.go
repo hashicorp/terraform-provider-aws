@@ -45,6 +45,69 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"read_capacity_units": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"throughput_mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(keyspaces.ThroughputMode_Values(), false),
+						},
+						"write_capacity_units": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+					},
+				},
+			},
+			"comment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"message": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"default_time_to_live": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 630720000),
+			},
+			"encryption_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_identifier": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(keyspaces.EncryptionType_Values(), false),
+						},
+					},
+				},
+			},
 			"keyspace_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -56,6 +119,86 @@ func ResourceTable() *schema.Resource {
 						"The name must consist of alphanumerics and underscores.",
 					),
 				),
+			},
+			"point_in_time_recovery": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(keyspaces.PointInTimeRecoveryStatus_Values(), false),
+						},
+					},
+				},
+			},
+			"schema_definition": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"all_column": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"clustering_key": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"order_by": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(keyspaces.SortOrder_Values(), false),
+									},
+								},
+							},
+						},
+						"partition_key": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"static_column": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"table_name": {
 				Type:     schema.TypeString,
@@ -71,6 +214,20 @@ func ResourceTable() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"ttl": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(keyspaces.TimeToLiveStatus_Values(), false),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -86,6 +243,34 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
+	}
+
+	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CapacitySpecification = expandCapacitySpecification(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("comment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Comment = expandComment(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("default_time_to_live"); ok {
+		input.DefaultTimeToLive = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("encryption_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionSpecification = expandEncryptionSpecification(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("point_in_time_recovery"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.PointInTimeRecovery = expandPointInTimeRecovery(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("schema_definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.SchemaDefinition = expandSchemaDefinition(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("ttl"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Ttl = expandTimeToLive(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if tags := Tags(tags.IgnoreAWS()); len(tags) > 0 {
@@ -310,4 +495,280 @@ func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 	}
 
 	return nil, err
+}
+
+func expandCapacitySpecification(tfMap map[string]interface{}) *keyspaces.CapacitySpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.CapacitySpecification{}
+
+	if v, ok := tfMap["read_capacity_units"].(int); ok && v != 0 {
+		apiObject.ReadCapacityUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["throughput_mode"].(string); ok && v != "" {
+		apiObject.ThroughputMode = aws.String(v)
+	}
+
+	if v, ok := tfMap["write_capacity_units"].(int); ok && v != 0 {
+		apiObject.WriteCapacityUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandComment(tfMap map[string]interface{}) *keyspaces.Comment {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.Comment{}
+
+	if v, ok := tfMap["message"].(string); ok && v != "" {
+		apiObject.Message = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandEncryptionSpecification(tfMap map[string]interface{}) *keyspaces.EncryptionSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.EncryptionSpecification{}
+
+	if v, ok := tfMap["kms_key_identifier"].(string); ok && v != "" {
+		apiObject.KmsKeyIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPointInTimeRecovery(tfMap map[string]interface{}) *keyspaces.PointInTimeRecovery {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.PointInTimeRecovery{}
+
+	if v, ok := tfMap["status"].(string); ok && v != "" {
+		apiObject.Status = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSchemaDefinition(tfMap map[string]interface{}) *keyspaces.SchemaDefinition {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.SchemaDefinition{}
+
+	if v, ok := tfMap["all_column"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllColumns = expandColumnDefinitions(v.List())
+	}
+
+	if v, ok := tfMap["clustering_key"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ClusteringKeys = expandClusteringKeys(v.List())
+	}
+
+	if v, ok := tfMap["partition_key"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.PartitionKeys = expandPartitionKeys(v.List())
+	}
+
+	if v, ok := tfMap["static_column"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StaticColumns = expandStaticColumns(v.List())
+	}
+
+	return apiObject
+}
+
+func expandTimeToLive(tfMap map[string]interface{}) *keyspaces.TimeToLive {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.TimeToLive{}
+
+	if v, ok := tfMap["status"].(string); ok && v != "" {
+		apiObject.Status = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandColumnDefinition(tfMap map[string]interface{}) *keyspaces.ColumnDefinition {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.ColumnDefinition{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandColumnDefinitions(tfList []interface{}) []*keyspaces.ColumnDefinition {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*keyspaces.ColumnDefinition
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandColumnDefinition(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandClusteringKey(tfMap map[string]interface{}) *keyspaces.ClusteringKey {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.ClusteringKey{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["order_by"].(string); ok && v != "" {
+		apiObject.OrderBy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandClusteringKeys(tfList []interface{}) []*keyspaces.ClusteringKey {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*keyspaces.ClusteringKey
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandClusteringKey(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandPartitionKey(tfMap map[string]interface{}) *keyspaces.PartitionKey {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.PartitionKey{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPartitionKeys(tfList []interface{}) []*keyspaces.PartitionKey {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*keyspaces.PartitionKey
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPartitionKey(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandStaticColumn(tfMap map[string]interface{}) *keyspaces.StaticColumn {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &keyspaces.StaticColumn{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandStaticColumns(tfList []interface{}) []*keyspaces.StaticColumn {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*keyspaces.StaticColumn
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandStaticColumn(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
