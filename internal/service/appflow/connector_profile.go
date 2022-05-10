@@ -6,6 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,6 +68,164 @@ func ResourceConnectorProfile() *schema.Resource {
 														validation.StringLenBetween(1, 256),
 														validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
+												},
+											},
+										},
+									},
+									"custom_connector": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"api_key": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"api_key": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 256),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"api_secret_key": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 256),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+														},
+													},
+												},
+												"authentication_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(appflow.AuthenticationType_Values(), false),
+												},
+												"basic": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"password": {
+																Type:         schema.TypeString,
+																Required:     true,
+																Sensitive:    true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"username": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+														},
+													},
+												},
+												"custom": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"credentials_map": {
+																Type:      schema.TypeMap,
+																Optional:  true,
+																Sensitive: true,
+																MaxItems:  50,
+																ValidateDiagFunc: allDiagFunc(
+																	validation.MapKeyLenBetween(1, 128),
+																	validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+																),
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(0, 2048),
+																		validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																	),
+																},
+															},
+															"custom_authentication_type": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															},
+														},
+													},
+												},
+												"oauth2": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"access_token": {
+																Type:      schema.TypeString,
+																Optional:  true,
+																Sensitive: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 2048),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"client_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 512),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"client_secret": {
+																Type:      schema.TypeString,
+																Optional:  true,
+																Sensitive: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 512),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+															"oauth_request": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"auth_code": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			ValidateFunc: validation.All(
+																				validation.StringLenBetween(1, 2048),
+																				validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			),
+																		},
+																		"redirect_uri": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			ValidateFunc: validation.All(
+																				validation.StringLenBetween(1, 512),
+																				validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			),
+																		},
+																	},
+																},
+															},
+															"refresh_token": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 1024),
+																	validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -752,6 +912,68 @@ func ResourceConnectorProfile() *schema.Resource {
 											Schema: map[string]*schema.Schema{},
 										},
 									},
+									"custom_connector": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"oauth2_properties": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"oauth2_grant_type": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appflow.OAuth2GrantType_Values(), false),
+															},
+															"token_url": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(1, 256),
+																	validation.StringMatch(regexp.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																),
+															},
+															"token_url_custom_properties": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																ValidateDiagFunc: allDiagFunc(
+																	validation.MapKeyLenBetween(1, 128),
+																	validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+																),
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(0, 2048),
+																		validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																	),
+																},
+															},
+														},
+													},
+												},
+												"profile_properties": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													MaxItems: 50,
+													ValidateDiagFunc: allDiagFunc(
+														validation.MapKeyLenBetween(1, 128),
+														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+													),
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(0, 2048),
+															validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"),
+														),
+													},
+												},
+											},
+										},
+									},
 									"datadog": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -1158,6 +1380,16 @@ func ResourceConnectorProfile() *schema.Resource {
 	}
 }
 
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
+}
+
 func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 	name := d.Get("connector_profile_name").(string)
@@ -1266,6 +1498,9 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *appflow.Connec
 	if v, ok := m["amplitude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Amplitude = expandAmplitudeConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
+	if v, ok := m["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		cpc.CustomConnector = expandCustomConnectorProfileCredentials(v[0].(map[string]interface{}))
+	}
 	if v, ok := m["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Datadog = expandDatadogConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
@@ -1322,6 +1557,26 @@ func expandAmplitudeConnectorProfileCredentials(m map[string]interface{}) *appfl
 	credentials := appflow.AmplitudeConnectorProfileCredentials{
 		ApiKey:    aws.String(m["api_key"].(string)),
 		SecretKey: aws.String(m["secret_key"].(string)),
+	}
+
+	return &credentials
+}
+
+func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.CustomConnectorProfileCredentials {
+	credentials := appflow.CustomConnectorProfileCredentials{
+		AuthenticationType: aws.String(m["authentication_type"].(string)),
+	}
+
+	if v, ok := m["basic"].([]interface{}); ok && len(v) > 0 {
+		credentials.Basic = expandBasicAuthCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["custom"].([]interface{}); ok && len(v) > 0 {
+		credentials.Custom = expandCustomAuthCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["oauth2_credentials"].([]interface{}); ok && len(v) > 0 {
+		credentials.Oauth2 = expandOAuth2Credentials(v[0].(map[string]interface{}))
 	}
 
 	return &credentials
@@ -1555,6 +1810,20 @@ func expandBasicAuthCredentials(m map[string]interface{}) *appflow.BasicAuthCred
 	return &credentials
 }
 
+func expandCustomAuthCredentials(m map[string]interface{}) *appflow.CustomAuthCredentials {
+	credentials := appflow.CustomAuthCredentials{}
+
+	if v, ok := m["credentials_map"].(map[string]interface{}); ok && len(v) > 0 {
+		credentials.CredentialsMap = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := m["custom_authentication_type"].(string); ok && v != "" {
+		credentials.CustomAuthenticationType = aws.String(v)
+	}
+
+	return &credentials
+}
+
 func expandOAuthCredentials(m map[string]interface{}) *appflow.OAuthCredentials {
 	credentials := appflow.OAuthCredentials{
 		ClientId:     aws.String(m["client_id"].(string)),
@@ -1563,6 +1832,32 @@ func expandOAuthCredentials(m map[string]interface{}) *appflow.OAuthCredentials 
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
+	}
+
+	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 {
+		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["refresh_token"].(string); ok && v != "" {
+		credentials.RefreshToken = aws.String(v)
+	}
+
+	return &credentials
+}
+
+func expandOAuth2Credentials(m map[string]interface{}) *appflow.OAuth2Credentials {
+	credentials := appflow.OAuth2Credentials{}
+
+	if v, ok := m["access_token"].(string); ok && v != "" {
+		credentials.AccessToken = aws.String(v)
+	}
+
+	if v, ok := m["client_id"].(string); ok && v != "" {
+		credentials.ClientId = aws.String(v)
+	}
+
+	if v, ok := m["client_secret"].(string); ok && v != "" {
+		credentials.ClientSecret = aws.String(v)
 	}
 
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 {
