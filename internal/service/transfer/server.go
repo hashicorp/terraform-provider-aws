@@ -846,10 +846,6 @@ func expandWorkflowDetail(tfList []interface{}) []*transfer.WorkflowDetail {
 			apiObject.WorkflowId = aws.String(v)
 		}
 
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
