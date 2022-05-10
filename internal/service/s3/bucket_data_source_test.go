@@ -58,6 +58,28 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketDataSource_prefix(t *testing.T) {
+	prefix := "tf-test-bucket-prefix"
+	bucketName := sdkacctest.RandomWithPrefix(prefix)
+	region := acctest.Region()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketDataSourceConfig_prefix(bucketName, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists("data.aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "arn", "aws_s3_bucket.bucket", "arn"),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "region", region),
+				),
+			},
+		},
+	})
+}
+
 func testAccBucketDataSourceConfig_basic(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
@@ -96,4 +118,21 @@ data "aws_s3_bucket" "bucket" {
   bucket = aws_s3_bucket_website_configuration.test.id
 }
 `, bucketName)
+}
+
+func testAccBucketDataSourceConfig_prefix(bucketName string, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+}
+
+data "aws_s3_bucket" "bucket" {
+  name_prefix = %[2]q
+
+  depends_on = [
+    aws_s3_bucket.bucket,
+  ]
+
+}
+`, bucketName, prefix)
 }

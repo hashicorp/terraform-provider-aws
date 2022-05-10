@@ -53,11 +53,28 @@ resource "aws_cloudfront_distribution" "test" {
 }
 ```
 
+### Get bucket by name-prefix
+```terraform
+resource "aws_s3_bucket" "test" {
+  bucket = "test-prefix"
+}
+
+data "aws_s3_bucket" "selected" {
+  name_prefix = "test-"
+
+  depends_on = [
+    aws_s3_bucket.test,
+  ]
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket
+* `bucket` - (Optional) The name of the bucket.
+* `name_prefix` - (Optional) Name prefix of the bucket. Returns first bucket found with prefix. Conflicts with `bucket`
 
 ## Attribute Reference
 
