@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -2832,11 +2831,11 @@ func testAccCheckBucketPolicy(n string, policy string) resource.TestCheckFunc {
 			Bucket: aws.String(rs.Primary.ID),
 		})
 
+		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchBucketPolicy) {
+			return nil
+		}
+
 		if policy == "" {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucketPolicy" {
-				// expected
-				return nil
-			}
 			if err == nil {
 				return fmt.Errorf("Expected no policy, got: %#v", *out.Policy)
 			} else {
