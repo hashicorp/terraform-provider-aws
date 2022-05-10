@@ -35,10 +35,10 @@ func FindKeyspaceByName(ctx context.Context, conn *keyspaces.Keyspaces, name str
 	return output, nil
 }
 
-func FindTableInKeyspaceByName(ctx context.Context, conn *keyspaces.Keyspaces, keyspacceName string, tableName string) (*keyspaces.GetTableOutput, error) {
+func FindTableByTwoPartKey(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) (*keyspaces.GetTableOutput, error) {
 	input := keyspaces.GetTableInput{
-		KeyspaceName: aws.String(keyspacceName),
-		TableName: aws.String(tableName),
+		KeyspaceName: aws.String(keyspaceName),
+		TableName:    aws.String(tableName),
 	}
 
 	output, err := conn.GetTableWithContext(ctx, &input)
