@@ -52,3 +52,31 @@ func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 
 	return result, nil
 }
+
+func FindConnectorProfileByName(conn *appflow.Appflow, name string) (*appflow.ConnectorProfile, error) {
+	params := &appflow.DescribeConnectorProfilesInput{
+		ConnectorProfileNames: []*string{aws.String(name)},
+	}
+
+	for {
+		output, err := conn.DescribeConnectorProfiles(params)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, connectorProfile := range output.ConnectorProfileDetails {
+			if aws.StringValue(connectorProfile.ConnectorProfileName) == name {
+				return connectorProfile, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		params.NextToken = output.NextToken
+	}
+
+	return nil, fmt.Errorf("No connector profile found with name: %s", name)
+}

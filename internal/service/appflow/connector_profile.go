@@ -1417,7 +1417,7 @@ func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) er
 func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	connectorProfile, err := GetConnectorProfile(conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByName(conn, d.Id())
 
 	if err != nil {
 		return err
@@ -1435,34 +1435,6 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(d.Get("connector_profile_name").(string))
 
 	return nil
-}
-
-func GetConnectorProfile(conn *appflow.Appflow, name string) (*appflow.ConnectorProfile, error) {
-	params := &appflow.DescribeConnectorProfilesInput{
-		ConnectorProfileNames: []*string{aws.String(name)},
-	}
-
-	for {
-		output, err := conn.DescribeConnectorProfiles(params)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, connectorProfile := range output.ConnectorProfileDetails {
-			if aws.StringValue(connectorProfile.ConnectorProfileName) == name {
-				return connectorProfile, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		params.NextToken = output.NextToken
-	}
-
-	return nil, fmt.Errorf("No AppFlow Connector Profile found with name: %s", name)
 }
 
 func resourceConnectorProfileUpdate(d *schema.ResourceData, meta interface{}) error {
