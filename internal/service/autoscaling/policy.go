@@ -1029,11 +1029,6 @@ func flattenCustomizedCapacityMetricSpecification(customizedCapacityMetricSpecif
 }
 
 func flattenMetricDataQueries(metricDataQueries []*autoscaling.MetricDataQuery) []interface{} {
-	metricDataQueriesFlat := map[string]interface{}{}
-	if metricDataQueriesFlat == nil {
-		return []interface{}{}
-	}
-
 	metricDataQueriesSpec := make([]interface{}, len(metricDataQueries))
 	for i := range metricDataQueriesSpec {
 		metricDataQuery := map[string]interface{}{}
