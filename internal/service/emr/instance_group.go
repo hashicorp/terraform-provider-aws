@@ -139,7 +139,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	instanceRole := emr.InstanceGroupTypeTask
 	groupConfig := &emr.InstanceGroupConfig{
-		EbsConfiguration: readEmrEBSConfig(d),
+		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
 		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
@@ -189,7 +189,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
-	if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
+	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
 	}
 
@@ -319,7 +319,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error modifying EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
+		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
 			return fmt.Errorf("error waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
 		}
 	}
@@ -413,8 +413,8 @@ func FetchInstanceGroup(conn *emr.EMR, clusterID, groupID string) (*emr.Instance
 	return ig, nil
 }
 
-// readEmrEBSConfig populates an emr.EbsConfiguration struct
-func readEmrEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
+// readEBSConfig populates an emr.EbsConfiguration struct
+func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 	result := &emr.EbsConfiguration{}
 	if v, ok := d.GetOk("ebs_optimized"); ok {
 		result.EbsOptimized = aws.Bool(v.(bool))
@@ -484,7 +484,7 @@ func marshalWithoutNil(v interface{}) ([]byte, error) {
 	return json.Marshal(cleanRules)
 }
 
-func waitForEmrInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
+func waitForInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			emr.InstanceGroupStateBootstrapping,

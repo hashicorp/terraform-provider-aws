@@ -21,10 +21,10 @@ func TestAccS3BucketCorsConfiguration_basic(t *testing.T) {
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketCorsConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCorsConfigurationBasicConfig(rName),
@@ -54,10 +54,10 @@ func TestAccS3BucketCorsConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketCorsConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCorsConfigurationBasicConfig(rName),
@@ -76,10 +76,10 @@ func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketCorsConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 
 			{
@@ -140,10 +140,10 @@ func TestAccS3BucketCorsConfiguration_SingleRule(t *testing.T) {
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketCorsConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCorsConfigurationCompleteConfig_SingleRule(rName),
@@ -181,10 +181,10 @@ func TestAccS3BucketCorsConfiguration_MultipleRules(t *testing.T) {
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketCorsConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCorsConfigurationConfig_MultipleRules(rName),

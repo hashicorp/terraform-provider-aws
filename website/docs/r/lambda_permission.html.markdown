@@ -184,6 +184,7 @@ EOF
 * `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
 * `event_source_token` - (Optional) The Event Source Token to validate.  Used with [Alexa Skills][1].
 * `function_name` - (Required) Name of the Lambda function whose resource policy you are updating
+* `function_url_auth_type` - (Optional) Lambda Function URLs [authentication type][3]. Valid values are: `AWS_IAM` or `NONE`.
 * `principal` - (Required) The principal who is getting this permission e.g., `s3.amazonaws.com`, an AWS account ID, or any valid AWS service principal such as `events.amazonaws.com` or `sns.amazonaws.com`.
 * `qualifier` - (Optional) Query parameter to specify function version or alias name. The permission will then apply to the specific qualified ARN e.g., `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
 * `source_account` - (Optional) This parameter is used for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
@@ -198,6 +199,7 @@ EOF
 
 [1]: https://developer.amazon.com/docs/custom-skills/host-a-custom-skill-as-an-aws-lambda-function.html#use-aws-cli
 [2]: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
+[3]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
 
 ## Attributes Reference
 

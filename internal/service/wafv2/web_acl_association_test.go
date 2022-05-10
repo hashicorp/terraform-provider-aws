@@ -27,9 +27,9 @@ func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
 			testAccPreCheckScopeRegional(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebACLAssociationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig(testName),
@@ -59,9 +59,9 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
 			testAccPreCheckScopeRegional(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebACLAssociationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig(testName),

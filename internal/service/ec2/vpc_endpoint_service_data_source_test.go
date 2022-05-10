@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCEndpointServiceDataSource_gateway(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceGatewayDataSourceConfig,
@@ -40,13 +40,13 @@ func TestAccEC2VPCEndpointServiceDataSource_gateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_interface(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceInterfaceDataSourceConfig,
@@ -67,14 +67,14 @@ func TestAccEC2VPCEndpointServiceDataSource_interface(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_custom(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceCustomDataSourceConfig(rName),
@@ -94,14 +94,14 @@ func TestAccEC2VPCEndpointServiceDataSource_custom(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceCustomFilterDataSourceConfig(rName),
@@ -121,14 +121,14 @@ func TestAccEC2VPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceCustomFilterTagsDataSourceConfig(rName),
@@ -148,13 +148,13 @@ func TestAccEC2VPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_ServiceType("s3", "Gateway"),
@@ -167,13 +167,13 @@ func TestAccEC2VPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
+func TestAccVPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_ServiceType("ec2", "Interface"),

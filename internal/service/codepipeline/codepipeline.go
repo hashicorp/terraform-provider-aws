@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -19,10 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,10 +32,10 @@ const (
 
 func ResourceCodePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCodePipelineCreate,
-		Read:   resourceCodePipelineRead,
-		Update: resourceCodePipelineUpdate,
-		Delete: resourceCodePipelineDelete,
+		Create: resourceCreate,
+		Read:   resourceRead,
+		Update: resourceUpdate,
+		Delete: resourceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -129,7 +128,7 @@ func ResourceCodePipeline() *schema.Resource {
 											validation.MapKeyLenBetween(1, 1000),
 										),
 										Elem:             &schema.Schema{Type: schema.TypeString},
-										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
+										DiffSuppressFunc: suppressStageActionConfiguration,
 									},
 									"category": {
 										Type:         schema.TypeString,
@@ -210,7 +209,7 @@ func ResourceCodePipeline() *schema.Resource {
 	}
 }
 
-func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -225,7 +224,7 @@ func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreatePipeline(params)
@@ -252,7 +251,7 @@ func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(resp.Pipeline.Name))
 
-	return resourceCodePipelineRead(d, meta)
+	return resourceRead(d, meta)
 }
 
 func expand(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
@@ -529,7 +528,7 @@ func flattenActionsInputArtifacts(artifacts []*codepipeline.InputArtifact) []str
 	return values
 }
 
-func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -538,14 +537,14 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodePipeline, names.ErrActionReading, ResCodePipeline, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CodePipeline: %w", err)
+		return names.Error(names.CodePipeline, names.ErrActionReading, ResCodePipeline, d.Id(), err)
 	}
 
 	metadata := resp.Metadata
@@ -590,7 +589,7 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -617,10 +616,10 @@ func resourceCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceCodePipelineRead(d, meta)
+	return resourceRead(d, meta)
 }
 
-func resourceCodePipelineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	_, err := conn.DeletePipeline(&codepipeline.DeletePipelineInput{
@@ -657,14 +656,14 @@ func resourceValidateActionProvider(i interface{}, path cty.Path) diag.Diagnosti
 	return nil
 }
 
-func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
+func suppressStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
 	parts := strings.Split(k, ".")
 	parts = parts[:len(parts)-2]
 	providerAddr := strings.Join(append(parts, "provider"), ".")
 	provider := d.Get(providerAddr).(string)
 
 	if provider == CodePipelineProviderGitHub && strings.HasSuffix(k, CodePipelineGitHubActionConfigurationOAuthToken) {
-		hash := hashCodePipelineGitHubToken(new)
+		hash := hashGitHubToken(new)
 		return old == hash
 	}
 
@@ -673,7 +672,7 @@ func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.
 
 const codePipelineGitHubTokenHashPrefix = "hash-"
 
-func hashCodePipelineGitHubToken(token string) string {
+func hashGitHubToken(token string) string {
 	// Without this check, the value was getting encoded twice
 	if strings.HasPrefix(token, codePipelineGitHubTokenHashPrefix) {
 		return token

@@ -16,12 +16,12 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 	dataName := "data.aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckStepFunctionsActivityDataSourceConfig_ActivityARN(rName),
+				Config: testAccActivityDataSourceConfig_checkActivityARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataName, "creation_date"),
@@ -29,7 +29,7 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckStepFunctionsActivityDataSourceConfig_ActivityName(rName),
+				Config: testAccActivityDataSourceConfig_checkActivityName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataName, "creation_date"),
@@ -40,7 +40,7 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStepFunctionsActivityDataSourceConfig_ActivityARN(rName string) string {
+func testAccActivityDataSourceConfig_checkActivityARN(rName string) string {
 	return fmt.Sprintf(`
 resource aws_sfn_activity "test" {
   name = "%s"
@@ -52,7 +52,7 @@ data aws_sfn_activity "test" {
 `, rName)
 }
 
-func testAccCheckStepFunctionsActivityDataSourceConfig_ActivityName(rName string) string {
+func testAccActivityDataSourceConfig_checkActivityName(rName string) string {
 	return fmt.Sprintf(`
 resource aws_sfn_activity "test" {
   name = "%s"

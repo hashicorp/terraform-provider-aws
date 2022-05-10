@@ -56,7 +56,7 @@ func ResourceAlias() *schema.Resource {
 			"target_key_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentKmsKeyARNOrID,
+				DiffSuppressFunc: suppressEquivalentKeyARNOrID,
 			},
 		},
 	}
@@ -166,6 +166,6 @@ func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func suppressEquivalentKmsKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
+func suppressEquivalentKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
 	return KeyARNOrIDEqual(old, new)
 }

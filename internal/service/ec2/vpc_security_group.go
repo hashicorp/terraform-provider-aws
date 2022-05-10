@@ -647,7 +647,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 
 				rule := initSecurityGroupRule(ruleMap, perm, desc)
 
-				if *g.GroupId == groupId {
+				if aws.StringValue(g.GroupId) == groupId {
 					rule["self"] = true
 					continue
 				}
@@ -730,7 +730,7 @@ func resourceSecurityGroupUpdateRules(
 						GroupId:       group.GroupId,
 						IpPermissions: remove,
 					}
-					if group.VpcId == nil || *group.VpcId == "" {
+					if aws.StringValue(group.VpcId) == "" {
 						req.GroupId = nil
 						req.GroupName = group.GroupName
 					}
@@ -757,7 +757,7 @@ func resourceSecurityGroupUpdateRules(
 						GroupId:       group.GroupId,
 						IpPermissions: add,
 					}
-					if group.VpcId == nil || *group.VpcId == "" {
+					if aws.StringValue(group.VpcId) == "" {
 						req.GroupId = nil
 						req.GroupName = group.GroupName
 					}
@@ -1400,10 +1400,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.IpPermission, desc string) map[string]interface{} {
 	var fromPort, toPort int64
 	if v := perm.FromPort; v != nil {
-		fromPort = *v
+		fromPort = aws.Int64Value(v)
 	}
 	if v := perm.ToPort; v != nil {
-		toPort = *v
+		toPort = aws.Int64Value(v)
 	}
 	k := fmt.Sprintf("%s-%d-%d-%s", *perm.IpProtocol, fromPort, toPort, desc)
 	rule, ok := ruleMap[k]
@@ -1411,7 +1411,7 @@ func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.
 		rule = make(map[string]interface{})
 		ruleMap[k] = rule
 	}
-	rule["protocol"] = *perm.IpProtocol
+	rule["protocol"] = aws.StringValue(perm.IpProtocol)
 	rule["from_port"] = fromPort
 	rule["to_port"] = toPort
 	if desc != "" {

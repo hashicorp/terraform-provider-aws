@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TrafficMirrorFilterRule_basic(t *testing.T) {
+func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
@@ -35,9 +35,9 @@ func TestAccEC2TrafficMirrorFilterRule_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilterRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorFilterRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorFilterRuleDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -105,7 +105,7 @@ func TestAccEC2TrafficMirrorFilterRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorFilterRule_disappears(t *testing.T) {
+func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
@@ -118,9 +118,9 @@ func TestAccEC2TrafficMirrorFilterRule_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilterRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorFilterRuleDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorFilterRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, direction, ruleNum),

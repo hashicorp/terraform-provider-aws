@@ -137,11 +137,6 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 		input.StreamingConfiguration = config
 
 		if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
-			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
-				log.Printf("[WARN] error getting Chime Voice Connector (%s) streaming configuration", d.Id())
-				d.SetId("")
-				return nil
-			}
 			return diag.Errorf("error updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 		}
 	}

@@ -27,10 +27,10 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
@@ -63,10 +63,10 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasUsingFunctionNameConfig(rName, rName, rName, rName, rName),
@@ -104,10 +104,10 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 	functionArnResourcePartUpdate := fmt.Sprintf("function:%s:%s", funcName, aliasNameUpdate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
@@ -149,10 +149,10 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),

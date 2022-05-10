@@ -76,9 +76,9 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckGatewayDestroy,
@@ -106,9 +106,9 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckGatewayDestroy,

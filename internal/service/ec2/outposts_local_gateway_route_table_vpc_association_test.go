@@ -14,17 +14,17 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2LocalGatewayRouteTableVPCAssociation_basic(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayRouteTableVPCAssociationConfig(rName),
@@ -45,15 +45,15 @@ func TestAccEC2LocalGatewayRouteTableVPCAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2LocalGatewayRouteTableVPCAssociation_disappears(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayRouteTableVPCAssociationConfig(rName),
@@ -67,15 +67,15 @@ func TestAccEC2LocalGatewayRouteTableVPCAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2LocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayRouteTableVPCAssociationTags1Config(rName, "key1", "value1"),

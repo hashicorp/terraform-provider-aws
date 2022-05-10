@@ -59,7 +59,7 @@ func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fmt.Sprintf("%s,%s", resourceShareARN, resourceARN))
 
-	if err := waitForRamResourceShareResourceAssociation(conn, resourceShareARN, resourceARN); err != nil {
+	if err := waitForResourceShareResourceAssociation(conn, resourceShareARN, resourceARN); err != nil {
 		return fmt.Errorf("error waiting for RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
 	}
 
@@ -164,7 +164,7 @@ func GetResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN st
 	return output.ResourceShareAssociations[0], nil
 }
 
-func ramResourceAssociationStateRefreshFunc(conn *ram.RAM, resourceShareARN, resourceARN string) resource.StateRefreshFunc {
+func resourceAssociationStateRefreshFunc(conn *ram.RAM, resourceShareARN, resourceARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resourceShareAssociation, err := GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
 
@@ -185,11 +185,11 @@ func ramResourceAssociationStateRefreshFunc(conn *ram.RAM, resourceShareARN, res
 	}
 }
 
-func waitForRamResourceShareResourceAssociation(conn *ram.RAM, resourceShareARN, resourceARN string) error {
+func waitForResourceShareResourceAssociation(conn *ram.RAM, resourceShareARN, resourceARN string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociating},
 		Target:  []string{ram.ResourceShareAssociationStatusAssociated},
-		Refresh: ramResourceAssociationStateRefreshFunc(conn, resourceShareARN, resourceARN),
+		Refresh: resourceAssociationStateRefreshFunc(conn, resourceShareARN, resourceARN),
 		Timeout: 5 * time.Minute,
 	}
 
@@ -202,7 +202,7 @@ func WaitForResourceShareResourceDisassociation(conn *ram.RAM, resourceShareARN,
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
 		Target:  []string{ram.ResourceShareAssociationStatusDisassociated},
-		Refresh: ramResourceAssociationStateRefreshFunc(conn, resourceShareARN, resourceARN),
+		Refresh: resourceAssociationStateRefreshFunc(conn, resourceShareARN, resourceARN),
 		Timeout: 5 * time.Minute,
 	}
 

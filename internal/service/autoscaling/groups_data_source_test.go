@@ -18,12 +18,12 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingGroupsDataSourceConfig(rName),
+				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
 					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
@@ -39,7 +39,7 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAutoScalingGroupsDataSourceConfig(rName string) string {
+func testAccGroupsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),

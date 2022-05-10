@@ -93,7 +93,7 @@ func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	input := &amplify.CreateDomainAssociationInput{
 		AppId:             aws.String(appID),
 		DomainName:        aws.String(domainName),
-		SubDomainSettings: expandAmplifySubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+		SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
@@ -143,7 +143,7 @@ func resourceDomainAssociationRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
 	d.Set("domain_name", domainAssociation.DomainName)
-	if err := d.Set("sub_domain", flattenAmplifySubDomains(domainAssociation.SubDomains)); err != nil {
+	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return fmt.Errorf("error setting sub_domain: %w", err)
 	}
 
@@ -163,7 +163,7 @@ func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 		input := &amplify.UpdateDomainAssociationInput{
 			AppId:             aws.String(appID),
 			DomainName:        aws.String(domainName),
-			SubDomainSettings: expandAmplifySubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+			SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 		}
 
 		log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
@@ -209,7 +209,7 @@ func resourceDomainAssociationDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandAmplifySubDomainSetting(tfMap map[string]interface{}) *amplify.SubDomainSetting {
+func expandSubDomainSetting(tfMap map[string]interface{}) *amplify.SubDomainSetting {
 	if tfMap == nil {
 		return nil
 	}
@@ -228,7 +228,7 @@ func expandAmplifySubDomainSetting(tfMap map[string]interface{}) *amplify.SubDom
 	return apiObject
 }
 
-func expandAmplifySubDomainSettings(tfList []interface{}) []*amplify.SubDomainSetting {
+func expandSubDomainSettings(tfList []interface{}) []*amplify.SubDomainSetting {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -242,7 +242,7 @@ func expandAmplifySubDomainSettings(tfList []interface{}) []*amplify.SubDomainSe
 			continue
 		}
 
-		apiObject := expandAmplifySubDomainSetting(tfMap)
+		apiObject := expandSubDomainSetting(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -254,7 +254,7 @@ func expandAmplifySubDomainSettings(tfList []interface{}) []*amplify.SubDomainSe
 	return apiObjects
 }
 
-func flattenAmplifySubDomain(apiObject *amplify.SubDomain) map[string]interface{} {
+func flattenSubDomain(apiObject *amplify.SubDomain) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -284,7 +284,7 @@ func flattenAmplifySubDomain(apiObject *amplify.SubDomain) map[string]interface{
 	return tfMap
 }
 
-func flattenAmplifySubDomains(apiObjects []*amplify.SubDomain) []interface{} {
+func flattenSubDomains(apiObjects []*amplify.SubDomain) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -296,7 +296,7 @@ func flattenAmplifySubDomains(apiObjects []*amplify.SubDomain) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenAmplifySubDomain(apiObject))
+		tfList = append(tfList, flattenSubDomain(apiObject))
 	}
 
 	return tfList

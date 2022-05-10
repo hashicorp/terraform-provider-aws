@@ -129,7 +129,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(subnetGroups) != 1 ||
-		*subnetGroups[0].DBSubnetGroupName != d.Id() {
+		aws.StringValue(subnetGroups[0].DBSubnetGroupName) != d.Id() {
 		return fmt.Errorf("unable to find DocDB Subnet Group: %s, removing from state", d.Id())
 	}
 

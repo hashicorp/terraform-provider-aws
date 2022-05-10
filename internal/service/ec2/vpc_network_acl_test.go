@@ -15,17 +15,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NetworkACL_basic(t *testing.T) {
+func TestAccVPCNetworkACL_basic(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLConfig(rName),
@@ -49,16 +49,16 @@ func TestAccEC2NetworkACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_disappears(t *testing.T) {
+func TestAccVPCNetworkACL_disappears(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLConfig(rName),
@@ -72,16 +72,16 @@ func TestAccEC2NetworkACL_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_tags(t *testing.T) {
+func TestAccVPCNetworkACL_tags(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLTags1Config(rName, "key1", "value1"),
@@ -117,16 +117,16 @@ func TestAccEC2NetworkACL_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_Egress_mode(t *testing.T) {
+func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLEgressModeBlocksConfig(rName),
@@ -168,16 +168,16 @@ func TestAccEC2NetworkACL_Egress_mode(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_Ingress_mode(t *testing.T) {
+func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLIngressModeBlocksConfig(rName),
@@ -219,16 +219,16 @@ func TestAccEC2NetworkACL_Ingress_mode(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_egressAndIngressRules(t *testing.T) {
+func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLEgressNIngressConfig(rName),
@@ -261,16 +261,16 @@ func TestAccEC2NetworkACL_egressAndIngressRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_OnlyIngressRules_basic(t *testing.T) {
+func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLIngressConfig(rName),
@@ -295,16 +295,16 @@ func TestAccEC2NetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_OnlyIngressRules_update(t *testing.T) {
+func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLIngressConfig(resourceName),
@@ -349,16 +349,16 @@ func TestAccEC2NetworkACL_OnlyIngressRules_update(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_caseSensitivityNoChanges(t *testing.T) {
+func TestAccVPCNetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLCaseSensitiveConfig(rName),
@@ -375,16 +375,16 @@ func TestAccEC2NetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_onlyEgressRules(t *testing.T) {
+func TestAccVPCNetworkACL_onlyEgressRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLEgressConfig(rName),
@@ -401,16 +401,16 @@ func TestAccEC2NetworkACL_onlyEgressRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_subnetChange(t *testing.T) {
+func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLSubnetConfig(rName),
@@ -438,16 +438,16 @@ func TestAccEC2NetworkACL_subnetChange(t *testing.T) {
 
 }
 
-func TestAccEC2NetworkACL_subnets(t *testing.T) {
+func TestAccVPCNetworkACL_subnets(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLSubnet_SubnetIDs(rName),
@@ -477,16 +477,16 @@ func TestAccEC2NetworkACL_subnets(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_subnetsDelete(t *testing.T) {
+func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLSubnet_SubnetIDs(resourceName),
@@ -514,16 +514,16 @@ func TestAccEC2NetworkACL_subnetsDelete(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_ipv6Rules(t *testing.T) {
+func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLIPv6Config(rName),
@@ -550,16 +550,16 @@ func TestAccEC2NetworkACL_ipv6Rules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_ipv6ICMPRules(t *testing.T) {
+func TestAccVPCNetworkACL_ipv6ICMPRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLIPv6ICMPConfig(rName),
@@ -571,16 +571,16 @@ func TestAccEC2NetworkACL_ipv6ICMPRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_ipv6VPCRules(t *testing.T) {
+func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLIPv6VPCConfig(rName),
@@ -601,16 +601,16 @@ func TestAccEC2NetworkACL_ipv6VPCRules(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_espProtocol(t *testing.T) {
+func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLEsp(rName),

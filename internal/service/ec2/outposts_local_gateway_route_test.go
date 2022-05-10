@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2LocalGatewayRoute_basic(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
@@ -22,10 +22,10 @@ func TestAccEC2LocalGatewayRoute_basic(t *testing.T) {
 	resourceName := "aws_ec2_local_gateway_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocalGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock),
@@ -45,16 +45,16 @@ func TestAccEC2LocalGatewayRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2LocalGatewayRoute_disappears(t *testing.T) {
+func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	resourceName := "aws_ec2_local_gateway_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocalGatewayRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock),

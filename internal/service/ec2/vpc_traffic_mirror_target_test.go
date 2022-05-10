@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TrafficMirrorTarget_nlb(t *testing.T) {
+func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
@@ -27,9 +27,9 @@ func TestAccEC2TrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
@@ -51,7 +51,7 @@ func TestAccEC2TrafficMirrorTarget_nlb(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorTarget_eni(t *testing.T) {
+func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -62,9 +62,9 @@ func TestAccEC2TrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigEni(rName, description),
@@ -84,7 +84,7 @@ func TestAccEC2TrafficMirrorTarget_eni(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorTarget_tags(t *testing.T) {
+func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
@@ -95,9 +95,9 @@ func TestAccEC2TrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key1", "value1"),
@@ -133,7 +133,7 @@ func TestAccEC2TrafficMirrorTarget_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorTarget_disappears(t *testing.T) {
+func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
@@ -144,9 +144,9 @@ func TestAccEC2TrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),

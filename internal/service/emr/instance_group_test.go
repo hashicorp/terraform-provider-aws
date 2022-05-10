@@ -22,10 +22,10 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rInt),
@@ -53,10 +53,10 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rInt),
@@ -105,10 +105,10 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_ConfigurationsJSON(rInt, "partitionName1"),
@@ -148,10 +148,10 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_AutoScalingPolicy(rInt, 1, 3),
@@ -193,10 +193,10 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rInt),
@@ -226,10 +226,10 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rInt),
@@ -250,10 +250,10 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_ebsConfig(rInt, true),

@@ -16,9 +16,9 @@ func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
 	resourceName := "aws_signer_signing_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck: acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningJobBasicDataSourceConfig(rName),

@@ -89,7 +89,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			DeliveryOptions:      expandSesConfigurationSetDeliveryOptions(v.([]interface{})),
+			DeliveryOptions:      expandConfigurationSetDeliveryOptions(v.([]interface{})),
 		}
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(input)
@@ -146,7 +146,7 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	if err := d.Set("delivery_options", flattenSesConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
+	if err := d.Set("delivery_options", flattenConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
 		return fmt.Errorf("error setting delivery_options: %w", err)
 	}
 
@@ -177,7 +177,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			DeliveryOptions:      expandSesConfigurationSetDeliveryOptions(d.Get("delivery_options").([]interface{})),
+			DeliveryOptions:      expandConfigurationSetDeliveryOptions(d.Get("delivery_options").([]interface{})),
 		}
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(input)
@@ -230,7 +230,7 @@ func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func expandSesConfigurationSetDeliveryOptions(l []interface{}) *ses.DeliveryOptions {
+func expandConfigurationSetDeliveryOptions(l []interface{}) *ses.DeliveryOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -249,7 +249,7 @@ func expandSesConfigurationSetDeliveryOptions(l []interface{}) *ses.DeliveryOpti
 	return options
 }
 
-func flattenSesConfigurationSetDeliveryOptions(options *ses.DeliveryOptions) []interface{} {
+func flattenConfigurationSetDeliveryOptions(options *ses.DeliveryOptions) []interface{} {
 	if options == nil {
 		return nil
 	}

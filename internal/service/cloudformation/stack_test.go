@@ -21,15 +21,15 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_failure"),
 				),
@@ -47,10 +47,10 @@ func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackCreationFailureConfig(rName, cloudformation.OnFailureDoNothing),
@@ -64,10 +64,10 @@ func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackCreationFailureConfig(rName, cloudformation.OnFailureDelete),
@@ -81,10 +81,10 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackCreationFailureConfig(rName, cloudformation.OnFailureRollback),
@@ -103,15 +103,15 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 	vpcCidrInvalid := "1000.0.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_withParams(rName, vpcCidrInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -128,15 +128,15 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -151,15 +151,15 @@ func TestAccCloudFormationStack_yaml(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_yaml(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -177,15 +177,15 @@ func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_defaultParams(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -205,15 +205,15 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 	expectedPolicyBody := "{\"Statement\":[{\"Action\":\"Update:*\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Resource\":\"LogicalResourceId/StaticVPC\"},{\"Action\":\"Update:*\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Resource\":\"*\"}]}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_allAttributesWithBodies(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
@@ -237,7 +237,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 			{
 				Config: testAccStackConfig_allAttributesWithBodies_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
@@ -266,15 +266,15 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 	vpcCidrUpdated := "12.0.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_withParams(rName, vpcCidrInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrInitial),
 				),
@@ -288,7 +288,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_withParams(rName, vpcCidrUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrUpdated),
 				),
@@ -304,15 +304,15 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -324,7 +324,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -337,15 +337,15 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_templateURL_withParams_withYAML(rName, "tf-cf-stack.test", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -365,15 +365,15 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack-1.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
@@ -385,7 +385,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 			{
 				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -398,22 +398,22 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_withTransform(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
 				PlanOnly: true,
 				Config:   testAccStackConfig_withTransform(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -427,15 +427,15 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_onFailure(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "on_failure", cloudformation.OnFailureDoNothing),
 				),
@@ -444,7 +444,7 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -497,7 +497,7 @@ func testAccCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 

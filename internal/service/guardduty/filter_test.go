@@ -25,13 +25,13 @@ func testAccFilter_basic(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFilterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
+				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -67,7 +67,7 @@ func testAccFilter_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyFilterConfigNoop_full(startDate, endDate),
+				Config: testAccFilterConfig_noopfull(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -91,13 +91,13 @@ func testAccFilter_update(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFilterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
+				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
@@ -105,7 +105,7 @@ func testAccFilter_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyFilterConfig_update(),
+				Config: testAccFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
@@ -135,13 +135,13 @@ func testAccFilter_tags(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFilterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_multipleTags(),
+				Config: testAccFilterConfig_multipleTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -150,7 +150,7 @@ func testAccFilter_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyFilterConfig_updateTags(),
+				Config: testAccFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -158,7 +158,7 @@ func testAccFilter_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
+				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -176,13 +176,13 @@ func testAccFilter_disappears(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckACMPCACertificateAuthorityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckACMPCACertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
+				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
@@ -255,7 +255,7 @@ func testAccCheckFilterExists(name string, filter *guardduty.GetFilterOutput) re
 	}
 }
 
-func testAccGuardDutyFilterConfig_full(startDate, endDate string) string {
+func testAccFilterConfig_full(startDate, endDate string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -290,7 +290,7 @@ resource "aws_guardduty_detector" "test" {
 `, startDate, endDate)
 }
 
-func testAccGuardDutyFilterConfigNoop_full(startDate, endDate string) string {
+func testAccFilterConfig_noopfull(startDate, endDate string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -326,7 +326,7 @@ resource "aws_guardduty_detector" "test" {
 `, startDate, endDate)
 }
 
-func testAccGuardDutyFilterConfig_multipleTags() string {
+func testAccFilterConfig_multipleTags() string {
 	return `
 data "aws_region" "current" {}
 
@@ -355,7 +355,7 @@ resource "aws_guardduty_detector" "test" {
 `
 }
 
-func testAccGuardDutyFilterConfig_update() string {
+func testAccFilterConfig_update() string {
 	return `
 data "aws_region" "current" {}
 
@@ -384,7 +384,7 @@ resource "aws_guardduty_detector" "test" {
 `
 }
 
-func testAccGuardDutyFilterConfig_updateTags() string {
+func testAccFilterConfig_updateTags() string {
 	return `
 data "aws_region" "current" {}
 

@@ -21,10 +21,10 @@ func TestAccSSMActivation_basic(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationBasicConfig(name, tag),
@@ -53,10 +53,10 @@ func TestAccSSMActivation_update(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationBasicConfig(name, "My Activation"),
@@ -105,10 +105,10 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationConfig_expirationDate(rName, expirationDateS),
@@ -136,10 +136,10 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationBasicConfig(name, tag),

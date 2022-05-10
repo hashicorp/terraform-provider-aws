@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDomain() *schema.Resource {
@@ -108,13 +109,14 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(domainOwner),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResDomain, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] CodeArtifact Domain %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeArtifact Domain (%s): %w", d.Id(), err)
+		return names.Error(names.CodeArtifact, names.ErrActionReading, ResDomain, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Domain.Arn)

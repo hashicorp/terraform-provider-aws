@@ -29,10 +29,10 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFunctionURLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLBasicConfig(funcName, policyName, roleName),
@@ -66,10 +66,10 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFunctionURLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLCorsConfig(funcName, policyName, roleName),
@@ -131,10 +131,10 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFunctionURLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLAliasConfig(funcName, aliasName, policyName, roleName),
@@ -164,10 +164,10 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFunctionURLDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLTwoURLsConfig(funcName, aliasName, policyName, roleName),

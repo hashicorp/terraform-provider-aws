@@ -96,6 +96,24 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 
 You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
+### Change of name or name-prefix value
+
+Security Group's Name [cannot be edited after the resource is created](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/working-with-security-groups.html#creating-security-group). In fact, the `name` and `name-prefix` arguments force the creation of a new Security Group resource when they change value. In that case, Terraform first deletes the existing Security Group resource and then it creates a new one. If the existing Security Group is associated to a Network Interface resource, the deletion cannot complete. The reason is that Network Interface resources cannot be left with no Security Group attached and the new one is not yet available at that point.
+
+It is required to invert the default behavior of Terraform. That is, first the new Security Group resource must be created, then associated to possible Network Interface resources and finally the old Security Group can be detached and deleted. To force this behavior, you must set the [create_before_destroy](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy) property:
+
+```terraform
+resource "aws_security_group" "sg_with_changeable_name" {
+  name = "changeable-name"
+  # ... other configuration ...
+
+  lifecycle {
+    # Necessary if changing 'name' or 'name_prefix' properties.
+    create_before_destroy = true
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

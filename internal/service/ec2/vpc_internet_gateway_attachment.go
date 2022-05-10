@@ -59,7 +59,7 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayAttachment(conn, igwID, vpcID)
 	}, d.IsNewResource())
 

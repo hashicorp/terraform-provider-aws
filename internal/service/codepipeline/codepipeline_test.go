@@ -31,9 +31,9 @@ func TestAccCodePipeline_basic(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig_basic(name),
@@ -136,9 +136,9 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig_basic(name),
@@ -163,9 +163,9 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig_emptyStageArtifacts(name),
@@ -205,9 +205,9 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig_deployWithServiceRole(name),
@@ -238,9 +238,9 @@ func TestAccCodePipeline_tags(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithTagsConfig(name, "tag1value", "tag2value"),
@@ -458,9 +458,9 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithNamespaceConfig(name),
@@ -491,9 +491,9 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig_WithGitHubv1SourceAction(name, githubToken),

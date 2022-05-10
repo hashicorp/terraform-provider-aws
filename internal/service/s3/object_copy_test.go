@@ -22,10 +22,10 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	sourceKey := "WshngtnNtnls"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectCopyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key),
@@ -46,10 +46,10 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	resourceName := "aws_s3_object_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectCopyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_BucketKeyEnabled_Bucket(rName),
@@ -67,10 +67,10 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	resourceName := "aws_s3_object_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectCopyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_BucketKeyEnabled_Object(rName),

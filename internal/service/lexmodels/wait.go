@@ -66,11 +66,11 @@ func waitBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name 
 	return nil, err
 }
 
-func waitLexBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
+func waitBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{lexModelBuildingServiceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
-		Refresh: statusLexBotAlias(conn, botAliasName, botName),
+		Refresh: statusBotAlias(conn, botAliasName, botName),
 		Timeout: lexBotAliasDeletedTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
@@ -82,11 +82,11 @@ func waitLexBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingServic
 	return nil, err
 }
 
-func waitLexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
+func waitIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{lexModelBuildingServiceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
-		Refresh: statusLexIntent(conn, intentId),
+		Refresh: statusIntent(conn, intentId),
 		Timeout: lexIntentDeletedTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
@@ -98,11 +98,11 @@ func waitLexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService,
 	return nil, err
 }
 
-func waitLexSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
+func waitSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{lexModelBuildingServiceStatusCreated},
 		Target:  []string{},
-		Refresh: statusLexSlotType(conn, name, SlotTypeVersionLatest),
+		Refresh: statusSlotType(conn, name, SlotTypeVersionLatest),
 		Timeout: lexSlotTypeDeletedTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()

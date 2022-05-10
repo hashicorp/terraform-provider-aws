@@ -15,9 +15,9 @@ func testAccTransitGatewayRouteTablesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig(rName),
@@ -34,9 +34,9 @@ func testAccTransitGatewayRouteTablesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTablesTransitGatewayFilterDataSource(rName),
@@ -53,9 +53,9 @@ func testAccTransitGatewayRouteTablesDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTablesTransitGatewayTagsDataSource(rName),
@@ -72,9 +72,9 @@ func testAccTransitGatewayRouteTablesDataSource_empty(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTablesTransitGatewayEmptyDataSource(rName),
