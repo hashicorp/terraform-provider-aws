@@ -13,8 +13,6 @@ import (
 const (
 	keyspaceExistsTimeout     = 1 * time.Minute
 	keyspaceDisappearsTimeout = 1 * time.Minute
-	tableExistsTimeout        = 5 * time.Minute
-	tableDisappearsTimeout    = 20 * time.Minute
 )
 
 func waitKeyspaceExists(ctx context.Context, conn *keyspaces.Keyspaces, name string) error {
@@ -44,52 +42,6 @@ func waitKeyspaceDisappears(ctx context.Context, conn *keyspaces.Keyspaces, name
 
 	err := resource.RetryContext(ctx, keyspaceDisappearsTimeout, func() *resource.RetryError {
 		_, err := FindKeyspaceByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(stillExistsErr)
-	})
-
-	if tfresource.TimedOut(err) {
-		return stillExistsErr
-	}
-
-	return err
-}
-
-func waitTableExists(ctx context.Context, conn *keyspaces.Keyspaces, keyspacceName string, tableName string) error {
-	err := resource.RetryContext(ctx, tableExistsTimeout, func() *resource.RetryError {
-		_, err := FindTableInKeyspaceByName(ctx, conn, keyspacceName, tableName)
-
-		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = FindTableInKeyspaceByName(ctx, conn, keyspacceName, tableName)
-	}
-
-	return err
-}
-
-func waitTableDisappears(ctx context.Context, conn *keyspaces.Keyspaces, keyspacceName string, tableName string) error {
-	stillExistsErr := fmt.Errorf("keyspace still exists")
-
-	err := resource.RetryContext(ctx, tableDisappearsTimeout, func() *resource.RetryError {
-		_, err := FindTableInKeyspaceByName(ctx, conn, keyspacceName, tableName)
 
 		if tfresource.NotFound(err) {
 			return nil

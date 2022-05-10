@@ -15,7 +15,6 @@ import (
 )
 
 func init() {
-	// No need to have separate sweeper for table as would be destroyed as part of keyspace
 	resource.AddTestSweepers("aws_keyspaces_keyspace", &resource.Sweeper{
 		Name: "aws_keyspaces_keyspace",
 		F:    sweepKeyspaces,

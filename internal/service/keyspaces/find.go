@@ -34,29 +34,3 @@ func FindKeyspaceByName(ctx context.Context, conn *keyspaces.Keyspaces, name str
 
 	return output, nil
 }
-
-func FindTableInKeyspaceByName(ctx context.Context, conn *keyspaces.Keyspaces, keyspacceName string, tableName string) (*keyspaces.GetTableOutput, error) {
-	input := keyspaces.GetTableInput{
-		KeyspaceName: aws.String(keyspacceName),
-		TableName: aws.String(tableName),
-	}
-
-	output, err := conn.GetTableWithContext(ctx, &input)
-
-	if tfawserr.ErrCodeEquals(err, keyspaces.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
