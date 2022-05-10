@@ -20,7 +20,7 @@ func FlowDeleted(ctx context.Context, conn *appflow.Appflow, id string) error {
 		Timeout: FlowDeletionTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
