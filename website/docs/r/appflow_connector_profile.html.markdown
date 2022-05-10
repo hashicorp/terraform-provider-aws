@@ -345,14 +345,9 @@ The AppFlow connector profile argument layout is a complex structure.
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the connector profile.
+
 * `credentials_arn` - The Amazon Resource Name (ARN) of the connector profile credentials.
-
-* `connector_profile_arn` - The Amazon Resource Name (ARN) of the connector profile.
-
-* `created_at` - Specifies when the connector profile was created.
-
-* `last_updated_at` - Specifies when the connector profile was last updated.
-
 
 ## Import
 
