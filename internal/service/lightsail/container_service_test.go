@@ -774,7 +774,7 @@ func testAccCheckContainerServiceExists(resourceName string, cs *lightsail.Conta
 func testAccContainerServiceConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 }
@@ -784,14 +784,14 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainer1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -801,19 +801,19 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainer2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
 
     container {
       container_name = "test2"
-      image = "redis:latest"
+      image          = "redis:latest"
     }
   }
 }
@@ -823,14 +823,14 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainer3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test3"
-      image = "nginx:latest"
+      image          = "nginx:latest"
     }
   }
 }
@@ -840,16 +840,16 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerEnvironment1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       environment {
-        key = "A"
+        key   = "A"
         value = "a"
       }
     }
@@ -861,16 +861,16 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerEnvironment2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       environment {
-        key = "B"
+        key   = "B"
         value = "b"
       }
     }
@@ -882,20 +882,20 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerEnvironment3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       environment {
-        key = "A"
+        key   = "A"
         value = "a"
       }
       environment {
-        key = "B"
+        key   = "B"
         value = "b"
       }
     }
@@ -907,14 +907,14 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerEnvironment4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -924,17 +924,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerPort1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
     }
   }
@@ -945,17 +945,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerPort2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 90
-        protocol = "TCP"
+        protocol    = "TCP"
       }
     }
   }
@@ -966,21 +966,21 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerPort3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
       port {
         port_number = 90
-        protocol = "TCP"
+        protocol    = "TCP"
       }
     }
   }
@@ -991,14 +991,14 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentContainerPort4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -1008,17 +1008,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentPublicEndpoint1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
     }
 
@@ -1035,17 +1035,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentPublicEndpoint2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test2"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
     }
 
@@ -1053,11 +1053,11 @@ resource "aws_lightsail_container_service" "test" {
       container_name = "test2"
       container_port = 80
       health_check {
-        healthy_threshold = 3
-        interval_seconds = 6
-        path = "/."
-        success_codes = "200"
-        timeout_seconds = 3
+        healthy_threshold   = 3
+        interval_seconds    = 6
+        path                = "/."
+        success_codes       = "200"
+        timeout_seconds     = 3
         unhealthy_threshold = 3
       }
     }
@@ -1069,17 +1069,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentPublicEndpoint3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test2"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
     }
 
@@ -1098,17 +1098,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentPublicEndpoint4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test2"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
     }
 
@@ -1125,17 +1125,17 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigDeploymentPublicEndpoint5(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test2"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
     }
   }
@@ -1146,9 +1146,9 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigIsDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
-  power = "nano"
-  scale = 1
+  name        = %q
+  power       = "nano"
+  scale       = 1
   is_disabled = true
 }
 `, rName)
@@ -1157,15 +1157,15 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigIsDisabledWithDeployment1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
-  power = "nano"
-  scale = 1
+  name        = %q
+  power       = "nano"
+  scale       = 1
   is_disabled = true
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -1175,15 +1175,15 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigIsDisabledWithDeployment2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
-  power = "micro"
-  scale = 1
+  name        = %q
+  power       = "micro"
+  scale       = 1
   is_disabled = true
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -1193,15 +1193,15 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigIsDisabledWithDeployment3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
-  power = "micro"
-  scale = 1
+  name        = %q
+  power       = "micro"
+  scale       = 1
   is_disabled = true
 
   deployment {
     container {
       container_name = "test2"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -1211,15 +1211,15 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigIsDisabledWithDeployment4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
-  power = "nano"
-  scale = 1
+  name        = %q
+  power       = "nano"
+  scale       = 1
   is_disabled = true
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -1229,14 +1229,14 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigIsDisabledWithDeployment5(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
   deployment {
     container {
       container_name = "test1"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
     }
   }
 }
@@ -1246,7 +1246,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigPower(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "micro"
   scale = 1
 }
@@ -1256,7 +1256,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigPublicDomainNames(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
@@ -1276,7 +1276,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigScale(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 2
 }
@@ -1286,13 +1286,13 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigTag1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
-  
+
   tags = {
     key1 = "value1"
-	key2 = "value2"
+    key2 = "value2"
   }
 }
 `, rName)
@@ -1301,7 +1301,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccContainerServiceConfigTag2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  name = %q
+  name  = %q
   power = "nano"
   scale = 1
 
