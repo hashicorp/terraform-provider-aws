@@ -1874,7 +1874,7 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 	cpc := appflow.ConnectorProfileProperties{}
 
 	if v, ok := m["amplitude"].([]interface{}); ok && len(v) > 0 {
-		cpc.Amplitude = &appflow.AmplitudeConnectorProfileProperties{}
+		cpc.Amplitude = v[0].(*appflow.AmplitudeConnectorProfileProperties)
 	}
 
 	if v, ok := m["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1886,11 +1886,11 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 	}
 
 	if v, ok := m["google_analytics"].([]interface{}); ok && len(v) > 0 {
-		cpc.GoogleAnalytics = &appflow.GoogleAnalyticsConnectorProfileProperties{}
+		cpc.GoogleAnalytics = v[0].(*appflow.GoogleAnalyticsConnectorProfileProperties)
 	}
 
 	if v, ok := m["honeycode"].([]interface{}); ok && len(v) > 0 {
-		cpc.Honeycode = &appflow.HoneycodeConnectorProfileProperties{}
+		cpc.Honeycode = v[0].(*appflow.HoneycodeConnectorProfileProperties)
 	}
 
 	if v, ok := m["infor_nexus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1918,7 +1918,7 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 	}
 
 	if v, ok := m["singular"].([]interface{}); ok && len(v) > 0 {
-		cpc.Singular = &appflow.SingularConnectorProfileProperties{}
+		cpc.Singular = v[0].(*appflow.SingularConnectorProfileProperties)
 	}
 
 	if v, ok := m["slack"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1930,7 +1930,7 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 	}
 
 	if v, ok := m["trendmicro"].([]interface{}); ok && len(v) > 0 {
-		cpc.Trendmicro = &appflow.TrendmicroConnectorProfileProperties{}
+		cpc.Trendmicro = v[0].(*appflow.TrendmicroConnectorProfileProperties)
 	}
 
 	if v, ok := m["veeva"].([]interface{}); ok && len(v) > 0 {
