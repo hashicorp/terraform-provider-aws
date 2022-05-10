@@ -88,7 +88,12 @@ func StatusPortfolioShareWithToken(conn *servicecatalog.ServiceCatalog, token st
 			return nil, StatusUnavailable, fmt.Errorf("error describing portfolio share status: empty response")
 		}
 
-		return output, aws.StringValue(output.Status), err
+		status := aws.StringValue(output.Status)
+		if (status == servicecatalog.ShareStatusCompletedWithErrors || status == servicecatalog.ShareStatusError) && output.ShareDetails != nil && output.ShareDetails.ShareErrors != nil && len(output.ShareDetails.ShareErrors) > 0 {
+			return output, status, fmt.Errorf("error with portfolio share status: %+v", output.ShareDetails.ShareErrors)
+		}
+
+		return output, status, err
 	}
 }
 
