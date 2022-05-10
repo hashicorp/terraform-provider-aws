@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -136,12 +136,12 @@ func testAccCheckTemplateDestroy(s *terraform.State) error {
 			},
 		})
 
+		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
+			continue
+		}
+
 		if err != nil {
-			if inspectorerr, ok := err.(awserr.Error); ok && inspectorerr.Code() == "InvalidInputException" {
-				return nil
-			} else {
-				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
-			}
+			return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
 		}
 
 		if len(resp.AssessmentTemplates) > 0 {
