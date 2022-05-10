@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+  tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
@@ -62,11 +63,12 @@ func testAccCheckVpcEndpointConnectionNotificationDestroy(s *terraform.State) er
 		resp, err := conn.DescribeVpcEndpointConnectionNotifications(&ec2.DescribeVpcEndpointConnectionNotificationsInput{
 			ConnectionNotificationId: aws.String(rs.Primary.ID),
 		})
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidConnectionNotification) {
+			continue
+		}
+
 		if err != nil {
-			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "InvalidConnectionNotification" {
-				continue
-			}
 			return err
 		}
 		if len(resp.ConnectionNotificationSet) > 0 {
