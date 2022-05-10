@@ -2081,36 +2081,30 @@ func flattenConnectorProfileConfig(cpp *appflow.ConnectorProfileProperties, cpc 
 
 func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) []interface{} {
 	result := make(map[string]interface{})
+	m := make(map[string]interface{})
 
 	if cpp.Amplitude != nil {
-		m := make(map[string]interface{})
 		result["amplitude"] = []interface{}{m}
 	}
 	if cpp.Datadog != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.Datadog.InstanceUrl)
 		result["datadog"] = []interface{}{m}
 	}
 	if cpp.Dynatrace != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.Dynatrace.InstanceUrl)
 		result["dynatrace"] = []interface{}{m}
 	}
 	if cpp.GoogleAnalytics != nil {
-		m := make(map[string]interface{})
 		result["google_analytics"] = []interface{}{m}
 	}
 	if cpp.Honeycode != nil {
-		m := make(map[string]interface{})
 		result["honeycode"] = []interface{}{m}
 	}
 	if cpp.InforNexus != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.InforNexus.InstanceUrl)
 		result["infor_nexus"] = []interface{}{m}
 	}
 	if cpp.Marketo != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.Marketo.InstanceUrl)
 		result["marketo"] = []interface{}{m}
 	}
@@ -2124,16 +2118,13 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 		result["salesforce"] = flattenSalesforceConnectorProfileProperties(cpp.Salesforce)
 	}
 	if cpp.ServiceNow != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.ServiceNow.InstanceUrl)
 		result["service_now"] = []interface{}{m}
 	}
 	if cpp.Singular != nil {
-		m := make(map[string]interface{})
 		result["singular"] = []interface{}{m}
 	}
 	if cpp.Slack != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.Slack.InstanceUrl)
 		result["slack"] = []interface{}{m}
 	}
@@ -2141,16 +2132,13 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 		result["snowflake"] = flattenSnowflakeConnectorProfileProperties(cpp.Snowflake)
 	}
 	if cpp.Trendmicro != nil {
-		m := make(map[string]interface{})
 		result["trendmicro"] = []interface{}{m}
 	}
 	if cpp.Veeva != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.Veeva.InstanceUrl)
 		result["veeva"] = []interface{}{m}
 	}
 	if cpp.Zendesk != nil {
-		m := make(map[string]interface{})
 		m["instance_url"] = aws.StringValue(cpp.Zendesk.InstanceUrl)
 		result["zendesk"] = []interface{}{m}
 	}
