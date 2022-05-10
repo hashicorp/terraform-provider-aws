@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_launch_template: Add `instance_requirements` attribute ([#24543](https://github.com/hashicorp/terraform-provider-aws/issues/24543))
 * resource/aws_launch_template: Add `instance_requirements` argument ([#24543](https://github.com/hashicorp/terraform-provider-aws/issues/24543))
 * resource/aws_spot_fleet_request: Add `overrides.instance_requirements` argument ([#24448](https://github.com/hashicorp/terraform-provider-aws/issues/24448))
+* data-source/aws_s3_bucket: Add `name_prefix` attribute ([#24544](https://github.com/hashicorp/terraform-provider-aws/issues/24544))
 
 BUG FIXES:
 
@@ -627,9 +628,9 @@ ENHANCEMENTS:
 * resource/aws_cloudformation_stack_set: Add `call_as` argument ([#22440](https://github.com/hashicorp/terraform-provider-aws/issues/22440))
 * resource/aws_elastic_transcoder_preset: Add plan time validations to `audio.audio_packing_mode`,  `audio.channels`,
 `audio.codec`,`audio.sample_rate`, `audio_codec_options.bit_depth`, `audio_codec_options.bit_order`,
-`audio_codec_options.profile`, `audio_codec_options.signed`, `audio_codec_options.signed`, 
+`audio_codec_options.profile`, `audio_codec_options.signed`, `audio_codec_options.signed`,
 `container`, `thumbnails.aspect_ratio`, `thumbnails.format`, `thumbnails.padding_policy`, `thumbnails.sizing_policy`,
-`type`, `video.aspect_ratio`, `video.codec`, `video.display_aspect_ratio`, `video.fixed_gop`, `video.frame_rate`,   `video.max_frame_rate`,  `video.padding_policy`, `video.sizing_policy`, `video_watermarks.horizontal_align`, 
+`type`, `video.aspect_ratio`, `video.codec`, `video.display_aspect_ratio`, `video.fixed_gop`, `video.frame_rate`,   `video.max_frame_rate`,  `video.padding_policy`, `video.sizing_policy`, `video_watermarks.horizontal_align`,
 `video_watermarks.id`, `video_watermarks.sizing_policy`, `video_watermarks.target`, `video_watermarks.vertical_align` ([#13974](https://github.com/hashicorp/terraform-provider-aws/issues/13974))
 * resource/aws_elastic_transcoder_preset: Allow `audio.bit_rate` to be computed. ([#13974](https://github.com/hashicorp/terraform-provider-aws/issues/13974))
 * resource/aws_gamelift_build: Add `object_version` argument to `storage_location` block. ([#22966](https://github.com/hashicorp/terraform-provider-aws/issues/22966))
@@ -2708,7 +2709,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_capacity_reservation: Add `owner_id` attribute ([#17129](https://github.com/hashicorp/terraform-provider-aws/issues/17129))
 * resource/aws_ec2_traffic_mirror_filter: Add `arn` attribute. ([#13948](https://github.com/hashicorp/terraform-provider-aws/issues/13948))
 * resource/aws_ec2_traffic_mirror_filter_rule: Add arn attribute. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
-* resource/aws_ec2_traffic_mirror_filter_rule: Add plan time validation to `destination_port_range.from_port`, 
+* resource/aws_ec2_traffic_mirror_filter_rule: Add plan time validation to `destination_port_range.from_port`,
 `destination_port_range.to_port`, `source_port_range.from_port`, and `source_port_range.to_port`. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
 * resource/aws_elastictranscoder_pipeline: Add plan time validations to `content_config.storage_class`, `content_config_permissions.access`, `content_config_permissions.grantee_type`,
 `notifications.completed`, `notifications.error`, `notifications.progressing`, `notifications.warning`,
@@ -2849,7 +2850,7 @@ ENHANCEMENTS
 * resource/aws_lightsail_instance: Add `ipv6_addresses` attribute ([#17155](https://github.com/hashicorp/terraform-provider-aws/issues/17155))
 * resource/aws_sagemaker_domain: Delete implicit EFS file system ([#17123](https://github.com/hashicorp/terraform-provider-aws/issues/17123))
 
-BUG FIXES 
+BUG FIXES
 
 * data-source/aws_lambda_function: Prevent error when getting Code Signing Config for container image based lambdas during read ([#17180](https://github.com/hashicorp/terraform-provider-aws/issues/17180))
 * provider: Fix error messages for missing required blocks not including the block name ([#17211](https://github.com/hashicorp/terraform-provider-aws/issues/17211))
@@ -3755,7 +3756,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * data-source/aws_launch_template: Prevent type error with `network_interfaces` `delete_on_termination` attribute ([#14599](https://github.com/hashicorp/terraform-provider-aws/issues/14599))
-* resource/aws_acm_certificate_validation: Prevent panic with missing `DomainValidationOptions` `ResourceRecord` attribute in API response [[#14590](https://github.com/hashicorp/terraform-provider-aws/issues/14590)] 
+* resource/aws_acm_certificate_validation: Prevent panic with missing `DomainValidationOptions` `ResourceRecord` attribute in API response [[#14590](https://github.com/hashicorp/terraform-provider-aws/issues/14590)]
 * resource/aws_ecr_repository: Prevent panic with missing `EncryptionConfiguration` attribute in API response ([#14584](https://github.com/hashicorp/terraform-provider-aws/issues/14584))
 * resource/aws_wafv2_rule_group: Prevent unnecessary resource recreation with `rule` updates ([#14617](https://github.com/hashicorp/terraform-provider-aws/issues/14617))
 * resource/aws_wafv2_web_acl: Prevent unnecessary resource recreation with `rule` updates ([#14616](https://github.com/hashicorp/terraform-provider-aws/issues/14616))

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -21,7 +22,11 @@ func DataSourceBucket() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"bucket": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"name_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -58,17 +63,44 @@ func DataSourceBucket() *schema.Resource {
 func dataSourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket := d.Get("bucket").(string)
+	var bucket string
+	if v, ok := d.GetOk("bucket"); ok {
+		bucket = v.(string)
 
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(bucket),
-	}
+		input := &s3.HeadBucketInput{
+			Bucket: aws.String(bucket),
+		}
 
-	log.Printf("[DEBUG] Reading S3 bucket: %s", input)
-	_, err := conn.HeadBucket(input)
+		log.Printf("[DEBUG] Reading S3 bucket: %s", input)
+		_, err := conn.HeadBucket(input)
 
-	if err != nil {
-		return fmt.Errorf("Failed getting S3 bucket (%s): %w", bucket, err)
+		if err != nil {
+			return fmt.Errorf("Failed getting S3 bucket (%s): %w", bucket, err)
+		}
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		prefix := v.(string)
+		input := &s3.ListBucketsInput{}
+
+		log.Printf("[DEBUG] Checking for S3 bucket with prefix: %s", prefix)
+		listBucketOutput, err := conn.ListBuckets(input)
+
+		if err != nil {
+			return fmt.Errorf("Failed listing S3 buckets: %w", err)
+		}
+
+		for _, buc := range listBucketOutput.Buckets {
+			if strings.HasPrefix(*buc.Name, prefix) {
+				bucket = *buc.Name
+				break
+			}
+		}
+
+		if bucket == "" {
+			return fmt.Errorf("Bucket does not exist with prefix: %s", prefix)
+		}
+
+	} else {
+		return fmt.Errorf("Have to provide bucket name or bucket name prefix")
 	}
 
 	d.SetId(bucket)
@@ -80,7 +112,7 @@ func dataSourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
 
-	err = bucketLocation(meta.(*conns.AWSClient), d, bucket)
+	err := bucketLocation(meta.(*conns.AWSClient), d, bucket)
 	if err != nil {
 		return fmt.Errorf("error getting S3 Bucket location: %w", err)
 	}
