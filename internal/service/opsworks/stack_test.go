@@ -536,7 +536,7 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 		}
 	}
 
-	return fmt.Errorf("Fall through error for OpsWorks stack test")
+	return nil
 }
 
 //////////////////////////////////////////////////
