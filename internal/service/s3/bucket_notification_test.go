@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -302,12 +302,15 @@ func testAccCheckBucketNotificationDestroy(s *terraform.State) error {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
+
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+				return nil
+			}
+
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucket" {
-					return nil
-				}
 				return resource.NonRetryableError(err)
 			}
+
 			if len(out.TopicConfigurations) > 0 {
 				return resource.RetryableError(fmt.Errorf("TopicConfigurations is exists: %v", out))
 			}

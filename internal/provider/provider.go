@@ -727,6 +727,8 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
+			"aws_location_map": location.DataSourceMap(),
+
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
@@ -957,6 +959,7 @@ func Provider() *schema.Provider {
 			"aws_appautoscaling_target":           appautoscaling.ResourceTarget(),
 
 			"aws_appflow_connector_profile": appflow.ResourceConnectorProfile(),
+			"aws_appflow_flow":              appflow.ResourceFlow(),
 
 			"aws_appmesh_gateway_route":   appmesh.ResourceGatewayRoute(),
 			"aws_appmesh_mesh":            appmesh.ResourceMesh(),

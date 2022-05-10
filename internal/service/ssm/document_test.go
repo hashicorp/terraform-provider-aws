@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -644,11 +644,11 @@ func testAccCheckDocumentDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.Attributes["name"]),
 		})
 
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
+			continue
+		}
+
 		if err != nil {
-			// InvalidDocument means it's gone, this is good
-			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == ssm.ErrCodeInvalidDocument {
-				return nil
-			}
 			return err
 		}
 
@@ -659,7 +659,7 @@ func testAccCheckDocumentDestroy(s *terraform.State) error {
 		return nil
 	}
 
-	return fmt.Errorf("Default error in SSM Document Test")
+	return nil
 }
 
 /*

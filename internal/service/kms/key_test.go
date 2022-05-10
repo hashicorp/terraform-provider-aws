@@ -244,6 +244,33 @@ func TestAccKMSKey_Policy_iamRole(t *testing.T) {
 	})
 }
 
+func TestAccKMSKey_Policy_iamRoleUpdate(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKey_policy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+			},
+			{
+				Config: testAccKeyPolicyIAMRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11801
 func TestAccKMSKey_Policy_iamRoleOrder(t *testing.T) {
 	var key kms.KeyMetadata
