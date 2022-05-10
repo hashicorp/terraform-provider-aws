@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,10 +23,10 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDmsEventSubscriptionConfigEnabled(rName, true),
@@ -57,10 +57,10 @@ func TestAccDMSEventSubscription_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDmsEventSubscriptionConfigEnabled(rName, true),
@@ -80,10 +80,10 @@ func TestAccDMSEventSubscription_enabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDmsEventSubscriptionConfigEnabled(rName, false),
@@ -121,10 +121,10 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDmsEventSubscriptionConfigEventCategories2(rName, "creation", "failure"),
@@ -159,10 +159,10 @@ func TestAccDMSEventSubscription_tags(t *testing.T) {
 	resourceName := "aws_dms_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEKS(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEKS(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDmsEventSubscriptionConfigTags1(rName, "key1", "value1"),
@@ -210,7 +210,7 @@ func testAccCheckDmsEventSubscriptionDestroy(s *terraform.State) error {
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			continue
 		}
 

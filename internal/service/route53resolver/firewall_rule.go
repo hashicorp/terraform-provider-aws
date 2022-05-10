@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -128,7 +128,7 @@ func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	rule, err := FindFirewallRuleByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -201,7 +201,7 @@ func resourceFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error 
 		FirewallDomainListId: aws.String(d.Get("firewall_domain_list_id").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

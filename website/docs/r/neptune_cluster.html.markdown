@@ -50,7 +50,7 @@ The following arguments are supported:
 * `engine_version` - (Optional) The database engine version.
 * `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the Neptune Cluster.
-* `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
+* `iam_database_authentication_enabled` - (Optional) Specifies whether or not mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_arn`, `storage_encrypted` needs to be set to true.
 * `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
 * `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.

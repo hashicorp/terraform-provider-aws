@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccElasticSearchDomainPolicy_basic(t *testing.T) {
+func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
@@ -46,19 +46,19 @@ func TestAccElasticSearchDomainPolicy_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainPolicyConfig(ri, policy),
+				Config: testAccDomainPolicyConfig(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildESDomainArn(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
 						if err != nil {
 							return err
 						}
@@ -72,7 +72,7 @@ func TestAccElasticSearchDomainPolicy_basic(t *testing.T) {
 	})
 }
 
-func buildESDomainArn(name, partition, accId, region string) (string, error) {
+func buildDomainARN(name, partition, accId, region string) (string, error) {
 	if partition == "" {
 		return "", fmt.Errorf("Unable to construct ES Domain ARN because of missing AWS partition")
 	}
@@ -83,14 +83,14 @@ func buildESDomainArn(name, partition, accId, region string) (string, error) {
 	return fmt.Sprintf("arn:%s:es:%s:%s:domain/%s", partition, region, accId, name), nil
 }
 
-func testAccESDomainPolicyConfig(randInt int, policy string) string {
+func testAccDomainPolicyConfig(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name           = "tf-test-%d"
   elasticsearch_version = "2.3"
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch" # supported in both aws and aws-us-gov
   }
 
   ebs_options {

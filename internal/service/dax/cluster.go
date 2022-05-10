@@ -10,13 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,6 +41,20 @@ func ResourceCluster() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cluster_endpoint_encryption_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(dax.ClusterEndpointEncryptionType_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// API returns "NONE" by default.
+					if old == dax.ClusterEndpointEncryptionTypeNone && new == "" {
+						return true
+					}
+
+					return old == new
+				},
 			},
 			"cluster_name": {
 				Type:     schema.TypeString,
@@ -209,6 +222,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("cluster_endpoint_encryption_type"); ok {
+		req.ClusterEndpointEncryptionType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		req.ParameterGroupName = aws.String(v.(string))
 	}
@@ -234,7 +251,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateCluster(req)
 		if err != nil {
@@ -289,7 +306,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	res, err := conn.DescribeClusters(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeClusterNotFoundFault) {
 			log.Printf("[WARN] DAX cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -307,6 +324,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	c := res.Clusters[0]
 	d.Set("arn", c.ClusterArn)
 	d.Set("cluster_name", c.ClusterName)
+	d.Set("cluster_endpoint_encryption_type", c.ClusterEndpointEncryptionType)
 	d.Set("description", c.Description)
 	d.Set("iam_role_arn", c.IamRoleArn)
 	d.Set("node_type", c.NodeType)
@@ -328,7 +346,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
 
 	if c.NotificationConfiguration != nil {
-		if *c.NotificationConfiguration.TopicStatus == "active" {
+		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -480,10 +498,10 @@ func setDaxClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		nodeDate = append(nodeDate, map[string]interface{}{
-			"id":                *node.NodeId,
-			"address":           *node.Endpoint.Address,
-			"port":              int(*node.Endpoint.Port),
-			"availability_zone": *node.AvailabilityZone,
+			"id":                aws.StringValue(node.NodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.AvailabilityZone),
 		})
 	}
 
@@ -496,7 +514,7 @@ func (b byNodeId) Len() int      { return len(b) }
 func (b byNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byNodeId) Less(i, j int) bool {
 	return b[i].NodeId != nil && b[j].NodeId != nil &&
-		*b[i].NodeId < *b[j].NodeId
+		aws.StringValue(b[i].NodeId) < aws.StringValue(b[j].NodeId)
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
@@ -508,7 +526,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidClusterStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeInvalidClusterStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -546,7 +564,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 			ClusterNames: []*string{aws.String(clusterID)},
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeClusterNotFoundFault) {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}
@@ -561,7 +579,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 
 		var c *dax.Cluster
 		for _, cluster := range resp.Clusters {
-			if *cluster.ClusterName == clusterID {
+			if aws.StringValue(cluster.ClusterName) == clusterID {
 				log.Printf("[DEBUG] Found matching DAX cluster: %s", *cluster.ClusterName)
 				c = cluster
 			}
@@ -584,7 +602,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		// return the current state if it's in the pending array
 		for _, p := range pending {
 			log.Printf("[DEBUG] DAX: checking pending state (%s) for cluster (%s), cluster status: %s", pending, clusterID, *c.Status)
-			s := *c.Status
+			s := aws.StringValue(c.Status)
 			if p == s {
 				log.Printf("[DEBUG] Return with status: %v", *c.Status)
 				return c, p, nil
@@ -595,7 +613,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		if givenState != "" {
 			log.Printf("[DEBUG] DAX: checking given state (%s) of cluster (%s) against cluster status (%s)", givenState, clusterID, *c.Status)
 			// check to make sure we have the node count we're expecting
-			if int64(len(c.Nodes)) != *c.TotalNodes {
+			if int64(len(c.Nodes)) != aws.Int64Value(c.TotalNodes) {
 				log.Printf("[DEBUG] Node count is not what is expected: %d found, %d expected", len(c.Nodes), *c.TotalNodes)
 				return nil, "creating", nil
 			}
@@ -604,7 +622,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 			// loop the nodes and check their status as well
 			for _, n := range c.Nodes {
 				log.Printf("[DEBUG] Checking cache node for status: %s", n)
-				if n.NodeStatus != nil && *n.NodeStatus != "available" {
+				if n.NodeStatus != nil && aws.StringValue(n.NodeStatus) != "available" {
 					log.Printf("[DEBUG] Node (%s) is not yet available, status: %s", *n.NodeId, *n.NodeStatus)
 					return nil, "creating", nil
 				}

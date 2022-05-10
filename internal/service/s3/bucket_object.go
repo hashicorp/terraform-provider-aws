@@ -1,5 +1,9 @@
 package s3
 
+// WARNING: This code is DEPRECATED and will be removed in a future release!!
+// DO NOT apply fixes or enhancements to the resource in this file.
+// INSTEAD, apply fixes and enhancements to the resource in "object.go".
+
 import (
 	"bytes"
 	"context"
@@ -11,25 +15,23 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/mitchellh/go-homedir"
 )
-
-const s3BucketObjectCreationTimeout = 2 * time.Minute
 
 func ResourceBucketObject() *schema.Resource {
 	return &schema.Resource{
@@ -48,98 +50,76 @@ func ResourceBucketObject() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
-			"key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
 			"acl": {
 				Type:         schema.TypeString,
 				Default:      s3.ObjectCannedACLPrivate,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
-
+			"bucket": {
+				Deprecated:   "Use the aws_s3_object resource instead",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"bucket_key_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"content_language": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"metadata": {
-				Type:         schema.TypeMap,
-				ValidateFunc: validateMetadataIsLowerCase,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-
-			"content_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"source": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
-			},
-
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content_base64"},
 			},
-
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content"},
 			},
-
-			"storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
+			"content_disposition": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
-			"server_side_encryption": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
-				Computed:     true,
+			"content_encoding": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
+			"content_language": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"content_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"etag": {
+				Type: schema.TypeString,
+				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
+				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
+				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"kms_key_id"},
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"key": {
+				Deprecated:   "Use the aws_s3_object resource instead",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -153,55 +133,55 @@ func ResourceBucketObject() *schema.Resource {
 					return false
 				},
 			},
-
-			"etag": {
-				Type: schema.TypeString,
-				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
-				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
-				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"kms_key_id"},
+			"metadata": {
+				Type:         schema.TypeMap,
+				ValidateFunc: validateMetadataIsLowerCase,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"website_redirect": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
 			"object_lock_legal_hold_status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
-
 			"object_lock_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
-
 			"object_lock_retain_until_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
+			"server_side_encryption": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+				Computed:     true,
+			},
+			"source": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"content", "content_base64"},
+			},
 			"source_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"version_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"website_redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -209,127 +189,8 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	var body io.ReadSeeker
-
-	if v, ok := d.GetOk("source"); ok {
-		source := v.(string)
-		path, err := homedir.Expand(source)
-		if err != nil {
-			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
-		}
-		file, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
-		}
-
-		body = file
-		defer func() {
-			err := file.Close()
-			if err != nil {
-				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
-			}
-		}()
-	} else if v, ok := d.GetOk("content"); ok {
-		content := v.(string)
-		body = bytes.NewReader([]byte(content))
-	} else if v, ok := d.GetOk("content_base64"); ok {
-		content := v.(string)
-		// We can't do streaming decoding here (with base64.NewDecoder) because
-		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
-		if err != nil {
-			return fmt.Errorf("error decoding content_base64: %s", err)
-		}
-		body = bytes.NewReader(contentRaw)
-	}
-
-	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-
-	putInput := &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		ACL:    aws.String(d.Get("acl").(string)),
-		Body:   body,
-	}
-
-	if v, ok := d.GetOk("storage_class"); ok {
-		putInput.StorageClass = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("cache_control"); ok {
-		putInput.CacheControl = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_type"); ok {
-		putInput.ContentType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("metadata"); ok {
-		putInput.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("content_encoding"); ok {
-		putInput.ContentEncoding = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_language"); ok {
-		putInput.ContentLanguage = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_disposition"); ok {
-		putInput.ContentDisposition = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		putInput.BucketKeyEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("server_side_encryption"); ok {
-		putInput.ServerSideEncryption = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		putInput.SSEKMSKeyId = aws.String(v.(string))
-		putInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
-	}
-
-	if len(tags) > 0 {
-		// The tag-set must be encoded as URL Query parameters.
-		putInput.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
-	}
-
-	if v, ok := d.GetOk("website_redirect"); ok {
-		putInput.WebsiteRedirectLocation = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
-		putInput.ObjectLockLegalHoldStatus = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_mode"); ok {
-		putInput.ObjectLockMode = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		putInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
-	}
-
-	if _, err := conn.PutObject(putInput); err != nil {
-		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
-	}
-
-	d.SetId(key)
-	return resourceBucketObjectRead(d, meta)
-}
-
 func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceBucketObjectPut(d, meta)
+	return resourceBucketObjectUpload(d, meta)
 }
 
 func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
@@ -347,7 +208,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *s3.HeadObjectOutput
 
-	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(s3ObjectCreationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.HeadObject(input)
@@ -377,7 +238,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
 
 	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
@@ -385,7 +246,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	metadata := verify.PointersMapToStringList(resp.Metadata)
+	metadata := flex.PointersMapToStringList(resp.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -401,10 +262,10 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
 	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
 
 	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("bucket object KMS: %w", err)
+		return fmt.Errorf("object KMS: %w", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -447,8 +308,8 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	if hasS3BucketObjectContentChanges(d) {
-		return resourceBucketObjectPut(d, meta)
+	if hasBucketObjectContentChanges(d) {
+		return resourceBucketObjectUpload(d, meta)
 	}
 
 	conn := meta.(*conns.AWSClient).S3Conn
@@ -486,15 +347,15 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 			Key:    aws.String(key),
 			Retention: &s3.ObjectLockRetention{
 				Mode:            aws.String(d.Get("object_lock_mode").(string)),
-				RetainUntilDate: expandS3ObjectDate(d.Get("object_lock_retain_until_date").(string)),
+				RetainUntilDate: expandObjectDate(d.Get("object_lock_retain_until_date").(string)),
 			},
 		}
 
 		// Bypass required to lower or clear retain-until date.
 		if d.HasChange("object_lock_retain_until_date") {
 			oraw, nraw := d.GetChange("object_lock_retain_until_date")
-			o := expandS3ObjectDate(oraw.(string))
-			n := expandS3ObjectDate(nraw.(string))
+			o := expandObjectDate(oraw.(string))
+			n := expandObjectDate(nraw.(string))
 			if n == nil || (o != nil && n.Before(*o)) {
 				req.BypassGovernanceRetention = aws.Bool(true)
 			}
@@ -529,9 +390,9 @@ func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error 
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(conn, bucket, key, "", false)
 	}
 
 	if err != nil {
@@ -560,20 +421,141 @@ func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
+func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3Conn
+	uploader := s3manager.NewUploaderWithClient(conn)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	var body io.ReadSeeker
+
+	if v, ok := d.GetOk("source"); ok {
+		source := v.(string)
+		path, err := homedir.Expand(source)
+		if err != nil {
+			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("Error opening S3 object source (%s): %s", path, err)
+		}
+
+		body = file
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
+			}
+		}()
+	} else if v, ok := d.GetOk("content"); ok {
+		content := v.(string)
+		body = bytes.NewReader([]byte(content))
+	} else if v, ok := d.GetOk("content_base64"); ok {
+		content := v.(string)
+		// We can't do streaming decoding here (with base64.NewDecoder) because
+		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
+		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		if err != nil {
+			return fmt.Errorf("error decoding content_base64: %s", err)
+		}
+		body = bytes.NewReader(contentRaw)
+	} else {
+		body = bytes.NewReader([]byte{})
+	}
+
+	bucket := d.Get("bucket").(string)
+	key := d.Get("key").(string)
+
+	input := &s3manager.UploadInput{
+		ACL:    aws.String(d.Get("acl").(string)),
+		Body:   body,
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	if v, ok := d.GetOk("storage_class"); ok {
+		input.StorageClass = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_control"); ok {
+		input.CacheControl = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_type"); ok {
+		input.ContentType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("metadata"); ok {
+		input.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("content_encoding"); ok {
+		input.ContentEncoding = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_language"); ok {
+		input.ContentLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_disposition"); ok {
+		input.ContentDisposition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("bucket_key_enabled"); ok {
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("server_side_encryption"); ok {
+		input.ServerSideEncryption = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.SSEKMSKeyId = aws.String(v.(string))
+		input.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
+	}
+
+	if len(tags) > 0 {
+		// The tag-set must be encoded as URL Query parameters.
+		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+	}
+
+	if v, ok := d.GetOk("website_redirect"); ok {
+		input.WebsiteRedirectLocation = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
+		input.ObjectLockLegalHoldStatus = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_mode"); ok {
+		input.ObjectLockMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
+		input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
+	}
+
+	if _, err := uploader.Upload(input); err != nil {
+		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
+	}
+
+	d.SetId(key)
+
+	return resourceBucketObjectRead(d, meta)
+}
+
 func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn
-		kmsresp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String("alias/aws/s3"),
-		})
+		keyMetadata, err := kms.FindKeyByID(conn, DefaultKmsKeyAlias)
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
+			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKmsKeyAlias, err)
 		}
 
-		if *sseKMSKeyId != *kmsresp.KeyMetadata.Arn {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *sseKMSKeyId)
+		if aws.StringValue(sseKMSKeyId) != aws.StringValue(keyMetadata.Arn) {
+			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", aws.StringValue(sseKMSKeyId))
 			d.Set("kms_key_id", sseKMSKeyId)
 		}
 	}
@@ -581,20 +563,8 @@ func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMS
 	return nil
 }
 
-func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(map[string]interface{})
-
-	for k := range value {
-		if k != strings.ToLower(k) {
-			errors = append(errors, fmt.Errorf(
-				"Metadata must be lowercase only. Offending key: %q", k))
-		}
-	}
-	return
-}
-
 func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if hasS3BucketObjectContentChanges(d) {
+	if hasBucketObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
 
@@ -606,7 +576,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func hasS3BucketObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasBucketObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
@@ -630,189 +600,4 @@ func hasS3BucketObjectContentChanges(d verify.ResourceDiffer) bool {
 		}
 	}
 	return false
-}
-
-// DeleteAllObjectVersions deletes all versions of a specified key from an S3 bucket.
-// If key is empty then all versions of all objects are deleted.
-// Set force to true to override any S3 object lock protections on object lock enabled buckets.
-func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) error {
-	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucketName),
-	}
-	if key != "" {
-		input.Prefix = aws.String(key)
-	}
-
-	var lastErr error
-	err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, objectVersion := range page.Versions {
-			objectKey := aws.StringValue(objectVersion.Key)
-			objectVersionID := aws.StringValue(objectVersion.VersionId)
-
-			if key != "" && key != objectKey {
-				continue
-			}
-
-			err := deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
-			if tfawserr.ErrMessageContains(err, "AccessDenied", "") && force {
-				// Remove any legal hold.
-				resp, err := conn.HeadObject(&s3.HeadObjectInput{
-					Bucket:    aws.String(bucketName),
-					Key:       objectVersion.Key,
-					VersionId: objectVersion.VersionId,
-				})
-
-				if err != nil {
-					log.Printf("[ERROR] Error getting S3 Bucket (%s) Object (%s) Version (%s) metadata: %s", bucketName, objectKey, objectVersionID, err)
-					lastErr = err
-					continue
-				}
-
-				if aws.StringValue(resp.ObjectLockLegalHoldStatus) == s3.ObjectLockLegalHoldStatusOn {
-					_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
-						Bucket:    aws.String(bucketName),
-						Key:       objectVersion.Key,
-						VersionId: objectVersion.VersionId,
-						LegalHold: &s3.ObjectLockLegalHold{
-							Status: aws.String(s3.ObjectLockLegalHoldStatusOff),
-						},
-					})
-
-					if err != nil {
-						log.Printf("[ERROR] Error putting S3 Bucket (%s) Object (%s) Version(%s) legal hold: %s", bucketName, objectKey, objectVersionID, err)
-						lastErr = err
-						continue
-					}
-
-					// Attempt to delete again.
-					err = deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
-
-					if err != nil {
-						lastErr = err
-					}
-
-					continue
-				}
-
-				// AccessDenied for another reason.
-				lastErr = fmt.Errorf("AccessDenied deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
-				continue
-			}
-
-			if err != nil {
-				lastErr = err
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
-		err = nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if lastErr != nil {
-		if !ignoreObjectErrors {
-			return fmt.Errorf("error deleting at least one object version, last error: %s", lastErr)
-		}
-
-		lastErr = nil
-	}
-
-	err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, deleteMarker := range page.DeleteMarkers {
-			deleteMarkerKey := aws.StringValue(deleteMarker.Key)
-			deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
-
-			if key != "" && key != deleteMarkerKey {
-				continue
-			}
-
-			// Delete markers have no object lock protections.
-			err := deleteS3ObjectVersion(conn, bucketName, deleteMarkerKey, deleteMarkerVersionID, false)
-
-			if err != nil {
-				lastErr = err
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
-		err = nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if lastErr != nil {
-		if !ignoreObjectErrors {
-			return fmt.Errorf("error deleting at least one object delete marker, last error: %s", lastErr)
-		}
-
-		lastErr = nil
-	}
-
-	return nil
-}
-
-// deleteS3ObjectVersion deletes a specific bucket object version.
-// Set force to true to override any S3 object lock protections.
-func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
-	input := &s3.DeleteObjectInput{
-		Bucket: aws.String(b),
-		Key:    aws.String(k),
-	}
-
-	if v != "" {
-		input.VersionId = aws.String(v)
-	}
-
-	if force {
-		input.BypassGovernanceRetention = aws.Bool(true)
-	}
-
-	log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", b, k, v)
-	_, err := conn.DeleteObject(input)
-
-	if err != nil {
-		log.Printf("[WARN] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
-	}
-
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchKey, "") {
-		return nil
-	}
-
-	return err
-}
-
-func expandS3ObjectDate(v string) *time.Time {
-	t, err := time.Parse(time.RFC3339, v)
-	if err != nil {
-		return nil
-	}
-
-	return aws.Time(t)
-}
-
-func flattenS3ObjectDate(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-
-	return t.Format(time.RFC3339)
 }

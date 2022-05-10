@@ -12,16 +12,36 @@ func TestAccEFSAccessPointsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_efs_access_points.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEFSAccessPointsDataSource_empty(t *testing.T) {
+	dataSourceName := "data.aws_efs_access_points.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessPointsEmptyDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},
@@ -38,6 +58,16 @@ resource "aws_efs_access_point" "test" {
 
 data "aws_efs_access_points" "test" {
   file_system_id = aws_efs_access_point.test.file_system_id
+}
+`
+}
+
+func testAccAccessPointsEmptyDataSourceConfig() string {
+	return `
+resource "aws_efs_file_system" "test" {}
+
+data "aws_efs_access_points" "test" {
+  file_system_id = aws_efs_file_system.test.id
 }
 `
 }

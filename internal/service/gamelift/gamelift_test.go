@@ -10,20 +10,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-type testAccGameliftGame struct {
+type testAccGame struct {
 	Location   *gamelift.S3Location
 	LaunchPath string
 }
 
-func (gg *testAccGameliftGame) Parameters(portNumber int) string {
+func (gg *testAccGame) Parameters(portNumber int) string {
 	return fmt.Sprintf("+sv_port %d +gamelift_start_server", portNumber)
 }
 
 // Location found from CloudTrail event after finishing tutorial
 // e.g. https://us-west-2.console.aws.amazon.com/gamelift/home?region=us-west-2#/r/fleets/sample
-func testAccSampleGame(region string) (*testAccGameliftGame, error) {
+func testAccSampleGame(region string) (*testAccGame, error) {
 	version := "v1.2.0.0"
-	accId, err := testAccGameliftAccountIdByRegion(region)
+	accId, err := testAccAccountIdByRegion(region)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func testAccSampleGame(region string) (*testAccGameliftGame, error) {
 	roleArn := fmt.Sprintf("arn:%s:iam::%s:role/sample-build-upload-role-%s", acctest.Partition(), accId, region)
 	launchPath := `C:\game\Bin64.Release.Dedicated\MultiplayerProjectLauncher_Server.exe`
 
-	gg := &testAccGameliftGame{
+	gg := &testAccGame{
 		Location: &gamelift.S3Location{
 			Bucket:  aws.String(bucket),
 			Key:     aws.String(key),
@@ -45,7 +45,7 @@ func testAccSampleGame(region string) (*testAccGameliftGame, error) {
 }
 
 // Account ID found from CloudTrail event (role ARN) after finishing tutorial in given region
-func testAccGameliftAccountIdByRegion(region string) (string, error) {
+func testAccAccountIdByRegion(region string) (string, error) {
 	m := map[string]string{
 		endpoints.ApNortheast1RegionID: "120069834884",
 		endpoints.ApNortheast2RegionID: "805673136642",

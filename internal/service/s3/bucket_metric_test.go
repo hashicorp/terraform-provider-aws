@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -274,17 +274,17 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithoutFilterConfig(bucketName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					resource.TestCheckNoResourceAttr(resourceName, "filter"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", metricName),
 				),
 			},
@@ -308,10 +308,10 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithEmptyFilterConfig(bucketName, metricName),
@@ -335,10 +335,10 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithFilterPrefixConfig(bucketName, metricName, prefix),
@@ -382,10 +382,10 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithFilterPrefixAndMultipleTagsConfig(bucketName, metricName, prefix, tag1, tag2),
@@ -431,10 +431,10 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithFilterPrefixAndSingleTagConfig(bucketName, metricName, prefix, tag1),
@@ -478,10 +478,10 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithFilterMultipleTagsConfig(bucketName, metricName, tag1, tag2),
@@ -525,10 +525,10 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketMetricDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetricsWithFilterSingleTagConfig(bucketName, metricName, tag1),
@@ -580,7 +580,7 @@ func testAccCheckBucketMetricDestroy(s *terraform.State) error {
 			log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
 			output, err := conn.GetBucketMetricsConfiguration(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 					return nil
 				}
 				return resource.NonRetryableError(err)
@@ -635,8 +635,12 @@ func testAccCheckBucketMetricsExistsConfig(n string, res *s3.MetricsConfiguratio
 func testAccBucketMetricsBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  acl    = "public-read"
   bucket = "%s"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
 }
 `, name)
 }

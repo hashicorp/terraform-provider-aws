@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(geoMatchSet),
@@ -60,10 +60,10 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(geoMatchSet),
@@ -96,10 +96,10 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(geoMatchSet),
@@ -119,10 +119,10 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig(setName),
@@ -171,10 +171,10 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGeoMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_noConstraints(setName),
@@ -282,7 +282,7 @@ func testAccCheckGeoMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the GeoMatchSet is already destroyed
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			return nil
 		}
 

@@ -14,15 +14,15 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_clusters.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClustersDataSourceConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
 				),
 			},
 		},

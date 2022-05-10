@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccWAFRegionalXSSMatchSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckXSSMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXSSMatchSetConfig(rName),
@@ -63,10 +63,10 @@ func TestAccWAFRegionalXSSMatchSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckXSSMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXSSMatchSetConfig(rName1),
@@ -99,10 +99,10 @@ func TestAccWAFRegionalXSSMatchSet_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckXSSMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXSSMatchSetConfig(rName),
@@ -122,10 +122,10 @@ func TestAccWAFRegionalXSSMatchSet_changeTuples(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckXSSMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXSSMatchSetConfig(rName),
@@ -182,10 +182,10 @@ func TestAccWAFRegionalXSSMatchSet_noTuples(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckXSSMatchSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXSSMatchSetConfig_noTuples(rName),
@@ -252,7 +252,7 @@ func testAccCheckXSSMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the regional WAF XSS Match Set is already destroyed
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 

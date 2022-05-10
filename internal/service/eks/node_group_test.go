@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
+	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkip)
 
 }
 
@@ -30,10 +30,10 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupNodeGroupNameConfig(rName),
@@ -80,10 +80,10 @@ func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupNodeGroupNameGeneratedConfig(rName),
@@ -108,10 +108,10 @@ func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupNodeGroupNamePrefixConfig(rName, "tf-acc-test-prefix-"),
@@ -136,10 +136,10 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupNodeGroupNameConfig(rName),
@@ -159,10 +159,10 @@ func TestAccEKSNodeGroup_amiType(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupAMITypeConfig(rName, eks.AMITypesAl2X8664Gpu),
@@ -193,10 +193,10 @@ func TestAccEKSNodeGroup_CapacityType_spot(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupCapacityTypeConfig(rName, eks.CapacityTypesSpot),
@@ -220,10 +220,10 @@ func TestAccEKSNodeGroup_diskSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupDiskSizeConfig(rName, 21),
@@ -247,10 +247,10 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupForceUpdateVersionConfig(rName, "1.19"),
@@ -279,20 +279,24 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ec2InstanceTypeOfferingsDataSourceName := "data.aws_ec2_instance_type_offerings.available"
 	resourceName := "aws_eks_node_group.test"
+	instanceTypes := fmt.Sprintf("%q, %q, %q, %q", "t2.medium", "t3.medium", "t2.large", "t3.large")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupInstanceTypesMultipleConfig(rName),
+				Config: testAccNodeGroupInstanceTypesMultipleConfig(rName, instanceTypes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_types.#", ec2InstanceTypeOfferingsDataSourceName, "instance_types.#"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.0", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.1", "t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.2", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.3", "t3.large"),
 				),
 			},
 			{
@@ -310,10 +314,10 @@ func TestAccEKSNodeGroup_InstanceTypes_single(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupInstanceTypesSingleConfig(rName),
@@ -337,10 +341,10 @@ func TestAccEKSNodeGroup_labels(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupLabels1Config(rName, "key1", "value1"),
@@ -384,10 +388,10 @@ func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupLaunchTemplateId1Config(rName),
@@ -423,10 +427,10 @@ func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupLaunchTemplateName1Config(rName),
@@ -461,10 +465,10 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupLaunchTemplateVersion1Config(rName),
@@ -499,10 +503,10 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupReleaseVersionConfig(rName, "1.17"),
@@ -539,10 +543,10 @@ func TestAccEKSNodeGroup_RemoteAccess_ec2SSHKey(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupRemoteAccessEC2SSHKeyConfig(rName, publicKey),
@@ -572,10 +576,10 @@ func TestAccEKSNodeGroup_RemoteAccess_sourceSecurityGroupIDs(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupRemoteAccessSourceSecurityGroupIds1Config(rName, publicKey),
@@ -600,10 +604,10 @@ func TestAccEKSNodeGroup_Scaling_desiredSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupScalingSizesConfig(rName, 2, 2, 1),
@@ -641,10 +645,10 @@ func TestAccEKSNodeGroup_Scaling_maxSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupScalingSizesConfig(rName, 1, 2, 1),
@@ -682,10 +686,10 @@ func TestAccEKSNodeGroup_Scaling_minSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupScalingSizesConfig(rName, 2, 2, 2),
@@ -723,10 +727,10 @@ func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupScalingSizesConfig(rName, 0, 1, 0),
@@ -774,10 +778,10 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupTags1Config(rName, "key1", "value1"),
@@ -821,10 +825,10 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupTaints1Config(rName, "key1", "value1", "NO_SCHEDULE"),
@@ -884,10 +888,10 @@ func TestAccEKSNodeGroup_update(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupUpdate1Config(rName),
@@ -922,10 +926,10 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupVersionConfig(rName, "1.19"),
@@ -951,7 +955,7 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 	})
 }
 
-func testAccErrorCheckSkipEKS(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterException: The following supplied instance types do not exist",
 	)
@@ -1386,21 +1390,16 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccNodeGroupInstanceTypesMultipleConfig(rName string) string {
+func testAccNodeGroupInstanceTypesMultipleConfig(rName, instanceTypes string) string {
 	return acctest.ConfigCompose(
 		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
-data "aws_ec2_instance_type_offerings" "available" {
-  filter {
-    name   = "instance-type"
-    values = ["t3.medium", "t3.large", "t2.medium", "t2.large"]
-  }
-}
-
 resource "aws_eks_node_group" "test" {
-  cluster_name    = aws_eks_cluster.test.name
-  instance_types  = data.aws_ec2_instance_type_offerings.available.instance_types
-  node_group_name = %[1]q
+  cluster_name = aws_eks_cluster.test.name
+  # use a predetermined string instead of aws_ec2_instance_type_offerings data source for the instance_types (TypeList)
+  # as the apply-time values of the data source's instance_types can change in order
+  instance_types  = [%[1]s]
+  node_group_name = %[2]q
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = aws_subnet.test[*].id
 
@@ -1416,7 +1415,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName))
+`, instanceTypes, rName))
 }
 
 func testAccNodeGroupInstanceTypesSingleConfig(rName string) string {

@@ -12,24 +12,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
-	var connection ec2.VpcPeeringConnection
+func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
+	var v ec2.VpcPeeringConnection
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
 	resourceNameConnection := "aws_vpc_peering_connection.main"        // Requester
 	resourceNameAccepter := "aws_vpc_peering_connection_accepter.peer" // Accepter
-	rName := fmt.Sprintf("terraform-testacc-pcxaccpt-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccVPCPeeringConnectionAccepterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterSameRegionSameAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameAccepter, &connection),
+					testAccCheckVPCPeeringConnectionExists(resourceNameAccepter, &v),
 					// The aws_vpc_peering_connection documentation says:
 					//	vpc_id - The ID of the requester VPC
 					//	peer_vpc_id - The ID of the VPC with which you are creating the VPC Peering Connection (accepter)
@@ -65,14 +65,14 @@ func TestAccEC2VPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
-	var connectionMain, connectionPeer ec2.VpcPeeringConnection
+func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
+	var vMain, vPeer ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
 	resourceNameConnection := "aws_vpc_peering_connection.main"        // Requester
 	resourceNameAccepter := "aws_vpc_peering_connection_accepter.peer" // Accepter
-	rName := fmt.Sprintf("terraform-testacc-pcxaccpt-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -86,13 +86,12 @@ func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 			{
 				Config: testAccVPCPeeringConnectionAccepterDifferentRegionSameAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &connectionMain),
-					testAccCheckVPCPeeringConnectionExistsWithProvider(resourceNameAccepter, &connectionPeer, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &vMain),
+					testAccCheckVPCPeeringConnectionExistsWithProvider(resourceNameAccepter, &vPeer, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
 					resource.TestCheckResourceAttr(resourceNameConnection, "peer_region", acctest.AlternateRegion()),
-					// ** TODO See TestAccAWSVPCPeeringConnectionAccepter_sameRegion()
 					// resource.TestCheckResourceAttrPair(resourceNameAccepter, "vpc_id", resourceNamePeerVpc, "id"),
 					// resource.TestCheckResourceAttrPair(resourceNameAccepter, "peer_vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameAccepter, "peer_owner_id", resourceNameMainVpc, "owner_id"),
@@ -111,14 +110,14 @@ func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
-	var connection ec2.VpcPeeringConnection
+func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
+	var v ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
 	resourceNameConnection := "aws_vpc_peering_connection.main"        // Requester
 	resourceNameAccepter := "aws_vpc_peering_connection_accepter.peer" // Accepter
-	rName := fmt.Sprintf("terraform-testacc-pcxaccpt-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -132,7 +131,7 @@ func TestAccEC2VPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 			{
 				Config: testAccVPCPeeringConnectionAccepterSameRegionDifferentAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &connection),
+					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &v),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -148,14 +147,14 @@ func TestAccEC2VPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
-	var connection ec2.VpcPeeringConnection
+func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
+	var v ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
 	resourceNameConnection := "aws_vpc_peering_connection.main"        // Requester
 	resourceNameAccepter := "aws_vpc_peering_connection_accepter.peer" // Accepter
-	rName := fmt.Sprintf("terraform-testacc-pcxaccpt-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -170,7 +169,7 @@ func TestAccEC2VPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *t
 			{
 				Config: testAccVPCPeeringConnectionAccepterDifferentRegionDifferentAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &connection),
+					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &v),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -233,7 +232,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 
 func testAccVPCPeeringConnectionAccepterDifferentRegionSameAccountConfig(rName string) string {
-	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -275,11 +274,11 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
     Name = %[1]q
   }
 }
-`, rName, acctest.AlternateRegion())
+`, rName, acctest.AlternateRegion()))
 }
 
 func testAccVPCPeeringConnectionAccepterSameRegionDifferentAccountConfig(rName string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -326,11 +325,11 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
     Name = %[1]q
   }
 }
-`, rName, acctest.Region())
+`, rName, acctest.Region()))
 }
 
 func testAccVPCPeeringConnectionAccepterDifferentRegionDifferentAccountConfig(rName string) string {
-	return acctest.ConfigAlternateAccountAlternateRegionProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAlternateAccountAlternateRegionProviderConfig(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -377,5 +376,5 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
     Name = %[1]q
   }
 }
-`, rName, acctest.AlternateRegion())
+`, rName, acctest.AlternateRegion()))
 }

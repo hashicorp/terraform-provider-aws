@@ -37,16 +37,42 @@ func DataSourceGroups() *schema.Resource {
 							Required: true,
 						},
 						"values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 					},
 				},
 			},
 		},
 	}
+}
+
+func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
+	var filters []*autoscaling.Filter
+	for _, v := range set.List() {
+		m := v.(map[string]interface{})
+		var filterValues []*string
+		for _, e := range m["values"].([]interface{}) {
+			filterValues = append(filterValues, aws.String(e.(string)))
+		}
+
+		// In previous iterations, users were expected to provide "key" and "value" tag names.
+		// With the addition of asgs filters, the signature is "tag-key" and "tag-value", so these conditions prevent breaking changes.
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/autoscaling/#Filter
+		name := m["name"].(string)
+		if name == "key" {
+			name = "tag-key"
+		}
+		if name == "value" {
+			name = "tag-value"
+		}
+		filters = append(filters, &autoscaling.Filter{
+			Name:   aws.String(name),
+			Values: filterValues,
+		})
+	}
+	return filters
 }
 
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
@@ -58,47 +84,24 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	var rawArn []string
 	var err error
 
-	tf := d.Get("filter").(*schema.Set)
-	if tf.Len() > 0 {
-		input := &autoscaling.DescribeTagsInput{
-			Filters: expandAsgTagFilters(tf.List()),
-		}
-		err = conn.DescribeTagsPages(input, func(resp *autoscaling.DescribeTagsOutput, lastPage bool) bool {
-			for _, v := range resp.Tags {
-				rawName = append(rawName, aws.StringValue(v.ResourceId))
-			}
-			return !lastPage
-		})
+	params := autoscaling.DescribeAutoScalingGroupsInput{}
 
-		maxAutoScalingGroupNames := 1600
-		for i := 0; i < len(rawName); i += maxAutoScalingGroupNames {
-			end := i + maxAutoScalingGroupNames
-
-			if end > len(rawName) {
-				end = len(rawName)
-			}
-
-			nameInput := &autoscaling.DescribeAutoScalingGroupsInput{
-				AutoScalingGroupNames: aws.StringSlice(rawName[i:end]),
-				MaxRecords:            aws.Int64(100),
-			}
-
-			err = conn.DescribeAutoScalingGroupsPages(nameInput, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
-				for _, group := range resp.AutoScalingGroups {
-					rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
-				}
-				return !lastPage
-			})
-		}
-	} else {
-		err = conn.DescribeAutoScalingGroupsPages(&autoscaling.DescribeAutoScalingGroupsInput{}, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
-			for _, group := range resp.AutoScalingGroups {
-				rawName = append(rawName, aws.StringValue(group.AutoScalingGroupName))
-				rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
-			}
-			return !lastPage
-		})
+	if v, ok := d.GetOk("filter"); ok {
+		params.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
+
+	if v, ok := d.GetOk("names"); ok {
+		params.AutoScalingGroupNames = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	err = conn.DescribeAutoScalingGroupsPages(&params, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+		for _, group := range resp.AutoScalingGroups {
+			rawName = append(rawName, aws.StringValue(group.AutoScalingGroupName))
+			rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
+		}
+		return !lastPage
+	})
+
 	if err != nil {
 		return fmt.Errorf("Error fetching Autoscaling Groups: %w", err)
 	}
@@ -117,19 +120,4 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-
-}
-
-func expandAsgTagFilters(in []interface{}) []*autoscaling.Filter {
-	out := make([]*autoscaling.Filter, len(in))
-	for i, filter := range in {
-		m := filter.(map[string]interface{})
-		values := flex.ExpandStringSet(m["values"].(*schema.Set))
-
-		out[i] = &autoscaling.Filter{
-			Name:   aws.String(m["name"].(string)),
-			Values: values,
-		}
-	}
-	return out
 }

@@ -67,7 +67,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactFlowId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		contactFlowSummary, err := dataSourceGetConnectContactFlowSummaryByName(ctx, conn, instanceID, name)
+		contactFlowSummary, err := dataSourceGetContactFlowSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Summary by name (%s): %w", name, err))
@@ -109,7 +109,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func dataSourceGetConnectContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {
+func dataSourceGetContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {
 	var result *connect.ContactFlowSummary
 
 	input := &connect.ListContactFlowsInput{

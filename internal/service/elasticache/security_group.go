@@ -105,7 +105,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	var group *elasticache.CacheSecurityGroup
 	for _, g := range res.CacheSecurityGroups {
 		log.Printf("[DEBUG] CacheSecurityGroupName: %v, id: %v", g.CacheSecurityGroupName, d.Id())
-		if *g.CacheSecurityGroupName == d.Id() {
+		if aws.StringValue(g.CacheSecurityGroupName) == d.Id() {
 			group = g
 		}
 	}

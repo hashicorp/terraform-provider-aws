@@ -8,11 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -76,7 +75,7 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
 	var err error
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
@@ -131,7 +130,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if t == nil {
+	if t == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Application AutoScaling Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -158,7 +157,7 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeregisterScalableTarget(input)
 
-	if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
 		return nil
 	}
 

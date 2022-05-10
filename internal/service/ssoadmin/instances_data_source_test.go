@@ -41,9 +41,9 @@ func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ssoadmin_instances.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesBasicDataSourceConfig,

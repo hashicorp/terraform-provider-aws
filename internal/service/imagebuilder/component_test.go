@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,10 +21,10 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentNameConfig(rName),
@@ -60,10 +60,10 @@ func TestAccImageBuilderComponent_disappears(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentNameConfig(rName),
@@ -82,10 +82,10 @@ func TestAccImageBuilderComponent_changeDescription(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentChangeDescriptionConfig(rName, "description1"),
@@ -108,10 +108,10 @@ func TestAccImageBuilderComponent_description(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentDescriptionConfig(rName, "description1"),
@@ -135,10 +135,10 @@ func TestAccImageBuilderComponent_kmsKeyID(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentKMSKeyIDConfig(rName),
@@ -161,10 +161,10 @@ func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentPlatformWindowsConfig(rName),
@@ -187,10 +187,10 @@ func TestAccImageBuilderComponent_supportedOsVersions(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentSupportedOsVersionsConfig(rName),
@@ -213,10 +213,10 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentTags1Config(rName, "key1", "value1"),
@@ -257,10 +257,10 @@ func TestAccImageBuilderComponent_uri(t *testing.T) {
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckComponentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentURIConfig(rName),
@@ -546,7 +546,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   content = yamlencode({
     phases = [{
@@ -568,7 +568,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_imagebuilder_component" "test" {
   name     = %[1]q
   platform = "Linux"
-  uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+  uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   version  = "1.0.0"
 }
 `, rName)

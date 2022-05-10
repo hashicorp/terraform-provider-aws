@@ -14,16 +14,16 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
-func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
+func TestAccBackupVaultNotification_basic(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultNotificationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultNotificationConfig(rName),
@@ -41,16 +41,16 @@ func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupVaultNotifications_Notification_disappears(t *testing.T) {
+func TestAccBackupVaultNotification_disappears(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultNotificationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultNotificationConfig(rName),

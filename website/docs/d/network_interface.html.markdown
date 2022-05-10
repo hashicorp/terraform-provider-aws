@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface"
 description: |-
@@ -31,6 +31,7 @@ See the [Network Interface](/docs/providers/aws/r/network_interface.html) for de
 
 Additionally, the following attributes are exported:
 
+* `arn` - The ARN of the network interface.
 * `association` - The association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
 * `availability_zone` - The Availability Zone.
 * `description` - Description of the network interface.

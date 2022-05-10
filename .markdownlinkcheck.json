@@ -1,4 +1,8 @@
 {
+    "timeout": "1m",
+    "retryOn429": true,
+    "retryCount": 5,
+    "aliveStatusCode": [200, 206],
     "ignorePatterns": [
         {
             "pattern": "^http(s)?://(?!(docs\\.aws\\.amazon\\.com|github.com|(www\\.)?terraform\\.io))"

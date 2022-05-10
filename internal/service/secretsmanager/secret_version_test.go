@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,10 +23,10 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_SecretString(rName),
@@ -55,10 +55,10 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_SecretBinary(rName),
@@ -86,10 +86,10 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_VersionStages_Single(rName),
@@ -152,7 +152,7 @@ func testAccCheckSecretVersionDestroy(s *terraform.State) error {
 		output, err := conn.GetSecretValue(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,10 +20,10 @@ func TestAccChimeVoiceConnectorTermination_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_termination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorTerminationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorTerminationConfig(name),
@@ -49,10 +49,10 @@ func TestAccChimeVoiceConnectorTermination_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_termination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorTerminationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorTerminationConfig(name),
@@ -71,10 +71,10 @@ func TestAccChimeVoiceConnectorTermination_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_termination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorTerminationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorTerminationConfig(name),
@@ -174,7 +174,7 @@ func testAccCheckVoiceConnectorTerminationDestroy(s *terraform.State) error {
 		}
 		resp, err := conn.GetVoiceConnectorTermination(input)
 
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			continue
 		}
 

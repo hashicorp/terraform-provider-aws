@@ -29,6 +29,10 @@ func validName(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen: %q", k, value))
 	}
+	if regexp.MustCompile(`^internal-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			`%q cannot begin with "internal-": %q`, k, value))
+	}
 	return
 }
 
@@ -46,6 +50,10 @@ func validNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	if regexp.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot begin with a hyphen: %q", k, value))
+	}
+	if regexp.MustCompile(`^internal-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			`%q cannot begin with "internal-": %q`, k, value))
 	}
 	return
 }

@@ -17,16 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpoint_gatewayBasic(t *testing.T) {
+func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
@@ -54,7 +54,7 @@ func TestAccEC2VPCEndpoint_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	var routeTable ec2.RouteTable
 	resourceName := "aws_vpc_endpoint.test"
@@ -62,10 +62,10 @@ func TestAccEC2VPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy(rName),
@@ -114,7 +114,7 @@ func TestAccEC2VPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_gatewayPolicy(t *testing.T) {
+func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	// This policy checks the DiffSuppressFunc
 	policy1 := `
@@ -156,10 +156,10 @@ func TestAccEC2VPCEndpoint_gatewayPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfigGatewayPolicy(rName, policy1),
@@ -182,16 +182,41 @@ func TestAccEC2VPCEndpoint_gatewayPolicy(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceBasic(t *testing.T) {
+func TestAccVPCEndpoint_ignoreEquivalent(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointOrderPolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+				),
+			},
+			{
+				Config:   testAccVpcEndpointNewOrderPolicyConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_interfaceBasic(rName),
@@ -220,16 +245,16 @@ func TestAccEC2VPCEndpoint_interfaceBasic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
+func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_interfaceWithSubnet(rName),
@@ -278,16 +303,16 @@ func TestAccEC2VPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, true),
@@ -319,16 +344,16 @@ func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, false),
@@ -380,16 +405,16 @@ func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_disappears(t *testing.T) {
+func TestAccVPCEndpoint_disappears(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
@@ -403,16 +428,16 @@ func TestAccEC2VPCEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_tags(t *testing.T) {
+func TestAccVPCEndpoint_tags(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfigTags1(rName, "key1", "value1"),
@@ -448,17 +473,17 @@ func TestAccEC2VPCEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
+func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	vpcEndpointServiceResourceName := "aws_vpc_endpoint_service.test"
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfigVpcEndpointTypeGatewayLoadBalancer(rName),
@@ -711,21 +736,12 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-  name   = "default"
-}
-
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
-
-  security_group_ids = [
-    data.aws_security_group.test.id,
-  ]
 }
 `, rName)
 }
@@ -1006,4 +1022,82 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVpcEndpointOrderPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service = "dynamodb"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "ReadOnly"
+      Principal = "*"
+      Action = [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables",
+        "dynamodb:ListTagsOfResource",
+      ]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+  service_name = data.aws_vpc_endpoint_service.test.service_name
+  vpc_id       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVpcEndpointNewOrderPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service = "dynamodb"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "ReadOnly"
+      Principal = "*"
+      Action = [
+        "dynamodb:ListTables",
+        "dynamodb:ListTagsOfResource",
+        "dynamodb:DescribeTable",
+      ]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+  service_name = data.aws_vpc_endpoint_service.test.service_name
+  vpc_id       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

@@ -7,14 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 const (
@@ -44,14 +44,11 @@ func ResourceMountTarget() *schema.Resource {
 			},
 
 			"ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.IsIPv4Address,
-					validation.StringIsEmpty,
-				),
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"security_groups": {
@@ -105,7 +102,7 @@ func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
-	az, err := getAzFromSubnetId(subnetId, meta.(*conns.AWSClient).EC2Conn)
+	az, err := getAzFromSubnetId(subnetId, meta)
 	if err != nil {
 		return fmt.Errorf("Failed getting Availability Zone from subnet ID (%s): %s", subnetId, err)
 	}
@@ -193,7 +190,7 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 			// The EFS mount target could not be found,
 			// which would indicate that it might be
 			// already deleted.
@@ -247,20 +244,14 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getAzFromSubnetId(subnetId string, conn *ec2.EC2) (string, error) {
-	input := ec2.DescribeSubnetsInput{
-		SubnetIds: []*string{aws.String(subnetId)},
-	}
-	out, err := conn.DescribeSubnets(&input)
+func getAzFromSubnetId(subnetId string, meta interface{}) (string, error) {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	subnet, err := ec2.FindSubnetByID(conn, subnetId)
 	if err != nil {
 		return "", err
 	}
 
-	if l := len(out.Subnets); l != 1 {
-		return "", fmt.Errorf("Expected exactly 1 subnet returned for %q, got: %d", subnetId, l)
-	}
-
-	return aws.StringValue(out.Subnets[0].AvailabilityZone), nil
+	return aws.StringValue(subnet.AvailabilityZone), nil
 }
 
 func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
@@ -293,7 +284,7 @@ func WaitForDeleteMountTarget(conn *efs.EFS, id string, timeout time.Duration) e
 				MountTargetId: aws.String(id),
 			})
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
+				if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 					return nil, "", nil
 				}
 

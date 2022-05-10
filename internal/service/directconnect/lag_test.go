@@ -22,10 +22,10 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigBasic(rName1),
@@ -77,10 +77,10 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigBasic(rName),
@@ -101,10 +101,10 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigConnectionID(rName),
@@ -139,10 +139,10 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigProviderName(rName),
@@ -177,10 +177,10 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigTags1(rName, "key1", "value1"),

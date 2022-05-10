@@ -19,10 +19,10 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_basic(t *testing.T) 
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkApplicationVersionConfig(sdkacctest.RandInt()),
@@ -39,10 +39,10 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_duplicateLabels(t *t
 	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkApplicationVersionConfig_duplicateLabel(sdkacctest.RandInt()),
@@ -60,10 +60,10 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application_version.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "test1", "test2"),
@@ -177,7 +177,7 @@ resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%d"
 }
 
-resource "aws_s3_bucket_object" "default" {
+resource "aws_s3_object" "default" {
   bucket = aws_s3_bucket.default.id
   key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -192,7 +192,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%d"
   bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_bucket_object.default.id
+  key         = aws_s3_object.default.id
 }
 `, randInt, randInt, randInt)
 }
@@ -203,7 +203,7 @@ resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%d"
 }
 
-resource "aws_s3_bucket_object" "default" {
+resource "aws_s3_object" "default" {
   bucket = aws_s3_bucket.default.id
   key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -218,7 +218,7 @@ resource "aws_elastic_beanstalk_application_version" "first" {
   application = aws_elastic_beanstalk_application.first.name
   name        = "tf-test-version-label-%d"
   bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_bucket_object.default.id
+  key         = aws_s3_object.default.id
 }
 
 resource "aws_elastic_beanstalk_application" "second" {
@@ -230,7 +230,7 @@ resource "aws_elastic_beanstalk_application_version" "second" {
   application = aws_elastic_beanstalk_application.second.name
   name        = "tf-test-version-label-%d"
   bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_bucket_object.default.id
+  key         = aws_s3_object.default.id
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }
@@ -241,7 +241,7 @@ resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%[1]d"
 }
 
-resource "aws_s3_bucket_object" "default" {
+resource "aws_s3_object" "default" {
   bucket = aws_s3_bucket.default.id
   key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -256,7 +256,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%[1]d"
   bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_bucket_object.default.id
+  key         = aws_s3_object.default.id
 
   tags = {
     firstTag  = "%[2]s"
@@ -272,7 +272,7 @@ resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%[1]d"
 }
 
-resource "aws_s3_bucket_object" "default" {
+resource "aws_s3_object" "default" {
   bucket = aws_s3_bucket.default.id
   key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -287,7 +287,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%[1]d"
   bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_bucket_object.default.id
+  key         = aws_s3_object.default.id
 
   tags = {
     firstTag  = "%[2]s"

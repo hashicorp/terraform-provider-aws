@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_encryption_by_default"
 description: |-
@@ -29,3 +29,11 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Import
+
+Default EBS encryption state can be imported, e.g.,
+
+```
+$ terraform import aws_ebs_encryption_by_default.example default
+```

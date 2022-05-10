@@ -39,6 +39,14 @@ func init() {
 		Name: "aws_batch_job_queue",
 		F:    sweepJobQueues,
 	})
+
+	resource.AddTestSweepers("aws_batch_scheduling_policy", &resource.Sweeper{
+		Name: "aws_batch_scheduling_policy",
+		F:    sweepSchedulingPolicies,
+		Dependencies: []string{
+			"aws_batch_job_queue",
+		},
+	})
 }
 
 func sweepComputeEnvironments(region string) error {
@@ -242,4 +250,46 @@ func sweepJobQueues(region string) error {
 	}
 
 	return nil
+}
+
+func sweepSchedulingPolicies(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).BatchConn
+	input := &batch.ListSchedulingPoliciesInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListSchedulingPoliciesPages(input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, schedulingPolicy := range page.SchedulingPolicies {
+			arn := aws.StringValue(schedulingPolicy.Arn)
+
+			log.Printf("[INFO] Deleting Batch Scheduling Policy: %s", arn)
+			_, err := conn.DeleteSchedulingPolicy(&batch.DeleteSchedulingPolicyInput{
+				Arn: aws.String(arn),
+			})
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Batch Scheduling Policy (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Batch Scheduling Policies sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Batch Scheduling Policies: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

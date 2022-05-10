@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,10 +21,10 @@ func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_Required(rName),
@@ -54,10 +54,10 @@ func TestAccNeptuneParameterGroup_description(t *testing.T) {
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_Description(rName, "description1"),
@@ -82,10 +82,10 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_Parameter(rName, "neptune_query_timeout", "25", "pending-reboot"),
@@ -130,10 +130,10 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_Tags_SingleTag(rName, "key1", "value1"),
@@ -184,7 +184,7 @@ func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 			})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 				return nil
 			}
 			return err

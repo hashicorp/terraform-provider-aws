@@ -25,12 +25,12 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 	confVersionResourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentNameConfig(rName),
@@ -63,12 +63,12 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 	strategy := "AppConfig.Linear50PercentEvery30Seconds"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_PredefinedStrategy(rName, strategy),
@@ -96,10 +96,10 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 	resourceName := "aws_appconfig_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentTags1(rName, "key1", "value1"),

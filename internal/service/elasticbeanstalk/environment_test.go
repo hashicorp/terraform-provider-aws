@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,10 +32,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_basic(t *testing.T) {
 	beanstalkEndpointURL := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvConfig(rName),
@@ -70,10 +70,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tier(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkWorkerEnvConfig(rName),
@@ -104,10 +104,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 	beanstalkCnameRegexp := regexp.MustCompile("^" + rName + ".+?elasticbeanstalk.com$")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvCnamePrefixConfig(rName),
@@ -136,10 +136,10 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkConfigTemplate(rName, 1),
@@ -183,10 +183,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_resource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkResourceOptionSetting(rName),
@@ -214,10 +214,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkTagsTemplate(rName, "test1", "test2"),
@@ -260,10 +260,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvTemplate_change(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnv_TemplateChange_stack(rName),
@@ -294,10 +294,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvSettings_update(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvConfig(rName),
@@ -338,10 +338,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvVersion_label(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvApplicationVersionConfig(rName),
@@ -379,10 +379,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_settingWithJSONValue(t *tes
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvSettingJsonValue(rName, publicKey, acctest.DefaultEmailAddress),
@@ -410,10 +410,10 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_platformARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvConfig_platform_arn(rName),
@@ -514,7 +514,7 @@ func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkEnvID.NotFound", "") {
+		if !tfawserr.ErrCodeEquals(err, "InvalidBeanstalkEnvID.NotFound") {
 			return err
 		}
 	}
@@ -1376,7 +1376,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -1385,7 +1385,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_elastic_beanstalk_application_version" "test" {
   application = aws_elastic_beanstalk_application.test.name
   bucket      = aws_s3_bucket.test.id
-  key         = aws_s3_bucket_object.test.id
+  key         = aws_s3_object.test.id
   name        = "%[1]s-1"
 }
 
@@ -1440,7 +1440,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -1449,7 +1449,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_elastic_beanstalk_application_version" "test" {
   application = aws_elastic_beanstalk_application.test.name
   bucket      = aws_s3_bucket.test.id
-  key         = aws_s3_bucket_object.test.id
+  key         = aws_s3_object.test.id
   name        = "%[1]s-2"
 }
 

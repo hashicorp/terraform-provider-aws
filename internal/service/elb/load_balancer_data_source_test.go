@@ -16,9 +16,9 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicDataSourceConfig(rName, t.Name()),
@@ -29,6 +29,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "internal", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "subnets.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.TestName", t.Name()),

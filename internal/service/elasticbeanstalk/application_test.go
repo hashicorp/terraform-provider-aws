@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,10 +20,10 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkAppConfig(rName),
@@ -45,10 +45,10 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkAppConfig(rName),
@@ -106,10 +106,10 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkAppConfigWithTags(rName, "test1", "test2"),
@@ -177,7 +177,7 @@ func testAccCheckBeanstalkAppDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if !tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
 			return err
 		}
 	}

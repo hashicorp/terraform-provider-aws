@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_cluster"
 description: |-
@@ -9,6 +9,8 @@ description: |-
 # Resource: aws_eks_cluster
 
 Manages an EKS Cluster.
+
+> **Hands-on:** For an example of `aws_eks_cluster` in use, follow the [Provision an EKS Cluster](https://learn.hashicorp.com/tutorials/terraform/eks) tutorial on HashiCorp Learn.
 
 ## Example Usage
 
@@ -199,6 +201,7 @@ The following arguments are supported in the `kubernetes_network_config` configu
     * Doesn't overlap with any CIDR block assigned to the VPC that you selected for VPC.
 
     * Between /24 and /12.
+* `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
 
 ## Attributes Reference
 

@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
+func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
+	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests")
+
 	var settings glue.DataCatalogEncryptionSettings
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -21,10 +23,10 @@ func testAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogEncryptionSettingsNonEncryptedConfig(),

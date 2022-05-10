@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,10 +20,10 @@ func TestAccRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig(rInt),
@@ -61,10 +61,10 @@ func TestAccRedshiftEventSubscription_withPrefix(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig(rInt),
@@ -95,10 +95,10 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionWithSourceIDsConfig(rInt),
@@ -143,10 +143,10 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig(rInt),
@@ -185,10 +185,10 @@ func TestAccRedshiftEventSubscription_tagsUpdate(t *testing.T) {
 	resourceName := "aws_redshift_event_subscription.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig(rInt),
@@ -275,7 +275,7 @@ func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
 			continue
 		}
 

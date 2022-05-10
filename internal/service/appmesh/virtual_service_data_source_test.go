@@ -17,10 +17,10 @@ func TestAccAppMeshVirtualServiceDataSource_virtualNode(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
@@ -47,10 +47,10 @@ func TestAccAppMeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),

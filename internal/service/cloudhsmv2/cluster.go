@@ -192,7 +192,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", cluster.VpcId)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set("hsm_type", cluster.HsmType)
-	if err := d.Set("cluster_certificates", readCloudHsmV2ClusterCertificates(cluster)); err != nil {
+	if err := d.Set("cluster_certificates", readClusterCertificates(cluster)); err != nil {
 		return fmt.Errorf("error setting cluster_certificates: %s", err)
 	}
 
@@ -250,7 +250,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readCloudHsmV2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]interface{} {
+func readClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]interface{} {
 	certs := map[string]interface{}{}
 	if cluster.Certificates != nil {
 		if aws.StringValue(cluster.State) == cloudhsmv2.ClusterStateUninitialized {

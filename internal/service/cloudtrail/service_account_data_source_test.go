@@ -14,9 +14,9 @@ func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudTrailServiceAccountConfig,
@@ -35,9 +35,9 @@ func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudTrailServiceAccountConfigRegion,

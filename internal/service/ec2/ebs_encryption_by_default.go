@@ -15,7 +15,9 @@ func ResourceEBSEncryptionByDefault() *schema.Resource {
 		Read:   resourceEBSEncryptionByDefaultRead,
 		Update: resourceEBSEncryptionByDefaultUpdate,
 		Delete: resourceEBSEncryptionByDefaultDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"enabled": {
 				Type:     schema.TypeBool,

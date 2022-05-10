@@ -1,5 +1,5 @@
 ---
-subcategory: "SNS"
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
 page_title: "AWS: aws_sns_sms_preferences"
 description: |-

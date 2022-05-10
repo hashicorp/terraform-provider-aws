@@ -94,7 +94,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 
 	policyNames := []*string{}
 	for _, backendServer := range lb.BackendServerDescriptions {
-		if instancePort != strconv.Itoa(int(*backendServer.InstancePort)) {
+		if instancePort != strconv.Itoa(int(aws.Int64Value(backendServer.InstancePort))) {
 			continue
 		}
 

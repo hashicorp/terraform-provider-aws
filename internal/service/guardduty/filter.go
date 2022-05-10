@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -152,7 +152,7 @@ func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
-	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
+	d.SetId(filterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
 	return resourceFilterRead(d, meta)
 }
@@ -223,7 +223,7 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-	d.SetId(guardDutyFilterCreateID(detectorID, name))
+	d.SetId(filterCreateID(detectorID, name))
 
 	return nil
 }
@@ -290,7 +290,7 @@ func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
 
 const guardDutyFilterIDSeparator = ":"
 
-func guardDutyFilterCreateID(detectorID, filterName string) string {
+func filterCreateID(detectorID, filterName string) string {
 	return detectorID + guardDutyFilterIDSeparator + filterName
 }
 

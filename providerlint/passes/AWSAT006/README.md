@@ -6,7 +6,7 @@ to work across AWS partitions, the DNS suffixes should not be hardcoded.
 ## Flagged Code
 
 ```go
-func testAccAWSMisericordiamHumilitatemPulchritudo(name string) string {
+func testAccEKSMisericordiamHumilitatemPulchritudo(name string) string {
     return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "%s"
@@ -33,7 +33,7 @@ POLICY
 ## Passing Code
 
 ```go
-func testAccAWSMisericordiamHumilitatemPulchritudo(name string) string {
+func testAccEKSMisericordiamHumilitatemPulchritudo(name string) string {
     return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

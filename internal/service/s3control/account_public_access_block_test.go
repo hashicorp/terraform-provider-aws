@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -49,10 +49,10 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig(),
@@ -79,10 +79,10 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig(),
@@ -101,10 +101,10 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockAccountIDConfig(),
@@ -127,10 +127,10 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(true),
@@ -167,10 +167,10 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(true),
@@ -207,10 +207,10 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(true),
@@ -247,10 +247,10 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(true),
@@ -305,7 +305,7 @@ func testAccCheckAccountPublicAccessBlockExists(resourceName string, configurati
 			var err error
 			output, err = conn.GetPublicAccessBlock(input)
 
-			if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrCodeEquals(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 				return resource.RetryableError(err)
 			}
 
@@ -346,7 +346,7 @@ func testAccCheckAccountPublicAccessBlockDestroy(s *terraform.State) error {
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(input)
 
-			if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrCodeEquals(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 				return nil
 			}
 
@@ -388,7 +388,7 @@ func testAccCheckAccountPublicAccessBlockDisappears() resource.TestCheckFunc {
 		return resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(getInput)
 
-			if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrCodeEquals(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 				return nil
 			}
 

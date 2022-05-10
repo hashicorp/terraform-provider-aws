@@ -22,7 +22,7 @@ func TestAccLightsailDomain_basic(t *testing.T) {
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckLightsailDomain(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -43,7 +43,7 @@ func TestAccLightsailDomain_disappears(t *testing.T) {
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckLightsailDomain(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -121,7 +121,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 
 func testAccDomainConfig_basic(lightsailDomainName string) string {
 	return acctest.ConfigCompose(
-		testAccLightsailDomainRegionProviderConfig(),
+		testAccDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_lightsail_domain" "test" {
   domain_name = "%s"

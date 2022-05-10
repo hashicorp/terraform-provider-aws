@@ -29,31 +29,6 @@ func TestValidRoleProfileName(t *testing.T) {
 	}
 }
 
-func TestValidRoleProfileNamePrefix(t *testing.T) {
-	validNamePrefixes := []string{
-		"tf-test-role-profile-",
-	}
-
-	for _, s := range validNamePrefixes {
-		_, errors := validRolePolicyNamePrefix(s, "name_prefix")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid IAM role policy name prefix: %v", s, errors)
-		}
-	}
-
-	invalidNamePrefixes := []string{
-		"invalid#name_prefix",
-		"this-is-a-very-long-role-policy-name-prefix-this-is-a-very-long-role-policy-name-prefix-this-is-a-very-",
-	}
-
-	for _, s := range invalidNamePrefixes {
-		_, errors := validRolePolicyNamePrefix(s, "name_prefix")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid IAM role policy name prefix: %v", s, errors)
-		}
-	}
-}
-
 func TestValidAccountAlias(t *testing.T) {
 	validAliases := []string{
 		"tf-alias",
@@ -89,11 +64,14 @@ func TestValidOpenIDURL(t *testing.T) {
 		ErrCount int
 	}{
 		{
-			Value:    "http://wrong.scheme.com", // nosemgrep: domain-names
+			Value: "https://good.test",
+		},
+		{
+			Value:    "http://wrong.scheme.test",
 			ErrCount: 1,
 		},
 		{
-			Value:    "ftp://wrong.scheme.co.uk", // nosemgrep: domain-names
+			Value:    "ftp://wrong.scheme.test",
 			ErrCount: 1,
 		},
 		{
@@ -101,7 +79,7 @@ func TestValidOpenIDURL(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "https://example.com/?query=param",
+			Value:    "https://no-queries.test/?query=param",
 			ErrCount: 1,
 		},
 	}

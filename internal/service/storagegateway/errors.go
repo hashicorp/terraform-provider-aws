@@ -7,9 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 )
 
+// Operation error code constants missing from AWS Go SDK: https://docs.aws.amazon.com/sdk-for-go/api/service/storagegateway/#pkg-constants.
+// See https://docs.aws.amazon.com/storagegateway/latest/userguide/AWSStorageGatewayAPI.html#APIOperationErrorCodes for details.
 const (
-	operationErrCodeFileShareNotFound = "FileShareNotFound"
-	fileSystemAssociationNotFound     = "fileSystemAssociationNotFound"
+	operationErrCodeFileShareNotFound             = "FileShareNotFound"
+	operationErrCodeFileSystemAssociationNotFound = "FileSystemAssociationNotFound"
+	operationErrCodeGatewayNotFound               = "GatewayNotFound"
 )
 
 // operationErrorCode returns the operation error code from the specified error:
@@ -26,17 +29,4 @@ func operationErrorCode(err error) string {
 	}
 
 	return ""
-}
-
-// Error code constants missing from AWS Go SDK:
-// https://docs.aws.amazon.com/sdk-for-go/api/service/storagegateway/#pkg-constants
-
-func invalidGatewayRequestErrCodeEquals(err error, errCode string) bool {
-	var igrex *storagegateway.InvalidGatewayRequestException
-	if errors.As(err, &igrex) {
-		if err := igrex.Error_; err != nil {
-			return aws.StringValue(err.ErrorCode) == errCode
-		}
-	}
-	return false
 }

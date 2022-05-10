@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -105,7 +105,7 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetSSHPublicKeyOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetSSHPublicKey(request)
@@ -139,8 +139,8 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM User SSH Key (%s): empty response", d.Id())
 	}
 
-	publicKey := *getResp.SSHPublicKey.SSHPublicKeyBody
-	if encoding == "SSH" {
+	publicKey := aws.StringValue(getResp.SSHPublicKey.SSHPublicKeyBody)
+	if encoding == iam.EncodingTypeSsh {
 		publicKey = cleanSSHKey(publicKey)
 	}
 

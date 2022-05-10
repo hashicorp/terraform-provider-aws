@@ -11,18 +11,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCDHCPOptionsDataSource_basic(t *testing.T) {
+func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_Missing,
-				ExpectError: regexp.MustCompile(`No matching EC2 DHCP Options found`),
+				ExpectError: regexp.MustCompile(`no matching EC2 DHCP Options Set found`),
 			},
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_DhcpOptionsID,
@@ -47,15 +47,15 @@ func TestAccEC2VPCDHCPOptionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptionsDataSource_filter(t *testing.T) {
+func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, 1),
@@ -77,7 +77,7 @@ func TestAccEC2VPCDHCPOptionsDataSource_filter(t *testing.T) {
 			},
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, 2),
-				ExpectError: regexp.MustCompile(`Multiple matching EC2 DHCP Options found`),
+				ExpectError: regexp.MustCompile(`multiple EC2 DHCP Options Sets matched`),
 			},
 			{
 				// We have one last empty step here because otherwise we'll leave the

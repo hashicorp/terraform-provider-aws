@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,8 +22,8 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{
 		Create:        resourceEBSSnapshotImportCreate,
 		Read:          resourceEBSSnapshotImportRead,
-		Update:        resourceEBSSnapshotImportUpdate,
-		Delete:        resourceEBSSnapshotImportDelete,
+		Update:        resourceEBSSnapshotUpdate,
+		Delete:        resourceEBSSnapshotDelete,
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -65,6 +65,10 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 						},
 					},
 				},
+			},
+			"data_encryption_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -120,7 +124,17 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"outpost_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,19 +142,13 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"volume_size": {
-				Type:     schema.TypeInt,
+			"owner_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
+			"permanent_restore": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 			},
 			"role_name": {
 				Type:     schema.TypeString,
@@ -148,12 +156,29 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				ForceNew: true,
 				Default:  "vmimport",
 			},
-			"data_encryption_key_id": {
+			"storage_tier": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.StringInSlice(ec2.TargetStorageTier_Values(), false),
+					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
+				),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"temporary_restore_days": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"volume_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"volume_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -210,7 +235,6 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		var resp *ec2.ImportSnapshotOutput
 		resp, err := conn.ImportSnapshot(request)
 
 		if tfawserr.ErrMessageContains(err, "InvalidParameter", "provided does not exist or does not have sufficient permissions") {
@@ -225,7 +249,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 
 		res, err := WaitEBSSnapshotImportComplete(conn, importTaskId)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error waiting for snapshot (%s) to be imported: %s", d.Id(), err))
+			return resource.NonRetryableError(fmt.Errorf("Error waiting for snapshot (%s) to be imported: %s", importTaskId, err))
 		}
 
 		d.SetId(aws.StringValue(res.SnapshotId))
@@ -248,6 +272,22 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error importing EBS Snapshot: %s", err)
 	}
 
+	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
+		_, err = conn.ModifySnapshotTier(&ec2.ModifySnapshotTierInput{
+			SnapshotId:  aws.String(d.Id()),
+			StorageTier: aws.String(v.(string)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error setting EBS Snapshot Import (%s) Storage Tier: %w", d.Id(), err)
+		}
+
+		_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
+		if err != nil {
+			return fmt.Errorf("Error waiting for EBS Snapshot Import (%s) Storage Tier to be archived: %w", d.Id(), err)
+		}
+	}
+
 	return resourceEBSSnapshotImportRead(d, meta)
 }
 
@@ -256,26 +296,17 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: []*string{aws.String(d.Id())},
-	}
-	res, err := conn.DescribeSnapshots(req)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-			log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
+	snapshot, err := FindSnapshotById(conn, d.Id())
 
-	if len(res.Snapshots) == 0 {
-		log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EBS Snapshot (%s) Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	snapshot := res.Snapshots[0]
+	if err != nil {
+		return fmt.Errorf("error reading EBS Snapshot (%s): %w", d.Id(), err)
+	}
 
 	d.Set("description", snapshot.Description)
 	d.Set("owner_id", snapshot.OwnerId)
@@ -284,6 +315,7 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set("storage_tier", snapshot.StorageTier)
 
 	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -304,43 +336,6 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", snapshotArn)
 
-	return nil
-}
-
-func resourceEBSSnapshotImportUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
-		}
-	}
-
-	return resourceEBSSnapshotImportRead(d, meta)
-}
-
-func resourceEBSSnapshotImportDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	input := &ec2.DeleteSnapshotInput{
-		SnapshotId: aws.String(d.Id()),
-	}
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSnapshot(input)
-		if err == nil {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
-			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
-		}
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteSnapshot(input)
-	}
-	if err != nil {
-		return fmt.Errorf("error deleting EBS snapshot: %s", err)
-	}
 	return nil
 }
 

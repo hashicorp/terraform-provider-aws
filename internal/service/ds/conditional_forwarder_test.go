@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,18 +17,19 @@ import (
 
 func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 	resourceName := "aws_directory_service_conditional_forwarder.fwd"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConditionalForwarderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConditionalForwarderDestroy,
 		Steps: []resource.TestStep{
 			// test create
 			{
-				Config: testAccDirectoryServiceConditionalForwarderConfig(ip1, ip2),
+				Config: testAccDirectoryServiceConditionalForwarderConfig(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(
 						resourceName,
@@ -37,7 +39,7 @@ func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 			},
 			// test update
 			{
-				Config: testAccDirectoryServiceConditionalForwarderConfig(ip1, ip3),
+				Config: testAccDirectoryServiceConditionalForwarderConfig(rName, domainName, ip1, ip3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(
 						resourceName,
@@ -56,7 +58,7 @@ func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 }
 
 func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_conditional_forwarder" {
@@ -73,7 +75,7 @@ func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
 
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			continue
 		}
 
@@ -105,7 +107,7 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),
@@ -138,70 +140,36 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 	}
 }
 
-func testAccDirectoryServiceConditionalForwarderConfig(ip1, ip2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccDirectoryServiceConditionalForwarderConfig(rName, domain, ip1, ip2 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_conditional_forwarder" "fwd" {
+  directory_id = aws_directory_service_directory.test.id
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+  remote_domain_name = "test.example.com"
+
+  dns_ips = [
+    %[2]q,
+    %[3]q,
+  ]
 }
 
-resource "aws_directory_service_directory" "bar" {
-  name     = "corp.notexample.com"
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
-    vpc_id     = aws_vpc.main.id
-    subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 
   tags = {
     Name = "terraform-testacc-directory-service-conditional-forwarder"
   }
 }
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
-  }
-}
-
-resource "aws_directory_service_conditional_forwarder" "fwd" {
-  directory_id = aws_directory_service_directory.bar.id
-
-  remote_domain_name = "test.example.com"
-
-  dns_ips = [
-    "%s",
-    "%s",
-  ]
-}
-`, ip1, ip2)
+`, domain, ip1, ip2),
+	)
 }

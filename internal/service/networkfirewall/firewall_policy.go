@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -45,11 +46,35 @@ func ResourceFirewallPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"stateful_default_actions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"stateful_engine_options": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rule_order": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(networkfirewall.RuleOrder_Values(), false),
+									},
+								},
+							},
+						},
 						"stateful_rule_group_reference": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"priority": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -103,7 +128,14 @@ func ResourceFirewallPolicy() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			// The stateful rule_order default action can be explicitly or implicitly set,
+			// so ignore spurious diffs if toggling between the two.
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				return forceNewIfNotRuleOrderDefault("firewall_policy.0.stateful_engine_options.0.rule_order", d)
+			},
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -113,7 +145,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
-		FirewallPolicy:     expandNetworkFirewallFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 		FirewallPolicyName: aws.String(d.Get("name").(string)),
 	}
 
@@ -172,7 +204,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", resp.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
-	if err := d.Set("firewall_policy", flattenNetworkFirewallFirewallPolicy(policy)); err != nil {
+	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting firewall_policy: %w", err))
 	}
 
@@ -198,7 +230,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("description", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			FirewallPolicy:    expandNetworkFirewallFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 			FirewallPolicyArn: aws.String(arn),
 			UpdateToken:       aws.String(d.Get("update_token").(string)),
 		}
@@ -263,7 +295,22 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func expandNetworkFirewallStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.StatefulRuleGroupReference {
+func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngineOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	options := &networkfirewall.StatefulEngineOptions{}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["rule_order"].(string); ok {
+		options.RuleOrder = aws.String(v)
+	}
+
+	return options
+}
+
+func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.StatefulRuleGroupReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -274,6 +321,9 @@ func expandNetworkFirewallStatefulRuleGroupReferences(l []interface{}) []*networ
 			continue
 		}
 		reference := &networkfirewall.StatefulRuleGroupReference{}
+		if v, ok := tfMap["priority"].(int); ok && v > 0 {
+			reference.Priority = aws.Int64(int64(v))
+		}
 		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
@@ -282,7 +332,7 @@ func expandNetworkFirewallStatefulRuleGroupReferences(l []interface{}) []*networ
 	return references
 }
 
-func expandNetworkFirewallStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.StatelessRuleGroupReference {
+func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.StatelessRuleGroupReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -304,7 +354,7 @@ func expandNetworkFirewallStatelessRuleGroupReferences(l []interface{}) []*netwo
 	return references
 }
 
-func expandNetworkFirewallFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
+func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -314,31 +364,45 @@ func expandNetworkFirewallFirewallPolicy(l []interface{}) *networkfirewall.Firew
 		StatelessFragmentDefaultActions: flex.ExpandStringSet(lRaw["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
+	if v, ok := lRaw["stateful_default_actions"].(*schema.Set); ok && v.Len() > 0 {
+		policy.StatefulDefaultActions = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := lRaw["stateful_engine_options"].([]interface{}); ok && len(v) > 0 {
+		policy.StatefulEngineOptions = expandStatefulEngineOptions(v)
+	}
+
 	if v, ok := lRaw["stateful_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatefulRuleGroupReferences = expandNetworkFirewallStatefulRuleGroupReferences(v.List())
+		policy.StatefulRuleGroupReferences = expandStatefulRuleGroupReferences(v.List())
 	}
 
 	if v, ok := lRaw["stateless_custom_action"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatelessCustomActions = expandNetworkFirewallCustomActions(v.List())
+		policy.StatelessCustomActions = expandCustomActions(v.List())
 	}
 
 	if v, ok := lRaw["stateless_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatelessRuleGroupReferences = expandNetworkFirewallStatelessRuleGroupReferences(v.List())
+		policy.StatelessRuleGroupReferences = expandStatelessRuleGroupReferences(v.List())
 	}
 
 	return policy
 }
 
-func flattenNetworkFirewallFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{} {
+func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{} {
 	if policy == nil {
 		return []interface{}{}
 	}
 	p := map[string]interface{}{}
+	if policy.StatefulDefaultActions != nil {
+		p["stateful_default_actions"] = flex.FlattenStringSet(policy.StatefulDefaultActions)
+	}
+	if policy.StatefulEngineOptions != nil {
+		p["stateful_engine_options"] = flattenStatefulEngineOptions(policy.StatefulEngineOptions)
+	}
 	if policy.StatefulRuleGroupReferences != nil {
-		p["stateful_rule_group_reference"] = flattenNetworkFirewallPolicyStatefulRuleGroupReference(policy.StatefulRuleGroupReferences)
+		p["stateful_rule_group_reference"] = flattenPolicyStatefulRuleGroupReference(policy.StatefulRuleGroupReferences)
 	}
 	if policy.StatelessCustomActions != nil {
-		p["stateless_custom_action"] = flattenNetworkFirewallCustomActions(policy.StatelessCustomActions)
+		p["stateless_custom_action"] = flattenCustomActions(policy.StatelessCustomActions)
 	}
 	if policy.StatelessDefaultActions != nil {
 		p["stateless_default_actions"] = flex.FlattenStringSet(policy.StatelessDefaultActions)
@@ -347,17 +411,32 @@ func flattenNetworkFirewallFirewallPolicy(policy *networkfirewall.FirewallPolicy
 		p["stateless_fragment_default_actions"] = flex.FlattenStringSet(policy.StatelessFragmentDefaultActions)
 	}
 	if policy.StatelessRuleGroupReferences != nil {
-		p["stateless_rule_group_reference"] = flattenNetworkFirewallPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
+		p["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
 	}
 
 	return []interface{}{p}
 }
 
-func flattenNetworkFirewallPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGroupReference) []interface{} {
+func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"rule_order": aws.StringValue(options.RuleOrder),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGroupReference) []interface{} {
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
 			"resource_arn": aws.StringValue(ref.ResourceArn),
+		}
+		if ref.Priority != nil {
+			reference["priority"] = int(aws.Int64Value(ref.Priority))
 		}
 		references = append(references, reference)
 	}
@@ -365,7 +444,7 @@ func flattenNetworkFirewallPolicyStatefulRuleGroupReference(l []*networkfirewall
 	return references
 }
 
-func flattenNetworkFirewallPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRuleGroupReference) []interface{} {
+func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRuleGroupReference) []interface{} {
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{

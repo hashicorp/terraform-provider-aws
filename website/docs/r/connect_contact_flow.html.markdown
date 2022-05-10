@@ -17,7 +17,6 @@ This resource embeds or references Contact Flows specified in Amazon Connect Con
 !> **WARN:** Contact Flows exported from the Console [Contact Flow import/export](https://docs.aws.amazon.com/connect/latest/adminguide/contact-flow-import-export.html) are not in the Amazon Connect Contact Flow Language and can not be used with this resource. Instead, the recommendation is to use the AWS CLI [`describe-contact-flow`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/connect/describe-contact-flow.html).
 See [example](#with-external-content) below which uses `jq` to extract the `Content` attribute and saves it to a local file.
 
-~> **NOTE:** Due to The behaviour of Amazon Connect you cannot delete contact flows. The [recommendation](https://docs.aws.amazon.com/connect/latest/adminguide/create-contact-flow.html#before-create-contact-flow) is to prefix the Contact Flow with `zzTrash_` to get obsolete contact flows out of the way.
 
 ## Example Usage
 
