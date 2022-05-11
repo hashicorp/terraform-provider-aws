@@ -41,12 +41,12 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
 				),
 			},
 			{
@@ -350,7 +350,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSVolume_multiAttach(t *testing.T) {
+func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -362,17 +362,62 @@ func TestAccEC2EBSVolume_multiAttach(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeMultiAttachConfig(rName),
+				Config: testAccEBSVolumeMultiAttachConfig(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "io1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeMultiAttachConfig(rName, "io2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "io2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolume_multiAttach_gp2(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEBSVolumeWithInvalidMultiAttachEnabledForTypeConfig,
+				ExpectError: regexp.MustCompile(`'multi_attach_enabled' must not be set when 'type' is`),
 			},
 		},
 	})
@@ -1155,6 +1200,15 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
+var testAccEBSVolumeWithInvalidMultiAttachEnabledForTypeConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+resource "aws_ebs_volume" "test" {
+  availability_zone    = data.aws_availability_zones.available.names[0]
+  size                 = 10
+  multi_attach_enabled = true
+  type                 = "gp2"
+}
+`)
+
 func testAccEBSVolumeOutpostConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
@@ -1175,7 +1229,7 @@ resource "aws_ebs_volume" "test" {
 `
 }
 
-func testAccEBSVolumeMultiAttachConfig(rName string) string {
+func testAccEBSVolumeMultiAttachConfig(rName, volumeType string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1188,7 +1242,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_ebs_volume" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
-  type                 = "io1"
+  type                 = %[2]q
   multi_attach_enabled = true
   size                 = 4
   iops                 = 100
@@ -1197,7 +1251,7 @@ resource "aws_ebs_volume" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, volumeType)
 }
 
 func testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, size, volumeType, iops, throughput string) string {
