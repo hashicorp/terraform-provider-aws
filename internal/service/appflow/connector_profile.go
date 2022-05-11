@@ -963,7 +963,6 @@ func ResourceConnectorProfile() *schema.Resource {
 												"profile_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													MaxItems: 50,
 													ValidateDiagFunc: allDiagFunc(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
