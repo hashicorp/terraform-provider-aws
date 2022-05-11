@@ -56,7 +56,7 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 
 func TestAccRoute53ResolverRulesDataSource_nameRegex(t *testing.T) {
 	dsResourceName := "data.aws_route53_resolver_rules.test"
-	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
+	rCount := 3
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,7 +67,7 @@ func TestAccRoute53ResolverRulesDataSource_nameRegex(t *testing.T) {
 			{
 				Config: testAccRulesDataSource_nameRegex(rCount, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", rCount),
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", strconv.Itoa(rCount)),
 				),
 			},
 		},
@@ -140,10 +140,10 @@ data "aws_route53_resolver_rules" "by_invalid_owner_id" {
 `, rName1, rName2)
 }
 
-func testAccRulesDataSource_nameRegex(rCount, rName string) string {
+func testAccRulesDataSource_nameRegex(rCount int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {
-  count       = %[1]s
+  count       = %[1]d
   domain_name = "%[2]s.example.org"
   name        = "%[2]s-${count.index}-rule"
   rule_type   = "SYSTEM"
