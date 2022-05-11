@@ -143,7 +143,7 @@ data "aws_route53_resolver_rules" "by_invalid_owner_id" {
 func testAccRulesDataSource_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {
-  count       = %[1]q
+  count       = %[1]s
   domain_name = "%[2]s.example.org"
   name        = "%[2]s-${count.index}-rule"
   rule_type   = "SYSTEM"
