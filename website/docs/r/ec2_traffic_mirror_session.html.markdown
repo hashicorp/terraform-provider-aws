@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_session"
 description: |-
@@ -28,6 +28,7 @@ resource "aws_ec2_traffic_mirror_target" "target" {
 resource "aws_ec2_traffic_mirror_session" "session" {
   description              = "traffic mirror session - terraform example"
   network_interface_id     = aws_instance.test.primary_network_interface_id
+  session_number           = 1
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
   traffic_mirror_target_id = aws_ec2_traffic_mirror_target.target.id
 }
@@ -57,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Traffic mirror sessions can be imported using the `id`, e.g.
+Traffic mirror sessions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e

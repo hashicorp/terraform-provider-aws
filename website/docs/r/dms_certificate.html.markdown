@@ -1,5 +1,5 @@
 ---
-subcategory: "Database Migration Service (DMS)"
+subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_certificate"
 description: |-
@@ -49,8 +49,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Certificates can be imported using the `certificate_arn`, e.g.
+Certificates can be imported using the `certificate_id`, e.g.,
 
 ```
-$ terraform import aws_dms_certificate.test arn:aws:dms:us-west-2:123456789:cert:xxxxxxxxxx
+$ terraform import aws_dms_certificate.test test-dms-certificate-tf
 ```

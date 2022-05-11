@@ -1,14 +1,14 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_vpc_association_authorization"
 description: |-
-  Authorizes a VPC in a peer account to be associated with a local Route53 Hosted Zone
+  Authorizes a VPC in a different account to be associated with a local Route53 Hosted Zone
 ---
 
 # Resource: aws_route53_vpc_association_authorization
 
-Authorizes a VPC in a peer account to be associated with a local Route53 Hosted Zone.
+Authorizes a VPC in a different account to be associated with a local Route53 Hosted Zone.
 
 ## Example Usage
 
@@ -31,6 +31,13 @@ resource "aws_route53_zone" "example" {
 
   vpc {
     vpc_id = aws_vpc.example.id
+  }
+
+  # Prevent the deletion of associated VPCs after
+  # the initial creation. See documentation on
+  # aws_route53_zone_association for details
+  lifecycle {
+    ignore_changes = [vpc]
   }
 }
 
@@ -71,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route 53 VPC Association Authorizations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.
+Route 53 VPC Association Authorizations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678

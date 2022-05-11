@@ -1,0 +1,136 @@
+package ec2_test
+
+import (
+	"testing"
+
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
+
+func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T) {
+	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayVPCAttachmentFilterDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv6_support", dataSourceName, "ipv6_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", dataSourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_owner_id", dataSourceName, "vpc_owner_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T) {
+	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayVPCAttachmentIDDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv6_support", dataSourceName, "ipv6_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", dataSourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_owner_id", dataSourceName, "vpc_owner_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayVPCAttachmentFilterDataSourceConfig() string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+}
+
+data "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  filter {
+    name   = "transit-gateway-attachment-id"
+    values = [aws_ec2_transit_gateway_vpc_attachment.test.id]
+  }
+}
+`
+}
+
+func testAccTransitGatewayVPCAttachmentIDDataSourceConfig() string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
+# IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+}
+
+data "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  id = aws_ec2_transit_gateway_vpc_attachment.test.id
+}
+`
+}

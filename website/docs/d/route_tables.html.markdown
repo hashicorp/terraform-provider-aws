@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route_tables"
 description: |-
@@ -28,8 +28,8 @@ data "aws_route_tables" "rts" {
 
 resource "aws_route" "r" {
   count                     = length(data.aws_route_tables.rts.ids)
-  route_table_id            = data.aws_route_tables.rts.ids[count.index]
-  destination_cidr_block    = "10.0.1.0/22"
+  route_table_id            = tolist(data.aws_route_tables.rts.ids)[count.index]
+  destination_cidr_block    = "10.0.0.0/22"
   vpc_peering_connection_id = "pcx-0e9a7a9ecd137dc54"
 }
 ```
@@ -55,4 +55,4 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A set of all the route table ids found. This data source will fail if none are found.
+* `ids` - A list of all the route table ids found.

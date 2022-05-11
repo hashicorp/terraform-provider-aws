@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_security_configuration"
 description: |-
@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR Security Configurations can be imported using the `name`, e.g.
+EMR Security Configurations can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_emr_security_configuration.sc example-sc-name

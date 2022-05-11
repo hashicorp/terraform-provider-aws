@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_security_group"
 description: |-
@@ -84,7 +84,9 @@ The following arguments are optional:
 
 ### egress and ingress
 
-Both the `egress` and `ingress` configuration blocks have the same arguments.
+Both arguments are processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+Both `egress` and `ingress` objects have the same arguments.
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this rule.
@@ -111,7 +113,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.
+Security Groups can be imported using the `security group id`, e.g.,
 
 ```
 $ terraform import aws_default_security_group.default_sg sg-903004f8

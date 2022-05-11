@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_target"
 description: |-
@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ec2_traffic_mirror_target
 
-Provides an Traffic mirror target.  
+Provides a Traffic mirror target.  
 Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html) for traffic mirroring
 
 ## Example Usage
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Traffic mirror targets can be imported using the `id`, e.g.
+Traffic mirror targets can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606

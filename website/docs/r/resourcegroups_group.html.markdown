@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Resource groups can be imported using the `name`, e.g.
+Resource groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_resourcegroups_group.foo resource-group-name
