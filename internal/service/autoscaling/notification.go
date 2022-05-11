@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -169,13 +168,12 @@ func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, group
 		}
 
 		_, err := conn.PutNotificationConfiguration(opts)
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("Error creating Autoscaling Group Notification for Group %s, error: \"%s\", code: \"%s\"", *a, awsErr.Message(), awsErr.Code())
-			}
-			return err
+			return fmt.Errorf("Error creating Autoscaling Group Notification for Group (%s): %w", aws.StringValue(a), err)
 		}
 	}
+
 	return nil
 }
 
