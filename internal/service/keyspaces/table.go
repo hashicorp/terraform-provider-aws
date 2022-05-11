@@ -48,22 +48,26 @@ func ResourceTable() *schema.Resource {
 			"capacity_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"read_capacity_units": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"throughput_mode": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(keyspaces.ThroughputMode_Values(), false),
 						},
 						"write_capacity_units": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
@@ -72,13 +76,15 @@ func ResourceTable() *schema.Resource {
 			"comment": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"message": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 					},
@@ -92,6 +98,7 @@ func ResourceTable() *schema.Resource {
 			"encryption_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -102,7 +109,8 @@ func ResourceTable() *schema.Resource {
 						},
 						"type": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(keyspaces.EncryptionType_Values(), false),
 						},
 					},
@@ -123,12 +131,14 @@ func ResourceTable() *schema.Resource {
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"status": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(keyspaces.PointInTimeRecoveryStatus_Values(), false),
 						},
 					},
@@ -140,22 +150,6 @@ func ResourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"all_column": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
 						"clustering_key": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -169,6 +163,22 @@ func ResourceTable() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(keyspaces.SortOrder_Values(), false),
+									},
+								},
+							},
+						},
+						"column": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 								},
 							},
@@ -506,7 +516,7 @@ func waitTableCreated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 
 func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{keyspaces.TableStatusDeleting},
+		Pending: []string{keyspaces.TableStatusActive, keyspaces.TableStatusDeleting},
 		Target:  []string{},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
 		Timeout: timeout,
@@ -613,7 +623,7 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *keyspaces.SchemaDefin
 
 	apiObject := &keyspaces.SchemaDefinition{}
 
-	if v, ok := tfMap["all_column"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["column"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.AllColumns = expandColumnDefinitions(v.List())
 	}
 
@@ -890,7 +900,7 @@ func flattenSchemaDefinition(apiObject *keyspaces.SchemaDefinition) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AllColumns; v != nil {
-		tfMap["all_column"] = flattenColumnDefinitions(v)
+		tfMap["column"] = flattenColumnDefinitions(v)
 	}
 
 	if v := apiObject.ClusteringKeys; v != nil {

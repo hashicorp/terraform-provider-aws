@@ -18,7 +18,7 @@ import (
 func TestAccKeyspacesTable_basic(t *testing.T) {
 	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
-	resourceName := "aws_keyspaces_keyspace.test"
+	resourceName := "aws_keyspaces_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -28,12 +28,34 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig(rName1, rName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "xyzzy"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
+					resource.TestCheckResourceAttr(resourceName, "comment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "comment.0.message", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_time_to_live", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "keyspace_name", rName1),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "Message",
+						"type": "ASCII",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
+						"name": "Message",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "0"),
 				),
 			},
 			{
@@ -48,7 +70,7 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 func TestAccKeyspacesTable_disappears(t *testing.T) {
 	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
-	resourceName := "aws_keyspaces_keyspace.test"
+	resourceName := "aws_keyspaces_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -136,6 +158,17 @@ resource "aws_keyspaces_keyspace" "test" {
 resource "aws_keyspaces_table" "test" {
   keyspace_name = aws_keyspaces_keyspace.test.name
   table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "Message"
+      type = "ASCII"
+    }
+
+    partition_key {
+      name = "Message"
+    }
+  }
 }
 `, rName1, rName2)
 }
