@@ -171,6 +171,64 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceEBSVolumeRead(d, meta)
 }
 
+func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	request := &ec2.DescribeVolumesInput{
+		VolumeIds: []*string{aws.String(d.Id())},
+	}
+
+	response, err := conn.DescribeVolumes(request)
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
+	}
+
+	if response == nil || len(response.Volumes) == 0 || response.Volumes[0] == nil {
+		return fmt.Errorf("error reading EC2 Volume (%s): empty response", d.Id())
+	}
+
+	volume := response.Volumes[0]
+
+	arn := arn.ARN{
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
+		Service:   ec2.ServiceName,
+	}
+	d.Set("arn", arn.String())
+	d.Set("availability_zone", volume.AvailabilityZone)
+	d.Set("encrypted", volume.Encrypted)
+	d.Set("iops", volume.Iops)
+	d.Set("kms_key_id", volume.KmsKeyId)
+	d.Set("size", volume.Size)
+	d.Set("snapshot_id", volume.SnapshotId)
+	d.Set("outpost_arn", volume.OutpostArn)
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+	d.Set("throughput", volume.Throughput)
+
+	tags := KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	d.Set("type", volume.VolumeType)
+
+	return nil
+}
+
 func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -229,89 +287,6 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceEBSVolumeRead(d, meta)
-}
-
-// volumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// a the state of a Volume. Returns successfully when volume is available
-func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-		})
-
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok {
-				// Set this to nil as if we didn't find anything.
-				log.Printf("Error on Volume State Refresh: message: \"%s\", code:\"%s\"", ec2err.Message(), ec2err.Code())
-				resp = nil
-				return nil, "", err
-			} else {
-				log.Printf("Error on Volume State Refresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		v := resp.Volumes[0]
-		return v, *v.State, nil
-	}
-}
-
-func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	request := &ec2.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(d.Id())},
-	}
-
-	response, err := conn.DescribeVolumes(request)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
-	}
-
-	if response == nil || len(response.Volumes) == 0 || response.Volumes[0] == nil {
-		return fmt.Errorf("error reading EC2 Volume (%s): empty response", d.Id())
-	}
-
-	volume := response.Volumes[0]
-
-	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-		Service:   ec2.ServiceName,
-	}
-	d.Set("arn", arn.String())
-	d.Set("availability_zone", volume.AvailabilityZone)
-	d.Set("encrypted", volume.Encrypted)
-	d.Set("iops", volume.Iops)
-	d.Set("kms_key_id", volume.KmsKeyId)
-	d.Set("size", volume.Size)
-	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("throughput", volume.Throughput)
-
-	tags := KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("type", volume.VolumeType)
-
-	return nil
 }
 
 func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
@@ -390,6 +365,31 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// volumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// a the state of a Volume. Returns successfully when volume is available
+func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
+			VolumeIds: []*string{aws.String(volumeID)},
+		})
+
+		if err != nil {
+			if ec2err, ok := err.(awserr.Error); ok {
+				// Set this to nil as if we didn't find anything.
+				log.Printf("Error on Volume State Refresh: message: \"%s\", code:\"%s\"", ec2err.Message(), ec2err.Code())
+				resp = nil
+				return nil, "", err
+			} else {
+				log.Printf("Error on Volume State Refresh: %s", err)
+				return nil, "", err
+			}
+		}
+
+		v := resp.Volumes[0]
+		return v, *v.State, nil
+	}
 }
 
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
