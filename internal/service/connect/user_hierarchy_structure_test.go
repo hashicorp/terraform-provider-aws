@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -41,10 +41,10 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserHierarchyStructureDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserHierarchyStructureDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureBasicConfig(rName, levelOneName),
@@ -201,10 +201,10 @@ func testAccUserHierarchyStructure_disappears(t *testing.T) {
 	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserHierarchyStructureDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserHierarchyStructureDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureBasicConfig(rName, levelOneName),
@@ -261,13 +261,14 @@ func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
 			InstanceId: aws.String(instanceID),
 		}
 
-		resp, experr := conn.DescribeUserHierarchyStructure(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		resp, err := conn.DescribeUserHierarchyStructure(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 
 		// API returns an empty list for HierarchyStructure if there are none
@@ -275,6 +276,7 @@ func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
 			continue
 		}
 	}
+
 	return nil
 }
 

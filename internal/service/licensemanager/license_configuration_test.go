@@ -19,15 +19,15 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseManagerLicenseConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", "Example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Example"),
@@ -55,21 +55,21 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseManagerLicenseConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
 				),
 			},
 			{
 				Config: testAccLicenseManagerLicenseConfigurationConfig_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "name", "NewName"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "123"),
@@ -88,7 +88,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	})
 }
 
-func testAccCheckLicenseManagerLicenseConfigurationExists(resourceName string, licenseConfiguration *licensemanager.LicenseConfiguration) resource.TestCheckFunc {
+func testAccCheckLicenseConfigurationExists(resourceName string, licenseConfiguration *licensemanager.LicenseConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -117,7 +117,7 @@ func testAccCheckLicenseManagerLicenseConfigurationExists(resourceName string, l
 	}
 }
 
-func testAccCheckLicenseManagerLicenseConfigurationDestroy(s *terraform.State) error {
+func testAccCheckLicenseConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
 	for _, rs := range s.RootModule().Resources {

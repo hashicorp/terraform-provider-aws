@@ -21,10 +21,10 @@ func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberAccountAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, macie.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberAccountAssociationConfig_basic(memberAcctId),
@@ -38,9 +38,9 @@ func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 
 func TestAccMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, macie.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// master account associated with Macie it can't be disassociated.
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

@@ -21,15 +21,15 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(fmt.Sprintf("thinggroup/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
@@ -57,15 +57,15 @@ func TestAccIoTThingGroup_disappears(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,15 +80,15 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -101,7 +101,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 			{
 				Config: testAccThingGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -110,7 +110,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 			{
 				Config: testAccThingGroupConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -127,15 +127,15 @@ func TestAccIoTThingGroup_parentGroup(t *testing.T) {
 	grandparentResourceName := "aws_iot_thing_group.grandparent"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingGroupConfigParentGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_group_name", parentResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.parent_group_name", parentResourceName, "name"),
@@ -161,15 +161,15 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingGroupConfigProperties(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", "1"),
@@ -186,7 +186,7 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 			{
 				Config: testAccThingGroupConfigPropertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", "2"),
@@ -200,7 +200,7 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 	})
 }
 
-func testAccCheckIotThingGroupExists(n string, v *iot.DescribeThingGroupOutput) resource.TestCheckFunc {
+func testAccCheckThingGroupExists(n string, v *iot.DescribeThingGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

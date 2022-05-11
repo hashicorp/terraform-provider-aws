@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
+func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
@@ -21,10 +21,10 @@ func TestAccEC2VPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccVPCPeeringConnectionAccepterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterSameRegionSameAccountConfig(rName),
@@ -65,7 +65,7 @@ func TestAccEC2VPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
+func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
 	var vMain, vPeer ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
@@ -92,7 +92,6 @@ func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
 					resource.TestCheckResourceAttr(resourceNameConnection, "peer_region", acctest.AlternateRegion()),
-					// ** TODO See TestAccAWSVPCPeeringConnectionAccepter_sameRegion()
 					// resource.TestCheckResourceAttrPair(resourceNameAccepter, "vpc_id", resourceNamePeerVpc, "id"),
 					// resource.TestCheckResourceAttrPair(resourceNameAccepter, "peer_vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameAccepter, "peer_owner_id", resourceNameMainVpc, "owner_id"),
@@ -111,7 +110,7 @@ func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
+func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
@@ -148,7 +147,7 @@ func TestAccEC2VPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
+func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
 	var v ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester

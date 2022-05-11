@@ -1,5 +1,5 @@
 ---
-subcategory: "VPN (Client)"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection_route"
 description: |-

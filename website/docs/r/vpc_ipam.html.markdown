@@ -3,12 +3,12 @@ subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam"
 description: |-
-  Provides a IPAM resource.
+  Provides an IPAM resource.
 ---
 
 # Resource: aws_vpc_ipam
 
-Provides a IPAM resource.
+Provides an IPAM resource.
 
 ## Example Usage
 

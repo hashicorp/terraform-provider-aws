@@ -21,10 +21,10 @@ func testAccWebhook_basic(t *testing.T) {
 	resourceName := "aws_amplify_webhook.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig(rName),
@@ -51,10 +51,10 @@ func testAccWebhook_disappears(t *testing.T) {
 	resourceName := "aws_amplify_webhook.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig(rName),
@@ -74,10 +74,10 @@ func testAccWebhook_update(t *testing.T) {
 	resourceName := "aws_amplify_webhook.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookDescriptionConfig(rName),

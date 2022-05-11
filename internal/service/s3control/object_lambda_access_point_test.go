@@ -22,10 +22,10 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectLambdaAccessPointConfig(rName),
@@ -63,10 +63,10 @@ func TestAccS3ControlObjectLambdaAccessPoint_disappears(t *testing.T) {
 	resourceName := "aws_s3control_object_lambda_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectLambdaAccessPointConfig(rName),
@@ -88,10 +88,10 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectLambdaAccessPointOptionalsConfig(rName),

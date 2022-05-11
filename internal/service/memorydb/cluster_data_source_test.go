@@ -66,7 +66,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 
 func testAccClusterDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(),
+		testAccClusterConfigBaseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {

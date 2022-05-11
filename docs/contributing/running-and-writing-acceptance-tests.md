@@ -228,10 +228,10 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDashboardDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig(rInt),
@@ -541,10 +541,10 @@ func TestAccExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -739,10 +739,10 @@ func TestAccExampleThing_disappears(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -782,10 +782,10 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
   resourceName := "aws_example_child_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleChildThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleChildThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -812,10 +812,10 @@ func TestAccExampleThing_Description(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
@@ -858,7 +858,7 @@ When testing requires AWS infrastructure in a second AWS account, the below chan
 
 - In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
+- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
 - Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -922,7 +922,7 @@ When testing requires AWS infrastructure in a second or third AWS region, the be
 
 - In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
+- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -1100,7 +1100,7 @@ When encountering these types of components, the acceptance testing can be setup
 
 To convert to serialized (one test at a time) acceptance testing:
 
-- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSagemakerDomain_basic` becomes `testAccSagemakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testAccSageMakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
 - Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
 
@@ -1154,10 +1154,10 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+    ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),
@@ -1214,6 +1214,11 @@ To run sweepers with an assumed role, use the following additional environment v
 * `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` - Optional.
 * `TF_AWS_ASSUME_ROLE_SESSION_NAME` - Optional.
 
+### Sweeper Checklists
+
+- [ ] __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be sweeped, at `internal/sweep/sweep_test.go`.
+- [ ] __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
+
 ### Writing Test Sweepers
 
 The first step is to initialize the resource into the test sweeper framework:
@@ -1235,14 +1240,14 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 
 ```go
 func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1274,7 +1279,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     return !lastPage
@@ -1284,11 +1289,11 @@ func sweepThings(region string) error {
     errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-	if sweep.SkipSweepError(err) {
+  if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1301,14 +1306,14 @@ Otherwise, if no paginated SDK call is available:
 
 ```go
 func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1338,7 +1343,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1348,11 +1353,11 @@ func sweepThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-	if sweep.SkipSweepError(err) {
+  if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }

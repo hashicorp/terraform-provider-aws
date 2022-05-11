@@ -21,10 +21,10 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
@@ -51,10 +51,10 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
@@ -89,10 +89,10 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
@@ -112,10 +112,10 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
@@ -135,10 +135,10 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyEquivalentConfig(rName),

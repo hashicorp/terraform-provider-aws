@@ -203,8 +203,8 @@ func resourceSigningJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	startSigningJobInput := &signer.StartSigningJobInput{
 		ProfileName: aws.String(profileName.(string)),
-		Source:      expandSignerSigningJobSource(source),
-		Destination: expandSignerSigningJobDestination(destination),
+		Source:      expandSigningJobSource(source),
+		Destination: expandSigningJobDestination(destination),
 	}
 
 	log.Printf("[DEBUG] Starting Signer Signing Job using profile name %q.", profileName)
@@ -289,7 +289,7 @@ func resourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting signer signing job requested by: %s", err)
 	}
 
-	if err := d.Set("revocation_record", flattenSignerSigningJobRevocationRecord(describeSigningJobOutput.RevocationRecord)); err != nil {
+	if err := d.Set("revocation_record", flattenSigningJobRevocationRecord(describeSigningJobOutput.RevocationRecord)); err != nil {
 		return fmt.Errorf("error setting signer signing job revocation record: %s", err)
 	}
 
@@ -301,11 +301,11 @@ func resourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting signer signing job requested by: %s", err)
 	}
 
-	if err := d.Set("signed_object", flattenSignerSigningJobSignedObject(describeSigningJobOutput.SignedObject)); err != nil {
+	if err := d.Set("signed_object", flattenSigningJobSignedObject(describeSigningJobOutput.SignedObject)); err != nil {
 		return fmt.Errorf("error setting signer signing job signed object: %s", err)
 	}
 
-	if err := d.Set("source", flattenSignerSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return fmt.Errorf("error setting signer signing job source: %s", err)
 	}
 
@@ -320,7 +320,7 @@ func resourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenSignerSigningJobRevocationRecord(apiObject *signer.SigningJobRevocationRecord) []interface{} {
+func flattenSigningJobRevocationRecord(apiObject *signer.SigningJobRevocationRecord) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}
@@ -342,19 +342,19 @@ func flattenSignerSigningJobRevocationRecord(apiObject *signer.SigningJobRevocat
 	return []interface{}{tfMap}
 }
 
-func flattenSignerSigningJobSource(apiObject *signer.Source) []interface{} {
+func flattenSigningJobSource(apiObject *signer.Source) []interface{} {
 	if apiObject == nil || apiObject.S3 == nil {
 		return []interface{}{}
 	}
 
 	tfMap := map[string]interface{}{
-		"s3": flattenSignerSigningJobS3Source(apiObject.S3),
+		"s3": flattenSigningJobS3Source(apiObject.S3),
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenSignerSigningJobS3Source(apiObject *signer.S3Source) []interface{} {
+func flattenSigningJobS3Source(apiObject *signer.S3Source) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -376,7 +376,7 @@ func flattenSignerSigningJobS3Source(apiObject *signer.S3Source) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func expandSignerSigningJobSource(tfList []interface{}) *signer.Source {
+func expandSigningJobSource(tfList []interface{}) *signer.Source {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
@@ -389,14 +389,14 @@ func expandSignerSigningJobSource(tfList []interface{}) *signer.Source {
 	var source *signer.Source
 	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
 		source = &signer.Source{
-			S3: expandSignerSigningJobS3Source(v),
+			S3: expandSigningJobS3Source(v),
 		}
 	}
 
 	return source
 }
 
-func expandSignerSigningJobS3Source(tfList []interface{}) *signer.S3Source {
+func expandSigningJobS3Source(tfList []interface{}) *signer.S3Source {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
@@ -422,7 +422,7 @@ func expandSignerSigningJobS3Source(tfList []interface{}) *signer.S3Source {
 	return s3Source
 }
 
-func expandSignerSigningJobDestination(tfList []interface{}) *signer.Destination {
+func expandSigningJobDestination(tfList []interface{}) *signer.Destination {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
@@ -435,14 +435,14 @@ func expandSignerSigningJobDestination(tfList []interface{}) *signer.Destination
 	var destination *signer.Destination
 	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
 		destination = &signer.Destination{
-			S3: expandSignerSigningJobS3Destination(v),
+			S3: expandSigningJobS3Destination(v),
 		}
 	}
 
 	return destination
 }
 
-func expandSignerSigningJobS3Destination(tfList []interface{}) *signer.S3Destination {
+func expandSigningJobS3Destination(tfList []interface{}) *signer.S3Destination {
 	if tfList == nil {
 		return nil
 	}
@@ -461,19 +461,19 @@ func expandSignerSigningJobS3Destination(tfList []interface{}) *signer.S3Destina
 	return s3Destination
 }
 
-func flattenSignerSigningJobSignedObject(apiObject *signer.SignedObject) []interface{} {
+func flattenSigningJobSignedObject(apiObject *signer.SignedObject) []interface{} {
 	if apiObject == nil || apiObject.S3 == nil {
 		return []interface{}{}
 	}
 
 	tfMap := map[string]interface{}{
-		"s3": flattenSignerSigningJobS3SignedObject(apiObject.S3),
+		"s3": flattenSigningJobS3SignedObject(apiObject.S3),
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenSignerSigningJobS3SignedObject(apiObject *signer.S3SignedObject) []interface{} {
+func flattenSigningJobS3SignedObject(apiObject *signer.S3SignedObject) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

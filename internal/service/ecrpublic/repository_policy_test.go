@@ -19,13 +19,13 @@ func TestAccECRPublicRepositoryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecrpublic.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicy(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -37,7 +37,7 @@ func TestAccECRPublicRepositoryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryPolicyUpdated(rName),
+				Config: testAccRepositoryPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -52,13 +52,13 @@ func TestAccECRPublicRepositoryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecrpublic.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicy(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -76,13 +76,13 @@ func TestAccECRPublicRepositoryPolicy_Disappears_repository(t *testing.T) {
 	repositoryResourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecrpublic.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicy(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -99,13 +99,13 @@ func TestAccECRPublicRepositoryPolicy_iam(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecrpublic.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyWithIAMRole(rName),
+				Config: testAccRepositoryPolicyConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -117,7 +117,7 @@ func TestAccECRPublicRepositoryPolicy_iam(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryPolicyWithIAMRoleUpdated(rName),
+				Config: testAccRepositoryPolicyConfig_iamRoleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -174,7 +174,7 @@ func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRepositoryPolicy(rName string) string {
+func testAccRepositoryPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -200,7 +200,7 @@ EOF
 `, rName)
 }
 
-func testAccRepositoryPolicyUpdated(rName string) string {
+func testAccRepositoryPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -229,11 +229,11 @@ EOF
 `, rName)
 }
 
-// testAccAwsEcrPublicRepositoryPolicyWithIAMRole creates a new IAM Role and tries
+// testAccRepositoryPolicyConfig_iamRole creates a new IAM Role and tries
 // to use it's ARN in an ECR Repository Policy. IAM changes need some time to
 // be propagated to other services - like ECR. So the following code should
 // exercise our retry logic, since we try to use the new resource instantly.
-func testAccRepositoryPolicyWithIAMRole(rName string) string {
+func testAccRepositoryPolicyConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -280,7 +280,7 @@ EOF
 `, rName)
 }
 
-func testAccRepositoryPolicyWithIAMRoleUpdated(rName string) string {
+func testAccRepositoryPolicyConfig_iamRoleUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q

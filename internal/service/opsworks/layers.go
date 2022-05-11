@@ -370,12 +370,24 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading OpsWorks layer: %s", d.Id())
 
 	resp, err := conn.DescribeLayers(req)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("error reading OpsWorks layer (%s): %w", d.Id(), err)
+	}
+
+	if len(resp.Layers) == 0 {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading OpsWorks layer (%s): not found after creation", d.Id())
+		}
+		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	layer := resp.Layers[0]
@@ -390,7 +402,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("system_packages", flex.FlattenStringList(layer.Packages))
 	d.Set("stack_id", layer.StackId)
 	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
-	if err := d.Set("cloudwatch_configuration", flattenOpsworksCloudWatchConfig(layer.CloudWatchLogsConfiguration)); err != nil {
+	if err := d.Set("cloudwatch_configuration", flattenCloudWatchConfig(layer.CloudWatchLogsConfiguration)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_configuration: %w", err)
 	}
 
@@ -486,7 +498,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("cloudwatch_configuration"); ok {
-		req.CloudWatchLogsConfiguration = expandOpsworksCloudWatchConfig(v.([]interface{}))
+		req.CloudWatchLogsConfiguration = expandCloudWatchConfig(v.([]interface{}))
 	}
 
 	if lt.CustomShortName {
@@ -517,15 +529,14 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error Creating Opsworks Layer (%s): %w", d.Get("name").(string), err)
 	}
 
-	layerId := *resp.LayerId
-	d.SetId(layerId)
+	d.SetId(aws.StringValue(resp.LayerId))
 
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
 	if aws.StringValue(loadBalancer) != "" {
 		log.Printf("[DEBUG] Attaching load balancer: %s", aws.StringValue(loadBalancer))
 		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: loadBalancer,
-			LayerId:                 &layerId,
+			LayerId:                 resp.LayerId,
 		})
 		if err != nil {
 			return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
@@ -576,7 +587,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if v, ok := d.GetOk("cloudwatch_configuration"); ok {
-			req.CloudWatchLogsConfiguration = expandOpsworksCloudWatchConfig(v.([]interface{}))
+			req.CloudWatchLogsConfiguration = expandCloudWatchConfig(v.([]interface{}))
 		}
 
 		if lt.CustomShortName {
@@ -707,7 +718,7 @@ func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[s
 		}
 
 		if strPtr, ok := attrs[def.AttrName]; ok && strPtr != nil {
-			strValue := *strPtr
+			strValue := aws.StringValue(strPtr)
 
 			switch def.Type {
 			case schema.TypeString:
@@ -839,7 +850,7 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 			data["number_of_disks"] = aws.Int64Value(config.NumberOfDisks)
 		}
 		if config.RaidLevel != nil {
-			data["raid_level"] = strconv.Itoa(int(*config.RaidLevel))
+			data["raid_level"] = strconv.Itoa(int(aws.Int64Value(config.RaidLevel)))
 		}
 		if config.Size != nil {
 			data["size"] = aws.Int64Value(config.Size)
@@ -855,7 +866,7 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 	d.Set("ebs_volume", newValue)
 }
 
-func expandOpsworksCloudWatchConfig(l []interface{}) *opsworks.CloudWatchLogsConfiguration {
+func expandCloudWatchConfig(l []interface{}) *opsworks.CloudWatchLogsConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -864,13 +875,13 @@ func expandOpsworksCloudWatchConfig(l []interface{}) *opsworks.CloudWatchLogsCon
 
 	config := &opsworks.CloudWatchLogsConfiguration{
 		Enabled:    aws.Bool(m["enabled"].(bool)),
-		LogStreams: expandOpsworksCloudWatchConfigLogStream(m["log_streams"].([]interface{})),
+		LogStreams: expandCloudWatchConfigLogStream(m["log_streams"].([]interface{})),
 	}
 
 	return config
 }
 
-func expandOpsworksCloudWatchConfigLogStream(l []interface{}) []*opsworks.CloudWatchLogsLogStream {
+func expandCloudWatchConfigLogStream(l []interface{}) []*opsworks.CloudWatchLogsLogStream {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -931,20 +942,20 @@ func expandOpsworksCloudWatchConfigLogStream(l []interface{}) []*opsworks.CloudW
 	return logStreams
 }
 
-func flattenOpsworksCloudWatchConfig(cloudwatchConfig *opsworks.CloudWatchLogsConfiguration) []map[string]interface{} {
+func flattenCloudWatchConfig(cloudwatchConfig *opsworks.CloudWatchLogsConfiguration) []map[string]interface{} {
 	if cloudwatchConfig == nil {
 		return nil
 	}
 
 	p := map[string]interface{}{
 		"enabled":     aws.BoolValue(cloudwatchConfig.Enabled),
-		"log_streams": flattenOpsworksCloudWatchConfigLogStreams(cloudwatchConfig.LogStreams),
+		"log_streams": flattenCloudWatchConfigLogStreams(cloudwatchConfig.LogStreams),
 	}
 
 	return []map[string]interface{}{p}
 }
 
-func flattenOpsworksCloudWatchConfigLogStreams(logStreams []*opsworks.CloudWatchLogsLogStream) []interface{} {
+func flattenCloudWatchConfigLogStreams(logStreams []*opsworks.CloudWatchLogsLogStream) []interface{} {
 	out := make([]interface{}, len(logStreams))
 
 	for i, logStream := range logStreams {

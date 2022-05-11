@@ -7,8 +7,8 @@ const (
 	Route53TrafficPolicyDocEndpointS3         = "s3-website"
 )
 
-// Route53TrafficPolicyDocEndpointType_Values returns all elements of the endpoints types
-func Route53TrafficPolicyDocEndpointType_Values() []string {
+// TrafficPolicyDocEndpointType_values returns all elements of the endpoints types
+func TrafficPolicyDocEndpointType_values() []string {
 	return []string{
 		Route53TrafficPolicyDocEndpointValue,
 		Route53TrafficPolicyDocEndpointCloudfront,

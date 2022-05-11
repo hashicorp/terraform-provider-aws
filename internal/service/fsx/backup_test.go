@@ -22,15 +22,15 @@ func TestAccFSxBackup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -53,15 +53,15 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 	vName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_", -1)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupONTAPBasicConfig(rName, vName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -82,15 +82,15 @@ func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupOpenzfsBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -111,15 +111,15 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupWindowsBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -140,15 +140,15 @@ func TestAccFSxBackup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceBackup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -163,15 +163,15 @@ func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -186,15 +186,15 @@ func TestAccFSxBackup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -207,7 +207,7 @@ func TestAccFSxBackup_tags(t *testing.T) {
 			{
 				Config: testAccBackupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -216,7 +216,7 @@ func TestAccFSxBackup_tags(t *testing.T) {
 			{
 				Config: testAccBackupTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -230,15 +230,15 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 	resourceName := "aws_fsx_backup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxBackupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupImplictTagsConfig("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckBackupExists(resourceName, &backup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -252,7 +252,7 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 	})
 }
 
-func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.TestCheckFunc {
+func testAccCheckBackupExists(resourceName string, fs *fsx.Backup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -276,7 +276,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 	}
 }
 
-func testAccCheckFsxBackupDestroy(s *terraform.State) error {
+func testAccCheckBackupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
 	for _, rs := range s.RootModule().Resources {

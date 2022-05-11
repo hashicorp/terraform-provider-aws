@@ -35,13 +35,11 @@ jobs:
       - run: |
           # efs/file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
           # kms/grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # quicksight/user_test.go: format verb as resource name (%[1]q). https://github.com/katbyte/terrafmt/issues/48
           # sns/platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
           find ./internal/service -type f -name '*_test.go' \
             | sort -u \
             | grep -v efs/file_system_test.go \
             | grep -v kms/grant_test.go \
-            | grep -v quicksight/user_test.go \
             | grep -v sns/platform_application_test.go \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
@@ -69,26 +67,17 @@ jobs:
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
-          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
 
       - run: tflint --init
 
       - run: |
           # efs/file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
           # kms/grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # lambda/permission_test.go: format verb as resource name ("%s"). https://github.com/katbyte/terrafmt/issues/48
-          # quicksight/user_test.go: format verb as resource name (%[1]q). https://github.com/katbyte/terrafmt/issues/48
           # sns/platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-
-          # resource_aws_efs_file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # resource_aws_kms_grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # resource_aws_quicksight_user_test.go: format verb as resource name (%[1]q). https://github.com/katbyte/terrafmt/issues/48
-          # resource_aws_sns_platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
           find ./internal/service -type f -name '*_test.go' \
             | sort -u \
             | grep -v efs/file_system_test.go \
             | grep -v kms/grant_test.go \
-            | grep -v lambda/permission_test.go \
-            | grep -v quicksight/user_test.go \
             | grep -v sns/platform_application_test.go \
            | ./scripts/validate-terraform.sh

@@ -41,13 +41,13 @@ func ResourceTableItem() *schema.Resource {
 			"item": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateDynamoDbTableItem,
+				ValidateFunc: validateTableItem,
 			},
 		},
 	}
 }
 
-func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []error) {
+func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 	_, err := ExpandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
@@ -83,7 +83,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	rangeKey := d.Get("range_key").(string)
-	id := buildDynamoDbTableItemId(tableName, hashKey, rangeKey, attributes)
+	id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
 
 	d.SetId(id)
 
@@ -149,7 +149,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		id := buildDynamoDbTableItemId(tableName, hashKey, rangeKey, attributes)
+		id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
 		d.SetId(id)
 	}
 
@@ -194,12 +194,12 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 
 	// The record exists, now test if it differs from what is desired
 	if !reflect.DeepEqual(result.Item, attributes) {
-		itemAttrs, err := flattenDynamoDBTableItemAttributes(result.Item)
+		itemAttrs, err := flattenTableItemAttributes(result.Item)
 		if err != nil {
 			return err
 		}
 		d.Set("item", itemAttrs)
-		id := buildDynamoDbTableItemId(tableName, hashKey, rangeKey, result.Item)
+		id := buildTableItemID(tableName, hashKey, rangeKey, result.Item)
 		d.SetId(id)
 	}
 
@@ -255,7 +255,7 @@ func BuildProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *strin
 	return aws.String("#a_" + strings.Join(keys, ", #a_"))
 }
 
-func buildDynamoDbTableItemId(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
+func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
 	id := []string{tableName, hashKey}
 
 	if hashVal, ok := attrs[hashKey]; ok {

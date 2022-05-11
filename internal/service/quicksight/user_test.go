@@ -26,15 +26,15 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 	resourceName2 := "aws_quicksight_user." + rName2
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName1, &user),
+					testAccCheckUserExists(resourceName1, &user),
 					resource.TestCheckResourceAttr(resourceName1, "user_name", rName1),
 					acctest.CheckResourceAttrRegionalARN(resourceName1, "arn", "quicksight", fmt.Sprintf("user/default/%s", rName1)),
 				),
@@ -42,7 +42,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 			{
 				Config: testAccUserConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName2, &user),
+					testAccCheckUserExists(resourceName2, &user),
 					resource.TestCheckResourceAttr(resourceName2, "user_name", rName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName2, "arn", "quicksight", fmt.Sprintf("user/default/%s", rName2)),
 				),
@@ -57,22 +57,22 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks"),
 				),
 			},
 			{
 				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks2"),
 				),
 			},
@@ -92,15 +92,15 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserWithNamespaceConfig(rName, namespace),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "namespace", namespace),
 				),
 			},
@@ -114,16 +114,16 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightUserDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName, &user),
-					testAccCheckQuickSightUserDisappears(&user),
+					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserDisappears(&user),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,7 +131,7 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User) resource.TestCheckFunc {
+func testAccCheckUserExists(resourceName string, user *quicksight.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -167,7 +167,7 @@ func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User
 	}
 }
 
-func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
+func testAccCheckUserDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_user" {
@@ -198,7 +198,7 @@ func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckQuickSightUserDisappears(v *quicksight.User) resource.TestCheckFunc {
+func testAccCheckUserDisappears(v *quicksight.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
@@ -245,7 +245,7 @@ resource "aws_quicksight_user" %[1]q {
   aws_account_id = data.aws_caller_identity.current.account_id
   user_name      = %[1]q
   email          = %[2]q
-	namespace      = %[3]q
+  namespace      = %[3]q
   identity_type  = "QUICKSIGHT"
   user_role      = "READER"
 }

@@ -14,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_security_group_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointSecurityGroupAssociationConfigBasic(rName),
@@ -36,16 +36,16 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_security_group_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointSecurityGroupAssociationConfigBasic(rName),
@@ -59,7 +59,7 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName0 := "aws_vpc_endpoint_security_group_association.test.0"
 	resourceName1 := "aws_vpc_endpoint_security_group_association.test.1"
@@ -67,10 +67,10 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointSecurityGroupAssociationConfigMultiple(rName),
@@ -85,16 +85,16 @@ func TestAccEC2VPCEndpointSecurityGroupAssociation_multiple(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *testing.T) {
+func TestAccVPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *testing.T) {
 	var v ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_security_group_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcEndpointSecurityGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointSecurityGroupAssociationConfigReplaceDefaultAssociation(rName),

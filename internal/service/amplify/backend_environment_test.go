@@ -23,10 +23,10 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendEnvironmentBasicConfig(rName, environmentName),
@@ -55,10 +55,10 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendEnvironmentBasicConfig(rName, environmentName),
@@ -80,10 +80,10 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendEnvironmentDeploymentArtifactsAndStackNameConfig(rName, environmentName),

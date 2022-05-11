@@ -163,7 +163,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	var group *elasticache.CacheSubnetGroup
 	for _, g := range res.CacheSubnetGroups {
 		log.Printf("[DEBUG] %v %v", g.CacheSubnetGroupName, d.Id())
-		if *g.CacheSubnetGroupName == d.Id() {
+		if aws.StringValue(g.CacheSubnetGroupName) == d.Id() {
 			group = g
 		}
 	}

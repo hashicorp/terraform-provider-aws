@@ -23,7 +23,7 @@ func ServiceFilterType(serviceName string) string {
 // ServiceFilterTypeNameField determines the service filter type name field.
 func ServiceFilterTypeNameField(serviceName string) string {
 	switch serviceName {
-	case "resourcegroupstaggingapi":
+	case "resourcegroupstaggingapi", "secretsmanager":
 		return "Key"
 	default:
 		return "Name"

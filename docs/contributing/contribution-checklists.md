@@ -138,10 +138,10 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNameGeneratedConfig(),
@@ -166,10 +166,10 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
-    CheckDestroy: testAccCheckThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNamePrefixConfig("tf-acc-test-prefix-"),
@@ -465,10 +465,10 @@ More details about this code generation, including fixes for potential error mes
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
-      PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-      ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-      Providers:    acctest.Providers,
-      CheckDestroy: testAccCheckClusterDestroy,
+      PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+      ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		  ProviderFactories: acctest.ProviderFactories,
+      CheckDestroy:      testAccCheckClusterDestroy,
       Steps: []resource.TestStep{
         {
           Config: testAccClusterConfigTags1(rName, "key1", "value1"),
@@ -691,10 +691,10 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{Service}TagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
@@ -718,10 +718,10 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{Service}TagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
@@ -740,10 +740,10 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{Service}TagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
@@ -855,59 +855,17 @@ into Terraform.
   requests can easily have merge conflicts or be out of date. The maintainers
   prioritize reviewing and merging these quickly to prevent those situations.
 
-  To add the AWS Go SDK service client:
+  **We have changed these directions a lot! Please review them carefully!**
 
-    - In `internal/conns/conns.go`: Add a string constant for the service. Follow these rules to name the constant.
-        - The constant name should be the same as the service name used in the AWS Go SDK except:
-            1. Drop "service" or "api" if the service name ends with either or both, and
-            2. Shorten the service name if it is excessively long. Avoid names longer than 17 characters if possible. When shortening a service name, look to the endpoints ID, common usage in documentation and marketing, and discuss the change with the community and maintainers to get buy in. The goals for this alternate name are to be instantly recognizable, not verbose, and more easily managed.
-        - The constant name should be capitalized following Go mixed-case rules. In other words:
-            1. Do not use underscores,
-            2. The first letter of each word is capitalized, and
-            3. Abbreviations and initialisms are all caps.
-        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessRepo` (shortened from "Serverless Application Repository").
-        - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
-    - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
-        1. The entry key is the string constant created above
-        2. The `AWSClientName` is the exact name of the return type of the `New()` method of the service. For example, see the `New()` method in the [Application Auto Scaling documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/applicationautoscaling/#New).
-        3. For `AWSServiceName`, `AWSEndpointsID`, and `AWSServiceID`, directly reference the AWS Go SDK service package for the values. For example, `accessanalyzer.ServiceName`, `accessanalyzer.EndpointsID`, and `accessanalyzer.ServiceID` respectively.
-        4. `ProviderNameUpper` is the exact same as the constant _name_ (_not_ value) as described above.
-        5. In most cases, the `HCLKeys` slice will have one element, an all-lowercase string that matches the AWS SDK Go service name and provider constant value, described above. However, when these diverge, it may be helpful to add additional elements. Practitioners can use any of these names in the provider configuration when customizing service endpoints.
-    - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. E.g.
-    `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `internal/conns/conns.go`: Add a new `{ServiceName}Conn` field to the `AWSClient`
-    struct for the service client. The service name should match the constant name, capitalized the same, as described above.
-    _E.g._, `DynamoDBConn *dynamodb.DynamoDB`.
-    - In `internal/conns/conns.go`: Create the new service client in the `{ServiceName}Conn`
-    field in the `AWSClient` instantiation within `Client()`, using the constant created above as a key to a value in the `Endpoints` map. _E.g._,
-    `DynamoDBConn: dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[DynamoDB])})),`.
-    - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
-    - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
-    name in the list of customizable endpoints.
-    - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
-    - In `.github/labeler-issue-triage.yml`: Add the new service to automated issue labeling. E.g., with the `quicksight` service
+  To add an AWS Go SDK service client:
 
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - '((\*|-) ?`?|(data|resource) "?)aws_quicksight_'
-  # ... other services ...
-  ```
-
-    - In `.github/labeler-pr-triage.yml`: Add the new service to automated pull request labeling. E.g., with the `quicksight` service
-
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - 'internal/service/quicksight/**/*'
-    - '**/*_quicksight_*'
-    - '**/quicksight_*'
-  # ... other services ...
-  ```
+    - Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier).
+    - In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](../../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and generators depend on the file being correct._**
 
     - Run the following then submit the pull request:
 
   ```sh
+  make gen
   make test
   go mod tidy
   ```
@@ -936,4 +894,4 @@ RIPStaticConfig if they are not documented yet.
 - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to [`internal/service/elb/service_account_data_source.go`](../../internal/service/elb/service_account_data_source.go)
 - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to [`internal/service/redshift/service_account_data_source.go`](../../internal/service/redshift/service_account_data_source.go)
 - [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to [`internal/service/elasticbeanstalk/hosted_zone_data_source.go`](../../internal/service/elasticbeanstalk/hosted_zone_data_source.go)
-- [ ] Check [Sagemaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html) and add AWS Account IDs if available to [`internal/service/sagemaker/prebuilt_ecr_image_data_source.go`](../../internal/service/sagemaker/prebuilt_ecr_image_data_source.go)
+- [ ] Check [SageMaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html) and add AWS Account IDs if available to [`internal/service/sagemaker/prebuilt_ecr_image_data_source.go`](../../internal/service/sagemaker/prebuilt_ecr_image_data_source.go)

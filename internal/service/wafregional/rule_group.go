@@ -114,7 +114,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(activatedRule) > 0 {
 		noActivatedRules := []interface{}{}
 
-		err := updateWafRuleGroupResourceWR(d.Id(), noActivatedRules, activatedRule, conn, region)
+		err := updateRuleGroupResourceWR(d.Id(), noActivatedRules, activatedRule, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
 		}
@@ -189,7 +189,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("activated_rule")
 		oldRules, newRules := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWafRuleGroupResourceWR(d.Id(), oldRules, newRules, conn, region)
+		err := updateRuleGroupResourceWR(d.Id(), oldRules, newRules, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
 		}
@@ -219,7 +219,7 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
 	if len(oldRules) > 0 {
 		noRules := []interface{}{}
-		err := updateWafRuleGroupResourceWR(id, oldRules, noRules, conn, region)
+		err := updateRuleGroupResourceWR(id, oldRules, noRules, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Regional Rule Group Predicates: %s", err)
 		}
@@ -240,7 +240,7 @@ func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFReg
 	return nil
 }
 
-func updateWafRuleGroupResourceWR(id string, oldRules, newRules []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRuleGroupResourceWR(id string, oldRules, newRules []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleGroupInput{

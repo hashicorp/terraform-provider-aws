@@ -80,7 +80,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ip_set_descriptors"); ok && v.(*schema.Set).Len() > 0 {
 
-		err := updateWafIpSetDescriptors(d.Id(), nil, v.(*schema.Set).List(), conn)
+		err := updateIPSetDescriptors(d.Id(), nil, v.(*schema.Set).List(), conn)
 		if err != nil {
 			return fmt.Errorf("Error Setting IP Descriptors: %s", err)
 		}
@@ -139,7 +139,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("ip_set_descriptors")
 		oldD, newD := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWafIpSetDescriptors(d.Id(), oldD, newD, conn)
+		err := updateIPSetDescriptors(d.Id(), oldD, newD, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
 		}
@@ -154,7 +154,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()
 
 	if len(oldDescriptors) > 0 {
-		err := updateWafIpSetDescriptors(d.Id(), oldDescriptors, nil, conn)
+		err := updateIPSetDescriptors(d.Id(), oldDescriptors, nil, conn)
 		if err != nil {
 			return fmt.Errorf("Error Deleting IPSetDescriptors: %s", err)
 		}
@@ -176,7 +176,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateWafIpSetDescriptors(id string, oldD, newD []interface{}, conn *waf.WAF) error {
+func updateIPSetDescriptors(id string, oldD, newD []interface{}, conn *waf.WAF) error {
 	for _, ipSetUpdates := range DiffIPSetDescriptors(oldD, newD) {
 		wr := NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {

@@ -141,10 +141,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	var output *s3.GetBucketVersioningOutput
 
-	if output, err = waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner); err != nil {
-		return diag.Errorf("error waiting for S3 Bucket Versioning status for bucket (%s): %s", d.Id(), err)
-	}
-
+	output, err = waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
 		d.SetId("")

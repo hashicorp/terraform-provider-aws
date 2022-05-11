@@ -19,16 +19,16 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEndpointDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile("The ID provided could not be found"),
 			},
 			{
-				Config: testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt, direction, name),
+				Config: testAccEndpointDataSourceConfig_initial(rInt, direction, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
@@ -48,16 +48,16 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEndpointDataSourceConfig_NonExistentFilter,
 				ExpectError: regexp.MustCompile("Your query returned no results. Please change your search criteria and try again"),
 			},
 			{
-				Config: testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt, direction, name),
+				Config: testAccEndpointDataSourceConfig_filter(rInt, direction, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
@@ -69,7 +69,7 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccDataSourceRoute53ResolverEndpointConfig_base(rInt int) string {
+func testAccDataSourceEndpointConfig_base(rInt int) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.0.0.0/16"
@@ -131,8 +131,8 @@ resource "aws_security_group" "sg2" {
 `, rInt)
 }
 
-func testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {
-	return acctest.ConfigCompose(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
+func testAccEndpointDataSourceConfig_initial(rInt int, direction, name string) string {
+	return acctest.ConfigCompose(testAccDataSourceEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
@@ -163,8 +163,8 @@ data "aws_route53_resolver_endpoint" "foo" {
 `, direction, name))
 }
 
-func testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt int, direction, name string) string {
-	return acctest.ConfigCompose(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
+func testAccEndpointDataSourceConfig_filter(rInt int, direction, name string) string {
+	return acctest.ConfigCompose(testAccDataSourceEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"

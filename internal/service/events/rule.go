@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -242,7 +241,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// IAM Roles take some time to propagate
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
@@ -331,7 +330,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
 	var output *eventbridge.PutRuleOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutRule(input)
 

@@ -23,8 +23,8 @@ func FlattenResourceRecords(recs []*route53.ResourceRecord, typeStr string) []st
 	strs := make([]string, 0, len(recs))
 	for _, r := range recs {
 		if r.Value != nil {
-			s := *r.Value
-			if typeStr == "TXT" || typeStr == "SPF" {
+			s := aws.StringValue(r.Value)
+			if typeStr == route53.RRTypeTxt || typeStr == route53.RRTypeSpf {
 				s = expandTxtEntry(s)
 			}
 			strs = append(strs, s)

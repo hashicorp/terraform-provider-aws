@@ -72,15 +72,15 @@ func TestAccSchemasSchema_basic(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "content"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -108,15 +108,15 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -131,15 +131,15 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaContentDescriptionConfig(rName, testAccSchemaContent, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContent),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -153,7 +153,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 			{
 				Config: testAccSchemaContentDescriptionConfig(rName, testAccSchemaContentUpdated, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContentUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -162,7 +162,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 			{
 				Config: testAccSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 				),
@@ -177,15 +177,15 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -198,7 +198,7 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 			{
 				Config: testAccSchemaTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -207,7 +207,7 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 			{
 				Config: testAccSchemaTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -246,7 +246,7 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
+func testAccCheckSchemaExists(n string, v *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

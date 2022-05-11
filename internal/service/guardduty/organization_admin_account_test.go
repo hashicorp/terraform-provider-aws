@@ -21,12 +21,12 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyOrganizationAdminAccountConfigSelf(),
+				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
@@ -92,7 +92,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 	}
 }
 
-func testAccGuardDutyOrganizationAdminAccountConfigSelf() string {
+func testAccOrganizationAdminAccountConfig_self() string {
 	return `
 data "aws_caller_identity" "current" {}
 

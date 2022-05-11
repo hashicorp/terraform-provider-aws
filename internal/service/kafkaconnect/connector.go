@@ -389,9 +389,9 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Capacity:                         expandCapacity(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
 		ConnectorConfiguration:           flex.ExpandStringMap(d.Get("connector_configuration").(map[string]interface{})),
 		ConnectorName:                    aws.String(name),
-		KafkaCluster:                     expandKafkaCluster(d.Get("kafka_cluster").([]interface{})[0].(map[string]interface{})),
-		KafkaClusterClientAuthentication: expandKafkaClusterClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})[0].(map[string]interface{})),
-		KafkaClusterEncryptionInTransit:  expandKafkaClusterEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]interface{})[0].(map[string]interface{})),
+		KafkaCluster:                     expandCluster(d.Get("kafka_cluster").([]interface{})[0].(map[string]interface{})),
+		KafkaClusterClientAuthentication: expandClusterClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})[0].(map[string]interface{})),
+		KafkaClusterEncryptionInTransit:  expandClusterEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]interface{})[0].(map[string]interface{})),
 		KafkaConnectVersion:              aws.String(d.Get("kafkaconnect_version").(string)),
 		Plugins:                          expandPlugins(d.Get("plugin").(*schema.Set).List()),
 		ServiceExecutionRoleArn:          aws.String(d.Get("service_execution_role_arn").(string)),
@@ -453,21 +453,21 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("connector_configuration", aws.StringValueMap(connector.ConnectorConfiguration))
 	d.Set("description", connector.ConnectorDescription)
 	if connector.KafkaCluster != nil {
-		if err := d.Set("kafka_cluster", []interface{}{flattenKafkaClusterDescription(connector.KafkaCluster)}); err != nil {
+		if err := d.Set("kafka_cluster", []interface{}{flattenClusterDescription(connector.KafkaCluster)}); err != nil {
 			return diag.Errorf("error setting kafka_cluster: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster", nil)
 	}
 	if connector.KafkaClusterClientAuthentication != nil {
-		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenKafkaClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
+		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
 			return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster_client_authentication", nil)
 	}
 	if connector.KafkaClusterEncryptionInTransit != nil {
-		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenKafkaClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
+		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
 			return diag.Errorf("error setting kafka_cluster_encryption_in_transit: %s", err)
 		}
 	} else {
@@ -736,7 +736,7 @@ func expandProvisionedCapacityUpdate(tfMap map[string]interface{}) *kafkaconnect
 	return apiObject
 }
 
-func expandKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.KafkaCluster {
+func expandCluster(tfMap map[string]interface{}) *kafkaconnect.KafkaCluster {
 	if tfMap == nil {
 		return nil
 	}
@@ -744,13 +744,13 @@ func expandKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.KafkaCluster
 	apiObject := &kafkaconnect.KafkaCluster{}
 
 	if v, ok := tfMap["apache_kafka_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ApacheKafkaCluster = expandApacheKafkaCluster(v[0].(map[string]interface{}))
+		apiObject.ApacheKafkaCluster = expandApacheCluster(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandApacheKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.ApacheKafkaCluster {
+func expandApacheCluster(tfMap map[string]interface{}) *kafkaconnect.ApacheKafkaCluster {
 	if tfMap == nil {
 		return nil
 	}
@@ -786,7 +786,7 @@ func expandVpc(tfMap map[string]interface{}) *kafkaconnect.Vpc {
 	return apiObject
 }
 
-func expandKafkaClusterClientAuthentication(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterClientAuthentication {
+func expandClusterClientAuthentication(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterClientAuthentication {
 	if tfMap == nil {
 		return nil
 	}
@@ -800,7 +800,7 @@ func expandKafkaClusterClientAuthentication(tfMap map[string]interface{}) *kafka
 	return apiObject
 }
 
-func expandKafkaClusterEncryptionInTransit(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterEncryptionInTransit {
+func expandClusterEncryptionInTransit(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterEncryptionInTransit {
 	if tfMap == nil {
 		return nil
 	}
@@ -1078,7 +1078,7 @@ func flattenProvisionedCapacityDescription(apiObject *kafkaconnect.ProvisionedCa
 	return tfMap
 }
 
-func flattenKafkaClusterDescription(apiObject *kafkaconnect.KafkaClusterDescription) map[string]interface{} {
+func flattenClusterDescription(apiObject *kafkaconnect.KafkaClusterDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1086,13 +1086,13 @@ func flattenKafkaClusterDescription(apiObject *kafkaconnect.KafkaClusterDescript
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ApacheKafkaCluster; v != nil {
-		tfMap["apache_kafka_cluster"] = []interface{}{flattenApacheKafkaClusterDescription(v)}
+		tfMap["apache_kafka_cluster"] = []interface{}{flattenApacheClusterDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenApacheKafkaClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterDescription) map[string]interface{} {
+func flattenApacheClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1128,7 +1128,7 @@ func flattenVpcDescription(apiObject *kafkaconnect.VpcDescription) map[string]in
 	return tfMap
 }
 
-func flattenKafkaClusterClientAuthenticationDescription(apiObject *kafkaconnect.KafkaClusterClientAuthenticationDescription) map[string]interface{} {
+func flattenClusterClientAuthenticationDescription(apiObject *kafkaconnect.KafkaClusterClientAuthenticationDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1142,7 +1142,7 @@ func flattenKafkaClusterClientAuthenticationDescription(apiObject *kafkaconnect.
 	return tfMap
 }
 
-func flattenKafkaClusterEncryptionInTransitDescription(apiObject *kafkaconnect.KafkaClusterEncryptionInTransitDescription) map[string]interface{} {
+func flattenClusterEncryptionInTransitDescription(apiObject *kafkaconnect.KafkaClusterEncryptionInTransitDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
