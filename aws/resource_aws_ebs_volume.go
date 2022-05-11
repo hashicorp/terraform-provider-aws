@@ -25,12 +25,6 @@ func resourceAwsEbsVolume() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -155,7 +149,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 		Pending:    []string{ec2.VolumeStateCreating},
 		Target:     []string{ec2.VolumeStateAvailable},
 		Refresh:    volumeStateRefreshFunc(conn, *result.VolumeId),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -205,7 +199,7 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 			Pending:    []string{ec2.VolumeStateCreating, ec2.VolumeModificationStateModifying},
 			Target:     []string{ec2.VolumeStateAvailable, ec2.VolumeStateInUse},
 			Refresh:    volumeStateRefreshFunc(conn, *result.VolumeModification.VolumeId),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Timeout:    5 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
@@ -310,7 +304,7 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 		VolumeId: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 
 		if isAWSErr(err, "InvalidVolume.NotFound", "") {
@@ -341,7 +335,7 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var output *ec2.DescribeVolumesOutput
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.DescribeVolumes(describeInput)
 
