@@ -22,6 +22,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 		Read:   resourceVolumeAttachmentRead,
 		Update: resourceVolumeAttachmentUpdate,
 		Delete: resourceVolumeAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -45,22 +46,14 @@ func ResourceVolumeAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
+			"force_detach": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-
-			"volume_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"force_detach": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
@@ -69,6 +62,11 @@ func ResourceVolumeAttachment() *schema.Resource {
 			"stop_instance_before_detaching": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"volume_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
