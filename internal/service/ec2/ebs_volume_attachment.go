@@ -26,16 +26,19 @@ func ResourceVolumeAttachment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
+
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DEVICE_NAME:VOLUME_ID:INSTANCE_ID", d.Id())
 				}
+
 				deviceName := idParts[0]
 				volumeID := idParts[1]
 				instanceID := idParts[2]
-				d.Set("device_name", deviceName)
-				d.Set("volume_id", volumeID)
-				d.Set("instance_id", instanceID)
 				d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
+				d.Set("device_name", deviceName)
+				d.Set("instance_id", instanceID)
+				d.Set("volume_id", volumeID)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -79,67 +82,42 @@ func ResourceVolumeAttachment() *schema.Resource {
 
 func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	name := d.Get("device_name").(string)
-	iID := d.Get("instance_id").(string)
-	vID := d.Get("volume_id").(string)
+	deviceName := d.Get("device_name").(string)
+	instanceID := d.Get("instance_id").(string)
+	volumeID := d.Get("volume_id").(string)
 
-	// Find out if the volume is already attached to the instance, in which case
-	// we have nothing to do
-	request := &ec2.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(vID)},
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.instance-id"),
-				Values: []*string{aws.String(iID)},
-			},
-			{
-				Name:   aws.String("attachment.device"),
-				Values: []*string{aws.String(name)},
-			},
-		},
-	}
+	_, err := FindEBSVolumeAttachment(conn, volumeID, instanceID, deviceName)
 
-	vols, err := conn.DescribeVolumes(request)
-	if (err != nil) || (len(vols.Volumes) == 0) {
+	if tfresource.NotFound(err) {
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
-		// instance is not running yet
-		if _, err := WaitInstanceReady(conn, iID, InstanceReadyTimeout); err != nil {
-			return fmt.Errorf("waiting for EC2 Instance (%s) to be ready: %w", iID, err)
+		// instance is not running yet.
+		if _, err := WaitInstanceReady(conn, instanceID, InstanceReadyTimeout); err != nil {
+			return fmt.Errorf("waiting for EC2 Instance (%s) to be ready: %w", instanceID, err)
 		}
 
-		// not attached
-		opts := &ec2.AttachVolumeInput{
-			Device:     aws.String(name),
-			InstanceId: aws.String(iID),
-			VolumeId:   aws.String(vID),
+		input := &ec2.AttachVolumeInput{
+			Device:     aws.String(deviceName),
+			InstanceId: aws.String(instanceID),
+			VolumeId:   aws.String(volumeID),
 		}
 
-		log.Printf("[DEBUG] Attaching Volume (%s) to Instance (%s)", vID, iID)
-		_, err := conn.AttachVolume(opts)
+		log.Printf("[DEBUG] Create EBS Volume Attachment: %s", input)
+		_, err := conn.AttachVolume(input)
 
 		if err != nil {
-			return fmt.Errorf("attaching EBS Volume (%s) to EC2 Instance (%s): %w", vID, iID, err)
+			return fmt.Errorf("attaching EBS Volume (%s) to EC2 Instance (%s): %w", volumeID, instanceID, err)
 		}
+	} else if err != nil {
+		return fmt.Errorf("reading EBS Volume (%s) Attachment (%s): %w", volumeID, instanceID, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VolumeAttachmentStateAttaching},
-		Target:     []string{ec2.VolumeAttachmentStateAttached},
-		Refresh:    volumeAttachmentStateRefreshFunc(conn, name, vID, iID),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if _, err := WaitVolumeAttachmentCreated(conn, volumeID, instanceID, deviceName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for EBS Volume (%s) Attachment (%s) create: %w", volumeID, instanceID, err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Volume (%s) to attach to Instance: %s, error: %s",
-			vID, iID, err)
-	}
+	d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
 
-	d.SetId(volumeAttachmentID(name, vID, iID))
 	return resourceVolumeAttachmentRead(d, meta)
 }
 
