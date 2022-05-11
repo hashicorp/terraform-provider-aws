@@ -31,6 +31,7 @@ const (
 	ErrCodeInvalidClientVpnRouteNotFound                  = "InvalidClientVpnRouteNotFound"
 	ErrCodeInvalidCustomerGatewayIDNotFound               = "InvalidCustomerGatewayID.NotFound"
 	ErrCodeInvalidDhcpOptionIDNotFound                    = "InvalidDhcpOptionID.NotFound"
+	ErrCodeInvalidFleetIdNotFound                         = "InvalidFleetId.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                       = "InvalidFlowLogId.NotFound"
 	ErrCodeInvalidGatewayIDNotFound                       = "InvalidGatewayID.NotFound"
 	ErrCodeInvalidGroupNotFound                           = "InvalidGroup.NotFound"
