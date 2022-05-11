@@ -51,6 +51,14 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_ebs_volume` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`) Used for creating volumes. This includes the time required for the volume to become available
+- `update` - (Default `5 minutes`) Used for `size`, `type`, or `iops` volume changes
+- `delete` - (Default `5 minutes`) Used for destroying volumes
+
 ## Import
 
 EBS Volumes can be imported using the `id`, e.g.,
