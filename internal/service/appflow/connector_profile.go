@@ -6,8 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1385,16 +1383,6 @@ func ResourceConnectorProfile() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-	}
-}
-
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
 	}
 }
 
