@@ -53,30 +53,47 @@ func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 	return result, nil
 }
 
-func FindConnectorProfileByName(conn *appflow.Appflow, name string) (*appflow.ConnectorProfile, error) {
+func FindConnectorProfileByName(ctx context.Context, conn *appflow.Appflow, name string) (*appflow.ConnectorProfile, error) {
 	params := &appflow.DescribeConnectorProfilesInput{
 		ConnectorProfileNames: []*string{aws.String(name)},
 	}
+	var result *appflow.ConnectorProfile
 
-	for {
-		output, err := conn.DescribeConnectorProfiles(params)
-
-		if err != nil {
-			return nil, err
+	err := conn.DescribeConnectorProfilesPagesWithContext(ctx, params, func(page *appflow.DescribeConnectorProfilesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, connectorProfile := range output.ConnectorProfileDetails {
+		for _, connectorProfile := range page.ConnectorProfileDetails {
+			if connectorProfile == nil {
+				continue
+			}
+
 			if aws.StringValue(connectorProfile.ConnectorProfileName) == name {
-				return connectorProfile, nil
+				result = connectorProfile
+				return false
 			}
 		}
+		return !lastPage
+	})
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
+	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: params,
 		}
-
-		params.NextToken = output.NextToken
 	}
 
-	return nil, fmt.Errorf("No connector profile found with name: %s", name)
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			Message:     fmt.Sprintf("No connector profile with name %q", name),
+			LastRequest: params,
+		}
+	}
+
+	return result, nil
 }

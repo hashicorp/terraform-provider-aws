@@ -1,13 +1,13 @@
 package appflow_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,12 +16,39 @@ import (
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 )
 
+func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
+	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_connector_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppFlowConnectorProfile_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"connector_profile_config.0.connector_profile_credentials"},
+			},
+		},
+	})
+}
+
 func TestAccAWSAppFlowConnectorProfile_Amplitude(t *testing.T) {
 	var connectorProfiles appflow.DescribeConnectorProfilesOutput
 
 	connectorProfileName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.amplitude"
-	connectorType := "Amplitude"
 
 	apiKey := os.Getenv("AMPLITUDE_API_KEY")
 	secretKey := os.Getenv("AMPLITUDE_SECRET_KEY")
@@ -39,7 +66,7 @@ func TestAccAWSAppFlowConnectorProfile_Amplitude(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Amplitude(connectorProfileName, apiKey, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Amplitude"),
@@ -68,7 +95,6 @@ func TestAccAWSAppFlowConnectorProfile_Datadog(t *testing.T) {
 
 	connectorProfileName := sdkacctest.RandomWithPrefix("tf-acc-test-appflow-connector-profile")
 	resourceName := "aws_appflow_connector_profile.datadog"
-	connectorType := "Datadog"
 
 	apiKey := os.Getenv("DATADOG_API_KEY")
 	applicationKey := os.Getenv("DATADOG_APPLICATION_KEY")
@@ -87,7 +113,7 @@ func TestAccAWSAppFlowConnectorProfile_Datadog(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Datadog(connectorProfileName, apiKey, applicationKey, instanceUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Datadog"),
@@ -117,7 +143,6 @@ func TestAccAWSAppFlowConnectorProfile_Dynatrace(t *testing.T) {
 
 	connectorProfileName := sdkacctest.RandomWithPrefix("tf-acc-test-appflow-connector-profile")
 	resourceName := "aws_appflow_connector_profile.dynatrace"
-	connectorType := "Dynatrace"
 
 	apiToken := os.Getenv("DYNATRACE_API_TOKEN")
 	instanceUrl := os.Getenv("DYNATRACE_INSTANCE_URL")
@@ -135,7 +160,7 @@ func TestAccAWSAppFlowConnectorProfile_Dynatrace(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Dynatrace(connectorProfileName, apiToken, instanceUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Dynatrace"),
@@ -164,7 +189,6 @@ func TestAccAWSAppFlowConnectorProfile_Slack(t *testing.T) {
 
 	connectorProfileName := sdkacctest.RandomWithPrefix("tf-acc-test-appflow-connector-profile")
 	resourceName := "aws_appflow_connector_profile.slack"
-	connectorType := "Slack"
 
 	clientId := os.Getenv("SLACK_CLIENT_ID")
 	clientSecret := os.Getenv("SLACK_CLIENT_SECRET")
@@ -184,7 +208,7 @@ func TestAccAWSAppFlowConnectorProfile_Slack(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Slack(connectorProfileName, clientId, clientSecret, accessToken, instanceUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Slack"),
@@ -217,7 +241,6 @@ func TestAccAWSAppFlowConnectorProfile_Snowflake(t *testing.T) {
 
 	connectorProfileName := sdkacctest.RandomWithPrefix("tf-acc-test-appflow-connector-profile")
 	resourceName := "aws_appflow_connector_profile.snowflake"
-	connectorType := "Snowflake"
 
 	password := os.Getenv("SNOWFLAKE_PASSWORD")
 	username := os.Getenv("SNOWFLAKE_USERNAME")
@@ -240,7 +263,7 @@ func TestAccAWSAppFlowConnectorProfile_Snowflake(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Snowflake(connectorProfileName, password, username, accountName, bucketName, region, stage, warehouse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Snowflake"),
@@ -274,7 +297,6 @@ func TestAccAWSAppFlowConnectorProfile_Trendmicro(t *testing.T) {
 
 	connectorProfileName := sdkacctest.RandomWithPrefix("tf-acc-test-appflow-connector-profile")
 	resourceName := "aws_appflow_connector_profile.trendmicro"
-	connectorType := "Trendmicro"
 
 	apiSecretKey := os.Getenv("TRENDMICRO_API_SECRET_KEY")
 
@@ -291,7 +313,7 @@ func TestAccAWSAppFlowConnectorProfile_Trendmicro(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Trendmicro(connectorProfileName, apiSecretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Trendmicro"),
@@ -318,7 +340,6 @@ func TestAccAWSAppFlowConnectorProfile_Zendesk(t *testing.T) {
 
 	connectorProfileName := sdkacctest.RandomWithPrefix("tf-acc-test-appflow-connector-profile")
 	resourceName := "aws_appflow_connector_profile.zendesk"
-	connectorType := "Zendesk"
 
 	clientId := os.Getenv("ZENDESK_CLIENT_ID")
 	clientSecret := os.Getenv("ZENDESK_CLIENT_SECRET")
@@ -338,7 +359,7 @@ func TestAccAWSAppFlowConnectorProfile_Zendesk(t *testing.T) {
 			{
 				Config: testAccAWSAppFlowConnectorProfile_Zendesk(connectorProfileName, clientId, clientSecret, accessToken, instanceUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, connectorType, &connectorProfiles),
+					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connection_mode", "Public"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "connector_profile_arn", "appflow", fmt.Sprintf("connectorprofile/%s", connectorProfileName)),
 					resource.TestCheckResourceAttr(resourceName, "connector_type", "Zendesk"),
@@ -374,9 +395,9 @@ func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := tfappflow.GetConnectorProfile(conn, rs.Primary.ID)
+		_, err := tfappflow.FindConnectorProfileByName(context.Background(), conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, appflow.ErrCodeResourceNotFoundException, "") {
+		if _, ok := err.(*resource.NotFoundError); ok {
 			continue
 		}
 
@@ -384,15 +405,13 @@ func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if output != nil {
-			return fmt.Errorf("AppFlow Connector profile (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("Expected AppFlow Connector Profile to be destroyed, %s found", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAWSAppFlowConnectorProfileExists(n string, connectorType string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
+func testAccCheckAWSAppFlowConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
@@ -406,7 +425,6 @@ func testAccCheckAWSAppFlowConnectorProfileExists(n string, connectorType string
 
 		req := &appflow.DescribeConnectorProfilesInput{
 			ConnectorProfileNames: []*string{aws.String(rs.Primary.Attributes["connector_profile_name"])},
-			ConnectorType:         aws.String(connectorType),
 		}
 		describe, err := conn.DescribeConnectorProfiles(req)
 
@@ -422,6 +440,147 @@ func testAccCheckAWSAppFlowConnectorProfileExists(n string, connectorType string
 
 		return nil
 	}
+}
+
+func testAccAppFlowConnectorProfileConfigBase(connectorProfileName string, redshiftPassword string, redshiftUsername string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "test" {
+  route_table_id = data.aws_route_table.test.id
+
+  destination_cidr_block = "0.0.0.0/0"
+  
+  gateway_id = aws_internet_gateway.test.id
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = aws_vpc.test.cidr_block
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_redshift_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = [ aws_subnet.test.id ]
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  managed_policy_arns = [ "arn:aws:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess" ]
+
+  assume_role_policy = jsonencode({
+	Version = "2012-10-17"
+	Statement = [
+	  {
+		Action = "sts:AssumeRole"
+		Effect = "Allow"
+		Sid    = ""
+		Principal = {
+		  Service = "ec2.amazonaws.com"
+		}
+	  },
+	]
+  })
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type = "ingress"
+
+  security_group_id = aws_security_group.test.id
+
+  from_port   = 0
+  to_port     = 65535
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier  = %[1]q
+
+  availability_zone         = data.aws_availability_zones.available.names[0]
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+  vpc_security_group_ids    = [ aws_security_group.test.id ]
+
+  master_password = %[2]q
+  master_username = %[3]q
+
+  publicly_accessible = true
+
+  node_type           = "dc2.large"
+  skip_final_snapshot = true
+}
+`, connectorProfileName, redshiftPassword, redshiftUsername))
+}
+
+func testAccAppFlowConnectorProfile_basic(connectorProfileName string) string {
+	const redshiftPassword = "testPassword123!"
+	const redshiftUsername = "testusername"
+
+	return acctest.ConfigCompose(
+		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		fmt.Sprintf(`
+resource "aws_appflow_connector_profile" "test" {
+  connector_profile_name = %[1]q
+  connector_type         = "Redshift"
+  connection_mode        = "Public"
+
+  connector_profile_config {
+
+    connector_profile_credentials {
+      redshift {
+		  password = %[2]q
+		  username = %[3]q
+	  }
+    }
+
+    connector_profile_properties {
+      redshift {
+	    bucket_name  = %[1]q
+		database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+		role_arn     = aws_iam_role.test.arn
+      }
+    }
+  }
+
+  depends_on = [
+    aws_route.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, connectorProfileName, redshiftPassword, redshiftUsername),
+	)
 }
 
 func testAccAWSAppFlowConnectorProfile_Amplitude(connectorProfileName string, apiKey string, secretKey string) string {

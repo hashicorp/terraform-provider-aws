@@ -1,6 +1,7 @@
 package appflow
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
@@ -1417,7 +1418,7 @@ func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) er
 func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	connectorProfile, err := FindConnectorProfileByName(conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByName(context.Background(), conn, d.Id())
 
 	if err != nil {
 		return err
@@ -1427,7 +1428,7 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
 	d.Set("connector_label", connectorProfile.ConnectorLabel)
-	d.Set("connector_profile_arn", connectorProfile.ConnectorProfileArn)
+	d.Set("arn", connectorProfile.ConnectorProfileArn)
 	d.Set("connector_profile_name", connectorProfile.ConnectorProfileName)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
