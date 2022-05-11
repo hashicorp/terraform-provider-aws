@@ -513,8 +513,8 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 
   timeouts {
-    create = "10m"
-    update = "10m"
+	create = "10m"
+	update = "10m"
     delete = "10m"
   }
 }
