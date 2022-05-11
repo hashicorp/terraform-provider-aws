@@ -104,12 +104,6 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException, elb.ErrCodePolicyNotFoundException) {
-		log.Printf("[WARN] Load Balancer / Load Balancer Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
 			log.Printf("[WARN] ELB Classic LB (%s) App Cookie Policy (%s) not found, removing from state", lbName, policyName)
