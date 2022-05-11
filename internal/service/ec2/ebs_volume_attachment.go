@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -115,11 +114,9 @@ func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 		log.Printf("[DEBUG] Attaching Volume (%s) to Instance (%s)", vID, iID)
 		_, err := conn.AttachVolume(opts)
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("Error attaching volume (%s) to instance (%s), message: \"%s\", code: \"%s\"",
-					vID, iID, awsErr.Message(), awsErr.Code())
-			}
+			return fmt.Errorf("attaching EBS Volume (%s) to EC2 Instance (%s): %w", vID, iID, err)
 		}
 	}
 
@@ -249,9 +246,6 @@ func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID 
 
 		resp, err := conn.DescribeVolumes(request)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				return nil, "failed", fmt.Errorf("code: %s, message: %s", awsErr.Code(), awsErr.Message())
-			}
 			return nil, "failed", err
 		}
 
