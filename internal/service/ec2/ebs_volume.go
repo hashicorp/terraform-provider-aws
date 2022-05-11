@@ -8,11 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -228,48 +226,37 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		params := &ec2.ModifyVolumeInput{
+		input := &ec2.ModifyVolumeInput{
 			VolumeId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("size") {
-			params.Size = aws.Int64(int64(d.Get("size").(int)))
-		}
-
-		if d.HasChange("type") {
-			params.VolumeType = aws.String(d.Get("type").(string))
-		}
-
 		if d.HasChange("iops") {
-			params.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+		}
+
+		if d.HasChange("size") {
+			input.Size = aws.Int64(int64(d.Get("size").(int)))
 		}
 
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
 		// Throughput is valid only for gp3 volumes.
 		if v := d.Get("throughput").(int); v > 0 && d.Get("type").(string) == ec2.VolumeTypeGp3 {
-			params.Throughput = aws.Int64(int64(v))
+			input.Throughput = aws.Int64(int64(v))
 		}
 
-		result, err := conn.ModifyVolume(params)
+		if d.HasChange("type") {
+			input.VolumeType = aws.String(d.Get("type").(string))
+		}
+
+		_, err := conn.ModifyVolume(input)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("modifying EBS Volume(%s): %w", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.VolumeStateCreating, ec2.VolumeModificationStateModifying},
-			Target:     []string{ec2.VolumeStateAvailable, ec2.VolumeStateInUse},
-			Refresh:    volumeStateRefreshFunc(conn, *result.VolumeModification.VolumeId),
-			Timeout:    5 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for Volume (%s) to become available: %s",
-				*result.VolumeModification.VolumeId, err)
+		if _, err := WaitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for EBS Volume (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -277,7 +264,7 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating EBS Volume (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -309,31 +296,6 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-// volumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// a the state of a Volume. Returns successfully when volume is available
-func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-		})
-
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok {
-				// Set this to nil as if we didn't find anything.
-				log.Printf("Error on Volume State Refresh: message: \"%s\", code:\"%s\"", ec2err.Message(), ec2err.Code())
-				resp = nil
-				return nil, "", err
-			} else {
-				log.Printf("Error on Volume State Refresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		v := resp.Volumes[0]
-		return v, *v.State, nil
-	}
 }
 
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
