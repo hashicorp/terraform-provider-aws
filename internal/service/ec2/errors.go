@@ -85,6 +85,7 @@ const (
 	ErrCodeInvalidVpnGatewayIDNotFound                    = "InvalidVpnGatewayID.NotFound"
 	ErrCodeNatGatewayNotFound                             = "NatGatewayNotFound"
 	ErrCodeUnsupportedOperation                           = "UnsupportedOperation"
+	ErrCodeVolumeInUse                                    = "VolumeInUse"
 )
 
 func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {
