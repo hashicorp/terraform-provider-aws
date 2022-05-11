@@ -117,63 +117,59 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	request := &ec2.CreateVolumeInput{
+	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
 	}
+
 	if value, ok := d.GetOk("encrypted"); ok {
-		request.Encrypted = aws.Bool(value.(bool))
+		input.Encrypted = aws.Bool(value.(bool))
 	}
+
 	if value, ok := d.GetOk("iops"); ok {
-		request.Iops = aws.Int64(int64(value.(int)))
+		input.Iops = aws.Int64(int64(value.(int)))
 	}
+
 	if value, ok := d.GetOk("kms_key_id"); ok {
-		request.KmsKeyId = aws.String(value.(string))
+		input.KmsKeyId = aws.String(value.(string))
 	}
-	if value, ok := d.GetOk("size"); ok {
-		request.Size = aws.Int64(int64(value.(int)))
-	}
-	if value, ok := d.GetOk("snapshot_id"); ok {
-		request.SnapshotId = aws.String(value.(string))
-	}
+
 	if value, ok := d.GetOk("multi_attach_enabled"); ok {
-		request.MultiAttachEnabled = aws.Bool(value.(bool))
+		input.MultiAttachEnabled = aws.Bool(value.(bool))
 	}
+
 	if value, ok := d.GetOk("outpost_arn"); ok {
-		request.OutpostArn = aws.String(value.(string))
+		input.OutpostArn = aws.String(value.(string))
 	}
+
+	if value, ok := d.GetOk("size"); ok {
+		input.Size = aws.Int64(int64(value.(int)))
+	}
+
+	if value, ok := d.GetOk("snapshot_id"); ok {
+		input.SnapshotId = aws.String(value.(string))
+	}
+
 	if value, ok := d.GetOk("throughput"); ok {
-		request.Throughput = aws.Int64(int64(value.(int)))
+		input.Throughput = aws.Int64(int64(value.(int)))
 	}
+
 	if value, ok := d.GetOk("type"); ok {
-		request.VolumeType = aws.String(value.(string))
+		input.VolumeType = aws.String(value.(string))
 	}
 
-	log.Printf("[DEBUG] EBS Volume create opts: %s", request)
-	result, err := conn.CreateVolume(request)
+	log.Printf("[DEBUG] Creating EBS Volume: %s", input)
+	output, err := conn.CreateVolume(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating EC2 volume: %s", err)
+		return fmt.Errorf("creating EBS Volume: %w", err)
 	}
 
-	log.Println("[DEBUG] Waiting for Volume to become available")
+	d.SetId(aws.StringValue(output.VolumeId))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VolumeStateCreating},
-		Target:     []string{ec2.VolumeStateAvailable},
-		Refresh:    volumeStateRefreshFunc(conn, *result.VolumeId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if _, err := WaitVolumeCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for EBS Volume (%s) create: %w", d.Id(), err)
 	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Volume (%s) to become available: %s",
-			*result.VolumeId, err)
-	}
-
-	d.SetId(aws.StringValue(result.VolumeId))
 
 	return resourceEBSVolumeRead(d, meta)
 }

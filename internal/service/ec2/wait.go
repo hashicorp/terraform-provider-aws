@@ -1318,6 +1318,25 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 	return nil, err
 }
 
+func WaitVolumeCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VolumeStateCreating},
+		Target:     []string{ec2.VolumeStateAvailable},
+		Refresh:    StatusVolumeState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Volume); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitVolumeDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.VolumeStateDeleting},
