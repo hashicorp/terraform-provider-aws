@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // testAccErrorCheckSkipEBSVolume skips EBS volume tests that have error messages indicating unsupported features
@@ -720,25 +719,17 @@ func testAccCheckVolumeDestroy(s *terraform.State) error {
 			continue
 		}
 
-		request := &ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(rs.Primary.ID)},
-		}
+		_, err := tfec2.FindEBSVolumeByID(conn, rs.Primary.ID)
 
-		resp, err := conn.DescribeVolumes(request)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err == nil {
-			for _, volume := range resp.Volumes {
-				if aws.StringValue(volume.VolumeId) == rs.Primary.ID {
-					return fmt.Errorf("Volume still exists")
-				}
-			}
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("EBS Volume %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -752,23 +743,20 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EBS Volume ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		request := &ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(rs.Primary.ID)},
+		output, err := tfec2.FindEBSVolumeByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
-		response, err := conn.DescribeVolumes(request)
-		if err == nil {
-			if response.Volumes != nil && len(response.Volumes) > 0 {
-				*v = *response.Volumes[0]
-				return nil
-			}
-		}
-		return fmt.Errorf("Error finding EC2 volume %s", rs.Primary.ID)
+		*v = *output
+
+		return nil
 	}
 }
 
