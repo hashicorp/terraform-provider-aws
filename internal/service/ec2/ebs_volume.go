@@ -27,8 +27,15 @@ func ResourceEBSVolume() *schema.Resource {
 		Read:   resourceEBSVolumeRead,
 		Update: resourceEBSVolumeUpdate,
 		Delete: resourceEBSVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -284,76 +291,25 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteVolumeInput{
-		VolumeId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return conn.DeleteVolume(&ec2.DeleteVolumeInput{
+				VolumeId: aws.String(d.Id()),
+			})
+		},
+		ErrCodeVolumeInUse)
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVolume(input)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-			return nil
-		}
-
-		if tfawserr.ErrCodeEquals(err, "VolumeInUse") {
-			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVolumeNotFound) {
 		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteVolume(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EBS Volume (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting EBS Volume (%s): %w", d.Id(), err)
 	}
 
-	describeInput := &ec2.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(d.Id())},
-	}
-
-	var output *ec2.DescribeVolumesOutput
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		var err error
-		output, err = conn.DescribeVolumes(describeInput)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		for _, volume := range output.Volumes {
-			if aws.StringValue(volume.VolumeId) == d.Id() {
-				state := aws.StringValue(volume.State)
-
-				if state == ec2.VolumeStateDeleting {
-					return resource.RetryableError(fmt.Errorf("EBS Volume (%s) still deleting", d.Id()))
-				}
-
-				return resource.NonRetryableError(fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), state))
-			}
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeVolumes(describeInput)
-	}
-
-	if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-		return nil
-	}
-
-	for _, volume := range output.Volumes {
-		if aws.StringValue(volume.VolumeId) == d.Id() {
-			return fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), aws.StringValue(volume.State))
-		}
+	if _, err := WaitVolumeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for EBS Volume (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
