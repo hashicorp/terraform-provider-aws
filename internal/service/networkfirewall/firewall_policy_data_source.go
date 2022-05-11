@@ -20,7 +20,8 @@ func DataSourceFirewallPolicy() *schema.Resource {
 				Type: schema.TypeString,
 				//Computed: true,
 				// Assuming ARN is the only acceptable input (it's not)
-				Required: true,
+				AtLeastOneOf: []string{"arn", "name"},
+				Optional:     true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -108,8 +109,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				// Computed: true,
 				// ForceNew: true,
+				AtLeastOneOf: []string{"arn", "name"},
 			},
 			// "tags":     tftags.TagsSchema(),
 			"tags": tftags.TagsSchemaComputed(),
@@ -128,24 +131,25 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
+	name := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s", arn)
+	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s %s", arn, name)
 
-	output, err := FindFirewallPolicy(ctx, conn, arn)
+	output, err := FindFirewallPolicyByNameAndArn(ctx, conn, arn, name)
 	// if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 	// 	log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", arn)
 	// 	d.SetId("")
 	// 	return nil
 	// }
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): %w", arn, err))
+		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): %w", arn, name, err))
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): empty output", arn))
+		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): empty output", arn, name))
 	}
 	if output.FirewallPolicyResponse == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): empty output.FirewallPolicyResponse", arn))
+		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): empty output.FirewallPolicyResponse", arn, name))
 	}
 
 	resp := output.FirewallPolicyResponse
