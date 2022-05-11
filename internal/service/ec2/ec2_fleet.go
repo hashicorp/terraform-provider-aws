@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -24,16 +25,18 @@ func ResourceFleet() *schema.Resource {
 		Read:   resourceFleetRead,
 		Update: resourceFleetUpdate,
 		Delete: resourceFleetDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"context": {
@@ -648,61 +651,16 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &ec2.DescribeFleetsInput{
-		FleetIds: []*string{aws.String(d.Id())},
-	}
+	fleet, err := FindFleetByID(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading EC2 Fleet (%s): %s", d.Id(), input)
-	output, err := conn.DescribeFleets(input)
-
-	if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
-		log.Printf("[WARN] EC2 Fleet (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Fleet %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Fleet: %s", err)
-	}
-
-	if output == nil || len(output.Fleets) == 0 {
-		log.Printf("[WARN] EC2 Fleet (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	var fleet *ec2.FleetData
-	for _, fleetData := range output.Fleets {
-		if fleetData == nil {
-			continue
-		}
-		if aws.StringValue(fleetData.FleetId) != d.Id() {
-			continue
-		}
-		fleet = fleetData
-		break
-	}
-
-	if fleet == nil {
-		log.Printf("[WARN] EC2 Fleet (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	deletedStates := []string{
-		ec2.FleetStateCodeDeleted,
-		ec2.FleetStateCodeDeletedRunning,
-		ec2.FleetStateCodeDeletedTerminating,
-		// AWS SDK constants are incorrect
-		"deleted_running",
-		"deleted_terminating",
-	}
-	for _, deletedState := range deletedStates {
-		if aws.StringValue(fleet.FleetState) == deletedState {
-			log.Printf("[WARN] EC2 Fleet (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(fleet.FleetState))
-			d.SetId("")
-			return nil
-		}
+		return fmt.Errorf("reading EC2 Fleet (%s): %w", d.Id(), err)
 	}
 
 	d.Set("context", fleet.Context)

@@ -3,19 +3,19 @@ package ec2_test
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2Fleet_basic(t *testing.T) {
@@ -81,7 +81,7 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetDisappears(&fleet1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2631,11 +2631,11 @@ func testAccCheckFleetHistory(resourceName string, errorMsg string) resource.Tes
 	}
 }
 
-func testAccCheckFleetExists(resourceName string, fleet *ec2.FleetData) resource.TestCheckFunc {
+func testAccCheckFleetExists(n string, v *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -2644,34 +2644,13 @@ func testAccCheckFleetExists(resourceName string, fleet *ec2.FleetData) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		input := &ec2.DescribeFleetsInput{
-			FleetIds: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		output, err := conn.DescribeFleets(input)
+		output, err := tfec2.FindFleetByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("EC2 Fleet not found")
-		}
-
-		for _, fleetData := range output.Fleets {
-			if fleetData == nil {
-				continue
-			}
-			if aws.StringValue(fleetData.FleetId) != rs.Primary.ID {
-				continue
-			}
-			*fleet = *fleetData
-			break
-		}
-
-		if fleet == nil {
-			return fmt.Errorf("EC2 Fleet not found")
-		}
+		*v = *output
 
 		return nil
 	}
@@ -2685,13 +2664,9 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &ec2.DescribeFleetsInput{
-			FleetIds: []*string{aws.String(rs.Primary.ID)},
-		}
+		_, err := tfec2.FindFleetByID(conn, rs.Primary.ID)
 
-		output, err := conn.DescribeFleets(input)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -2699,51 +2674,10 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if output == nil {
-			continue
-		}
-
-		for _, fleetData := range output.Fleets {
-			if fleetData == nil {
-				continue
-			}
-			if aws.StringValue(fleetData.FleetId) != rs.Primary.ID {
-				continue
-			}
-			if aws.StringValue(fleetData.FleetState) == ec2.FleetStateCodeDeleted {
-				break
-			}
-			terminateInstances, err := strconv.ParseBool(rs.Primary.Attributes["terminate_instances"])
-			if err != nil {
-				return fmt.Errorf("error converting terminate_instances (%s) to bool: %s", rs.Primary.Attributes["terminate_instances"], err)
-			}
-			if !terminateInstances && aws.StringValue(fleetData.FleetState) == ec2.FleetStateCodeDeletedRunning {
-				break
-			}
-			// AWS SDK constant is incorrect
-			if !terminateInstances && aws.StringValue(fleetData.FleetState) == "deleted_running" {
-				break
-			}
-			return fmt.Errorf("EC2 Fleet (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(fleetData.FleetState))
-		}
+		return fmt.Errorf("EC2 Fleet %s still exists", rs.Primary.ID)
 	}
 
 	return nil
-}
-
-func testAccCheckFleetDisappears(fleet *ec2.FleetData) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteFleetsInput{
-			FleetIds:           []*string{fleet.FleetId},
-			TerminateInstances: aws.Bool(false),
-		}
-
-		_, err := conn.DeleteFleets(input)
-
-		return err
-	}
 }
 
 func testAccCheckFleetNotRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
