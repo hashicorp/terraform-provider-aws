@@ -150,8 +150,10 @@ func ResourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						// These nested attributes are all declared as TypeList rather than TypeSet to avoid
+						// https://github.com/hashicorp/terraform-plugin-sdk/issues/160.
 						"clustering_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -168,35 +170,47 @@ func ResourceTable() *schema.Resource {
 							},
 						},
 						"column": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										StateFunc: func(val interface{}) string {
+											// Keyspaces always changes the value to lowercase.
+											return strings.ToLower(val.(string))
+										},
 									},
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										StateFunc: func(val interface{}) string {
+											// Keyspaces always changes the value to lowercase.
+											return strings.ToLower(val.(string))
+										},
 									},
 								},
 							},
 						},
 						"partition_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										StateFunc: func(val interface{}) string {
+											// Keyspaces always changes the value to lowercase.
+											return strings.ToLower(val.(string))
+										},
 									},
 								},
 							},
 						},
 						"static_column": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -623,20 +637,20 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *keyspaces.SchemaDefin
 
 	apiObject := &keyspaces.SchemaDefinition{}
 
-	if v, ok := tfMap["column"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AllColumns = expandColumnDefinitions(v.List())
+	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AllColumns = expandColumnDefinitions(v)
 	}
 
-	if v, ok := tfMap["clustering_key"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.ClusteringKeys = expandClusteringKeys(v.List())
+	if v, ok := tfMap["clustering_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ClusteringKeys = expandClusteringKeys(v)
 	}
 
-	if v, ok := tfMap["partition_key"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PartitionKeys = expandPartitionKeys(v.List())
+	if v, ok := tfMap["partition_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PartitionKeys = expandPartitionKeys(v)
 	}
 
-	if v, ok := tfMap["static_column"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.StaticColumns = expandStaticColumns(v.List())
+	if v, ok := tfMap["static_column"].([]interface{}); ok && len(v) > 0 {
+		apiObject.StaticColumns = expandStaticColumns(v)
 	}
 
 	return apiObject

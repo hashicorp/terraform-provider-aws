@@ -45,12 +45,12 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "Message",
-						"type": "ASCII",
+						"name": "message", // Keyspaces always changes the value to lowercase.
+						"type": "ascii",   // Keyspaces always changes the value to lowercase.
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						"name": "Message",
+						"name": "message", // Keyspaces always changes the value to lowercase.
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
