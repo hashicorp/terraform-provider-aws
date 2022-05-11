@@ -80,7 +80,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									},
 									"custom_connector": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -919,7 +919,7 @@ func ResourceConnectorProfile() *schema.Resource {
 									},
 									"custom_connector": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
