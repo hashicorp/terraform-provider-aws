@@ -14,7 +14,11 @@ Retrieve information about a firewall policy.
 
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
+<<<<<<< HEAD
   arn  = var.firewall_policy_arn
+=======
+  arn = var.firewall_policy_arn
+>>>>>>> b6513d6618 (First push to add Network Firewall data source)
   name = var.firewall_policy_name
 }
 ```
@@ -22,8 +26,13 @@ data "aws_networkfirewall_firewall_policy" "example" {
 ## Argument Reference
 One or more of the following arguments are required:
 
+<<<<<<< HEAD
 * `arn` - The Amazon Resource Name (ARN) of the firewall policy.
 * `name` - The descriptive name of the firewall policy.
+=======
+* `arn` - The Amazon Resource Name (ARN) of the firewall policy. 
+* `name` - The descriptive name of the firewall policy. 
+>>>>>>> b6513d6618 (First push to add Network Firewall data source)
 
 
 ## Attributes Reference
