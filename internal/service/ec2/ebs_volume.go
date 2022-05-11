@@ -69,6 +69,12 @@ func ResourceEBSVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -82,17 +88,6 @@ func ResourceEBSVolume() *schema.Resource {
 				ForceNew:     true,
 				AtLeastOneOf: []string{"size", "snapshot_id"},
 			},
-			"outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"throughput": {
@@ -100,6 +95,11 @@ func ResourceEBSVolume() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(125, 1000),
+			},
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
