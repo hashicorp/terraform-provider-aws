@@ -176,55 +176,47 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	request := &ec2.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(d.Id())},
+	volume, err := FindEBSVolumeByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
+		return fmt.Errorf("reading EBS Volume(%s): %w", d.Id(), err)
 	}
-
-	if response == nil || len(response.Volumes) == 0 || response.Volumes[0] == nil {
-		return fmt.Errorf("error reading EC2 Volume (%s): empty response", d.Id())
-	}
-
-	volume := response.Volumes[0]
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
 	d.Set("availability_zone", volume.AvailabilityZone)
 	d.Set("encrypted", volume.Encrypted)
 	d.Set("iops", volume.Iops)
 	d.Set("kms_key_id", volume.KmsKeyId)
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set("size", volume.Size)
 	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("throughput", volume.Throughput)
+	d.Set("type", volume.VolumeType)
 
 	tags := KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
-
-	d.Set("type", volume.VolumeType)
 
 	return nil
 }

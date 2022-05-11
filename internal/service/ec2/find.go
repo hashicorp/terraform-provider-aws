@@ -573,6 +573,34 @@ func FindEBSVolume(conn *ec2.EC2, input *ec2.DescribeVolumesInput) (*ec2.Volume,
 	return output[0], nil
 }
 
+func FindEBSVolumeByID(conn *ec2.EC2, id string) (*ec2.Volume, error) {
+	input := &ec2.DescribeVolumesInput{
+		VolumeIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindEBSVolume(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.VolumeStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VolumeId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindEBSVolumeAttachment(conn *ec2.EC2, volumeID, instanceID, deviceName string) (*ec2.VolumeAttachment, error) {
 	input := &ec2.DescribeVolumesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -588,7 +616,7 @@ func FindEBSVolumeAttachment(conn *ec2.EC2, volumeID, instanceID, deviceName str
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == ec2.VolumeStateAvailable {
+	if state := aws.StringValue(output.State); state == ec2.VolumeStateAvailable || state == ec2.VolumeStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
