@@ -925,7 +925,7 @@ func ResourceConnectorProfile() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"oauth2_properties": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
