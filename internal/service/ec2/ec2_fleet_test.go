@@ -3075,7 +3075,7 @@ resource "aws_ec2_fleet" "test" {
       instance_requirements {
         %s
       }
-	}
+    }
   }
 
   target_capacity_specification {

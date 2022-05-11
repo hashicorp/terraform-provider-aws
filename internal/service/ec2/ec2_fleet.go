@@ -1416,7 +1416,7 @@ func flattenEc2FleetLaunchTemplateOverrideInstanceRequirements(apiObject *ec2.In
 	}
 
 	if v := apiObject.MemoryMiB; v != nil {
-		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+		tfMap["memory_mib"] = []interface{}{flattenEc2FleetLaunchTemplateOverrideInstanceRequirementsMemoryMiB(v)}
 	}
 
 	if v := apiObject.NetworkInterfaceCount; v != nil {
