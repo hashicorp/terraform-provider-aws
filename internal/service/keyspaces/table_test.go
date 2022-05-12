@@ -44,10 +44,14 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.name", "message"), // Keyspaces always changes the value to lowercase.
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.type", "ascii"),   // Keyspaces always changes the value to lowercase.
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "message",
+						"type": "ascii",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.0.name", "message"), // Keyspaces always changes the value to lowercase.
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
+						"name": "message",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -258,12 +262,12 @@ resource "aws_keyspaces_table" "test" {
 
   schema_definition {
     column {
-      name = "Message"
-      type = "ASCII"
+      name = "message"
+      type = "ascii"
     }
 
     partition_key {
-      name = "Message"
+      name = "message"
     }
   }
 }
@@ -282,12 +286,12 @@ resource "aws_keyspaces_table" "test" {
 
   schema_definition {
     column {
-      name = "Message"
-      type = "ASCII"
+      name = "message"
+      type = "ascii"
     }
 
     partition_key {
-      name = "Message"
+      name = "message"
     }
   }
 
@@ -310,12 +314,12 @@ resource "aws_keyspaces_table" "test" {
 
   schema_definition {
     column {
-      name = "Message"
-      type = "ASCII"
+      name = "message"
+      type = "ascii"
     }
 
     partition_key {
-      name = "Message"
+      name = "message"
     }
   }
 

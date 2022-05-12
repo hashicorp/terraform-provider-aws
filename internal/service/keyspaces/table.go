@@ -150,20 +150,21 @@ func ResourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// These nested attributes are all declared as TypeList rather than TypeSet to avoid
-						// https://github.com/hashicorp/terraform-plugin-sdk/issues/160.
 						"clustering_key": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
-										StateFunc: func(val interface{}) string {
-											// Keyspaces always changes the value to lowercase.
-											return strings.ToLower(val.(string))
-										},
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 48),
+											validation.StringMatch(
+												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
+												"The name must consist of lower case alphanumerics and underscores.",
+											),
+										),
 									},
 									"order_by": {
 										Type:         schema.TypeString,
@@ -174,57 +175,66 @@ func ResourceTable() *schema.Resource {
 							},
 						},
 						"column": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
-										StateFunc: func(val interface{}) string {
-											// Keyspaces always changes the value to lowercase.
-											return strings.ToLower(val.(string))
-										},
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 48),
+											validation.StringMatch(
+												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
+												"The name must consist of lower case alphanumerics and underscores.",
+											),
+										),
 									},
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
-										StateFunc: func(val interface{}) string {
-											// Keyspaces always changes the value to lowercase.
-											return strings.ToLower(val.(string))
-										},
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9]+$`),
+											"The type must consist of lower case alphanumerics.",
+										),
 									},
 								},
 							},
 						},
 						"partition_key": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
-										StateFunc: func(val interface{}) string {
-											// Keyspaces always changes the value to lowercase.
-											return strings.ToLower(val.(string))
-										},
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 48),
+											validation.StringMatch(
+												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
+												"The name must consist of lower case alphanumerics and underscores.",
+											),
+										),
 									},
 								},
 							},
 						},
 						"static_column": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
-										StateFunc: func(val interface{}) string {
-											// Keyspaces always changes the value to lowercase.
-											return strings.ToLower(val.(string))
-										},
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 48),
+											validation.StringMatch(
+												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
+												"The name must consist of lower case alphanumerics and underscores.",
+											),
+										),
 									},
 								},
 							},
@@ -645,20 +655,20 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *keyspaces.SchemaDefin
 
 	apiObject := &keyspaces.SchemaDefinition{}
 
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AllColumns = expandColumnDefinitions(v)
+	if v, ok := tfMap["column"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllColumns = expandColumnDefinitions(v.List())
 	}
 
-	if v, ok := tfMap["clustering_key"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ClusteringKeys = expandClusteringKeys(v)
+	if v, ok := tfMap["clustering_key"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ClusteringKeys = expandClusteringKeys(v.List())
 	}
 
-	if v, ok := tfMap["partition_key"].([]interface{}); ok && len(v) > 0 {
-		apiObject.PartitionKeys = expandPartitionKeys(v)
+	if v, ok := tfMap["partition_key"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.PartitionKeys = expandPartitionKeys(v.List())
 	}
 
-	if v, ok := tfMap["static_column"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StaticColumns = expandStaticColumns(v)
+	if v, ok := tfMap["static_column"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StaticColumns = expandStaticColumns(v.List())
 	}
 
 	return apiObject
