@@ -31,7 +31,7 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 			{
 				Config: testAccAppFlowConnectorProfile_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`connectorprofile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
@@ -75,7 +75,7 @@ func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAppFlowConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
+func testAccCheckAppFlowConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
