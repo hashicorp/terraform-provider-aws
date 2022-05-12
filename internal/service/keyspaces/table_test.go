@@ -219,6 +219,76 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 	})
 }
 
+func TestAccKeyspacesTable_update(t *testing.T) {
+	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_table.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableAllAttributesConfig(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "200"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.write_capacity_units", "100"),
+					resource.TestCheckResourceAttr(resourceName, "comment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "comment.0.message", "TESTING"),
+					resource.TestCheckResourceAttr(resourceName, "default_time_to_live", "500000"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_specification.0.kms_key_identifier", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.0.type", "CUSTOMER_MANAGED_KMS_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "keyspace_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.status", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableAllAttributesUpdatedConfig(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.write_capacity_units", "0"),
+					resource.TestCheckResourceAttr(resourceName, "comment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "comment.0.message", "TESTING"),
+					resource.TestCheckResourceAttr(resourceName, "default_time_to_live", "1500000"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.0.kms_key_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, "encryption_specification.0.type", "AWS_OWNED_KMS_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "keyspace_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
 
@@ -436,6 +506,105 @@ resource "aws_keyspaces_table" "test" {
     static_column {
       name = "pay_scale"
     }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableAllAttributesConfig(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    read_capacity_units  = 200
+    throughput_mode      = "PROVISIONED"
+    write_capacity_units = 100
+  }
+
+  comment {
+    message = "TESTING"
+  }
+
+  default_time_to_live = 500000
+
+  encryption_specification {
+    kms_key_identifier = aws_kms_key.test.arn
+    type               = "CUSTOMER_MANAGED_KMS_KEY"
+  }
+
+  point_in_time_recovery {
+    status = "ENABLED"
+  }
+
+  ttl {
+    status = "ENABLED"
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableAllAttributesUpdatedConfig(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode = "PAY_PER_REQUEST"
+  }
+
+  comment {
+    message = "TESTING"
+  }
+
+  default_time_to_live = 1500000
+
+  encryption_specification {
+    type = "AWS_OWNED_KMS_KEY"
+  }
+
+  point_in_time_recovery {
+    status = "DISABLED"
   }
 }
 `, rName1, rName2)

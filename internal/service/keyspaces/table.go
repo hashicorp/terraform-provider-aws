@@ -55,7 +55,6 @@ func ResourceTable() *schema.Resource {
 						"read_capacity_units": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"throughput_mode": {
@@ -67,7 +66,6 @@ func ResourceTable() *schema.Resource {
 						"write_capacity_units": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
@@ -436,20 +434,109 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &keyspaces.UpdateTableInput{
-			KeyspaceName: aws.String(keyspaceName),
-			TableName:    aws.String(tableName),
+		// https://docs.aws.amazon.com/keyspaces/latest/APIReference/API_UpdateTable.html
+		// Note that you can only update one specific table setting per update operation.
+		if d.HasChange("capacity_specification") {
+			if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input := &keyspaces.UpdateTableInput{
+					CapacitySpecification: expandCapacitySpecification(v.([]interface{})[0].(map[string]interface{})),
+					KeyspaceName:          aws.String(keyspaceName),
+					TableName:             aws.String(tableName),
+				}
+
+				log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
+				_, err := conn.UpdateTableWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
+				}
+
+				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return diag.Errorf("waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
+				}
+			}
 		}
 
-		log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
-		_, err := conn.UpdateTableWithContext(ctx, input)
+		if d.HasChange("default_time_to_live") {
+			input := &keyspaces.UpdateTableInput{
+				DefaultTimeToLive: aws.Int64(int64(d.Get("default_time_to_live").(int))),
+				KeyspaceName:      aws.String(keyspaceName),
+				TableName:         aws.String(tableName),
+			}
 
-		if err != nil {
-			return diag.Errorf("updating Keyspaces Table (%s): %s", d.Id(), err)
+			log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
+			_, err := conn.UpdateTableWithContext(ctx, input)
+
+			if err != nil {
+				return diag.Errorf("updating Keyspaces Table (%s) DefaultTimeToLive: %s", d.Id(), err)
+			}
+
+			if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return diag.Errorf("waiting for Keyspaces Table (%s) DefaultTimeToLive update: %s", d.Id(), err)
+			}
 		}
 
-		if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Keyspaces Table (%s) update: %s", d.Id(), err)
+		if d.HasChange("encryption_specification") {
+			if v, ok := d.GetOk("encryption_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input := &keyspaces.UpdateTableInput{
+					EncryptionSpecification: expandEncryptionSpecification(v.([]interface{})[0].(map[string]interface{})),
+					KeyspaceName:            aws.String(keyspaceName),
+					TableName:               aws.String(tableName),
+				}
+
+				log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
+				_, err := conn.UpdateTableWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("updating Keyspaces Table (%s) EncryptionSpecification: %s", d.Id(), err)
+				}
+
+				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return diag.Errorf("waiting for Keyspaces Table (%s) EncryptionSpecification update: %s", d.Id(), err)
+				}
+			}
+		}
+
+		if d.HasChange("point_in_time_recovery") {
+			if v, ok := d.GetOk("point_in_time_recovery"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input := &keyspaces.UpdateTableInput{
+					KeyspaceName:        aws.String(keyspaceName),
+					PointInTimeRecovery: expandPointInTimeRecovery(v.([]interface{})[0].(map[string]interface{})),
+					TableName:           aws.String(tableName),
+				}
+
+				log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
+				_, err := conn.UpdateTableWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("updating Keyspaces Table (%s) PointInTimeRecovery: %s", d.Id(), err)
+				}
+
+				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return diag.Errorf("waiting for Keyspaces Table (%s) PointInTimeRecovery update: %s", d.Id(), err)
+				}
+			}
+		}
+
+		if d.HasChange("ttl") {
+			if v, ok := d.GetOk("ttl"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input := &keyspaces.UpdateTableInput{
+					KeyspaceName: aws.String(keyspaceName),
+					TableName:    aws.String(tableName),
+					Ttl:          expandTimeToLive(v.([]interface{})[0].(map[string]interface{})),
+				}
+
+				log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
+				_, err := conn.UpdateTableWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("updating Keyspaces Table (%s) Ttl: %s", d.Id(), err)
+				}
+
+				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return diag.Errorf("waiting for Keyspaces Table (%s) Ttl update: %s", d.Id(), err)
+				}
+			}
 		}
 	}
 
