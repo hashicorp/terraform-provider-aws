@@ -157,10 +157,14 @@ resource "aws_redshift_subnet_group" "test" {
   subnet_ids = [aws_subnet.test.id]
 }
 
+data "aws_iam_policy" "test" {
+  name = "AmazonRedshiftAllCommandsFullAccess"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess"]
+  managed_policy_arns = [data.aws_iam_policy.test.arn]
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
