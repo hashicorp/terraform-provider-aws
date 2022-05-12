@@ -2,11 +2,11 @@ package appflow
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,10 +16,10 @@ import (
 
 func ResourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConnectorProfileCreate,
-		Read:   resourceConnectorProfileRead,
-		Update: resourceConnectorProfileUpdate,
-		Delete: resourceConnectorProfileDelete,
+		CreateWithoutTimeout: resourceConnectorProfileCreate,
+		ReadWithoutTimeout:   resourceConnectorProfileRead,
+		UpdateWithoutTimeout: resourceConnectorProfileUpdate,
+		DeleteWithoutTimeout: resourceConnectorProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -1392,7 +1392,7 @@ func ResourceConnectorProfile() *schema.Resource {
 	}
 }
 
-func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 	name := d.Get("name").(string)
 
@@ -1414,21 +1414,21 @@ func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.CreateConnectorProfile(&createConnectorProfileInput)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppFlow Connector Profile: %w", err)
+		return diag.Errorf("creating AppFlow Connector Profile: %s", err)
 	}
 
 	d.SetId(name)
 
-	return resourceConnectorProfileRead(d, meta)
+	return resourceConnectorProfileRead(ctx, d, meta)
 }
 
-func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
 	connectorProfile, err := FindConnectorProfileByName(context.Background(), conn, d.Id())
 
 	if err != nil {
-		return err
+		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	// Credentials are not returned by any API operation. Instead, a
@@ -1452,18 +1452,18 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceConnectorProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceConnectorProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 	_, err := conn.DeleteConnectorProfile(&appflow.DeleteConnectorProfileInput{
 		ConnectorProfileName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error deleting AppFlow Connector Profile (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
 	return nil
