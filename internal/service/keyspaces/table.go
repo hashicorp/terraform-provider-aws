@@ -650,7 +650,7 @@ func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 	return nil, err
 }
 
-func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
+func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusUpdating},
 		Target:  []string{keyspaces.TableStatusActive},
