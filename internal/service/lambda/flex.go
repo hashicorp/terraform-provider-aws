@@ -44,7 +44,7 @@ func flattenVPCConfigResponse(s *lambda.VpcConfigResponse) []map[string]interfac
 	settings["subnet_ids"] = flex.FlattenStringSet(s.SubnetIds)
 	settings["security_group_ids"] = flex.FlattenStringSet(s.SecurityGroupIds)
 	if s.VpcId != nil {
-		settings["vpc_id"] = *s.VpcId
+		settings["vpc_id"] = aws.StringValue(s.VpcId)
 	}
 
 	return []map[string]interface{}{settings}

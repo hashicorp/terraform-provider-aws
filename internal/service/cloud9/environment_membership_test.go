@@ -21,10 +21,10 @@ func TestAccEnvironmentMembership_basic(t *testing.T) {
 	resourceName := "aws_cloud9_environment_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentMemberDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMembershipConfig(rName, "read-only"),
@@ -60,10 +60,10 @@ func TestAccEnvironmentMembership_disappears(t *testing.T) {
 	resourceName := "aws_cloud9_environment_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentMemberDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMembershipConfig(rName, "read-only"),
@@ -85,10 +85,10 @@ func TestAccEnvironmentMembership_disappears_env(t *testing.T) {
 	resourceName := "aws_cloud9_environment_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentMemberDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloud9.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMembershipConfig(rName, "read-only"),

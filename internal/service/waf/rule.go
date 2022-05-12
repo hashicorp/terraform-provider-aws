@@ -109,7 +109,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	newPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRuleResource(d.Id(), noPredicates, newPredicates, conn)
+		err := updateRuleResource(d.Id(), noPredicates, newPredicates, conn)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Rule (%s): %w", d.Id(), err)
 		}
@@ -198,7 +198,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWafRuleResource(d.Id(), oldP, newP, conn)
+		err := updateRuleResource(d.Id(), oldP, newP, conn)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Rule (%s): %w", d.Id(), err)
 		}
@@ -221,7 +221,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRuleResource(d.Id(), oldPredicates, noPredicates, conn)
+		err := updateRuleResource(d.Id(), oldPredicates, noPredicates, conn)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Rule (%s) predicates: %w", d.Id(), err)
 		}
@@ -269,7 +269,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateWafRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
+func updateRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleInput{

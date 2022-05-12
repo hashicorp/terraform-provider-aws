@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -43,10 +43,10 @@ func testAccRoutingProfile_basic(t *testing.T) {
 	updatedDescription := "Updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, originalDescription),
@@ -98,10 +98,10 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, "Disappear"),
@@ -124,10 +124,10 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 	description := "testMediaConcurrencies"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, description),
@@ -177,10 +177,10 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, "first"),
@@ -233,10 +233,10 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 	description := "testQueueConfigs"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Routing profile without queue_configs
@@ -397,15 +397,17 @@ func testAccCheckRoutingProfileDestroy(s *terraform.State) error {
 			RoutingProfileId: aws.String(routingProfileID),
 		}
 
-		_, experr := conn.DescribeRoutingProfile(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		_, err = conn.DescribeRoutingProfile(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 

@@ -16,10 +16,10 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      nil,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginDataSourceConfig(rName),
@@ -36,10 +36,10 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 }
 
 func testAccCustomPluginDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
-  content_type = "JAR"
+  content_type = "ZIP"
 
   location {
     s3 {

@@ -17,15 +17,15 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_emr_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmrSecurityConfigurationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmrSecurityConfigurationExists(resourceName),
+					testAccCheckSecurityConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
 				),
 			},
@@ -38,7 +38,7 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
+func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_security_configuration" {
@@ -68,7 +68,7 @@ func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckSecurityConfigurationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

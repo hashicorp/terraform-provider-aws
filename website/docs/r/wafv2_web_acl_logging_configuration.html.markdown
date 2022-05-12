@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl_logging_configuration"
 description: |-
@@ -12,7 +12,7 @@ Creates a WAFv2 Web ACL Logging Configuration resource.
 
 -> **Note:** To start logging from a WAFv2 Web ACL, an Amazon Kinesis Data Firehose (e.g., [`aws_kinesis_firehose_delivery_stream` resource](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) must also be created with a PUT source (not a stream) and in the region that you are operating.
 If you are capturing logs for Amazon CloudFront, always create the firehose in US East (N. Virginia).
-Be sure to give the data firehose a name that starts with the prefix `aws-waf-logs-`.
+Be sure to give the data firehose, cloudwatch log group, and/or s3 bucket a name that starts with the prefix `aws-waf-logs-`.
 
 ## Example Usage
 
@@ -129,7 +129,7 @@ The `redacted_fields` block supports the following arguments:
 * `method` - (Optional) Redact the HTTP method. Must be specified as an empty configuration block `{}`. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Redact the query string. Must be specified as an empty configuration block `{}`. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Redact a single header. See [Single Header](#single-header) below for details.
-* `single_query_argument` - (Optional, **DEPRECATED**) Redact a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `single_query_argument` - (Optional, **DEPRECATED**) Redact a single query argument. See [Single Query Argument](#single-query-argument-deprecated) below for details.
 * `uri_path` - (Optional) Redact the request URI path. Must be specified as an empty configuration block `{}`. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Single Header

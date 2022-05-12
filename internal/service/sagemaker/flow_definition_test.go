@@ -20,10 +20,10 @@ func testAccFlowDefinition_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionBasicConfig(rName),
@@ -62,10 +62,10 @@ func testAccFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionPublicWorkforceConfig(rName),
@@ -94,10 +94,10 @@ func testAccFlowDefinition_humanLoopRequestSource(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionHumanLoopRequestSourceConfig(rName),
@@ -126,10 +126,10 @@ func testAccFlowDefinition_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionTags1Config(rName, "key1", "value1"),
@@ -171,10 +171,10 @@ func testAccFlowDefinition_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowDefinitionBasicConfig(rName),

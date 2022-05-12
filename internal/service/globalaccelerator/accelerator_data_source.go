@@ -130,14 +130,14 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
-	d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets))
+	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))
 
 	acceleratorAttributes, err := FindAcceleratorAttributesByARN(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenGlobalAcceleratorAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 

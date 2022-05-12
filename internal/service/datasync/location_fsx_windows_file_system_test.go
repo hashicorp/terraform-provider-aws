@@ -29,9 +29,9 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsConfig(domainName),
@@ -68,9 +68,9 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsConfig(domainName),
@@ -96,9 +96,9 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsSubdirectoryConfig(domainName, "/subdirectory1/"),
@@ -130,9 +130,9 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsTags1Config(domainName, "key1", "value1"),

@@ -358,13 +358,13 @@ type TopicSubscriptionRedrivePolicy struct {
 }
 
 func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
-	ob, err := normalizeSnsTopicSubscriptionDeliveryPolicy(old)
+	ob, err := normalizeTopicSubscriptionDeliveryPolicy(old)
 	if err != nil {
 		log.Print(err)
 		return false
 	}
 
-	nb, err := normalizeSnsTopicSubscriptionDeliveryPolicy(new)
+	nb, err := normalizeTopicSubscriptionDeliveryPolicy(new)
 	if err != nil {
 		log.Print(err)
 		return false
@@ -373,7 +373,7 @@ func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *sc
 	return verify.JSONBytesEqual(ob, nb)
 }
 
-func normalizeSnsTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
+func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {

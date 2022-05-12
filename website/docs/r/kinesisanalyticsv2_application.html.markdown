@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
+subcategory: "Kinesis Analytics V2"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application"
 description: |-

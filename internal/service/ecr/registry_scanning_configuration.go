@@ -78,7 +78,7 @@ func resourceRegistryScanningConfigurationPut(d *schema.ResourceData, meta inter
 
 	input := ecr.PutRegistryScanningConfigurationInput{
 		ScanType: aws.String(d.Get("scan_type").(string)),
-		Rules:    expandEcrScanningRegistryRules(d.Get("rule").(*schema.Set).List()),
+		Rules:    expandScanningRegistryRules(d.Get("rule").(*schema.Set).List()),
 	}
 
 	_, err := conn.PutRegistryScanningConfiguration(&input)
@@ -103,7 +103,7 @@ func resourceRegistryScanningConfigurationRead(d *schema.ResourceData, meta inte
 
 	d.Set("registry_id", out.RegistryId)
 	d.Set("scan_type", out.ScanningConfiguration.ScanType)
-	d.Set("rule", flattenEcrScanningConfigurationRules(out.ScanningConfiguration.Rules))
+	d.Set("rule", flattenScanningConfigurationRules(out.ScanningConfiguration.Rules))
 
 	return nil
 }
@@ -126,7 +126,7 @@ func resourceRegistryScanningConfigurationDelete(d *schema.ResourceData, meta in
 
 // Helper functions
 
-func expandEcrScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule {
+func expandScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -137,26 +137,26 @@ func expandEcrScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule
 		if rule == nil {
 			continue
 		}
-		rules = append(rules, expandEcrScanningRegistryRule(rule.(map[string]interface{})))
+		rules = append(rules, expandScanningRegistryRule(rule.(map[string]interface{})))
 	}
 
 	return rules
 }
 
-func expandEcrScanningRegistryRule(m map[string]interface{}) *ecr.RegistryScanningRule {
+func expandScanningRegistryRule(m map[string]interface{}) *ecr.RegistryScanningRule {
 	if m == nil {
 		return nil
 	}
 
 	rule := &ecr.RegistryScanningRule{
-		RepositoryFilters: expandEcrScanningRegistryRuleRepositoryFilters(m["repository_filter"].(*schema.Set).List()),
+		RepositoryFilters: expandScanningRegistryRuleRepositoryFilters(m["repository_filter"].(*schema.Set).List()),
 		ScanFrequency:     aws.String(m["scan_frequency"].(string)),
 	}
 
 	return rule
 }
 
-func expandEcrScanningRegistryRuleRepositoryFilters(l []interface{}) []*ecr.ScanningRepositoryFilter {
+func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []*ecr.ScanningRepositoryFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -177,18 +177,18 @@ func expandEcrScanningRegistryRuleRepositoryFilters(l []interface{}) []*ecr.Scan
 	return filters
 }
 
-func flattenEcrScanningConfigurationRules(r []*ecr.RegistryScanningRule) interface{} {
+func flattenScanningConfigurationRules(r []*ecr.RegistryScanningRule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["scan_frequency"] = aws.StringValue(rule.ScanFrequency)
-		m["repository_filter"] = flattenEcrScanningConfigurationFilters(rule.RepositoryFilters)
+		m["repository_filter"] = flattenScanningConfigurationFilters(rule.RepositoryFilters)
 		out[i] = m
 	}
 	return out
 }
 
-func flattenEcrScanningConfigurationFilters(l []*ecr.ScanningRepositoryFilter) []interface{} {
+func flattenScanningConfigurationFilters(l []*ecr.ScanningRepositoryFilter) []interface{} {
 	if len(l) == 0 {
 		return nil
 	}

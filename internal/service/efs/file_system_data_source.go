@@ -116,7 +116,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 		return errors.New("error reading EFS FileSystem: empty output")
 	}
 
-	var results []*efs.FileSystemDescription
+	results := describeResp.FileSystems
 
 	if len(tagsToMatch) > 0 {
 
@@ -134,12 +134,10 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		results = fileSystems
-	} else {
-		results = describeResp.FileSystems
 	}
 
-	if len(results) > 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+	if count := len(results); count != 1 {
+		return fmt.Errorf("Search returned %d results, please revise so only one is returned", count)
 	}
 
 	fs := results[0]
@@ -171,7 +169,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 			aws.StringValue(fs.FileSystemId), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return fmt.Errorf("error setting lifecycle_policy: %w", err)
 	}
 

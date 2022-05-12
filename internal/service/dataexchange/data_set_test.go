@@ -22,10 +22,10 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 	resourceName := "aws_dataexchange_data_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dataexchange.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataExchangeDataSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataExchangeDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataExchangeDataSetConfig(rName),
@@ -61,10 +61,10 @@ func TestAccDataExchangeDataSet_tags(t *testing.T) {
 	resourceName := "aws_dataexchange_data_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dataexchange.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataExchangeDataSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataExchangeDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataExchangeDataSetConfigTags1(rName, "key1", "value1"),
@@ -106,10 +106,10 @@ func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 	resourceName := "aws_dataexchange_data_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dataexchange.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataExchangeDataSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataExchangeDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataExchangeDataSetConfig(rName),

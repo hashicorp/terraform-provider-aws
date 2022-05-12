@@ -73,7 +73,7 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 	d.SetId(fmt.Sprintf("%s,%s,%s", managedPolicyArn, permissionSetArn, instanceArn))
 
 	// Provision ALL accounts after attaching the managed policy
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 
@@ -138,7 +138,7 @@ func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interfac
 	}
 
 	// Provision ALL accounts after detaching the managed policy
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 

@@ -16,15 +16,19 @@ import (
 )
 
 func TestAccRDSProxyEndpoint_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointConfig(rName),
@@ -54,15 +58,19 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointTargetRoleConfig(rName),
@@ -81,15 +89,19 @@ func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointVPCSecurityGroupIds1Config(rName),
@@ -118,15 +130,19 @@ func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointTags1Config(rName, "key1", "value1"),
@@ -163,14 +179,18 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointConfig(rName),
@@ -185,14 +205,18 @@ func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_Disappears_proxy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointConfig(rName),

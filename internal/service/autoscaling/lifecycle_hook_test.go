@@ -17,10 +17,10 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 	resourceName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLifecycleHookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecycleHookConfig(resourceName),
@@ -46,10 +46,10 @@ func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLifecycleHookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecycleHookConfig_omitDefaultResult(rName, rInt),

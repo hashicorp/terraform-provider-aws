@@ -117,7 +117,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		createOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(v[0].(map[string]interface{}))
+		createOpts.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
 	}
 
 	resp, err := conn.CreateQueue(createOpts)
@@ -159,7 +159,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pricing_plan", resp.Queue.PricingPlan)
 	d.Set("status", resp.Queue.Status)
 
-	if err := d.Set("reservation_plan_settings", flattenMediaConvertReservationPlan(resp.Queue.ReservationPlan)); err != nil {
+	if err := d.Set("reservation_plan_settings", flattenReservationPlan(resp.Queue.ReservationPlan)); err != nil {
 		return fmt.Errorf("Error setting Media Convert Queue reservation_plan_settings: %s", err)
 	}
 
@@ -202,7 +202,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("reservation_plan_settings"); ok {
 			reservationPlanSettings := v.([]interface{})[0].(map[string]interface{})
-			updateOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(reservationPlanSettings)
+			updateOpts.ReservationPlanSettings = expandReservationPlanSettings(reservationPlanSettings)
 		}
 
 		_, err = conn.UpdateQueue(updateOpts)

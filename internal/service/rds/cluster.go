@@ -16,16 +16,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
-	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
-	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
-	rdsClusterTimeoutDelete                           = 2 * time.Minute
+	clusterScalingConfiguration_DefaultMinCapacity = 1
+	clusterScalingConfiguration_DefaultMaxCapacity = 16
+	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -34,6 +33,7 @@ func ResourceCluster() *schema.Resource {
 		Read:   resourceClusterRead,
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceClusterImport,
 		},
@@ -45,210 +45,258 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
-
 			"allow_major_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
+			// apply_immediately is used to determine when the update modifications take place.
+			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"availability_zones": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
+			"backup_retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntAtMost(35),
+			},
 			"backtrack_window": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-
 			"cluster_identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"cluster_identifier_prefix"},
 				ValidateFunc:  validIdentifier,
+				ConflictsWith: []string{"cluster_identifier_prefix"},
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"cluster_identifier"},
 				ValidateFunc:  validIdentifierPrefix,
+				ConflictsWith: []string{"cluster_identifier"},
 			},
-
 			"cluster_members": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
+			"cluster_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
+			"db_cluster_instance_class": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"db_cluster_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"db_instance_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-
-			"db_cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"db_instance_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"enable_global_write_forwarding": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"reader_endpoint": {
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
+				},
+			},
+			"enable_http_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "aurora",
 				ForceNew:     true,
+				Default:      EngineAurora,
 				ValidateFunc: validEngine(),
 			},
-
 			"engine_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "provisioned",
-				ValidateFunc: validation.StringInSlice([]string{
-					"global",
-					"multimaster",
-					"parallelquery",
-					"provisioned",
-					"serverless",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      EngineModeProvisioned,
+				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"scaling_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_pause": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"max_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMaxCapacity,
-						},
-						"min_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMinCapacity,
-						},
-						"seconds_until_auto_pause": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(300, 86400),
-						},
-						"timeout_action": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "RollbackCapacityChange",
-							ValidateFunc: validation.StringInSlice([]string{
-								"ForceApplyCapacityChange",
-								"RollbackCapacityChange",
-							}, false),
-						},
-					},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+					value := v.(string)
+					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+						es = append(es, fmt.Errorf(
+							"only alphanumeric characters and hyphens allowed in %q", k))
+					}
+					if regexp.MustCompile(`--`).MatchString(value) {
+						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
+					}
+					if regexp.MustCompile(`-$`).MatchString(value) {
+						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
+					}
+					return
 				},
 			},
-
-			"storage_encrypted": {
+			"global_cluster_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"iam_database_authentication_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"iam_roles": {
+				Type:     schema.TypeSet,
+				Optional: true,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"iops": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"master_password": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"master_username": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
 				ForceNew: true,
 			},
-
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"preferred_backup_window": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
+			},
+			"preferred_maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(val interface{}) string {
+					if val == nil {
+						return ""
+					}
+					return strings.ToLower(val.(string))
+				},
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+			},
+			"reader_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replication_source_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"restore_to_point_in_time": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
-				ConflictsWith: []string{
-					"s3_import",
-					"snapshot_identifier",
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"restore_to_time": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  verify.ValidUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+						},
+						"restore_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(RestoreType_Values(), false),
+						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -258,43 +306,23 @@ func ResourceCluster() *schema.Resource {
 								validIdentifier,
 							),
 						},
-
-						"restore_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"full-copy",
-								"copy-on-write",
-							}, false),
-						},
-
 						"use_latest_restorable_time": {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							ForceNew:      true,
 							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
 						},
-
-						"restore_to_time": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ValidateFunc:  verify.ValidUTCTimestamp,
-							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
-						},
 					},
 				},
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+				},
 			},
-
 			"s3_import": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				ConflictsWith: []string{
-					"snapshot_identifier",
-					"restore_to_point_in_time",
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket_name": {
@@ -324,160 +352,101 @@ func ResourceCluster() *schema.Resource {
 						},
 					},
 				},
-			},
-
-			"final_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only alphanumeric characters and hyphens allowed in %q", k))
-					}
-					if regexp.MustCompile(`--`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
-					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
-					}
-					return
+				ConflictsWith: []string{
+					"snapshot_identifier",
+					"restore_to_point_in_time",
 				},
 			},
-
+			"scaling_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_pause": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"max_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
+						},
+						"min_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  clusterScalingConfiguration_DefaultMinCapacity,
+						},
+						"seconds_until_auto_pause": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(300, 86400),
+						},
+						"timeout_action": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      TimeoutActionRollbackCapacityChange,
+							ValidateFunc: validation.StringInSlice(TimeoutAction_Values(), false),
+						},
+					},
+				},
+			},
+			"serverlessv2_scaling_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_capacity": {
+							Type:         schema.TypeFloat,
+							Required:     true,
+							ValidateFunc: validation.FloatBetween(0.5, 128),
+						},
+						"min_capacity": {
+							Type:         schema.TypeFloat,
+							Required:     true,
+							ValidateFunc: validation.FloatBetween(0.5, 128),
+						},
+					},
+				},
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"master_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-
-			// apply_immediately is used to determine when the update modifications
-			// take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"preferred_backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-
-			"preferred_maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val interface{}) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
-				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-
-			"backup_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"replication_source_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"iam_database_authentication_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"source_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
-			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"audit",
-						"error",
-						"general",
-						"slowquery",
-						"postgresql",
-					}, false),
-				},
-			},
-			"enable_http_endpoint": {
+			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
+				ForceNew: true,
 			},
-
+			"storage_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -589,12 +558,16 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore from snapshot configuration: %s", opts)
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshot(&opts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
@@ -809,6 +782,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 					modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(val.(string))
 				case "scaling_configuration":
 					modifyDbClusterInput.ScalingConfiguration = ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+				case "serverlessv2_scaling_configuration":
+					if len(val.([]interface{})) > 0 && val.([]interface{})[0] != nil {
+						modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+					}
 				}
 			}
 		}
@@ -870,6 +847,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("db_cluster_instance_class"); ok {
+			createOpts.DBClusterInstanceClass = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("engine_version"); ok {
 			createOpts.EngineVersion = aws.String(attr.(string))
 		}
@@ -922,13 +903,29 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.ReplicationSourceIdentifier = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOkExists("allocated_storage"); ok {
+			createOpts.AllocatedStorage = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOkExists("storage_type"); ok {
+			createOpts.StorageType = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOkExists("iops"); ok {
+			createOpts.Iops = aws.Int64(int64(attr.(int)))
+		}
+
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			createOpts.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
 			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
 		}
 
 		log.Printf("[DEBUG] RDS Cluster create options: %s", createOpts)
 		var resp *rds.CreateDBClusterOutput
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			resp, err = conn.CreateDBCluster(createOpts)
 			if err != nil {
@@ -953,8 +950,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] RDS Cluster ID: %s", d.Id())
 
-	log.Println(
-		"[INFO] Waiting for RDS Cluster to be available")
+	log.Println("[INFO] Waiting for RDS Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,
@@ -990,7 +986,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1004,39 +1000,16 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-	}
+	dbc, err := FindDBClusterByID(conn, d.Id())
 
-	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
-	resp, err := conn.DescribeDBClusters(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return fmt.Errorf("Error retrieving RDS cluster: empty response for: %s", input)
-	}
-
-	var dbc *rds.DBCluster
-	for _, c := range resp.DBClusters {
-		if aws.StringValue(c.DBClusterIdentifier) == d.Id() {
-			dbc = c
-			break
-		}
-	}
-
-	if dbc == nil {
-		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading RDS Cluster (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
@@ -1076,12 +1049,13 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("endpoint", dbc.Endpoint)
+	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 
-	rdsClusterSetResourceDataEngineVersionFromCluster(d, dbc)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 
 	var roles []string
 	for _, r := range dbc.AssociatedRoles {
@@ -1099,11 +1073,23 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 
-	if err := d.Set("scaling_configuration", flattenRDSScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
+	if err := d.Set("scaling_configuration", flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
 		return fmt.Errorf("error setting scaling_configuration: %s", err)
 	}
 
+	d.Set("allocated_storage", dbc.AllocatedStorage)
+	d.Set("storage_type", dbc.StorageType)
+	d.Set("iops", dbc.Iops)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+
+	if dbc.ServerlessV2ScalingConfiguration != nil {
+		if err := d.Set("serverlessv2_scaling_configuration", []interface{}{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
+			return fmt.Errorf("error setting serverlessv2_scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("serverlessv2_scaling_configuration", nil)
+	}
+
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
@@ -1182,6 +1168,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("db_cluster_instance_class") {
+		req.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
@@ -1198,6 +1189,21 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("port") {
 		req.Port = aws.Int64(int64(d.Get("port").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_type") {
+		req.StorageType = aws.String(d.Get("storage_type").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("allocated_storage") {
+		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("iops") {
+		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		requestUpdate = true
 	}
 
@@ -1251,6 +1257,13 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("serverlessv2_scaling_configuration") {
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			req.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			requestUpdate = true
+		}
+	}
+
 	if d.HasChange("enable_http_endpoint") {
 		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		requestUpdate = true
@@ -1288,7 +1301,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1397,7 +1410,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
@@ -1446,7 +1459,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 		var dbc *rds.DBCluster
 
 		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == dbClusterIdentifier {
+			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
 				dbc = c
 			}
 		}
@@ -1506,7 +1519,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
@@ -1515,6 +1528,7 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
+
 	_, err := stateConf.WaitForState()
 	return err
 }
@@ -1534,22 +1548,8 @@ func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) err
 	return err
 }
 
-func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
+func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
-}
-
-func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
-	newVersionSubstr := newVersion
-
-	if len(newVersion) > len(oldVersion) {
-		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
-	}
-
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != newVersionSubstr {
-		d.Set("engine_version", newVersion)
-	}
-
-	d.Set("engine_version_actual", newVersion)
 }

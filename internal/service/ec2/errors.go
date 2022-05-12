@@ -16,16 +16,20 @@ const (
 	ErrCodeDependencyViolation                            = "DependencyViolation"
 	ErrCodeGatewayNotAttached                             = "Gateway.NotAttached"
 	ErrCodeIncorrectState                                 = "IncorrectState"
+	ErrCodeInvalidAMIIDNotFound                           = "InvalidAMIID.NotFound"
+	ErrCodeInvalidAMIIDUnavailable                        = "InvalidAMIID.Unavailable"
 	ErrCodeInvalidAddressNotFound                         = "InvalidAddress.NotFound"
 	ErrCodeInvalidAllocationIDNotFound                    = "InvalidAllocationID.NotFound"
 	ErrCodeInvalidAssociationIDNotFound                   = "InvalidAssociationID.NotFound"
 	ErrCodeInvalidAttachmentIDNotFound                    = "InvalidAttachmentID.NotFound"
+	ErrCodeInvalidCapacityReservationIdNotFound           = "InvalidCapacityReservationId.NotFound'"
 	ErrCodeInvalidCarrierGatewayIDNotFound                = "InvalidCarrierGatewayID.NotFound"
 	ErrCodeInvalidClientVpnActiveAssociationNotFound      = "InvalidClientVpnActiveAssociationNotFound"
 	ErrCodeInvalidClientVpnAssociationIdNotFound          = "InvalidClientVpnAssociationIdNotFound"
 	ErrCodeInvalidClientVpnAuthorizationRuleNotFound      = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 	ErrCodeInvalidClientVpnEndpointIdNotFound             = "InvalidClientVpnEndpointId.NotFound"
 	ErrCodeInvalidClientVpnRouteNotFound                  = "InvalidClientVpnRouteNotFound"
+	ErrCodeInvalidConnectionNotification                  = "InvalidConnectionNotification"
 	ErrCodeInvalidCustomerGatewayIDNotFound               = "InvalidCustomerGatewayID.NotFound"
 	ErrCodeInvalidDhcpOptionIDNotFound                    = "InvalidDhcpOptionID.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                       = "InvalidFlowLogId.NotFound"
@@ -35,6 +39,10 @@ const (
 	ErrCodeInvalidInstanceIDNotFound                      = "InvalidInstanceID.NotFound"
 	ErrCodeInvalidInternetGatewayIDNotFound               = "InvalidInternetGatewayID.NotFound"
 	ErrCodeInvalidKeyPairNotFound                         = "InvalidKeyPair.NotFound"
+	ErrCodeInvalidLaunchTemplateIdMalformed               = "InvalidLaunchTemplateId.Malformed"
+	ErrCodeInvalidLaunchTemplateIdNotFound                = "InvalidLaunchTemplateId.NotFound"
+	ErrCodeInvalidLaunchTemplateIdVersionNotFound         = "InvalidLaunchTemplateId.VersionNotFound"
+	ErrCodeInvalidLaunchTemplateNameNotFoundException     = "InvalidLaunchTemplateName.NotFoundException"
 	ErrCodeInvalidNetworkAclEntryNotFound                 = "InvalidNetworkAclEntry.NotFound"
 	ErrCodeInvalidNetworkAclIDNotFound                    = "InvalidNetworkAclID.NotFound"
 	ErrCodeInvalidNetworkInterfaceIDNotFound              = "InvalidNetworkInterfaceID.NotFound"
@@ -55,8 +63,10 @@ const (
 	ErrCodeInvalidSnapshotInUse                           = "InvalidSnapshot.InUse"
 	ErrCodeInvalidSnapshotNotFound                        = "InvalidSnapshot.NotFound"
 	ErrCodeInvalidSpotDatafeedNotFound                    = "InvalidSpotDatafeed.NotFound"
+	ErrCodeInvalidSpotFleetRequestConfig                  = "InvalidSpotFleetRequestConfig"
+	ErrCodeInvalidSpotFleetRequestIdNotFound              = "InvalidSpotFleetRequestId.NotFound"
 	ErrCodeInvalidSpotInstanceRequestIDNotFound           = "InvalidSpotInstanceRequestID.NotFound"
-	ErrCodeInvalidSubnetCidrReservationIDNotFound         = "InvalidSubnetCidrReservationID.NotFound"
+	ErrCodeInvalidSubnetCIDRReservationIDNotFound         = "InvalidSubnetCidrReservationID.NotFound"
 	ErrCodeInvalidSubnetIDNotFound                        = "InvalidSubnetID.NotFound"
 	ErrCodeInvalidSubnetIdNotFound                        = "InvalidSubnetId.NotFound"
 	ErrCodeInvalidTransitGatewayAttachmentIDNotFound      = "InvalidTransitGatewayAttachmentID.NotFound"
@@ -75,7 +85,28 @@ const (
 	ErrCodeInvalidVpnGatewayIDNotFound                    = "InvalidVpnGatewayID.NotFound"
 	ErrCodeNatGatewayNotFound                             = "NatGatewayNotFound"
 	ErrCodeUnsupportedOperation                           = "UnsupportedOperation"
+	ErrCodeVolumeInUse                                    = "VolumeInUse"
 )
+
+func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {
+	if apiObject == nil || apiObject.Error == nil {
+		return nil
+	}
+
+	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+}
+
+func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsErrorItem) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := CancelSpotFleetRequestError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
+}
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 	if apiObject == nil {

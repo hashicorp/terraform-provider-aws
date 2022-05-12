@@ -21,10 +21,10 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduledActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionPauseClusterConfig(rName, "cron(00 23 * * ? *)"),
@@ -77,10 +77,10 @@ func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 	endTime := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduledActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionPauseClusterWithFullOptionsConfig(rName, "cron(00 * * * ? *)", "This is test action", true, startTime, endTime),
@@ -114,10 +114,10 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduledActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionResumeClusterConfig(rName, "cron(00 23 * * ? *)"),
@@ -168,10 +168,10 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduledActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionResizeClusterBasicConfig(rName, "cron(00 23 * * ? *)"),
@@ -222,10 +222,10 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduledActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionResizeClusterWithFullOptionsConfig(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc2.large", 2),
@@ -263,10 +263,10 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduledActionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionPauseClusterConfig(rName, "cron(00 23 * * ? *)"),

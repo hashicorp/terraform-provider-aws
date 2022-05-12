@@ -52,10 +52,10 @@ func testAccBackupFramework_basic(t *testing.T) {
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, originalDescription),
@@ -112,10 +112,10 @@ func testAccBackupFramework_updateTags(t *testing.T) {
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),
@@ -201,10 +201,10 @@ func testAccBackupFramework_updateControlScope(t *testing.T) {
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),
@@ -313,10 +313,10 @@ func testAccBackupFramework_updateControlInputParameters(t *testing.T) {
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
@@ -393,10 +393,10 @@ func testAccBackupFramework_updateControls(t *testing.T) {
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),
@@ -471,10 +471,10 @@ func testAccBackupFramework_disappears(t *testing.T) {
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),

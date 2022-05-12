@@ -122,7 +122,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
+		err := modifyClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 		if err != nil {
 			return fmt.Errorf("error modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 		}
@@ -220,7 +220,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
-			err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), parameters)
+			err := modifyClusterParameterGroupParameters(conn, d.Id(), parameters)
 			if err != nil {
 				return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) parameter: %w", d.Id(), err)
 			}
@@ -256,7 +256,7 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func modifyNeptuneClusterParameterGroupParameters(conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
+func modifyClusterParameterGroupParameters(conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
 	// We can only modify 20 parameters at a time, so walk them until
 	// we've got them all.
 	for parameters != nil {

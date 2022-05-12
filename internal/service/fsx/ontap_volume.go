@@ -140,7 +140,7 @@ func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tiering_policy"); ok {
-		input.OntapConfiguration.TieringPolicy = expandFsxOntapVolumeTieringPolicy(v.([]interface{}))
+		input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -198,7 +198,7 @@ func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("uuid", ontapConfig.UUID)
 	d.Set("volume_type", volume.VolumeType)
 
-	if err := d.Set("tiering_policy", flattenFsxOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
+	if err := d.Set("tiering_policy", flattenOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
 		return fmt.Errorf("error setting tiering_policy: %w", err)
 	}
 
@@ -258,7 +258,7 @@ func resourceOntapVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("tiering_policy") {
-			input.OntapConfiguration.TieringPolicy = expandFsxOntapVolumeTieringPolicy(d.Get("tiering_policy").([]interface{}))
+			input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(d.Get("tiering_policy").([]interface{}))
 		}
 
 		_, err := conn.UpdateVolume(input)
@@ -298,7 +298,7 @@ func resourceOntapVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandFsxOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
+func expandOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -320,7 +320,7 @@ func expandFsxOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
 	return &out
 }
 
-func flattenFsxOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
+func flattenOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}

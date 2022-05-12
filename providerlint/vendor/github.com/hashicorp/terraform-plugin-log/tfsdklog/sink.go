@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/hashicorp/go-hclog"
@@ -53,13 +54,8 @@ const (
 // loggers.
 var ValidLevels = []string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF"}
 
-func getSink(ctx context.Context) hclog.Logger {
-	logger := ctx.Value(logging.SinkKey)
-	if logger == nil {
-		return nil
-	}
-	return logger.(hclog.Logger)
-}
+// Only show invalid log level message once across any number of level lookups.
+var invalidLogLevelMessage sync.Once
 
 // RegisterTestSink sets up a logging sink, for use with test frameworks and
 // other cases where plugin logs don't get routed through Terraform. This
@@ -71,10 +67,15 @@ func getSink(ctx context.Context) hclog.Logger {
 // RegisterTestSink must be called prior to any loggers being setup or
 // instantiated.
 func RegisterTestSink(ctx context.Context, t testing.T) context.Context {
-	return context.WithValue(ctx, logging.SinkKey, newSink(t))
+	logger, loggerOptions := newSink(t)
+
+	ctx = logging.SetSink(ctx, logger)
+	ctx = logging.SetSinkOptions(ctx, loggerOptions)
+
+	return ctx
 }
 
-func newSink(t testing.T) hclog.Logger {
+func newSink(t testing.T) (hclog.Logger, *hclog.LoggerOptions) {
 	logOutput := io.Writer(os.Stderr)
 	var json bool
 	var logLevel hclog.Level
@@ -120,21 +121,29 @@ func newSink(t testing.T) hclog.Logger {
 	} else if isValidLogLevel(envLevel) {
 		logLevel = hclog.LevelFromString(envLevel)
 	} else {
-		fmt.Fprintf(os.Stderr, "[WARN] Invalid log level: %q. Defaulting to level: OFF. Valid levels are: %+v",
-			envLevel, ValidLevels)
+		invalidLogLevelMessage.Do(func() {
+			fmt.Fprintf(
+				os.Stderr,
+				"[WARN] Invalid log level: %q. Defaulting to level: OFF. Valid levels are: %+v\n",
+				envLevel,
+				ValidLevels,
+			)
+		})
 	}
 
-	return hclog.New(&hclog.LoggerOptions{
+	loggerOptions := &hclog.LoggerOptions{
 		Level:             logLevel,
 		Output:            logOutput,
 		IndependentLevels: true,
 		JSONFormat:        json,
-	})
+	}
+
+	return hclog.New(loggerOptions), loggerOptions
 }
 
 func isValidLogLevel(level string) bool {
-	for _, l := range ValidLevels {
-		if level == string(l) {
+	for _, validLevel := range ValidLevels {
+		if level == validLevel {
 			return true
 		}
 	}

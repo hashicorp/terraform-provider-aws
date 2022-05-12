@@ -2,7 +2,6 @@ package cloudfront
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceOriginAccessIdentity() *schema.Resource {
@@ -74,13 +74,14 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
+		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResOriginAccessIdentity, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
-			log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CloudFront, names.ErrActionReading, ResOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig

@@ -1,6 +1,7 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -300,20 +302,26 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
+		log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
-			log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
-	if numberOfRemediationConfigurations < 1 {
+	if !d.IsNewResource() && numberOfRemediationConfigurations < 1 {
 		log.Printf("[WARN] No Remediation Configuration for Config Rule %q (no remediation configuration found)", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
