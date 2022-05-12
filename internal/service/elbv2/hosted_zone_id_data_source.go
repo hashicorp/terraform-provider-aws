@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
@@ -76,8 +77,9 @@ func DataSourceHostedZoneID() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"region": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidRegionName,
 			},
 			"load_balancer_type": {
 				Type:         schema.TypeString,
@@ -95,8 +97,7 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 		region = v.(string)
 	}
 
-	var lbType string
-	lbType = elbv2.LoadBalancerTypeEnumApplication
+	lbType := elbv2.LoadBalancerTypeEnumApplication
 	if v, ok := d.GetOk("load_balancer_type"); ok {
 		lbType = v.(string)
 	}
@@ -104,14 +105,16 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 	if lbType == elbv2.LoadBalancerTypeEnumApplication {
 		if zoneId, ok := HostedZoneIdPerRegionALBMap[region]; ok {
 			d.SetId(zoneId)
-			return nil
+		} else {
+			fmt.Errorf("Unknown region (%q)", region)
 		}
 	} else if lbType == elbv2.LoadBalancerTypeEnumNetwork {
 		if zoneId, ok := HostedZoneIdPerRegionNLBMap[region]; ok {
 			d.SetId(zoneId)
-			return nil
+		} else {
+			fmt.Errorf("Unknown region (%q)", region)
 		}
 	}
 
-	return fmt.Errorf("Unknown region (%q)", region)
+	return nil
 }
