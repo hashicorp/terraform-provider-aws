@@ -152,34 +152,62 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					testAccCheckTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.0.name", "division"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.0.order_by", "ASC"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.1.name", "region"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.1.order_by", "DESC"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.clustering_key.*", map[string]string{
+						"name":     "division",
+						"order_by": "ASC",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.clustering_key.*", map[string]string{
+						"name":     "region",
+						"order_by": "DESC",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "9"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.name", "id"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.type", "text"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.1.name", "name"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.1.type", "text"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.2.name", "region"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.2.type", "text"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.3.name", "division"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.3.type", "text"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.4.name", "project"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.4.type", "text"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.5.name", "role"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.5.type", "text"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.6.name", "pay_scale"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.6.type", "int"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.7.name", "vacation_hrs"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.7.type", "float"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.8.name", "manager_id"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.8.type", "text"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "id",
+						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "name",
+						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "region",
+						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "division",
+						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "project",
+						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "role",
+						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "pay_scale",
+						"type": "int",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "vacation_hrs",
+						"type": "float",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "manager_id",
+						"type": "text",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.0.name", "message"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
+						"name": "id",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.0.name", "role"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.1.name", "pay_scale"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
+						"name": "role",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
+						"name": "pay_scale",
+					}),
 				),
 			},
 			{
@@ -343,8 +371,8 @@ resource "aws_keyspaces_table" "test" {
 
   schema_definition {
     column {
-      name = "ID"
-      type = "Text"
+      name = "id"
+      type = "text"
     }
 
     column {
@@ -354,11 +382,11 @@ resource "aws_keyspaces_table" "test" {
 
     column {
       name = "region"
-      type = "TEXT"
+      type = "text"
     }
 
     column {
-      name = "Division"
+      name = "division"
       type = "text"
     }
 
@@ -368,7 +396,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     column {
-      name = "ROLE"
+      name = "role"
       type = "text"
     }
 
@@ -388,11 +416,11 @@ resource "aws_keyspaces_table" "test" {
     }
 
     partition_key {
-      name = "ID"
+      name = "id"
     }
 
     clustering_key {
-      name     = "Division"
+      name     = "division"
       order_by = "ASC"
     }
 
@@ -402,7 +430,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     static_column {
-      name = "ROLE"
+      name = "role"
     }
 
     static_column {
