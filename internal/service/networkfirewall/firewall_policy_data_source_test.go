@@ -15,7 +15,6 @@ func TestAccFirewallPolicy_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
-	//outboundCallerConfigName := "exampleOutboundCallerConfigName"
 
 	resource.ParallelTest(t, resource.TestCase{
 		// Test setup
@@ -31,10 +30,8 @@ func TestAccFirewallPolicy_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
-					//resource.TestCheckTypeSetElemAttr(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.*", resourceName, "firewall_policy.0.stateless_fragment_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.#", resourceName, "firewall_policy.0.stateless_default_actions.#"),
-					//resource.TestCheckTypeSetElemAttr(datasourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.*", resourceName, "firewall_policy.0.stateless_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),

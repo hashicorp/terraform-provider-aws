@@ -17,23 +17,17 @@ func DataSourceFirewallPolicy() *schema.Resource {
 		ReadContext: dataSourceFirewallPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type: schema.TypeString,
-				//Computed: true,
-				// Assuming ARN is the only acceptable input (it's not)
+				Type:         schema.TypeString,
 				AtLeastOneOf: []string{"arn", "name"},
 				Optional:     true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
-				// Optional: true,
-				// Attributes are being fetched by the API call
 			},
 			"firewall_policy": {
 				Type:     schema.TypeList,
 				Computed: true,
-				// Required: true,
-				// Not passing in items  - MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"stateful_default_actions": {
@@ -42,17 +36,13 @@ func DataSourceFirewallPolicy() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"stateful_engine_options": {
-							Type: schema.TypeList,
-							//MaxItems: 1,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"rule_order": {
-										Type: schema.TypeString,
-										// Required:     true,
+										Type:     schema.TypeString,
 										Computed: true,
-										// API is returning already valid data
-										// ValidateFunc: validation.StringInSlice(networkfirewall.RuleOrder_Values(), false),
 									},
 								},
 							},
@@ -65,12 +55,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 									"priority": {
 										Type:     schema.TypeInt,
 										Computed: true,
-										//ValidateFunc: validation.IntAtLeast(1),
 									},
 									"resource_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
-										//ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -94,12 +82,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 									"priority": {
 										Type:     schema.TypeInt,
 										Computed: true,
-										//ValidateFunc: validation.IntAtLeast(1),
 									},
 									"resource_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
-										//ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -108,13 +94,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Computed: true,
-				// ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				AtLeastOneOf: []string{"arn", "name"},
 			},
-			// "tags":     tftags.TagsSchema(),
 			"tags": tftags.TagsSchemaComputed(),
 			"update_token": {
 				Type:     schema.TypeString,
@@ -126,8 +109,6 @@ func DataSourceFirewallPolicy() *schema.Resource {
 
 func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	// Don't need to exclude default tags in the data source read
-	// defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
@@ -136,11 +117,7 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s %s", arn, name)
 
 	output, err := FindFirewallPolicyByNameAndArn(ctx, conn, arn, name)
-	// if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-	// 	log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", arn)
-	// 	d.SetId("")
-	// 	return nil
-	// }
+
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): %w", arn, name, err))
 	}
@@ -168,11 +145,6 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	// if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-	// 	return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	// }
-	//
 	if err := d.Set("tags", tags.Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
