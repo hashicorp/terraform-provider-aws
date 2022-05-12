@@ -107,6 +107,20 @@ func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsError
 	return errors.ErrorOrNil()
 }
 
+func CreateFleetError(apiObjects []*ec2.CreateFleetError) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		multierror.Append(errors, awserr.New(aws.StringValue(apiObject.ErrorCode), aws.StringValue(apiObject.ErrorMessage), nil))
+	}
+
+	return errors.ErrorOrNil()
+}
+
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 	if apiObject == nil {
 		return nil
