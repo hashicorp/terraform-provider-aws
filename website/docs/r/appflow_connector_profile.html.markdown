@@ -21,7 +21,10 @@ AppFlow API Reference.
 
 ```terraform
 resource "aws_appflow_connector_profile" "amplitude" {
+  name            = "amplitude-connector"
   connection_mode = "Public"
+  connector_type  = "Amplitude"
+
   connector_profile_config {
     connector_profile_credentials {
       amplitude {
@@ -34,8 +37,6 @@ resource "aws_appflow_connector_profile" "amplitude" {
       }
     }
   }
-  connector_profile_name = "amplitude-connector"
-  connector_type         = "Amplitude"
 }
 ```
 
@@ -45,7 +46,10 @@ resource "aws_appflow_connector_profile" "amplitude" {
 data "aws_region" "current" {}
 
 resource "aws_appflow_connector_profile" "zendesk" {
+  name            = "zendesk-connector"
   connection_mode = "Public"
+  connector_type  = "Zendesk"
+
   connector_profile_config {
     connector_profile_credentials {
       zendesk {
@@ -63,8 +67,6 @@ resource "aws_appflow_connector_profile" "zendesk" {
       }
     }
   }
-  connector_profile_name = "zendesk-connector"
-  connector_type         = "Zendesk"
 }
 ```
 
@@ -75,13 +77,13 @@ The AppFlow connector profile argument layout is a complex structure.
 
 ### Top-Level Arguments
 
+* `name ` (Required) - The name of the connector profile. The name is unique for each ConnectorProfile in your AWS account.
+
 * `connection_mode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
 
+* `connector_type` (Required) - The type of connector. One of: `Amplitude`, `CustomConnector`, `CustomerProfiles`, `Datadog`, `Dynatrace`, `EventBridge`, `Googleanalytics`, `Honeycode`, `Infornexus`, `LookoutMetrics`, `Marketo`, `Redshift`, `S3`, `Salesforce`, `SAPOData`, `Servicenow`, `Singular`, `Slack`, `Snowflake`, `Trendmicro`, `Upsolver`, `Veeva`, `Zendesk`.
+
 * `connector_profile_config` (Required) - Defines the connector-specific [configuration and credentials](#connector-profile-config-arguments).
-
-* `connector_profile_name ` (Required) - The name of the connector profile. The name is unique for each ConnectorProfile in your AWS account.
-
-* `connector_type` (Required) - The type of connector. One of: `Amplitude`, `Datadog`, `Dynatrace`, `Googleanalytics`, `Honeycode`, `Infornexus`, `Marketo`, `Redshift`, `Salesforce`, `Servicenow`, `Singular`, `Slack`, `Snowflake`, `Trendmicro`, `Veeva`, `Zendesk`.
 
 * `kms_arn` (Optional) - The ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 
