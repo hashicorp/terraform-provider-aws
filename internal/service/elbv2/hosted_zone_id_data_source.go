@@ -83,7 +83,7 @@ func DataSourceHostedZoneID() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice([]string{"application", "network"}, false), // should only accept application or network
+				ValidateFunc: validation.StringInSlice([]string{elbv2.LoadBalancerTypeEnumApplication, elbv2.LoadBalancerTypeEnumNetwork}, false),
 			},
 		},
 	}
