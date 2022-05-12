@@ -44,6 +44,7 @@ func ResourceConnectorProfile() *schema.Resource {
 			"connector_label": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
 					validation.StringLenBetween(1, 256),
@@ -1372,6 +1373,7 @@ func ResourceConnectorProfile() *schema.Resource {
 			"connector_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(appflow.ConnectorType_Values(), false),
 			},
 			"kms_arn": {
