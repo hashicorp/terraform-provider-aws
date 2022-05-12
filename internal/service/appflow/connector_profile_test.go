@@ -138,6 +138,34 @@ func TestAccAppFlowConnectorProfile_tags(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_connector_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppFlowConnectorProfile_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
