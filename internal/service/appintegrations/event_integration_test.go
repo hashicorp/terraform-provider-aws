@@ -31,7 +31,10 @@ func TestAccEventIntegration_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEventIntegrationDestroy,
@@ -86,8 +89,10 @@ func TestAccEventIntegration_updateTags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+		}, ErrorCheck: acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -162,8 +167,10 @@ func TestAccEventIntegration_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+		}, ErrorCheck: acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
