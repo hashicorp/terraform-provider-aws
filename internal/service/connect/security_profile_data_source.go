@@ -106,7 +106,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("name", resp.SecurityProfile.SecurityProfileName)
 
 	// reading permissions requires a separate API call
-	permissions, err := getConnectSecurityProfilePermissions(ctx, conn, instanceID, *resp.SecurityProfile.Id)
+	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, *resp.SecurityProfile.Id)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %w", *resp.SecurityProfile.Id, err))
