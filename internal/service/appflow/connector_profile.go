@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -1427,8 +1428,14 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	connectorProfile, err := FindConnectorProfileByName(context.Background(), conn, d.Id())
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
+		return diag.Errorf("reading AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
 	// Credentials are not returned by any API operation. Instead, a
