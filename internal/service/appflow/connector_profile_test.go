@@ -88,6 +88,56 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowConnectorProfile_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_connector_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConnectorProfile_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigConnectorProfile_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccConfigConnectorProfile_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
@@ -325,5 +375,92 @@ resource "aws_appflow_connector_profile" "test" {
   ]
 }
 `, connectorProfileName, redshiftPassword, redshiftUsername, bucketPrefix),
+	)
+}
+
+func testAccConfigConnectorProfile_tags1(connectorProfileName string, tagKey1 string, tagValue1 string) string {
+	const redshiftPassword = "testPassword123!"
+	const redshiftUsername = "testusername"
+
+	return acctest.ConfigCompose(
+		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		fmt.Sprintf(`
+resource "aws_appflow_connector_profile" "test" {
+  name            = %[1]q
+  connector_type  = "Redshift"
+  connection_mode = "Public"
+
+  connector_profile_config {
+
+    connector_profile_credentials {
+      redshift {
+        password = %[2]q
+        username = %[3]q
+      }
+    }
+
+    connector_profile_properties {
+      redshift {
+        bucket_name  = %[1]q
+        database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        role_arn     = aws_iam_role.test.arn
+      }
+    }
+  }
+
+  tags = {
+    %[4]q = %[5]q
+  }
+
+  depends_on = [
+    aws_route.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, connectorProfileName, redshiftPassword, redshiftUsername, tagKey1, tagValue1),
+	)
+}
+
+func testAccConfigConnectorProfile_tags2(connectorProfileName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	const redshiftPassword = "testPassword123!"
+	const redshiftUsername = "testusername"
+
+	return acctest.ConfigCompose(
+		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		fmt.Sprintf(`
+resource "aws_appflow_connector_profile" "test" {
+  name            = %[1]q
+  connector_type  = "Redshift"
+  connection_mode = "Public"
+
+  connector_profile_config {
+
+    connector_profile_credentials {
+      redshift {
+        password = %[2]q
+        username = %[3]q
+      }
+    }
+
+    connector_profile_properties {
+      redshift {
+        bucket_name  = %[1]q
+        database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        role_arn     = aws_iam_role.test.arn
+      }
+    }
+  }
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+
+  depends_on = [
+    aws_route.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, connectorProfileName, redshiftPassword, redshiftUsername, tagKey1, tagValue1, tagKey2, tagValue2),
 	)
 }

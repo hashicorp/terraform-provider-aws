@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -1389,7 +1390,10 @@ func ResourceConnectorProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1423,6 +1427,15 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(aws.StringValue(out.ConnectorProfileArn))
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if len(tags) > 0 {
+		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+			return diag.Errorf("adding AppFlow Connector Profile (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceConnectorProfileRead(ctx, d, meta)
 }
@@ -1458,6 +1471,25 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("connector_type", connectorProfile.ConnectorType)
 	d.Set("credentials_arn", connectorProfile.CredentialsArn)
 
+	tags, err := ListTags(conn, d.Id())
+
+	if err != nil {
+		return diag.Errorf("listing tags for AppFlow Connector Profile (%s): %s", d.Id(), err)
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
+	}
+
 	return nil
 }
 
@@ -1476,6 +1508,15 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)
+	}
+
+	arn := d.Get("arn").(string)
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, arn, o, n); err != nil {
+			return diag.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceConnectorProfileRead(ctx, d, meta)
