@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,6 +33,13 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 				Config: testAccAppFlowConnectorProfile_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`connectorprofile/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
+					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.0.connector_profile_credentials.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.0.connector_profile_properties.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "connector_type"),
 				),
 			},
 			{
