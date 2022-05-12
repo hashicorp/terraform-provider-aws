@@ -77,7 +77,7 @@ func TestAccAWSAppFlowConnectorProfile_Amplitude(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_credentials.0.amplitude.0.secret_key", secretKey),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.amplitude.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -125,7 +125,7 @@ func TestAccAWSAppFlowConnectorProfile_Datadog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.datadog.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.datadog.0.instance_url", instanceUrl),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccAWSAppFlowConnectorProfile_Dynatrace(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.dynatrace.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.dynatrace.0.instance_url", instanceUrl),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccAWSAppFlowConnectorProfile_Slack(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.slack.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.slack.0.instance_url", instanceUrl),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -279,7 +279,7 @@ func TestAccAWSAppFlowConnectorProfile_Snowflake(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.snowflake.0.region", region),
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.0.connector_profile_properties.0.snowflake.0.stage"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.snowflake.0.warehouse", warehouse),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -322,7 +322,7 @@ func TestAccAWSAppFlowConnectorProfile_Trendmicro(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_credentials.0.trendmicro.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_credentials.0.trendmicro.0.api_secret_key", apiSecretKey),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -374,7 +374,7 @@ func TestAccAWSAppFlowConnectorProfile_Zendesk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.zendesk.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.zendesk.0.instance_url", instanceUrl),
-					resource.TestCheckResourceAttr(resourceName, "connector_profile_name", connectorProfileName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectorProfileName),
 				),
 			},
 			{
@@ -424,7 +424,7 @@ func testAccCheckAWSAppFlowConnectorProfileExists(n string, res *appflow.Describ
 		}
 
 		req := &appflow.DescribeConnectorProfilesInput{
-			ConnectorProfileNames: []*string{aws.String(rs.Primary.Attributes["connector_profile_name"])},
+			ConnectorProfileNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		}
 		describe, err := conn.DescribeConnectorProfiles(req)
 
@@ -552,7 +552,7 @@ func testAccAppFlowConnectorProfile_basic(connectorProfileName string) string {
 		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Redshift"
   connection_mode        = "Public"
 
@@ -586,7 +586,7 @@ resource "aws_appflow_connector_profile" "test" {
 func testAccAWSAppFlowConnectorProfile_Amplitude(connectorProfileName string, apiKey string, secretKey string) string {
 	return fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "amplitude" {
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Amplitude"
   connection_mode        = "Public"
   connector_profile_config {
@@ -609,7 +609,7 @@ resource "aws_appflow_connector_profile" "amplitude" {
 func testAccAWSAppFlowConnectorProfile_Datadog(connectorProfileName string, apiKey string, applicationKey string, instanceUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "datadog" {
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Datadog"
   connection_mode        = "Public"
   connector_profile_config {
@@ -633,7 +633,7 @@ resource "aws_appflow_connector_profile" "datadog" {
 func testAccAWSAppFlowConnectorProfile_Dynatrace(connectorProfileName string, apiToken string, instanceUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "dynatrace" {
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Dynatrace"
   connection_mode        = "Public"
   connector_profile_config {
@@ -659,7 +659,7 @@ data "aws_region" "current" {}
 
 resource "aws_appflow_connector_profile" "slack" {
   connection_mode        = "Public"
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Slack"
   connector_profile_config {
     connector_profile_credentials {
@@ -693,7 +693,7 @@ resource "aws_s3_bucket" "snowflake" {
 }
 
 resource "aws_appflow_connector_profile" "snowflake" {
-  connector_profile_name = %[2]q
+  name = %[2]q
   connector_type         = "Snowflake"
   connection_mode        = "Public"
   connector_profile_config {
@@ -723,7 +723,7 @@ func testAccAWSAppFlowConnectorProfile_Trendmicro(connectorProfileName string, a
 data "aws_region" "current" {}
 
 resource "aws_appflow_connector_profile" "trendmicro" {
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Trendmicro"
   connection_mode        = "Public"
   connector_profile_config {
@@ -748,7 +748,7 @@ data "aws_region" "current" {}
 
 resource "aws_appflow_connector_profile" "zendesk" {
   connection_mode        = "Public"
-  connector_profile_name = %[1]q
+  name = %[1]q
   connector_type         = "Zendesk"
   connector_profile_config {
     connector_profile_credentials {

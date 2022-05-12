@@ -1361,7 +1361,7 @@ func ResourceConnectorProfile() *schema.Resource {
 					},
 				},
 			},
-			"connector_profile_name": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -1387,7 +1387,7 @@ func ResourceConnectorProfile() *schema.Resource {
 
 func resourceConnectorProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppFlowConn
-	name := d.Get("connector_profile_name").(string)
+	name := d.Get("name").(string)
 
 	createConnectorProfileInput := appflow.CreateConnectorProfileInput{
 		ConnectionMode:         aws.String(d.Get("connection_mode").(string)),
@@ -1429,11 +1429,11 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
 	d.Set("connector_label", connectorProfile.ConnectorLabel)
 	d.Set("arn", connectorProfile.ConnectorProfileArn)
-	d.Set("connector_profile_name", connectorProfile.ConnectorProfileName)
+	d.Set("name", connectorProfile.ConnectorProfileName)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
 
-	d.SetId(d.Get("connector_profile_name").(string))
+	d.SetId(d.Get("name").(string))
 
 	return nil
 }
