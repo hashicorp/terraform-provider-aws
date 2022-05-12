@@ -160,6 +160,10 @@ func ResourceTable() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										StateFunc: func(val interface{}) string {
+											// Keyspaces always changes the value to lowercase.
+											return strings.ToLower(val.(string))
+										},
 									},
 									"order_by": {
 										Type:         schema.TypeString,
@@ -217,6 +221,10 @@ func ResourceTable() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										StateFunc: func(val interface{}) string {
+											// Keyspaces always changes the value to lowercase.
+											return strings.ToLower(val.(string))
+										},
 									},
 								},
 							},

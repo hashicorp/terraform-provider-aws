@@ -44,14 +44,10 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "message", // Keyspaces always changes the value to lowercase.
-						"type": "ascii",   // Keyspaces always changes the value to lowercase.
-					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.name", "message"), // Keyspaces always changes the value to lowercase.
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.type", "ascii"),   // Keyspaces always changes the value to lowercase.
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						"name": "message", // Keyspaces always changes the value to lowercase.
-					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.0.name", "message"), // Keyspaces always changes the value to lowercase.
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -130,6 +126,62 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
+	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableMultipleColumnsConfig(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.0.name", "division"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.0.order_by", "ASC"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.1.name", "region"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.1.order_by", "DESC"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.name", "id"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.0.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.1.name", "name"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.1.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.2.name", "region"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.2.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.3.name", "division"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.3.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.4.name", "project"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.4.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.5.name", "role"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.5.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.6.name", "pay_scale"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.6.type", "int"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.7.name", "vacation_hrs"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.7.type", "float"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.8.name", "manager_id"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.8.type", "text"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.0.name", "message"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.0.name", "role"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.1.name", "pay_scale"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -273,4 +325,86 @@ resource "aws_keyspaces_table" "test" {
   }
 }
 `, rName1, rName2, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccTableMultipleColumnsConfig(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "ID"
+      type = "Text"
+    }
+
+    column {
+      name = "name"
+      type = "text"
+    }
+
+    column {
+      name = "region"
+      type = "TEXT"
+    }
+
+    column {
+      name = "Division"
+      type = "text"
+    }
+
+    column {
+      name = "project"
+      type = "text"
+    }
+
+    column {
+      name = "ROLE"
+      type = "text"
+    }
+
+    column {
+      name = "pay_scale"
+      type = "int"
+    }
+
+    column {
+      name = "vacation_hrs"
+      type = "float"
+    }
+
+    column {
+      name = "manager_id"
+      type = "text"
+    }
+
+    partition_key {
+      name = "ID"
+    }
+
+    clustering_key {
+      name     = "Division"
+      order_by = "ASC"
+    }
+
+    clustering_key {
+      name     = "region"
+      order_by = "DESC"
+    }
+
+    static_column {
+      name = "ROLE"
+    }
+
+    static_column {
+      name = "pay_scale"
+    }
+  }
+}
+`, rName1, rName2)
 }
