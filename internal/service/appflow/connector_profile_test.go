@@ -134,7 +134,7 @@ resource "aws_route" "test" {
   route_table_id = data.aws_route_table.test.id
 
   destination_cidr_block = "0.0.0.0/0"
-  
+
   gateway_id = aws_internet_gateway.test.id
 }
 
@@ -150,31 +150,31 @@ resource "aws_subnet" "test" {
 
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [ aws_subnet.test.id ]
+  subnet_ids = [aws_subnet.test.id]
 }
 
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  managed_policy_arns = [ "arn:aws:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess" ]
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess"]
 
   assume_role_policy = jsonencode({
-	Version = "2012-10-17"
-	Statement = [
-	  {
-		Action = "sts:AssumeRole"
-		Effect = "Allow"
-		Sid    = ""
-		Principal = {
-		  Service = "ec2.amazonaws.com"
-		}
-	  },
-	]
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
   })
 }
 
 resource "aws_security_group" "test" {
-  name   = %[1]q
+  name = %[1]q
 
   vpc_id = aws_vpc.test.id
 }
@@ -191,11 +191,11 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier  = %[1]q
+  cluster_identifier = %[1]q
 
   availability_zone         = data.aws_availability_zones.available.names[0]
   cluster_subnet_group_name = aws_redshift_subnet_group.test.name
-  vpc_security_group_ids    = [ aws_security_group.test.id ]
+  vpc_security_group_ids    = [aws_security_group.test.id]
 
   master_password = %[2]q
   master_username = %[3]q
@@ -216,24 +216,24 @@ func testAccAppFlowConnectorProfile_basic(connectorProfileName string) string {
 		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
-  name = %[1]q
-  connector_type         = "Redshift"
-  connection_mode        = "Public"
+  name            = %[1]q
+  connector_type  = "Redshift"
+  connection_mode = "Public"
 
   connector_profile_config {
 
     connector_profile_credentials {
       redshift {
-		  password = %[2]q
-		  username = %[3]q
-	  }
+        password = %[2]q
+        username = %[3]q
+      }
     }
 
     connector_profile_properties {
       redshift {
-	    bucket_name  = %[1]q
-		database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
-		role_arn     = aws_iam_role.test.arn
+        bucket_name  = %[1]q
+        database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        role_arn     = aws_iam_role.test.arn
       }
     }
   }
