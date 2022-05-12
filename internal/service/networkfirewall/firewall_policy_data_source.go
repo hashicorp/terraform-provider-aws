@@ -17,13 +17,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 		ReadContext: dataSourceFirewallPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
-<<<<<<< HEAD
 				Type:         schema.TypeString,
-=======
-				Type: schema.TypeString,
-				//Computed: true,
-				// Assuming ARN is the only acceptable input (it's not)
->>>>>>> 7505fe3b1a (Add changelog, WIP support for name input)
 				AtLeastOneOf: []string{"arn", "name"},
 				Optional:     true,
 			},
