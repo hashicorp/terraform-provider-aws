@@ -25,6 +25,10 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"container_recipe_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -150,6 +154,10 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("build_version_arn", image.Arn)
 	d.Set("date_created", image.DateCreated)
+
+	if image.ContainerRecipe != nil {
+		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
+	}
 
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)

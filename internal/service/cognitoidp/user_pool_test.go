@@ -20,11 +20,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkipCognitoIdentityProvider)
+	acctest.RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipCognitoIdentityProvider(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"not supported in this region",
 	)
@@ -35,10 +35,10 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_Name(rName),
@@ -85,10 +85,10 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolAccountRecoverySingleConfig(rName),
@@ -131,10 +131,10 @@ func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withAdminCreateUserConfiguration(rName),
@@ -170,10 +170,10 @@ func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withAdminCreateUserConfigAndPasswordPolicy(rName),
@@ -197,10 +197,10 @@ func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_AdvancedSecurityMode(rName, "OFF"),
@@ -235,10 +235,10 @@ func TestAccCognitoIDPUserPool_withDevice(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withDeviceConfiguration(rName),
@@ -273,10 +273,10 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withEmailVerificationMessage(rName, subject, message),
@@ -308,10 +308,10 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_MFAConfiguration_SMSConfiguration(rName),
@@ -356,10 +356,10 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_MFAConfiguration_SMSConfigurationAndSoftwareTokenMfaConfigurationEnabled(rName, false),
@@ -406,10 +406,10 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_MFAConfiguration_SMSConfiguration(rName),
@@ -444,10 +444,10 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName, true),
@@ -490,10 +490,10 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName, true),
@@ -530,10 +530,10 @@ func TestAccCognitoIDPUserPool_smsAuthenticationMessage(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_SMSAuthenticationMessage(rName, smsAuthenticationMessage1),
@@ -564,10 +564,10 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_SMSConfiguration_ExternalID(rName, "test"),
@@ -609,10 +609,10 @@ func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_SMSConfiguration_ExternalID(rName, "test"),
@@ -647,10 +647,10 @@ func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_SMSConfiguration_ExternalID(rName, "test"),
@@ -686,10 +686,10 @@ func TestAccCognitoIDPUserPool_smsVerificationMessage(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_SMSVerificationMessage(rName, smsVerificationMessage1),
@@ -719,10 +719,10 @@ func TestAccCognitoIDPUserPool_withEmail(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withEmailConfiguration(rName),
@@ -755,10 +755,10 @@ func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 	emailTo := sourceARN[strings.LastIndex(sourceARN, "/")+1:]
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withEmailConfigurationSource(rName, replyTo, sourceARN, emailTo, "DEVELOPER"),
@@ -780,10 +780,10 @@ func TestAccCognitoIDPUserPool_withTags(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_Tags1(rName, "key1", "value1"),
@@ -823,10 +823,10 @@ func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withAliasAttributes(rName),
@@ -861,10 +861,10 @@ func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withUsernameAttributes(rName),
@@ -899,10 +899,10 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withPasswordPolicy(rName),
@@ -943,10 +943,10 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withUsernameConfiguration(rName),
@@ -980,10 +980,10 @@ func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withLambdaConfig(rName),
@@ -1050,10 +1050,10 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolLambdaEmailSenderConfig(rName),
@@ -1090,10 +1090,10 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolLambdaSMSSenderConfig(rName),
@@ -1129,10 +1129,10 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withSchemaAttributes(rName),
@@ -1213,10 +1213,10 @@ func TestAccCognitoIDPUserPool_schemaAttributesRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withSchemaAttributesUpdated(rName, "mybool"),
@@ -1233,10 +1233,10 @@ func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withSchemaAttributesUpdated(rName, "mybool"),
@@ -1254,10 +1254,10 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_withVerificationMessageTemplate(rName),
@@ -1312,10 +1312,10 @@ func TestAccCognitoIDPUserPool_update(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_update(rName, optionalMfa, authenticationMessage),
@@ -1397,10 +1397,10 @@ func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolConfig_Name(rName),

@@ -21,15 +21,15 @@ func TestAccRedshiftSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRedshiftSubnetGroupConfig(rInt),
+				Config: testAccSubnetGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(
@@ -53,15 +53,15 @@ func TestAccRedshiftSubnetGroup_disappears(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRedshiftSubnetGroupConfig(rInt),
+				Config: testAccSubnetGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
+					testAccCheckSubnetGroupExists(resourceName, &clusterSubnetGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,15 +76,15 @@ func TestAccRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRedshiftSubnetGroupConfig(rInt),
+				Config: testAccSubnetGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "test description"),
 				),
@@ -97,9 +97,9 @@ func TestAccRedshiftSubnetGroup_updateDescription(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: testAccRedshiftSubnetGroup_updateDescription(rInt),
+				Config: testAccSubnetGroupConfig_updateDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "test description updated"),
 				),
@@ -114,15 +114,15 @@ func TestAccRedshiftSubnetGroup_updateSubnetIDs(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRedshiftSubnetGroupConfig(rInt),
+				Config: testAccSubnetGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "subnet_ids.#", "2"),
 				),
@@ -135,9 +135,9 @@ func TestAccRedshiftSubnetGroup_updateSubnetIDs(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt),
+				Config: testAccSubnetGroupConfig_updateSubnetIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "subnet_ids.#", "3"),
 				),
@@ -152,15 +152,15 @@ func TestAccRedshiftSubnetGroup_tags(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRedshiftSubnetGroupConfigWithTags(rInt),
+				Config: testAccSubnetGroupConfig_tags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-redshift-subnetgroup"),
@@ -174,9 +174,9 @@ func TestAccRedshiftSubnetGroup_tags(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt),
+				Config: testAccSubnetGroupConfig_tagsUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
+					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.environment", "production"),
@@ -188,7 +188,7 @@ func TestAccRedshiftSubnetGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRedshiftSubnetGroupDestroy(s *terraform.State) error {
+func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -219,7 +219,7 @@ func testAccCheckRedshiftSubnetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(n string, v *redshift.ClusterSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -246,7 +246,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 	}
 }
 
-func testAccRedshiftSubnetGroupConfig(rInt int) string {
+func testAccSubnetGroupConfig_basic(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -284,7 +284,7 @@ resource "aws_redshift_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
+func testAccSubnetGroupConfig_updateDescription(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -322,7 +322,7 @@ resource "aws_redshift_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
+func testAccSubnetGroupConfig_tags(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -363,7 +363,7 @@ resource "aws_redshift_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
+func testAccSubnetGroupConfig_tagsUpdated(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -406,7 +406,7 @@ resource "aws_redshift_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
+func testAccSubnetGroupConfig_updateSubnetIDs(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

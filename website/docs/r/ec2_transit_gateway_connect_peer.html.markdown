@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_connect_peer"
 description: |-
@@ -40,7 +40,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `id` - EC2 Transit Gateway Connect Peer identifier
+* `arn` - EC2 Transit Gateway Connect Peer ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts

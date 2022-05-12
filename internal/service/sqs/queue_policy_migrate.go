@@ -12,13 +12,13 @@ func QueuePolicyMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS SQS Query Policy State v0; migrating to v1")
-		return migrateSqsQueuePolicyStateV0toV1(is)
+		return migrateQueuePolicyStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateSqsQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")

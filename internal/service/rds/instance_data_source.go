@@ -256,7 +256,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	var parameterGroups []string
 	for _, v := range dbInstance.DBParameterGroups {
-		parameterGroups = append(parameterGroups, *v.DBParameterGroupName)
+		parameterGroups = append(parameterGroups, aws.StringValue(v.DBParameterGroupName))
 	}
 	if err := d.Set("db_parameter_groups", parameterGroups); err != nil {
 		return fmt.Errorf("Error setting db_parameter_groups attribute: %#v, error: %w", parameterGroups, err)
@@ -264,7 +264,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	var dbSecurityGroups []string
 	for _, v := range dbInstance.DBSecurityGroups {
-		dbSecurityGroups = append(dbSecurityGroups, *v.DBSecurityGroupName)
+		dbSecurityGroups = append(dbSecurityGroups, aws.StringValue(v.DBSecurityGroupName))
 	}
 	if err := d.Set("db_security_groups", dbSecurityGroups); err != nil {
 		return fmt.Errorf("Error setting db_security_groups attribute: %#v, error: %w", dbSecurityGroups, err)
@@ -286,10 +286,21 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("monitoring_interval", dbInstance.MonitoringInterval)
 	d.Set("monitoring_role_arn", dbInstance.MonitoringRoleArn)
 	d.Set("multi_az", dbInstance.MultiAZ)
-	d.Set("address", dbInstance.Endpoint.Address)
-	d.Set("port", dbInstance.Endpoint.Port)
-	d.Set("hosted_zone_id", dbInstance.Endpoint.HostedZoneId)
-	d.Set("endpoint", fmt.Sprintf("%s:%d", *dbInstance.Endpoint.Address, *dbInstance.Endpoint.Port))
+
+	// Per AWS SDK Go docs:
+	// The endpoint might not be shown for instances whose status is creating.
+	if dbEndpoint := dbInstance.Endpoint; dbEndpoint != nil {
+		d.Set("address", dbEndpoint.Address)
+		d.Set("port", dbEndpoint.Port)
+		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
+		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
+
+	} else {
+		d.Set("address", nil)
+		d.Set("port", nil)
+		d.Set("hosted_zone_id", nil)
+		d.Set("endpoint", nil)
+	}
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbInstance.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %w", err)
@@ -297,7 +308,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	var optionGroups []string
 	for _, v := range dbInstance.OptionGroupMemberships {
-		optionGroups = append(optionGroups, *v.OptionGroupName)
+		optionGroups = append(optionGroups, aws.StringValue(v.OptionGroupName))
 	}
 	if err := d.Set("option_group_memberships", optionGroups); err != nil {
 		return fmt.Errorf("Error setting option_group_memberships attribute: %#v, error: %w", optionGroups, err)
@@ -314,7 +325,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	var vpcSecurityGroups []string
 	for _, v := range dbInstance.VpcSecurityGroups {
-		vpcSecurityGroups = append(vpcSecurityGroups, *v.VpcSecurityGroupId)
+		vpcSecurityGroups = append(vpcSecurityGroups, aws.StringValue(v.VpcSecurityGroupId))
 	}
 	if err := d.Set("vpc_security_groups", vpcSecurityGroups); err != nil {
 		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %w", vpcSecurityGroups, err)

@@ -48,11 +48,11 @@ func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActiveReceiptRuleSetConfig(rName),
@@ -73,11 +73,11 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActiveReceiptRuleSetConfig(rName),
@@ -91,7 +91,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
+func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {

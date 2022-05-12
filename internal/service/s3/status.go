@@ -85,6 +85,10 @@ func bucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBu
 			}
 		}
 
+		if output.Status == nil {
+			return output, BucketVersioningStatusDisabled, nil
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }

@@ -425,10 +425,10 @@ func flattenNotificationConfigurationFilter(filter *s3.NotificationConfiguration
 
 	for _, f := range filter.Key.FilterRules {
 		if strings.ToLower(*f.Name) == s3.FilterRuleNamePrefix {
-			filterRules["filter_prefix"] = *f.Value
+			filterRules["filter_prefix"] = aws.StringValue(f.Value)
 		}
 		if strings.ToLower(*f.Name) == s3.FilterRuleNameSuffix {
-			filterRules["filter_suffix"] = *f.Value
+			filterRules["filter_suffix"] = aws.StringValue(f.Value)
 		}
 	}
 	return filterRules
@@ -444,9 +444,9 @@ func flattenTopicConfigurations(configs []*s3.TopicConfiguration) []map[string]i
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = *notification.Id
+		conf["id"] = aws.StringValue(notification.Id)
 		conf["events"] = flex.FlattenStringSet(notification.Events)
-		conf["topic_arn"] = *notification.TopicArn
+		conf["topic_arn"] = aws.StringValue(notification.TopicArn)
 		topicNotifications = append(topicNotifications, conf)
 	}
 
@@ -463,9 +463,9 @@ func flattenQueueConfigurations(configs []*s3.QueueConfiguration) []map[string]i
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = *notification.Id
+		conf["id"] = aws.StringValue(notification.Id)
 		conf["events"] = flex.FlattenStringSet(notification.Events)
-		conf["queue_arn"] = *notification.QueueArn
+		conf["queue_arn"] = aws.StringValue(notification.QueueArn)
 		queueNotifications = append(queueNotifications, conf)
 	}
 
@@ -482,9 +482,9 @@ func flattenLambdaFunctionConfigurations(configs []*s3.LambdaFunctionConfigurati
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = *notification.Id
+		conf["id"] = aws.StringValue(notification.Id)
 		conf["events"] = flex.FlattenStringSet(notification.Events)
-		conf["lambda_function_arn"] = *notification.LambdaFunctionArn
+		conf["lambda_function_arn"] = aws.StringValue(notification.LambdaFunctionArn)
 		lambdaFunctionNotifications = append(lambdaFunctionNotifications, conf)
 	}
 

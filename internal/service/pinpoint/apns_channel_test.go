@@ -31,26 +31,26 @@ import (
  APNS_CERTIFICATE_PRIVATE_KEY - APNs Certificate Private Key File content
 **/
 
-type testAccAWSPinpointAPNSChannelCertConfiguration struct {
+type testAccAPNSChannelCertConfiguration struct {
 	Certificate string
 	PrivateKey  string
 }
 
-type testAccAWSPinpointAPNSChannelTokenConfiguration struct {
+type testAccAPNSChannelTokenConfiguration struct {
 	BundleId   string
 	TeamId     string
 	TokenKey   string
 	TokenKeyId string
 }
 
-func testAccAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSChannelCertConfiguration {
-	var conf *testAccAWSPinpointAPNSChannelCertConfiguration
+func testAccAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAPNSChannelCertConfiguration {
+	var conf *testAccAPNSChannelCertConfiguration
 	if os.Getenv("APNS_CERTIFICATE") != "" {
 		if os.Getenv("APNS_CERTIFICATE_PRIVATE_KEY") == "" {
 			t.Fatalf("APNS_CERTIFICATE set but missing APNS_CERTIFICATE_PRIVATE_KEY")
 		}
 
-		conf = &testAccAWSPinpointAPNSChannelCertConfiguration{
+		conf = &testAccAPNSChannelCertConfiguration{
 			Certificate: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_CERTIFICATE"))),
 			PrivateKey:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_CERTIFICATE_PRIVATE_KEY"))),
 		}
@@ -63,7 +63,7 @@ func testAccAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAWSPinpoin
 	return conf
 }
 
-func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSChannelTokenConfiguration {
+func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAPNSChannelTokenConfiguration {
 	if os.Getenv("APNS_BUNDLE_ID") == "" {
 		t.Skipf("APNS_BUNDLE_ID env is missing, skipping test")
 	}
@@ -80,7 +80,7 @@ func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPinpoi
 		t.Skipf("APNS_TOKEN_KEY_ID env is missing, skipping test")
 	}
 
-	conf := testAccAWSPinpointAPNSChannelTokenConfiguration{
+	conf := testAccAPNSChannelTokenConfiguration{
 		BundleId:   strconv.Quote(strings.TrimSpace(os.Getenv("APNS_BUNDLE_ID"))),
 		TeamId:     strconv.Quote(strings.TrimSpace(os.Getenv("APNS_TEAM_ID"))),
 		TokenKey:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_TOKEN_KEY"))),
@@ -97,10 +97,10 @@ func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	configuration := testAccAPNSChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPNSChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSChannelConfig_basicCertificate(configuration),
@@ -131,10 +131,10 @@ func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
 	configuration := testAccAPNSChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPNSChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSChannelConfig_basicToken(configuration),
@@ -187,7 +187,7 @@ func testAccCheckAPNSChannelExists(n string, channel *pinpoint.APNSChannelRespon
 	}
 }
 
-func testAccAPNSChannelConfig_basicCertificate(conf *testAccAWSPinpointAPNSChannelCertConfiguration) string {
+func testAccAPNSChannelConfig_basicCertificate(conf *testAccAPNSChannelCertConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -201,7 +201,7 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
 `, conf.Certificate, conf.PrivateKey)
 }
 
-func testAccAPNSChannelConfig_basicToken(conf *testAccAWSPinpointAPNSChannelTokenConfiguration) string {
+func testAccAPNSChannelConfig_basicToken(conf *testAccAPNSChannelTokenConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -217,7 +216,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Creating DocDB Instance opts: %s", createOpts)
 	var resp *docdb.CreateDBInstanceOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
@@ -280,7 +279,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 
 	var dbc *docdb.DBCluster
 	for _, c := range resp.DBClusters {
-		if *c.DBClusterIdentifier == *db.DBClusterIdentifier {
+		if aws.StringValue(c.DBClusterIdentifier) == aws.StringValue(db.DBClusterIdentifier) {
 			dbc = c
 		}
 	}
@@ -291,7 +290,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for _, m := range dbc.DBClusterMembers {
-		if *db.DBInstanceIdentifier == *m.DBInstanceIdentifier {
+		if aws.StringValue(db.DBInstanceIdentifier) == aws.StringValue(m.DBInstanceIdentifier) {
 			if *m.IsClusterWriter {
 				d.Set("writer", true)
 			} else {
@@ -383,7 +382,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {

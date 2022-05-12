@@ -22,10 +22,10 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebsiteCertificateAuthorityAssociationConfig(suffix),
@@ -52,10 +52,10 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testin
 	displayName1 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
 	displayName2 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebsiteCertificateAuthorityAssociationDisplayNameConfig(suffix, displayName1),
@@ -85,10 +85,10 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebsiteCertificateAuthorityAssociationConfig(suffix),

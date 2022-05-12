@@ -15,10 +15,10 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckStreamDataSourceConfig(rName, 2),

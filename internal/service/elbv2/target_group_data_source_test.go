@@ -16,9 +16,9 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_lb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbTargetGroupBasicDataSourceConfig(rName),
@@ -76,9 +76,9 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbTargetGroupAppCookieDataSourceConfig(rName),
@@ -118,9 +118,9 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcclbTargetGroupBackwardsCompatibilityDataSourceConfig(rName),

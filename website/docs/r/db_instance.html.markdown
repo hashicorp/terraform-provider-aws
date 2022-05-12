@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_instance"
 description: |-
@@ -118,7 +118,7 @@ see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amaz
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
 is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`).
-The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
+The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
 For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'. Cannot be specified for a replica.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
@@ -225,8 +225,9 @@ This setting does not apply to `aurora-mysql` or `aurora-postgresql` DB engines.
 The `restore_to_point_in_time` block supports the following arguments:
 
 * `restore_time` - (Optional) The date and time to restore from. Value must be a time in Universal Coordinated Time (UTC) format and must be before the latest restorable time for the DB instance. Cannot be specified with `use_latest_restorable_time`.
-* `source_db_instance_identifier` - (Optional) The identifier of the source DB instance from which to restore. Must match the identifier of an existing DB instance. Required if `source_dbi_resource_id` is not specified.
-* `source_dbi_resource_id` - (Optional) The resource ID of the source DB instance from which to restore. Required if `source_db_instance_identifier` is not specified.
+* `source_db_instance_identifier` - (Optional) The identifier of the source DB instance from which to restore. Must match the identifier of an existing DB instance. Required if `source_db_instance_automated_backups_arn` or `source_dbi_resource_id` is not specified.
+* `source_db_instance_automated_backups_arn` - (Optional) The ARN of the automated backup from which to restore. Required if `source_db_instance_identifier` or `source_dbi_resource_id` is not specified.
+* `source_dbi_resource_id` - (Optional) The resource ID of the source DB instance from which to restore. Required if `source_db_instance_identifier` or `source_db_instance_automated_backups_arn` is not specified.
 * `use_latest_restorable_time` - (Optional) A boolean value that indicates whether the DB instance is restored from the latest backup time. Defaults to `false`. Cannot be specified with `restore_time`.
 
 ### S3 Import Options

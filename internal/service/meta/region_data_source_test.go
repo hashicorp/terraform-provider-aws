@@ -79,9 +79,9 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_empty,
@@ -99,9 +99,9 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_endpoint(),
@@ -119,9 +119,9 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_endpointAndName(),
@@ -139,9 +139,9 @@ func TestAccMetaRegionDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_name(),

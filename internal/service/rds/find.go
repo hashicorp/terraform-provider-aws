@@ -1,6 +1,8 @@
 package rds
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -118,6 +120,43 @@ func FindDBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	return dbCluster, nil
 }
 
+func FindDBClusterWithActivityStream(conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
+	log.Printf("[DEBUG] Calling conn.DescribeDBCClusters(input) with DBClusterIdentifier set to %s", dbClusterArn)
+	input := &rds.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(dbClusterArn),
+	}
+
+	output, err := conn.DescribeDBClusters(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbCluster := output.DBClusters[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbCluster.DBClusterArn) != dbClusterArn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	if status := aws.StringValue(dbCluster.ActivityStreamStatus); status == rds.ActivityStreamStatusStopped {
+		return nil, &resource.NotFoundError{
+			Message: status,
+		}
+	}
+
+	return dbCluster, nil
+}
+
 func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
@@ -166,7 +205,16 @@ func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.DBProxies[0], nil
+	dbProxy := output.DBProxies[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbProxy.DBProxyName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbProxy, nil
 }
 
 func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
@@ -188,4 +236,82 @@ func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription
 	}
 
 	return output.EventSubscriptionsList[0], nil
+}
+
+func FindDBInstanceAutomatedBackupByARN(conn *rds.RDS, arn string) (*rds.DBInstanceAutomatedBackup, error) {
+	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
+		DBInstanceAutomatedBackupsArn: aws.String(arn),
+	}
+
+	output, err := findDBInstanceAutomatedBackup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
+		// If the automated backup is retained, the replication is stopped.
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBInstanceAutomatedBackupsArn) != arn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBInstanceAutomatedBackup(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
+	output, err := findDBInstanceAutomatedBackups(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func findDBInstanceAutomatedBackups(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) ([]*rds.DBInstanceAutomatedBackup, error) {
+	var output []*rds.DBInstanceAutomatedBackup
+
+	err := conn.DescribeDBInstanceAutomatedBackupsPages(input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBInstanceAutomatedBackups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

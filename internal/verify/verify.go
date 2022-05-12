@@ -41,6 +41,7 @@ const (
 	ErrCodeInternalServiceError        = "InternalServiceError"
 	ErrCodeInvalidAction               = "InvalidAction"
 	ErrCodeInvalidParameterException   = "InvalidParameterException"
+	ErrCodeInvalidParameterValue       = "InvalidParameterValue"
 	ErrCodeInvalidRequest              = "InvalidRequest"
 	ErrCodeOperationDisabledException  = "OperationDisabledException"
 	ErrCodeOperationNotPermitted       = "OperationNotPermitted"
@@ -73,6 +74,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterValue) {
 		return true
 	}
 

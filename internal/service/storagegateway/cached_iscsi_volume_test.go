@@ -78,10 +78,10 @@ func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCachediSCSIVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_Basic(rName),
@@ -118,10 +118,10 @@ func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCachediSCSIVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeKMSEncryptedConfig(rName),
@@ -146,10 +146,10 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCachediSCSIVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeTags1Config(rName, "key1", "value1"),
@@ -194,10 +194,10 @@ func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCachediSCSIVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_SnapshotID(rName),
@@ -233,10 +233,10 @@ func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCachediSCSIVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_SourceVolumeARN(rName),
@@ -271,10 +271,10 @@ func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCachediSCSIVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachediSCSIVolumeConfig_Basic(rName),

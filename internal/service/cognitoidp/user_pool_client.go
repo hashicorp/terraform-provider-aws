@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceUserPoolClient() *schema.Resource {
@@ -350,13 +351,14 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeUserPoolClient(params)
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPoolClient, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito User Pool Client %s is already gone", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPoolClient, d.Id(), err)
 	}
 
 	userPoolClient := resp.UserPoolClient

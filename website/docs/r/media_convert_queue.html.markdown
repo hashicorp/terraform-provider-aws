@@ -1,5 +1,5 @@
 ---
-subcategory: "MediaConvert"
+subcategory: "Elemental MediaConvert"
 layout: "aws"
 page_title: "AWS: aws_media_convert_queue"
 description: |-

@@ -1,5 +1,5 @@
 ---
-subcategory: "Amplify Console"
+subcategory: "Amplify"
 layout: "aws"
 page_title: "AWS: aws_amplify_backend_environment"
 description: |-

@@ -29,7 +29,7 @@ func testAccCustomDataIdentifier_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -60,7 +60,7 @@ func testAccCustomDataIdentifier_Name_Generated(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -88,7 +88,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -113,7 +113,7 @@ func testAccCustomDataIdentifier_NamePrefix(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieCustomDataIdentifierconfigNamePrefix(namePrefix, regex),
+				Config: testAccCustomDataIdentifierConfig_namePrefix(namePrefix, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
@@ -145,7 +145,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, description),
+				Config: testAccCustomDataIdentifierConfig_complete(bucketName, regex, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -155,7 +155,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, descriptionUpdated),
+				Config: testAccCustomDataIdentifierConfig_complete(bucketName, regex, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -186,7 +186,7 @@ func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex),
+				Config: testAccCustomDataIdentifierConfig_completeTags(bucketName, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -267,7 +267,7 @@ func testAccCheckCustomDataIdentifierDestroy(s *terraform.State) error {
 
 }
 
-func testAccMacieCustomDataIdentifierconfigNameGenerated(regex string) string {
+func testAccCustomDataIdentifierConfig_nameGenerated(regex string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
@@ -279,7 +279,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
 `, regex)
 }
 
-func testAccMacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
+func testAccCustomDataIdentifierConfig_namePrefix(name, regex string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
@@ -292,7 +292,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
 `, name, regex)
 }
 
-func testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, description string) string {
+func testAccCustomDataIdentifierConfig_complete(bucketName, regex, description string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -331,7 +331,7 @@ resource "aws_macie2_classification_job" "test" {
 `, bucketName, regex, description)
 }
 
-func testAccMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex string) string {
+func testAccCustomDataIdentifierConfig_completeTags(bucketName, regex string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

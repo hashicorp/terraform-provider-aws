@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_key_pair"
 description: |-
@@ -42,7 +42,7 @@ The arguments of this data source act as filters for querying the available
 Key Pairs. The given filters must match exactly one Key Pair
 whose data will be exported as attributes.
 
-* `key_id` - (Optional) The Key Pair ID.
+* `key_pair_id` - (Optional) The Key Pair ID.
 * `key_name` - (Optional) The Key Pair name.
 * `filter` -  (Optional) Custom filter block as described below.
 

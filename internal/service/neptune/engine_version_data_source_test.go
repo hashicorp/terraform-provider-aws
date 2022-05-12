@@ -17,10 +17,10 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	version := "1.0.2.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionBasicDataSourceConfig(version),
@@ -45,10 +45,10 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionPreferredDataSourceConfig(),
@@ -65,10 +65,10 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),

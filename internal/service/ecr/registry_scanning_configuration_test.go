@@ -31,10 +31,10 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 	resourceName := "aws_ecr_registry_scanning_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccRegistryScanningConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryScanningConfigurationConfig(),
@@ -59,10 +59,10 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 	resourceName := "aws_ecr_registry_scanning_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccRegistryScanningConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryScanningConfigurationConfigOneRule(),

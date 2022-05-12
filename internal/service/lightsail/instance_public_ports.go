@@ -75,7 +75,7 @@ func resourceInstancePublicPortsCreate(d *schema.ResourceData, meta interface{})
 
 	var portInfos []*lightsail.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
-		portInfos = expandLightsailPortInfos(v.(*schema.Set).List())
+		portInfos = expandPortInfos(v.(*schema.Set).List())
 	}
 
 	input := &lightsail.PutInstancePublicPortsInput{
@@ -118,7 +118,7 @@ func resourceInstancePublicPortsRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error reading Lightsail instance public ports (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("port_info", flattenLightsailInstancePortStates(output.PortStates)); err != nil {
+	if err := d.Set("port_info", flattenInstancePortStates(output.PortStates)); err != nil {
 		return fmt.Errorf("error setting port_info: %w", err)
 	}
 
@@ -132,7 +132,7 @@ func resourceInstancePublicPortsDelete(d *schema.ResourceData, meta interface{})
 
 	var portInfos []*lightsail.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
-		portInfos = expandLightsailPortInfos(v.(*schema.Set).List())
+		portInfos = expandPortInfos(v.(*schema.Set).List())
 	}
 
 	for _, portInfo := range portInfos {
@@ -153,7 +153,7 @@ func resourceInstancePublicPortsDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func expandLightsailPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
+func expandPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 	if tfMap == nil {
 		return nil
 	}
@@ -171,7 +171,7 @@ func expandLightsailPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 	return apiObject
 }
 
-func expandLightsailPortInfos(tfList []interface{}) []*lightsail.PortInfo {
+func expandPortInfos(tfList []interface{}) []*lightsail.PortInfo {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -185,7 +185,7 @@ func expandLightsailPortInfos(tfList []interface{}) []*lightsail.PortInfo {
 			continue
 		}
 
-		apiObject := expandLightsailPortInfo(tfMap)
+		apiObject := expandPortInfo(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -197,7 +197,7 @@ func expandLightsailPortInfos(tfList []interface{}) []*lightsail.PortInfo {
 	return apiObjects
 }
 
-func flattenLightsailInstancePortState(apiObject *lightsail.InstancePortState) map[string]interface{} {
+func flattenInstancePortState(apiObject *lightsail.InstancePortState) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -215,7 +215,7 @@ func flattenLightsailInstancePortState(apiObject *lightsail.InstancePortState) m
 	return tfMap
 }
 
-func flattenLightsailInstancePortStates(apiObjects []*lightsail.InstancePortState) []interface{} {
+func flattenInstancePortStates(apiObjects []*lightsail.InstancePortState) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -227,7 +227,7 @@ func flattenLightsailInstancePortStates(apiObjects []*lightsail.InstancePortStat
 			continue
 		}
 
-		tfList = append(tfList, flattenLightsailInstancePortState(apiObject))
+		tfList = append(tfList, flattenInstancePortState(apiObject))
 	}
 
 	return tfList

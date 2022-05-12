@@ -9,6 +9,9 @@ const (
 	replicationTaskStatusModifying = "modifying"
 	replicationTaskStatusReady     = "ready"
 	replicationTaskStatusStopped   = "stopped"
+	replicationTaskStatusStopping  = "stopping"
+	replicationTaskStatusRunning   = "running"
+	replicationTaskStatusStarting  = "starting"
 )
 
 const (

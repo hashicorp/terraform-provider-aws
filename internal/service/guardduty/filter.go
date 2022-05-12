@@ -152,7 +152,7 @@ func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
-	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
+	d.SetId(filterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
 	return resourceFilterRead(d, meta)
 }
@@ -223,7 +223,7 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-	d.SetId(guardDutyFilterCreateID(detectorID, name))
+	d.SetId(filterCreateID(detectorID, name))
 
 	return nil
 }
@@ -290,7 +290,7 @@ func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
 
 const guardDutyFilterIDSeparator = ":"
 
-func guardDutyFilterCreateID(detectorID, filterName string) string {
+func filterCreateID(detectorID, filterName string) string {
 	return detectorID + guardDutyFilterIDSeparator + filterName
 }
 

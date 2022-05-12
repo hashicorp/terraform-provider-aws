@@ -21,10 +21,10 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkteamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamCognitoConfig(rName),
@@ -92,10 +92,10 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkteamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamOIDCConfig(rName),
@@ -149,10 +149,10 @@ func testAccWorkteam_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkteamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamTags1Config(rName, "key1", "value1"),
@@ -195,10 +195,10 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkteamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamNotificationConfig(rName),
@@ -248,10 +248,10 @@ func testAccWorkteam_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkteamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamOIDCConfig(rName),

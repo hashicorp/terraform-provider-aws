@@ -58,8 +58,9 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	}
 
 	conf := &conns.Config{
-		MaxRetries: 5,
-		Region:     region,
+		MaxRetries:       5,
+		Region:           region,
+		SuppressDebugLog: true,
 	}
 
 	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {

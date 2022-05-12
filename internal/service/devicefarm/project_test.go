@@ -30,9 +30,9 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmProjectConfig(rName),
@@ -73,9 +73,9 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmProjectConfigDefaultJobTimeout(rName, 10),
@@ -115,9 +115,9 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmProjectConfigTags1(rName, "key1", "value1"),
@@ -166,9 +166,9 @@ func TestAccDeviceFarmProject_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmProjectConfig(rName),

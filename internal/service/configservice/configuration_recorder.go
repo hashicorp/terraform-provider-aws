@@ -1,8 +1,8 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConfigurationRecorder() *schema.Resource {
@@ -99,20 +100,25 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
+		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
-			log.Printf("[WARN] Configuration Recorder %q is gone (NoSuchConfigurationRecorderException)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Getting Configuration Recorder failed: %s", err)
+		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id(), err)
 	}
 
 	numberOfRecorders := len(out.ConfigurationRecorders)
-	if numberOfRecorders < 1 {
-		log.Printf("[WARN] Configuration Recorder %q is gone (no recorders found)", d.Id())
+	if !d.IsNewResource() && numberOfRecorders < 1 {
+		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && numberOfRecorders < 1 {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id(), errors.New("none found"))
 	}
 
 	if numberOfRecorders > 1 {

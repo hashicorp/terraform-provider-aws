@@ -16,10 +16,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(emr.EndpointsID, testAccErrorCheckSkipEMR)
+	acctest.RegisterServiceErrorCheckFunc(emr.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipEMR(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Managed scaling is not available",
 		"SSO is not enabled",
@@ -31,10 +31,10 @@ func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
 			{
@@ -56,10 +56,10 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *te
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
 			{
@@ -81,10 +81,10 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
 			{
@@ -106,10 +106,10 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicy_basic(rName),

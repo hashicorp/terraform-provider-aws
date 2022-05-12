@@ -1,5 +1,5 @@
 ---
-subcategory: "Directory Service"
+subcategory: "DS (Directory Service)"
 layout: "aws"
 page_title: "AWS: aws_directory_service_directory"
 description: |-

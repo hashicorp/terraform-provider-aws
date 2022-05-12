@@ -19,10 +19,10 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSafetyRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingControlSafetyRuleAssertionConfig(rName),
@@ -49,10 +49,10 @@ func testAccSafetyRule_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSafetyRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingControlSafetyRuleAssertionConfig(rName),
@@ -71,10 +71,10 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSafetyRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingControlSafetyRuleGatingConfig(rName),

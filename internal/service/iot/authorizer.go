@@ -41,6 +41,11 @@ func ResourceAuthorizer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"enable_caching_for_http": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -85,6 +90,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &iot.CreateAuthorizerInput{
 		AuthorizerFunctionArn: aws.String(d.Get("authorizer_function_arn").(string)),
 		AuthorizerName:        aws.String(name),
+		EnableCachingForHttp:  aws.Bool(d.Get("enable_caching_for_http").(bool)),
 		SigningDisabled:       aws.Bool(d.Get("signing_disabled").(bool)),
 		Status:                aws.String(d.Get("status").(string)),
 	}
@@ -126,6 +132,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", authorizer.AuthorizerArn)
 	d.Set("authorizer_function_arn", authorizer.AuthorizerFunctionArn)
+	d.Set("enable_caching_for_http", authorizer.EnableCachingForHttp)
 	d.Set("name", authorizer.AuthorizerName)
 	d.Set("signing_disabled", authorizer.SigningDisabled)
 	d.Set("status", authorizer.Status)
@@ -144,6 +151,10 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("authorizer_function_arn") {
 		input.AuthorizerFunctionArn = aws.String(d.Get("authorizer_function_arn").(string))
+	}
+
+	if d.HasChange("enable_caching_for_http") {
+		input.EnableCachingForHttp = aws.Bool(d.Get("enable_caching_for_http").(bool))
 	}
 
 	if d.HasChange("status") {

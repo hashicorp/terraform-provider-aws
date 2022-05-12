@@ -16,10 +16,10 @@ func TestAccAppMeshMeshDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMeshDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckMeshDataSourceConfig(rName),
@@ -44,10 +44,10 @@ func TestAccAppMeshMeshDataSource_meshOwner(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMeshDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckMeshDataSourceConfig_meshOwner(rName),
@@ -72,10 +72,10 @@ func TestAccAppMeshMeshDataSource_specAndTagsSet(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMeshDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckMeshDataSourceConfig_specAndTagsSet(rName),

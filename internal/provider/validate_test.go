@@ -51,7 +51,7 @@ func TestValidAssumeRoleDuration(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		_, errs := ValidAssumeRoleDuration(tc.val, "test_property")
+		_, errs := validAssumeRoleDuration(tc.val, "test_property")
 
 		if len(errs) == 0 && tc.expectedErr == nil {
 			continue

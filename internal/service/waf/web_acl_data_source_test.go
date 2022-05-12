@@ -17,9 +17,9 @@ func TestAccWAFWebACLDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_web_acl.web_acl"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWebACLDataSourceConfig_NonExistent,

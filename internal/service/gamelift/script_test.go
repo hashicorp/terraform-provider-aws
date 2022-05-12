@@ -30,9 +30,9 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScriptDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptBasicConfig(rName),
@@ -78,9 +78,9 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScriptDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptBasicTags1Config(rName, "key1", "value1"),
@@ -129,9 +129,9 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScriptDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptBasicConfig(rName),
@@ -154,7 +154,7 @@ func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheck
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Script ID is set")
+			return fmt.Errorf("No GameLift Script ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -165,7 +165,7 @@ func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheck
 		}
 
 		if aws.StringValue(script.ScriptId) != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Script not found")
+			return fmt.Errorf("GameLift Script not found")
 		}
 
 		*res = *script

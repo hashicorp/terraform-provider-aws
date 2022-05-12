@@ -46,7 +46,7 @@ func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{""},
-		Target:                    []string{s3.BucketVersioningStatusEnabled, s3.BucketVersioningStatusSuspended},
+		Target:                    []string{s3.BucketVersioningStatusEnabled, s3.BucketVersioningStatusSuspended, BucketVersioningStatusDisabled},
 		Refresh:                   bucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner),
 		Timeout:                   bucketVersioningStableTimeout,
 		ContinuousTargetOccurence: 3,

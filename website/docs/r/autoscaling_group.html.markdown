@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group"
 description: |-
@@ -325,9 +325,13 @@ resource "aws_autoscaling_group" "example" {
   min_size           = 1
 
   warm_pool {
-    pool_state                  = "Stopped"
+    pool_state                  = "Hibernated"
     min_size                    = 1
     max_group_prepared_capacity = 10
+
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
 }
 ```
@@ -391,9 +395,11 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
   all attached load balancers on both create and update operations. (Takes
   precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `protect_from_scale_in` (Optional) Allows setting instance protection. The
-   Auto Scaling Group will not select instances with this setting for termination
-   during scale in events.
+* `protect_from_scale_in` (Optional) Indicates whether newly launched instances
+  are automatically protected from termination by Amazon EC2 Auto Scaling when
+  scaling in. For more information about preventing instances from terminating
+  on scale in, see [Using instance scale-in protection](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-instance-protection.html)
+  in the Amazon EC2 Auto Scaling User Guide.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 * `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
 * `instance_refresh` - (Optional) If this block is configured, start an
@@ -493,9 +499,16 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default) or Running.
+* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 * `min_size` - (Optional) Specifies the minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
+* `instance_reuse_policy` - (Optional) Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in. The default is to terminate instances in the Auto Scaling group when the group scales in.
 * `max_group_prepared_capacity` - (Optional) Specifies the total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+
+##### instance_reuse_policy
+
+This configuration block supports the following:
+
+* `reuse_on_scale_in` - (Optional) Specifies whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
 
 ## Attributes Reference
 
