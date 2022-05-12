@@ -85,6 +85,8 @@ The AppFlow connector profile argument layout is a complex structure.
 
 * `connector_profile_config` (Required) - Defines the connector-specific [configuration and credentials](#connector-profile-config-arguments).
 
+* `connector_label` (Optional) - The label of the connector. The label is unique for each ConnectorRegistration in your AWS account. Only needed if calling for `CustomConnector` connector type.
+
 * `kms_arn` (Optional) - The ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 
 #### Connector Profile Config Arguments
@@ -97,6 +99,8 @@ The AppFlow connector profile argument layout is a complex structure.
 ##### Connector Profile Credentials Arguments
 
 * `amplitude` (Optional) - The connector-specific [credentials](#amplitude-connector-profile-credentials-arguments) required when using Amplitude.
+
+* `custom_connector` (Optional) - The connector-specific profile [credentials](#custom-connector-profile-credentials-arguments) required when using the custom connector.
 
 * `datadog` (Optional) - The connector-specific [credentials](#datadog-connector-profile-credentials-arguments) required when using Datadog.
 
@@ -133,6 +137,31 @@ The AppFlow connector profile argument layout is a complex structure.
 * `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 
 * `secret_key` (Required) - The Secret Access Key portion of the credentials.
+
+##### Custom Connector Profile Credentials Arguments
+
+* `api_key` (Optional) - The API keys required for the authentication of the user.
+  * `api_key` (Required) - The API key required for API key authentication.
+  * `api_secret_key` (Optional) - The API secret key required for API key authentication.
+
+* `authentication_type` (Required) - The authentication type that the custom connector uses for authenticating while creating a connector profile. One of: `APIKEY`, `BASIC`, `CUSTOM`, `OAUTH2`.
+
+* `basic` (Optional) - The basic credentials that are required for the authentication of the user.
+  * `password` (Required) - The password to use to connect to a resource.
+  * `username` (Required) - The username to use to connect to a resource.
+
+* `custom` (Optional) - If the connector uses the custom authentication mechanism, this holds the required credentials.
+  * `credentials_map` (Optional) - A map that holds custom authentication credentials.
+  * `custom_authentication_type` (Required) - The custom authentication type that the connector uses.
+
+* `oauth2` (Optional) - The OAuth 2.0 credentials required for the authentication of the user.
+  * `access_token` (Optional) - The access token used to access the connector on your behalf.
+  * `client_id` (Optional) - The identifier for the desired client.
+  * `client_secret` (Optional) - The client secret used by the OAuth client to authenticate to the authorization server.
+  * `oauth_request` (Optional) - Used by select connectors for which the OAuth workflow is supported.
+    * `auth_code` (Optional) - The code provided by the connector when it has been authenticated via the connected app.
+    * `redirect_uri` (Optional) - The URL to which the authentication server redirects the browser after authorization has been granted.
+  * `refresh_token` (Optional) - The refresh token used to refresh an expired access token.
 
 ##### Datadog Connector Profile Credentials Arguments
 
@@ -248,6 +277,8 @@ The AppFlow connector profile argument layout is a complex structure.
 
 ##### Connector Profile Properties Arguments
 
+* `custom_connector` (Optional) - The [properties](#custom-connector-profile-properties-arguments) required by the custom connector.
+
 * `datadog` (Optional) - The connector-specific [properties](#datadog-connector-profile-properties-arguments) required by Datadog.
 
 * `dynatrace` (Optional) - The connector-specific [properties](#dynatrace-connector-profile-properties-arguments) required by Dynatrace.
@@ -269,6 +300,15 @@ The AppFlow connector profile argument layout is a complex structure.
 * `veeva` (Optional) - The connector-specific [properties](#veeva-connector-profile-properties-arguments) required by Veeva.
 
 * `zendesk` (Optional) - The connector-specific [properties](#zendesk-connector-profile-properties-arguments) required by Zendesk.
+
+##### Custom Connector Profile Properties Arguments
+
+* `oauth2_properties` (Optional) - The OAuth 2.0 properties required for OAuth 2.0 authentication.
+  * `oauth2_grant_type` (Required) - The OAuth 2.0 grant type used by connector for OAuth 2.0 authentication. One of: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`.
+  * `token_url` (Required) - The token URL required for OAuth 2.0 authentication.
+  * `token_url_custom_properties` (Optional) - Associates your token URL with a map of properties that you define. Use this parameter to provide any additional details that the connector requires to authenticate your request.
+
+* `profile_properties` (Optional) - A map of properties that are required to create a profile for the custom connector.
 
 ##### Datadog Connector Profile Properties Arguments
 
