@@ -1383,6 +1383,11 @@ func ResourceConnectorProfile() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"credentials_arn": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 		},
 	}
 }
@@ -1426,6 +1431,12 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	// Credentials are not returned by any API operation. Instead, a
+	// "credentials_arn" property is returned.
+	//
+	// It may be possible to implement a function that reads from this
+	// credentials resource -- but it is not documented in the API reference.
+	// (https://docs.aws.amazon.com/appflow/1.0/APIReference/API_ConnectorProfile.html#appflow-Type-ConnectorProfile-credentialsArn)
 	credentials := d.Get("connector_profile_config.0.connector_profile_credentials").([]interface{})
 
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
@@ -1434,6 +1445,7 @@ func resourceConnectorProfileRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", connectorProfile.ConnectorProfileName)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
+	d.Set("credentials_arn", connectorProfile.CredentialsArn)
 
 	d.SetId(d.Get("name").(string))
 
