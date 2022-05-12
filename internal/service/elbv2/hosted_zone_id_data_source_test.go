@@ -18,7 +18,7 @@ func TestAccLBHostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAWSLbHostedZoneIdConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", "id", tfelbv2.HostedZoneIdPerRegionMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", "id", tfelbv2.HostedZoneIdPerRegionALBMap[acctest.Region()]),
 				),
 			},
 			{
