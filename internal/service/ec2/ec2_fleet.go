@@ -361,15 +361,10 @@ func ResourceFleet() *schema.Resource {
 				},
 			},
 			"on_demand_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allocation_strategy": {
@@ -388,15 +383,10 @@ func ResourceFleet() *schema.Resource {
 				ForceNew: true,
 			},
 			"spot_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allocation_strategy": {
@@ -430,27 +420,17 @@ func ResourceFleet() *schema.Resource {
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"maintenance_strategies": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capacity_rebalance": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											if old == "1" && new == "0" {
-												return true
-											}
-											return false
-										},
+										Type:             schema.TypeList,
+										Optional:         true,
+										MaxItems:         1,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"replacement_strategy": {
