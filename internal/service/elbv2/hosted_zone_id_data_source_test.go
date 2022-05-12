@@ -61,7 +61,7 @@ data "aws_lb_hosted_zone_id" "network" {
 
 const testAccCheckAWSLbHostedZoneIdExplicitNetworkRegionConfig = `
 data "aws_lb_hosted_zone_id" "network-regional" {
-  region = "eu-west-1"
+  region             = "eu-west-1"
   load_balancer_type = "network"
 }
 `
