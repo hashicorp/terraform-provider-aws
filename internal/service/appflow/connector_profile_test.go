@@ -17,6 +17,10 @@ import (
 )
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var connectorProfiles appflow.DescribeConnectorProfilesOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
