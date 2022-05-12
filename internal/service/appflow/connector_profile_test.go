@@ -55,6 +55,39 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowConnectorProfile_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_connector_profile.test"
+	testPrefix := "test-prefix"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppFlowConnectorProfile_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+				),
+			},
+			{
+				Config: testAccAppFlowConnectorProfile_update(rName, testPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.redshift.0.bucket_prefix", testPrefix),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
@@ -252,5 +285,45 @@ resource "aws_appflow_connector_profile" "test" {
   ]
 }
 `, connectorProfileName, redshiftPassword, redshiftUsername),
+	)
+}
+
+func testAccAppFlowConnectorProfile_update(connectorProfileName string, bucketPrefix string) string {
+	const redshiftPassword = "testPassword123!"
+	const redshiftUsername = "testusername"
+
+	return acctest.ConfigCompose(
+		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		fmt.Sprintf(`
+resource "aws_appflow_connector_profile" "test" {
+  name            = %[1]q
+  connector_type  = "Redshift"
+  connection_mode = "Public"
+
+  connector_profile_config {
+
+    connector_profile_credentials {
+      redshift {
+        password = %[2]q
+        username = %[3]q
+      }
+    }
+
+    connector_profile_properties {
+      redshift {
+        bucket_name   = %[1]q
+		bucket_prefix = %[4]q
+        database_url  = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        role_arn      = aws_iam_role.test.arn
+      }
+    }
+  }
+
+  depends_on = [
+    aws_route.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, connectorProfileName, redshiftPassword, redshiftUsername, bucketPrefix),
 	)
 }

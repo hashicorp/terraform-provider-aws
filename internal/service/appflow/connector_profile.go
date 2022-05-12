@@ -2,6 +2,7 @@ package appflow
 
 import (
 	"context"
+	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -1452,7 +1453,23 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*conns.AWSClient).AppFlowConn
+	name := d.Get("name").(string)
+
+	updateConnectorProfileInput := appflow.UpdateConnectorProfileInput{
+		ConnectionMode:         aws.String(d.Get("connection_mode").(string)),
+		ConnectorProfileConfig: expandConnectorProfileConfig(d.Get("connector_profile_config").([]interface{})[0].(map[string]interface{})),
+		ConnectorProfileName:   aws.String(name),
+	}
+
+	log.Printf("[DEBUG] Updating AppFlow Connector Profile (%s): %#v", d.Id(), updateConnectorProfileInput)
+	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
+
+	if err != nil {
+		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)
+	}
+
+	return resourceConnectorProfileRead(ctx, d, meta)
 }
 
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
