@@ -43,13 +43,10 @@ func ResourceFleet() *schema.Resource {
 				Optional: true,
 			},
 			"excess_capacity_termination_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.FleetExcessCapacityTerminationPolicyTermination,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.FleetExcessCapacityTerminationPolicyNoTermination,
-					ec2.FleetExcessCapacityTerminationPolicyTermination,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.FleetExcessCapacityTerminationPolicyTermination,
+				ValidateFunc: validation.StringInSlice(ec2.FleetExcessCapacityTerminationPolicy_Values(), false),
 			},
 			"launch_template_config": {
 				Type:     schema.TypeList,
@@ -397,15 +394,11 @@ func ResourceFleet() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(SpotAllocationStrategy_Values(), false),
 						},
 						"instance_interruption_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  ec2.SpotInstanceInterruptionBehaviorTerminate,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.SpotInstanceInterruptionBehaviorHibernate,
-								ec2.SpotInstanceInterruptionBehaviorStop,
-								ec2.SpotInstanceInterruptionBehaviorTerminate,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      ec2.SpotInstanceInterruptionBehaviorTerminate,
+							ValidateFunc: validation.StringInSlice(ec2.SpotInstanceInterruptionBehavior_Values(), false),
 						},
 						"instance_pools_to_use_count": {
 							Type:         schema.TypeInt,
@@ -429,12 +422,10 @@ func ResourceFleet() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"replacement_strategy": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"launch",
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(ec2.FleetReplacementStrategy_Values(), false),
 												},
 											},
 										},
@@ -455,13 +446,10 @@ func ResourceFleet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_target_capacity_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.DefaultTargetCapacityTypeOnDemand,
-								ec2.DefaultTargetCapacityTypeSpot,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.DefaultTargetCapacityType_Values(), false),
 						},
 						"on_demand_target_capacity": {
 							Type:     schema.TypeInt,
