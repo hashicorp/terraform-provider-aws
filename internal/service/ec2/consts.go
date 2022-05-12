@@ -1,7 +1,7 @@
 package ec2
 
 import (
-	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
 const (
@@ -23,10 +23,10 @@ const (
 )
 
 func FleetOnDemandAllocationStrategy_Values() []string {
-	return []string{
+	return append(
+		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
 		FleetOnDemandAllocationStrategyLowestPrice,
-		awsec2.FleetOnDemandAllocationStrategyPrioritized,
-	}
+	)
 }
 
 const (
@@ -204,3 +204,13 @@ const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
 )
+
+func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
+	for i, v := range slice {
+		if v == s {
+			return append(slice[:i], slice[i+1:]...)
+		}
+	}
+
+	return slice
+}
