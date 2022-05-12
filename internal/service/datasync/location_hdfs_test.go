@@ -24,10 +24,10 @@ func TestAccDataSyncLocationHdfs_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationHdfsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationHdfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHdfsConfig(rName),
@@ -62,10 +62,10 @@ func TestAccDataSyncLocationHdfs_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationHdfsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationHdfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHdfsConfig(rName),
@@ -86,10 +86,10 @@ func TestAccDataSyncLocationHdfs_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationHdfsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationHdfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHdfsTags1Config(rName, "key1", "value1"),

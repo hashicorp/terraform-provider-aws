@@ -20,10 +20,10 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStudioLifecycleDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStudioLifecycleDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleBasicConfig(rName),
@@ -51,10 +51,10 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStudioLifecycleDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStudioLifecycleDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleTags1Config(rName, "key1", "value1"),
@@ -96,10 +96,10 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStudioLifecycleDestroyConfig,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStudioLifecycleDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleBasicConfig(rName),

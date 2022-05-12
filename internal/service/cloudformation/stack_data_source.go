@@ -98,7 +98,7 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
 	}
 
-	d.Set("parameters", flattenAllCloudFormationParameters(stack.Parameters))
+	d.Set("parameters", flattenAllParameters(stack.Parameters))
 	if err := d.Set("tags", KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}

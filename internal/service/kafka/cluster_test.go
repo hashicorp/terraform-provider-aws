@@ -50,10 +50,10 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig(rName),
@@ -115,10 +115,10 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, 11),
@@ -156,10 +156,10 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterBrokerNodeGroupInfoInstanceTypeConfig(rName, "kafka.t3.small"),
@@ -198,10 +198,10 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSaslIam(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterBrokerNodeGroupInfoNoPublicAccessSaslIamConfig(rName),
@@ -267,10 +267,10 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, true),
@@ -331,10 +331,10 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterClientAuthenticationSaslIamConfig(rName, true),
@@ -398,10 +398,10 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			// We need to create and activate the CA before creating the MSK cluster.
 			{
@@ -458,10 +458,10 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			// We need to create and activate the CA before creating the MSK cluster.
 			{
@@ -529,10 +529,10 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfigurationInfoRevision1Config(rName),
@@ -571,10 +571,10 @@ func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) 
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEncryptionInfoEncryptionAtRestKmsKeyArnConfig(rName),
@@ -601,10 +601,10 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEncryptionInfoEncryptionInTransitClientBrokerConfig(rName, "PLAINTEXT"),
@@ -637,10 +637,10 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEncryptionInfoEncryptionInTransitInClusterConfig(rName, false),
@@ -669,10 +669,10 @@ func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEnhancedMonitoringConfig(rName, "PER_BROKER"),
@@ -707,10 +707,10 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterNumberOfBrokerNodesConfig(rName, 3),
@@ -763,10 +763,10 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterOpenMonitoringConfig(rName, false, false),
@@ -811,10 +811,10 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterLoggingInfoConfig(rName, false, false, false),
@@ -863,13 +863,13 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.7.1"),
+				Config: testAccClusterConfig_version(rName, "2.7.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
@@ -884,7 +884,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.8.0"),
+				Config: testAccClusterConfig_version(rName, "2.8.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -901,13 +901,13 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.8.0"),
+				Config: testAccClusterConfig_version(rName, "2.8.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.8.0"),
@@ -927,7 +927,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterKafkaVersionConfig(rName, "2.7.1"),
+				Config: testAccClusterConfig_version(rName, "2.7.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
@@ -951,13 +951,13 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterKafkaVersionWithConfigurationInfoConfig(rName, "2.7.1", "config1"),
+				Config: testAccClusterConfig_versionConfigurationInfo(rName, "2.7.1", "config1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
@@ -975,7 +975,7 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterKafkaVersionWithConfigurationInfoConfig(rName, "2.8.0", "config2"),
+				Config: testAccClusterConfig_versionConfigurationInfo(rName, "2.8.0", "config2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -995,10 +995,10 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfigTags1(rName, "key1", "value1"),
@@ -1894,7 +1894,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, cloudwatchLogsEnabled, cloudwatchLogsLogGroup, firehoseEnabled, firehoseDeliveryStream, s3Enabled, s3Bucket))
 }
 
-func testAccClusterKafkaVersionConfig(rName string, kafkaVersion string) string {
+func testAccClusterConfig_version(rName string, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1917,7 +1917,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, kafkaVersion))
 }
 
-func testAccClusterKafkaVersionWithConfigurationInfoConfig(rName string, kafkaVersion string, configResourceName string) string {
+func testAccClusterConfig_versionConfigurationInfo(rName string, kafkaVersion string, configResourceName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "config1" {
   kafka_versions    = ["2.7.1"]

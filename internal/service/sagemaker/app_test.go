@@ -26,10 +26,10 @@ func testAccApp_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBasicConfig(rName),
@@ -64,10 +64,10 @@ func testAccApp_resourceSpec(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppResourceSpecConfig(rName),
@@ -99,10 +99,10 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppResourceSpecLifecycleConfig(rName, uName),
@@ -134,10 +134,10 @@ func testAccApp_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppTags1Config(rName, "key1", "value1"),
@@ -183,10 +183,10 @@ func testAccApp_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBasicConfig(rName),

@@ -46,10 +46,10 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
@@ -119,10 +119,10 @@ func testAccTransitVirtualInterface_Tags(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxTransitVirtualInterfaceConfig_tags(connectionId, rName, amzAsn, bgpAsn, vlan),
@@ -198,10 +198,10 @@ func testAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitVirtualInterfaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxTransitVirtualInterfaceConfigSiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -123,7 +122,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	var policyStatement *PermissionPolicyStatement
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {

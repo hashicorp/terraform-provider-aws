@@ -122,7 +122,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err := d.Set("byte_match_tuples", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
+	if err := d.Set("byte_match_tuples", flattenByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
 		return fmt.Errorf("error setting byte_match_tuples: %s", err)
 	}
 
@@ -131,7 +131,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenWafByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
+func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 	tuples := make([]interface{}, len(in))
 
 	for i, tuple := range in {

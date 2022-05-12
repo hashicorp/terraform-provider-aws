@@ -33,10 +33,10 @@ func TestAccRDSInstance_basic(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceBasicConfig(rName),
@@ -106,10 +106,10 @@ func TestAccRDSInstance_NameDeprecated_basic(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceNameDeprecatedBasicConfig(rName),
@@ -180,10 +180,10 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 	engineVersion := "8.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MajorVersionOnly(),
@@ -217,10 +217,10 @@ func TestAccRDSInstance_namePrefix(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_namePrefix(identifierPrefix),
@@ -252,10 +252,10 @@ func TestAccRDSInstance_nameGenerated(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_nameGenerated(),
@@ -288,10 +288,10 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_KMSKeyID(rName),
@@ -327,10 +327,10 @@ func TestAccRDSInstance_subnetGroup(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_WithSubnetGroup(rName),
@@ -361,10 +361,10 @@ func TestAccRDSInstance_optionGroup(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_WithOptionGroup(rName),
@@ -387,10 +387,10 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_IAMAuth(rName),
@@ -416,10 +416,10 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_AllowMajorVersionUpgrade(rName, true),
@@ -464,10 +464,10 @@ func TestAccRDSInstance_dbSubnetGroupName(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName(rName),
@@ -525,10 +525,10 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_VPCSecurityGroupIDs(rName),
@@ -553,10 +553,10 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DeletionProtection(rName, true),
@@ -597,9 +597,9 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// testAccCheckInstanceSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
 		CheckDestroy: testAccCheckInstanceSnapshot,
@@ -623,10 +623,10 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceNoSnapshot,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_FinalSnapshotIdentifier_SkipFinalSnapshot(rName),
@@ -649,10 +649,10 @@ func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MariaDB(rName),
@@ -691,10 +691,10 @@ func TestAccRDSInstance_maxAllocatedStorage(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MaxAllocatedStorage(rName, 10),
@@ -739,10 +739,10 @@ func TestAccRDSInstance_password(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			// Password should not be shown in error message
 			{
@@ -783,10 +783,10 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_basic(rName),
@@ -824,10 +824,10 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName),
@@ -860,10 +860,10 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName),
@@ -897,10 +897,10 @@ func TestAccRDSInstance_ReplicateSourceDB_addLater(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(),
@@ -932,10 +932,10 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_AllocatedStorage(rName, 10),
@@ -962,10 +962,10 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_Iops(rName, 1000),
@@ -992,10 +992,10 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_AllocatedStorageAndIops(rName, 220, 2200),
@@ -1023,10 +1023,10 @@ func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_AllowMajorVersionUpgrade(rName, true),
@@ -1053,10 +1053,10 @@ func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) 
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_AutoMinorVersionUpgrade(rName, false),
@@ -1083,10 +1083,10 @@ func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_AvailabilityZone(rName),
@@ -1112,10 +1112,10 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_BackupRetentionPeriod(rName, 1),
@@ -1142,10 +1142,10 @@ func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
@@ -1284,10 +1284,10 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_DeletionProtection(rName, true),
@@ -1324,10 +1324,10 @@ func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *te
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_IAMDatabaseAuthenticationEnabled(rName, true),
@@ -1354,10 +1354,10 @@ func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
@@ -1384,10 +1384,10 @@ func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_MaxAllocatedStorage(rName, 10),
@@ -1414,10 +1414,10 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_Monitoring(rName, 5),
@@ -1444,10 +1444,10 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_MultiAZ(rName, true),
@@ -1474,10 +1474,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *tes
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rName),
@@ -1507,10 +1507,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth(t
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_differentSetOnBoth(rName),
@@ -1540,10 +1540,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue(t
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_replicaCopiesValue(rName),
@@ -1572,10 +1572,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica(t *test
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_setOnReplica(rName),
@@ -1603,10 +1603,10 @@ func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_Port(rName, 9999),
@@ -1633,10 +1633,10 @@ func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_VPCSecurityGroupIDs(rName),
@@ -1664,10 +1664,10 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 	certifiateDataSourceName := "data.aws_rds_certificate.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CACertificateIdentifier(rName),
@@ -1695,10 +1695,10 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ReplicaMode(rName),
@@ -1731,10 +1731,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 	parameterGroupResourceName := "aws_db_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_Setup(rName),
@@ -1768,10 +1768,10 @@ func TestAccRDSInstance_S3Import_basic(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_S3Import_basic(rName, bucketPrefix),
@@ -1801,10 +1801,10 @@ func TestAccRDSInstance_S3Import_nameDeprecated(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_S3Import_NameDeprecated_basic(rName, bucketPrefix),
@@ -1835,10 +1835,10 @@ func TestAccRDSInstance_S3Import_namePrefix(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix),
@@ -1868,10 +1868,10 @@ func TestAccRDSInstance_S3Import_nameGenerated(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix),
@@ -1907,10 +1907,10 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier(rName),
@@ -1948,10 +1948,10 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName),
@@ -1985,10 +1985,10 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName),
@@ -2023,10 +2023,10 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier(rName),
@@ -2062,10 +2062,10 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_AllocatedStorage(rName, 10),
@@ -2094,10 +2094,10 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_Io1Storage(rName, 1000),
@@ -2126,10 +2126,10 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_AllowMajorVersionUpgrade(rName, true),
@@ -2158,10 +2158,10 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_AutoMinorVersionUpgrade(rName, false),
@@ -2190,10 +2190,10 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_AvailabilityZone(rName),
@@ -2221,10 +2221,10 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod(rName, 1),
@@ -2253,10 +2253,10 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod_Unset(rName),
@@ -2285,10 +2285,10 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
@@ -2319,10 +2319,10 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_DBSubnetGroupName(rName),
@@ -2394,10 +2394,10 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_DBSubnetGroupName_VPCSecurityGroupIDs(rName),
@@ -2427,10 +2427,10 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_DeletionProtection(rName, true),
@@ -2469,10 +2469,10 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_IAMDatabaseAuthenticationEnabled(rName, true),
@@ -2501,10 +2501,10 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
@@ -2533,10 +2533,10 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_MaxAllocatedStorage(rName, 10),
@@ -2565,10 +2565,10 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_Monitoring(rName, 5),
@@ -2597,10 +2597,10 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_MultiAZ(rName, true),
@@ -2629,10 +2629,10 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_MultiAZ_SQLServer(rName, true),
@@ -2661,10 +2661,10 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_ParameterGroupName(rName),
@@ -2694,10 +2694,10 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_Port(rName, 9999),
@@ -2726,10 +2726,10 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_Tags(rName),
@@ -2759,10 +2759,10 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_Tags_Clear(rName),
@@ -2791,10 +2791,10 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_VPCSecurityGroupIDs(rName),
@@ -2826,10 +2826,10 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_VPCSecurityGroupIds_Tags(rName),
@@ -2855,10 +2855,10 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MonitoringInterval(rName, 30),
@@ -2914,10 +2914,10 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MonitoringRoleARN(rName),
@@ -2959,10 +2959,10 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MonitoringRoleARN(rName),
@@ -3003,10 +3003,10 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MonitoringRoleARNRemoved(rName),
@@ -3049,10 +3049,10 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 1000),
@@ -3084,10 +3084,10 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotInstanceConfig_mySQLPort(rName),
@@ -3118,10 +3118,10 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MSSQL_timezone(rName),
@@ -3160,10 +3160,10 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 	directory2 := domain.RandomSubdomain().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MSSQLDomain(rName, directory1, directory2),
@@ -3204,10 +3204,10 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MSSQLDomainSnapshotRestore(rName, domain),
@@ -3234,10 +3234,10 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 	restoreResourceName := "aws_db_instance.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MySQLSnapshotRestoreWithEngineVersion(rName),
@@ -3262,10 +3262,10 @@ func TestAccRDSInstance_minorVersion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_AutoMinorVersion(rName),
@@ -3308,10 +3308,10 @@ func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExportConfiguration(rName),
@@ -3345,10 +3345,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExportConfiguration(rName),
@@ -3401,10 +3401,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_msSQL(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_MSSQL(rName),
@@ -3439,10 +3439,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_oracle(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_Oracle(rName),
@@ -3478,10 +3478,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_Postgresql(rName),
@@ -3517,10 +3517,10 @@ func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceAutomatedBackups,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackups,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_NoDeleteAutomatedBackups(rName),
@@ -3872,10 +3872,10 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_PerformanceInsightsDisabled(rName),
@@ -3915,10 +3915,10 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_PerformanceInsightsEnabled(rName),
@@ -3959,10 +3959,10 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_PerformanceInsightsKMSKeyID(rName),
@@ -4012,10 +4012,10 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_PerformanceInsightsRetentionPeriod(rName, 731),
@@ -4060,10 +4060,10 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_PerformanceInsightsEnabled(rName),
@@ -4095,10 +4095,10 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_PerformanceInsightsEnabled(rName),
@@ -4126,10 +4126,10 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_WithCACertificateIdentifier(),
@@ -4153,10 +4153,10 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_SourceIdentifier(rName),
@@ -4194,10 +4194,10 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_SourceResourceID(rName),
@@ -4235,10 +4235,10 @@ func TestAccRDSInstance_NationalCharacterSet_oracle(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_NationalCharacterSet_Oracle(rName),
@@ -4274,10 +4274,10 @@ func TestAccRDSInstance_NoNationalCharacterSet_oracle(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_NoNationalCharacterSet_Oracle(rName),
@@ -4308,10 +4308,10 @@ func TestAccRDSInstance_coIPEnabled(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_CoIPEnabled(rName, true, 0),
@@ -4332,10 +4332,10 @@ func TestAccRDSInstance_CoIPEnabled_disabledToEnabled(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_CoIPEnabled(rName, false, 0),
@@ -4371,10 +4371,10 @@ func TestAccRDSInstance_CoIPEnabled_enabledToDisabled(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_CoIPEnabled(rName, true, 0),
@@ -4411,10 +4411,10 @@ func TestAccRDSInstance_CoIPEnabled_restoreToPointInTime(t *testing.T) {
 	resourceName := "aws_db_instance.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CoIPEnabled_RestorePointInTime(rName, false, true),
@@ -4452,10 +4452,10 @@ func TestAccRDSInstance_CoIPEnabled_snapshotIdentifier(t *testing.T) {
 	resourceName := "aws_db_instance.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CoIPEnabled_SnapshotIdentifier(rName, false, true),
@@ -4480,10 +4480,10 @@ func TestAccRDSInstance_license(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_license(rName, "license-included"),
@@ -4819,7 +4819,7 @@ resource "aws_db_instance" "snapshot" {
 
 func testAccInstanceConfig_S3Import_Base(rName, bucketPrefix string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q

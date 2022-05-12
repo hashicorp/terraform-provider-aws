@@ -21,15 +21,15 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueUDFDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUDFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
+				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
@@ -43,9 +43,9 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, updated),
+				Config: testAccUserDefinedFunctionConfig_basic(rName, updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", updated),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", updated),
@@ -61,15 +61,15 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueUDFDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUDFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
+				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
@@ -79,16 +79,16 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlueUserDefinedFunctionResourceURIConfig2(rName),
+				Config: testAccUserDefinedFunctionConfig_resourceURI2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "2"),
 				),
 			},
 			{
-				Config: testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
+				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
@@ -101,15 +101,15 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueUDFDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUDFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
+				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -118,7 +118,7 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGlueUDFDestroy(s *terraform.State) error {
+func testAccCheckUDFDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -149,7 +149,7 @@ func testAccCheckGlueUDFDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFunc {
+func testAccCheckUserDefinedFunctionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -189,7 +189,7 @@ func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFu
 	}
 }
 
-func testAccGlueUserDefinedFunctionBasicConfig(rName string, name string) string {
+func testAccUserDefinedFunctionConfig_basic(rName string, name string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -206,7 +206,7 @@ resource "aws_glue_user_defined_function" "test" {
 `, rName, name)
 }
 
-func testAccGlueUserDefinedFunctionResourceURIConfig1(rName string) string {
+func testAccUserDefinedFunctionConfig_resourceURI1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -228,7 +228,7 @@ resource "aws_glue_user_defined_function" "test" {
 `, rName)
 }
 
-func testAccGlueUserDefinedFunctionResourceURIConfig2(rName string) string {
+func testAccUserDefinedFunctionConfig_resourceURI2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q

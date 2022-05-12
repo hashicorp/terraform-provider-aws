@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -189,6 +188,22 @@ func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destination
 	}
 }
 
+func StatusImageState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImageByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 // StatusInstanceIAMInstanceProfile fetches the Instance and its IamInstanceProfile
 //
 // The EC2 API accepts a name and always returns an ARN, so it is converted
@@ -209,7 +224,7 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 			return instance, "", nil
 		}
 
-		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
+		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
 			return instance, "", err
@@ -743,6 +758,38 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 		}
 
 		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
+	}
+}
+
+func StatusVolumeState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeAttachmentState(conn *ec2.EC2, volumeID, instanceID, deviceName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeAttachment(conn, volumeID, instanceID, deviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 

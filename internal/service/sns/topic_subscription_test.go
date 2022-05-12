@@ -73,10 +73,10 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig(rName),
@@ -114,10 +114,10 @@ func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy1)),
@@ -161,10 +161,10 @@ func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
@@ -222,10 +222,10 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, dlqName),
@@ -278,10 +278,10 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, true),
@@ -325,10 +325,10 @@ func TestAccSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_autoConfirmingEndpoint(rName),
@@ -355,10 +355,10 @@ func TestAccSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(rName),
@@ -385,10 +385,10 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionEmailConfig(rName, acctest.DefaultEmailAddress),
@@ -415,10 +415,10 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_firehose(rName),
@@ -444,10 +444,10 @@ func TestAccSNSTopicSubscription_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig(rName),
@@ -467,10 +467,10 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig(rName),

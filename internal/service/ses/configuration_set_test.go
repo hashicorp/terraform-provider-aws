@@ -24,9 +24,9 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetBasicConfig(rName),
@@ -58,9 +58,9 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetSendingConfig(rName, false),
@@ -104,9 +104,9 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetReputationMetricsConfig(rName, false),
@@ -147,9 +147,9 @@ func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
@@ -177,9 +177,9 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetBasicConfig(rName),
@@ -233,9 +233,9 @@ func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetEmptyDeliveryOptionsConfig(rName),
@@ -263,9 +263,9 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetBasicConfig(rName),
@@ -312,9 +312,9 @@ func TestAccSESConfigurationSet_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetBasicConfig(rName),
@@ -357,7 +357,7 @@ func testAccCheckConfigurationSetExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
+func testAccCheckConfigurationSetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {

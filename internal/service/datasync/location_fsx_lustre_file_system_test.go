@@ -26,9 +26,9 @@ func TestAccDataSyncLocationFSxLustreFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxLustreConfig(),
@@ -62,9 +62,9 @@ func TestAccDataSyncLocationFSxLustreFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxLustreConfig(),
@@ -89,9 +89,9 @@ func TestAccDataSyncLocationFSxLustreFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxLustreSubdirectoryConfig("/subdirectory1/"),
@@ -120,9 +120,9 @@ func TestAccDataSyncLocationFSxLustreFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxLustreTags1Config("key1", "value1"),

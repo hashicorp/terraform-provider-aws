@@ -15,15 +15,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2InternetGateway_basic(t *testing.T) {
+func TestAccVPCInternetGateway_basic(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInternetGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInternetGatewayBasicConfig,
@@ -44,15 +44,15 @@ func TestAccEC2InternetGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2InternetGateway_disappears(t *testing.T) {
+func TestAccVPCInternetGateway_disappears(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInternetGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInternetGatewayBasicConfig,
@@ -66,7 +66,7 @@ func TestAccEC2InternetGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2InternetGateway_Attachment(t *testing.T) {
+func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 	vpc1ResourceName := "aws_vpc.test1"
@@ -74,10 +74,10 @@ func TestAccEC2InternetGateway_Attachment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInternetGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInternetGatewayAttachmentConfig(rName),
@@ -102,16 +102,16 @@ func TestAccEC2InternetGateway_Attachment(t *testing.T) {
 	})
 }
 
-func TestAccEC2InternetGateway_Tags(t *testing.T) {
+func TestAccVPCInternetGateway_Tags(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInternetGatewayDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInternetGatewayTags1Config(rName, "key1", "value1"),

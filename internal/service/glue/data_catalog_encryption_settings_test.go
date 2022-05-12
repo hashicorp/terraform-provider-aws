@@ -23,10 +23,10 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogEncryptionSettingsNonEncryptedConfig(),

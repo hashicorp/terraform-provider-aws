@@ -19,10 +19,10 @@ func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotCopyGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyGrant_Basic(rName),
@@ -47,10 +47,10 @@ func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotCopyGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyGrantWithTags(rName),
@@ -91,10 +91,10 @@ func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSnapshotCopyGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyGrant_Basic(rName),

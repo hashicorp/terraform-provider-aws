@@ -22,9 +22,9 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGat
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDxAttachmentDataSourceConfig(rName, rBgpAsn),
@@ -50,9 +50,9 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDxAttachmentFilterDataSourceConfig(rName, rBgpAsn),

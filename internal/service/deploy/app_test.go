@@ -22,10 +22,10 @@ func TestAccCodeDeployApp_basic(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppNameConfig(rName),
@@ -62,10 +62,10 @@ func TestAccCodeDeployApp_computePlatform(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppComputePlatformConfig(rName, "Lambda"),
@@ -92,10 +92,10 @@ func TestAccCodeDeployApp_ComputePlatform_ecs(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppComputePlatformConfig(rName, "ECS"),
@@ -119,10 +119,10 @@ func TestAccCodeDeployApp_ComputePlatform_lambda(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppComputePlatformConfig(rName, "Lambda"),
@@ -147,10 +147,10 @@ func TestAccCodeDeployApp_name(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppNameConfig(rName1),
@@ -181,10 +181,10 @@ func TestAccCodeDeployApp_tags(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppTags1Config(rName, "key1", "value1"),
@@ -226,10 +226,10 @@ func TestAccCodeDeployApp_disappears(t *testing.T) {
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppNameConfig(rName),

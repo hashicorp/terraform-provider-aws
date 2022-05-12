@@ -26,10 +26,10 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	usersAndGroupsConfig := testAccUserGroupMembershipUsersAndGroupsConfig(userName1, userName2, groupName1, groupName2, groupName3)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccUserGroupMembershipDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccUserGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			// simplest test
 			{

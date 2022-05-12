@@ -20,11 +20,11 @@ const (
 	fileSystemAssociationDeletedDelay                       = 5 * time.Second
 )
 
-func waitStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
+func waitGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{storagegateway.ErrorCodeGatewayNotConnected},
 		Target:                    []string{storageGatewayGatewayStatusConnected},
-		Refresh:                   statusStorageGatewayGateway(conn, gatewayARN),
+		Refresh:                   statusGateway(conn, gatewayARN),
 		Timeout:                   timeout,
 		MinTimeout:                storageGatewayGatewayConnectedMinTimeout,
 		ContinuousTargetOccurence: storageGatewayGatewayConnectedContinuousTargetOccurence, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway
@@ -40,11 +40,11 @@ func waitStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gat
 	}
 }
 
-func waitStorageGatewayGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
+func waitGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{storagegateway.ActiveDirectoryStatusJoining},
 		Target:  []string{storagegateway.ActiveDirectoryStatusJoined},
-		Refresh: statusStorageGatewayGatewayJoinDomain(conn, volumeARN),
+		Refresh: statusGatewayJoinDomain(conn, volumeARN),
 		Timeout: storageGatewayGatewayJoinDomainJoinedTimeout,
 	}
 

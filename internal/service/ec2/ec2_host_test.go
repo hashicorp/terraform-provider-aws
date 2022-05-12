@@ -20,10 +20,10 @@ func TestAccEC2Host_basic(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2HostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig(),
@@ -52,10 +52,10 @@ func TestAccEC2Host_disappears(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2HostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig(),
@@ -75,10 +75,10 @@ func TestAccEC2Host_instanceFamily(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2HostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostInstanceFamilyConfig(rName),
@@ -122,10 +122,10 @@ func TestAccEC2Host_tags(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2HostDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostTags1Config("key1", "value1"),

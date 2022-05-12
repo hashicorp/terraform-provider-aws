@@ -13,7 +13,7 @@ import (
 
 func TestAccPricingProductDataSource_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
@@ -21,7 +21,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 				Config: testAccProductEC2DataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
-					testAccPricingCheckValueIsJSON("data.aws_pricing_product.test"),
+					testAccCheckValueIsJSON("data.aws_pricing_product.test"),
 				),
 			},
 		},
@@ -30,7 +30,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 
 func TestAccPricingProductDataSource_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 				Config: testAccProductRedshiftDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
-					testAccPricingCheckValueIsJSON("data.aws_pricing_product.test"),
+					testAccCheckValueIsJSON("data.aws_pricing_product.test"),
 				),
 			},
 		},
@@ -47,7 +47,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 
 func testAccProductEC2DataSourceConfig() string {
 	return acctest.ConfigCompose(
-		testAccPricingRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		`
 data "aws_ec2_instance_type_offering" "available" {
   preferred_instance_types = ["c5.large", "c4.large"]
@@ -98,7 +98,7 @@ data "aws_pricing_product" "test" {
 
 func testAccProductRedshiftDataSourceConfig() string {
 	return acctest.ConfigCompose(
-		testAccPricingRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		`
 data "aws_redshift_orderable_cluster" "test" {
   preferred_node_types = ["dc2.8xlarge", "ds2.8xlarge"]
@@ -127,7 +127,7 @@ data "aws_pricing_product" "test" {
 `)
 }
 
-func testAccPricingCheckValueIsJSON(data string) resource.TestCheckFunc {
+func testAccCheckValueIsJSON(data string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[data]
 

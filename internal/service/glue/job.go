@@ -169,7 +169,7 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	input := &glue.CreateJobInput{
-		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
+		Command: expandJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
 		Tags:    Tags(tags.IgnoreAWS()),
@@ -206,7 +206,7 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("execution_property"); ok {
-		input.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
+		input.ExecutionProperty = expandExecutionProperty(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -214,7 +214,7 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("notification_property"); ok {
-		input.NotificationProperty = expandGlueNotificationProperty(v.([]interface{}))
+		input.NotificationProperty = expandNotificationProperty(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
@@ -276,10 +276,10 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", jobARN)
 
-	if err := d.Set("command", flattenGlueJobCommand(job.Command)); err != nil {
+	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
 		return fmt.Errorf("error setting command: %s", err)
 	}
-	if err := d.Set("connections", flattenGlueConnectionsList(job.Connections)); err != nil {
+	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
 		return fmt.Errorf("error setting connections: %s", err)
 	}
 	if err := d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments)); err != nil {
@@ -290,12 +290,12 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("description", job.Description)
 	d.Set("glue_version", job.GlueVersion)
-	if err := d.Set("execution_property", flattenGlueExecutionProperty(job.ExecutionProperty)); err != nil {
+	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
 		return fmt.Errorf("error setting execution_property: %s", err)
 	}
 	d.Set("max_capacity", job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
-	if err := d.Set("notification_property", flattenGlueNotificationProperty(job.NotificationProperty)); err != nil {
+	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
 		return fmt.Errorf("error setting notification_property: #{err}")
 	}
 	d.Set("name", job.Name)
@@ -336,7 +336,7 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
 		"role_arn", "security_configuration", "timeout", "worker_type", "non_overridable_arguments") {
 		jobUpdate := &glue.JobUpdate{
-			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
+			Command: expandJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get("role_arn").(string)),
 		}
 
@@ -375,7 +375,7 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("execution_property"); ok {
-			jobUpdate.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
+			jobUpdate.ExecutionProperty = expandExecutionProperty(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("max_retries"); ok {
@@ -383,7 +383,7 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("notification_property"); ok {
-			jobUpdate.NotificationProperty = expandGlueNotificationProperty(v.([]interface{}))
+			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("security_configuration"); ok {
@@ -444,7 +444,7 @@ func DeleteJob(conn *glue.Glue, jobName string) error {
 	return nil
 }
 
-func expandGlueExecutionProperty(l []interface{}) *glue.ExecutionProperty {
+func expandExecutionProperty(l []interface{}) *glue.ExecutionProperty {
 	m := l[0].(map[string]interface{})
 
 	executionProperty := &glue.ExecutionProperty{
@@ -454,7 +454,7 @@ func expandGlueExecutionProperty(l []interface{}) *glue.ExecutionProperty {
 	return executionProperty
 }
 
-func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
+func expandJobCommand(l []interface{}) *glue.JobCommand {
 	m := l[0].(map[string]interface{})
 
 	jobCommand := &glue.JobCommand{
@@ -469,7 +469,7 @@ func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
 	return jobCommand
 }
 
-func expandGlueNotificationProperty(l []interface{}) *glue.NotificationProperty {
+func expandNotificationProperty(l []interface{}) *glue.NotificationProperty {
 	m := l[0].(map[string]interface{})
 
 	notificationProperty := &glue.NotificationProperty{
@@ -479,7 +479,7 @@ func expandGlueNotificationProperty(l []interface{}) *glue.NotificationProperty 
 	return notificationProperty
 }
 
-func flattenGlueConnectionsList(connectionsList *glue.ConnectionsList) []interface{} {
+func flattenConnectionsList(connectionsList *glue.ConnectionsList) []interface{} {
 	if connectionsList == nil {
 		return []interface{}{}
 	}
@@ -487,7 +487,7 @@ func flattenGlueConnectionsList(connectionsList *glue.ConnectionsList) []interfa
 	return flex.FlattenStringList(connectionsList.Connections)
 }
 
-func flattenGlueExecutionProperty(executionProperty *glue.ExecutionProperty) []map[string]interface{} {
+func flattenExecutionProperty(executionProperty *glue.ExecutionProperty) []map[string]interface{} {
 	if executionProperty == nil {
 		return []map[string]interface{}{}
 	}
@@ -499,7 +499,7 @@ func flattenGlueExecutionProperty(executionProperty *glue.ExecutionProperty) []m
 	return []map[string]interface{}{m}
 }
 
-func flattenGlueJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
+func flattenJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
 	if jobCommand == nil {
 		return []map[string]interface{}{}
 	}
@@ -513,7 +513,7 @@ func flattenGlueJobCommand(jobCommand *glue.JobCommand) []map[string]interface{}
 	return []map[string]interface{}{m}
 }
 
-func flattenGlueNotificationProperty(notificationProperty *glue.NotificationProperty) []map[string]interface{} {
+func flattenNotificationProperty(notificationProperty *glue.NotificationProperty) []map[string]interface{} {
 	if notificationProperty == nil {
 		return []map[string]interface{}{}
 	}

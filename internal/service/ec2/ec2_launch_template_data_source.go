@@ -272,6 +272,201 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"instance_requirements": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"accelerator_count": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"accelerator_manufacturers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"accelerator_names": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"accelerator_total_memory_mib": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"accelerator_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"bare_metal": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"baseline_ebs_bandwidth_mbps": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"burstable_performance": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"cpu_manufacturers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"excluded_instance_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"instance_generations": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"local_storage": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"local_storage_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"memory_gib_per_vcpu": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"memory_mib": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_interface_count": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"on_demand_max_price_percentage_over_lowest_price": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"require_hibernate_support": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"spot_max_price_percentage_over_lowest_price": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"total_local_storage_gb": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"vcpu_count": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -17,9 +17,9 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_basic(rName),
@@ -45,9 +45,9 @@ func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T
 	rName := "data.aws_launch_configuration.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt),
@@ -65,9 +65,9 @@ func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName),
@@ -88,10 +88,10 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName),

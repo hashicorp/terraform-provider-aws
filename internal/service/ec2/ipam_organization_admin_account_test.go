@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccVPCIpamOrganizationAdminAccount_basic(t *testing.T) {
+func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_admin_account.test"

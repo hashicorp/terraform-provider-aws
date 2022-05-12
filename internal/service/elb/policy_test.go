@@ -25,10 +25,10 @@ func TestAccELBPolicy_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rInt),
@@ -49,10 +49,10 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rInt),
@@ -83,10 +83,10 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 	policyTypeName := "LBCookieStickinessPolicyType"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_policyTypeNameOnly(rName, policyTypeName),
@@ -106,10 +106,10 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_policyTypeNameOnly(rName, tfelb.SSLNegotiationPolicyType),
@@ -129,10 +129,10 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_customSSLSecurityPolicy(rName, "Protocol-TLSv1.1", "DHE-RSA-AES256-SHA256"),
@@ -180,10 +180,10 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 	predefinedSecurityPolicyUpdated := "ELBSecurityPolicy-2016-08"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predefinedSSLSecurityPolicy(rName, predefinedSecurityPolicy),
@@ -220,10 +220,10 @@ func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_updateWhileAssigned0(rInt),

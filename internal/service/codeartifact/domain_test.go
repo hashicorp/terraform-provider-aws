@@ -16,15 +16,15 @@ import (
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
-func testAccCodeArtifactDomain_basic(t *testing.T) {
+func testAccDomain_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainBasicConfig(rName),
@@ -49,15 +49,15 @@ func testAccCodeArtifactDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
+func testAccDomain_defaultEncryptionKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainDefaultEncryptionKeyConfig(rName),
@@ -81,15 +81,15 @@ func testAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_tags(t *testing.T) {
+func testAccDomain_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainTags1Config(rName, "key1", "value1"),
@@ -124,15 +124,15 @@ func testAccCodeArtifactDomain_tags(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_disappears(t *testing.T) {
+func testAccDomain_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainDefaultEncryptionKeyConfig(rName),

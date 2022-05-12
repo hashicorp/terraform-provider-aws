@@ -105,7 +105,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	// only set the instance Id that this resource manages
 	found := false
 	for _, i := range resp.LoadBalancerDescriptions[0].Instances {
-		if expected == *i.InstanceId {
+		if expected == aws.StringValue(i.InstanceId) {
 			d.Set("instance", expected)
 			found = true
 		}

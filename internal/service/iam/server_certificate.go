@@ -312,7 +312,7 @@ func normalizeCert(cert interface{}) string {
 	case string:
 		rawCert = cert
 	case *string:
-		rawCert = *cert
+		rawCert = aws.StringValue(cert)
 	default:
 		return ""
 	}

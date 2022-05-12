@@ -10,15 +10,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2SubnetIDsDataSource_basic(t *testing.T) {
+func TestAccVPCSubnetIDsDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetIDsDataSourceConfig(rName, rInt),
@@ -34,15 +34,15 @@ func TestAccEC2SubnetIDsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SubnetIDsDataSource_filter(t *testing.T) {
+func TestAccVPCSubnetIDsDataSource_filter(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetIDsDataSource_filter(rName, rInt),

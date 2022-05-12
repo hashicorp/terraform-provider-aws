@@ -22,10 +22,10 @@ func TestAccLogsDestination_basic(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig(rstring),
@@ -52,10 +52,10 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig(rstring),

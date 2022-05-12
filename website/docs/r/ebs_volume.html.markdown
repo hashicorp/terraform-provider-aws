@@ -32,7 +32,7 @@ The following arguments are supported:
 * `availability_zone` - (Required) The AZ where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
 * `iops` - (Optional) The amount of IOPS to provision for the disk. Only valid for `type` of `io1`, `io2` or `gp3`.
-* `multi_attach_enabled` - (Optional) Specifies whether to enable Amazon EBS Multi-Attach. Multi-Attach is supported exclusively on `io1` volumes.
+* `multi_attach_enabled` - (Optional) Specifies whether to enable Amazon EBS Multi-Attach. Multi-Attach is supported on `io1` and `io2` volumes.
 * `size` - (Optional) The size of the drive in GiBs.
 * `snapshot_id` (Optional) A snapshot to base the EBS volume off of.
 * `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
@@ -50,6 +50,14 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The volume ID (e.g., vol-59fcb34e).
 * `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_ebs_volume` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`) Used for creating volumes. This includes the time required for the volume to become available
+- `update` - (Default `5 minutes`) Used for `size`, `type`, or `iops` volume changes
+- `delete` - (Default `5 minutes`) Used for destroying volumes
 
 ## Import
 

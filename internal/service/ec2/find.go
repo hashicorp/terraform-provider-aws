@@ -573,6 +573,76 @@ func FindEBSVolume(conn *ec2.EC2, input *ec2.DescribeVolumesInput) (*ec2.Volume,
 	return output[0], nil
 }
 
+func FindEBSVolumeByID(conn *ec2.EC2, id string) (*ec2.Volume, error) {
+	input := &ec2.DescribeVolumesInput{
+		VolumeIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindEBSVolume(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.VolumeStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VolumeId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindEBSVolumeAttachment(conn *ec2.EC2, volumeID, instanceID, deviceName string) (*ec2.VolumeAttachment, error) {
+	input := &ec2.DescribeVolumesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"attachment.device":      deviceName,
+			"attachment.instance-id": instanceID,
+		}),
+		VolumeIds: aws.StringSlice([]string{volumeID}),
+	}
+
+	output, err := FindEBSVolume(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.VolumeStateAvailable || state == ec2.VolumeStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VolumeId) != volumeID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	for _, v := range output.Attachments {
+		if aws.StringValue(v.State) == ec2.VolumeAttachmentStateDetached {
+			continue
+		}
+
+		if aws.StringValue(v.Device) == deviceName && aws.StringValue(v.InstanceId) == instanceID {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address, error) {
 	var addresses []*ec2.Address
 
@@ -1953,7 +2023,7 @@ func FindSubnets(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) ([]*ec2.Subnet,
 	return output, nil
 }
 
-func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
+func FindSubnetCIDRReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
 	input := &ec2.GetSubnetCidrReservationsInput{
 		SubnetId: aws.String(subnetID),
 	}

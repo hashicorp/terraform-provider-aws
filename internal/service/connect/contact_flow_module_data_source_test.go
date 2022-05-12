@@ -16,9 +16,9 @@ func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T)
 	datasourceName := "data.aws_connect_contact_flow_module.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowModuleDataSourceConfig_ContactFlowModuleID(rName, resourceName),
@@ -46,9 +46,9 @@ func TestAccConnectContactFlowModuleDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_contact_flow_module.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowModuleDataSourceConfig_Name(rName, rName2),

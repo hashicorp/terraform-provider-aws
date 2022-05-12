@@ -183,7 +183,7 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
@@ -191,7 +191,7 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+		associationInput.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("compliance_severity"); ok {
@@ -275,7 +275,7 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting targets error: %w", err)
 	}
 
-	if err := d.Set("output_location", flattenAssociationOutoutLocation(association.OutputLocation)); err != nil {
+	if err := d.Set("output_location", flattenAssociationOutputLocation(association.OutputLocation)); err != nil {
 		return fmt.Errorf("Error setting output_location error: %w", err)
 	}
 
@@ -309,7 +309,7 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
 	if _, ok := d.GetOk("targets"); ok {
@@ -317,7 +317,7 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+		associationInput.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("compliance_severity"); ok {
@@ -365,7 +365,7 @@ func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSSMDocumentParameters(params map[string]interface{}) map[string][]*string {
+func expandDocumentParameters(params map[string]interface{}) map[string][]*string {
 	var docParams = make(map[string][]*string)
 	for k, v := range params {
 		values := make([]*string, 1)
@@ -376,7 +376,7 @@ func expandSSMDocumentParameters(params map[string]interface{}) map[string][]*st
 	return docParams
 }
 
-func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssociationOutputLocation {
+func expandAssociationOutputLocation(config []interface{}) *ssm.InstanceAssociationOutputLocation {
 	if config == nil {
 		return nil
 	}
@@ -401,22 +401,22 @@ func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssoc
 	}
 }
 
-func flattenAssociationOutoutLocation(location *ssm.InstanceAssociationOutputLocation) []map[string]interface{} {
-	if location == nil {
+func flattenAssociationOutputLocation(location *ssm.InstanceAssociationOutputLocation) []map[string]interface{} {
+	if location == nil || location.S3Location == nil {
 		return nil
 	}
 
 	result := make([]map[string]interface{}, 0)
 	item := make(map[string]interface{})
 
-	item["s3_bucket_name"] = *location.S3Location.OutputS3BucketName
+	item["s3_bucket_name"] = aws.StringValue(location.S3Location.OutputS3BucketName)
 
 	if location.S3Location.OutputS3KeyPrefix != nil {
-		item["s3_key_prefix"] = *location.S3Location.OutputS3KeyPrefix
+		item["s3_key_prefix"] = aws.StringValue(location.S3Location.OutputS3KeyPrefix)
 	}
 
 	if location.S3Location.OutputS3Region != nil {
-		item["s3_region"] = *location.S3Location.OutputS3Region
+		item["s3_region"] = aws.StringValue(location.S3Location.OutputS3Region)
 	}
 
 	result = append(result, item)

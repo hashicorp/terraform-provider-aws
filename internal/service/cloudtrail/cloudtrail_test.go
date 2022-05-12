@@ -56,10 +56,10 @@ func testAcc_basic(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig(rName),
@@ -102,10 +102,10 @@ func testAcc_cloudWatch(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudWatchConfig(rName),
@@ -143,10 +143,10 @@ func testAcc_enableLogging(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnableLoggingConfig(rName, true),
@@ -197,10 +197,10 @@ func testAcc_multiRegion(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig(rName),
@@ -244,10 +244,10 @@ func testAcc_organization(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfig(rName),
@@ -282,10 +282,10 @@ func testAcc_logValidation(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogValidationConfig(rName),
@@ -324,10 +324,10 @@ func testAcc_kmsKey(t *testing.T) {
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKMSKeyConfig(rName),
@@ -356,10 +356,10 @@ func testAcc_tags(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagsConfig(rName),
@@ -411,10 +411,10 @@ func testAcc_globalServiceEvents(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalServiceEventsConfig(rName),
@@ -437,10 +437,10 @@ func testAcc_eventSelector(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSelectorConfig(rName),
@@ -508,10 +508,10 @@ func testAcc_eventSelectorDynamoDB(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSelectorDynamoDBConfig(rName),
@@ -534,10 +534,10 @@ func testAcc_eventSelectorExclude(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSelectorExcludeKMSConfig(rName),
@@ -583,10 +583,10 @@ func testAcc_insightSelector(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInsightSelectorConfig(rName),
@@ -630,10 +630,10 @@ func testAcc_advanced_event_selector(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig_advancedEventSelector(rName),
@@ -729,10 +729,10 @@ func testAcc_disappears(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfig(rName),

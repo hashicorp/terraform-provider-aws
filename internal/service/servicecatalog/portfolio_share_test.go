@@ -68,9 +68,9 @@ func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPortfolioShareDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_organizationalUnit(rName),

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2RouteTableAssociation_Subnet_basic(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
@@ -22,10 +22,10 @@ func TestAccEC2RouteTableAssociation_Subnet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableAssociationConfigSubnet(rName),
@@ -45,7 +45,7 @@ func TestAccEC2RouteTableAssociation_Subnet_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable1 := "aws_route_table.test"
@@ -54,10 +54,10 @@ func TestAccEC2RouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableAssociationConfigSubnet(rName),
@@ -79,7 +79,7 @@ func TestAccEC2RouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTableAssociation_Gateway_basic(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
@@ -87,10 +87,10 @@ func TestAccEC2RouteTableAssociation_Gateway_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableAssociationConfigGateway(rName),
@@ -110,7 +110,7 @@ func TestAccEC2RouteTableAssociation_Gateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
+func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable1 := "aws_route_table.test"
@@ -119,10 +119,10 @@ func TestAccEC2RouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableAssociationConfigGateway(rName),
@@ -144,16 +144,16 @@ func TestAccEC2RouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTableAssociation_disappears(t *testing.T) {
+func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableAssociationConfigSubnet(rName),

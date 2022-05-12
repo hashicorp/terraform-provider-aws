@@ -1,5 +1,7 @@
 package sns
 
+import "time"
+
 const (
 	FIFOTopicNameSuffix = ".fifo"
 )
@@ -69,4 +71,8 @@ const (
 	TopicAttributeNameSQSSuccessFeedbackRoleArn            = "SQSSuccessFeedbackRoleArn"
 	TopicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
 	TopicAttributeNameTopicArn                             = "TopicArn"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

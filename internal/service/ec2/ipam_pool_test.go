@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPCIpamPool_basic(t *testing.T) {
+func TestAccIPAMPool_basic(t *testing.T) {
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamPool,
@@ -56,14 +56,14 @@ func TestAccVPCIpamPool_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPool_tags(t *testing.T) {
+func TestAccIPAMPool_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamPoolTagsConfig("key1", "value1"),
@@ -96,15 +96,15 @@ func TestAccVPCIpamPool_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamPool_ipv6Basic(t *testing.T) {
+func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCIpamPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamPool_ipv6,

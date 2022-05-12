@@ -23,10 +23,10 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_SecretString(rName),
@@ -55,10 +55,10 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_SecretBinary(rName),
@@ -86,10 +86,10 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionConfig_VersionStages_Single(rName),

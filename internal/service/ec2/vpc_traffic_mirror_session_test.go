@@ -17,7 +17,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TrafficMirrorSession_basic(t *testing.T) {
+func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	description := "test session"
@@ -31,9 +31,9 @@ func TestAccEC2TrafficMirrorSession_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -81,7 +81,7 @@ func TestAccEC2TrafficMirrorSession_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorSession_tags(t *testing.T) {
+func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)
@@ -92,9 +92,9 @@ func TestAccEC2TrafficMirrorSession_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorSessionConfigTags1(rName, "key1", "value1", session),
@@ -130,7 +130,7 @@ func TestAccEC2TrafficMirrorSession_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorSession_disappears(t *testing.T) {
+func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)
@@ -141,9 +141,9 @@ func TestAccEC2TrafficMirrorSession_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorSessionConfig(rName, session),

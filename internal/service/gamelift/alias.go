@@ -207,12 +207,12 @@ func flattenRoutingStrategy(rs *gamelift.RoutingStrategy) []interface{} {
 
 	m := make(map[string]interface{})
 	if rs.FleetId != nil {
-		m["fleet_id"] = *rs.FleetId
+		m["fleet_id"] = aws.StringValue(rs.FleetId)
 	}
 	if rs.Message != nil {
-		m["message"] = *rs.Message
+		m["message"] = aws.StringValue(rs.Message)
 	}
-	m["type"] = *rs.Type
+	m["type"] = aws.StringValue(rs.Type)
 
 	return []interface{}{m}
 }

@@ -281,7 +281,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("network_interface", "")
 	}
 
-	region := *conn.Config.Region
+	region := aws.StringValue(conn.Config.Region)
 	d.Set("private_ip", address.PrivateIpAddress)
 	if address.PrivateIpAddress != nil {
 		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(*address.PrivateIpAddress), RegionalPrivateDNSSuffix(region)))
@@ -302,14 +302,14 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.
 	if address.Domain != nil {
-		d.Set("vpc", *address.Domain == ec2.DomainTypeVpc)
+		d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
 	}
 
 	d.Set("domain", address.Domain)
 
 	// Force ID to be an Allocation ID if we're on a VPC
 	// This allows users to import the EIP based on the IP if they are in a VPC
-	if *address.Domain == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
+	if aws.StringValue(address.Domain) == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
 		log.Printf("[DEBUG] Re-assigning EIP ID (%s) to it's Allocation ID (%s)", d.Id(), *address.AllocationId)
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
@@ -387,7 +387,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, "InvalidAllocationID.NotFound") {
+				if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAllocationIDNotFound) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -518,9 +518,10 @@ func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 	// is the case, then it was already disassociated somehow,
 	// and that is okay. The most commmon reason for this is that
 	// the instance or ENI it was attached it was destroyed.
-	if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAssociationID.NotFound" {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
 		err = nil
 	}
+
 	return err
 }
 
@@ -544,7 +545,7 @@ func waitForEc2AddressAssociationClassic(conn *ec2.EC2, publicIP string, instanc
 	err := resource.Retry(ec2AddressAssociationClassicTimeout, func() *resource.RetryError {
 		output, err := conn.DescribeAddresses(input)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidAddress.NotFound") {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAddressNotFound) {
 			return resource.RetryableError(err)
 		}
 

@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -30,9 +30,9 @@ func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackNoVPCCreateConfig(rName),
@@ -61,9 +61,9 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackNoVPCCreateConfig(rName),
@@ -98,9 +98,9 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackVPCCreateConfig(rName),
@@ -147,9 +147,9 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackNoVPCCreateTagsConfig(rName),
@@ -191,9 +191,9 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_CustomCookbooks_Set(rName),
@@ -230,10 +230,10 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 	// This test cannot be parallel with other tests, because it changes the provider region in a non-standard way
 	// https://github.com/hashicorp/terraform-provider-aws/issues/21887
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStack_classicEndpoint(rName),
@@ -526,17 +526,17 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.DescribeStacks(req)
+
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "ResourceNotFoundException" {
-					// not found, all good
-					return nil
-				}
-			}
 			return err
 		}
 	}
-	return fmt.Errorf("Fall through error for OpsWorks stack test")
+
+	return nil
 }
 
 //////////////////////////////////////////////////

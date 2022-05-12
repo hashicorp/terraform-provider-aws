@@ -19,10 +19,10 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainIdentityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig(domain),
@@ -39,10 +39,10 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainIdentityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig(domain),
@@ -62,10 +62,10 @@ func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainIdentityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityConfig(domain),

@@ -96,7 +96,7 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("regex_pattern_strings") {
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
-		err := updateWafRegionalRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, newPatterns, conn, region)
+		err := updateRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, newPatterns, conn, region)
 		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -117,7 +117,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {
 		noPatterns := []interface{}{}
-		err := updateWafRegionalRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, noPatterns, conn, region)
+		err := updateRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, noPatterns, conn, region)
 		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
@@ -142,7 +142,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func updateWafRegionalRegexPatternSetPatternStringsWR(id string, oldPatterns, newPatterns []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRegexPatternSetPatternStringsWR(id string, oldPatterns, newPatterns []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexPatternSetInput{

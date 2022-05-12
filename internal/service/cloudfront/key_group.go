@@ -49,7 +49,7 @@ func resourceKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.CreateKeyGroupInput{
-		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
+		KeyGroupConfig: expandKeyGroupConfig(d),
 	}
 
 	log.Println("[DEBUG] Create CloudFront Key Group:", input)
@@ -102,7 +102,7 @@ func resourceKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
-		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
+		KeyGroupConfig: expandKeyGroupConfig(d),
 		IfMatch:        aws.String(d.Get("etag").(string)),
 	}
 
@@ -133,7 +133,7 @@ func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandCloudFrontKeyGroupConfig(d *schema.ResourceData) *cloudfront.KeyGroupConfig {
+func expandKeyGroupConfig(d *schema.ResourceData) *cloudfront.KeyGroupConfig {
 	keyGroupConfig := &cloudfront.KeyGroupConfig{
 		Items: flex.ExpandStringSet(d.Get("items").(*schema.Set)),
 		Name:  aws.String(d.Get("name").(string)),

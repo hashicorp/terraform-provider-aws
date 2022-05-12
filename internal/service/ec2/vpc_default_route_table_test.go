@@ -17,17 +17,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2DefaultRouteTable_basic(t *testing.T) {
+func TestAccVPCDefaultRouteTable_basic(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			// Verify non-existent Route Table ID behavior
 			{
@@ -61,7 +61,7 @@ func TestAccEC2DefaultRouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_Disappears_vpc(t *testing.T) {
+func TestAccVPCDefaultRouteTable_Disappears_vpc(t *testing.T) {
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
 	resourceName := "aws_default_route_table.test"
@@ -69,10 +69,10 @@ func TestAccEC2DefaultRouteTable_Disappears_vpc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigBasic(rName),
@@ -87,7 +87,7 @@ func TestAccEC2DefaultRouteTable_Disappears_vpc(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_Route_mode(t *testing.T) {
+func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -95,10 +95,10 @@ func TestAccEC2DefaultRouteTable_Route_mode(t *testing.T) {
 	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr),
@@ -155,7 +155,7 @@ func TestAccEC2DefaultRouteTable_Route_mode(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_swap(t *testing.T) {
+func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -165,10 +165,10 @@ func TestAccEC2DefaultRouteTable_swap(t *testing.T) {
 	destinationCidr2 := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr1),
@@ -223,7 +223,7 @@ func TestAccEC2DefaultRouteTable_swap(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
+func TestAccVPCDefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -235,10 +235,10 @@ func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigIpv4TransitGateway(rName, destinationCidr),
@@ -259,7 +259,7 @@ func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
+func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -271,10 +271,10 @@ func TestAccEC2DefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	destinationCidr := "0.0.0.0/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigIpv4VpcEndpoint(rName, destinationCidr),
@@ -304,7 +304,7 @@ func TestAccEC2DefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
+func TestAccVPCDefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -312,10 +312,10 @@ func TestAccEC2DefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigVpcEndpointAssociation(rName, destinationCidr),
@@ -336,16 +336,16 @@ func TestAccEC2DefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_tags(t *testing.T) {
+func TestAccVPCDefaultRouteTable_tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigTags1(rName, "key1", "value1"),
@@ -376,7 +376,7 @@ func TestAccEC2DefaultRouteTable_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
+func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -385,10 +385,10 @@ func TestAccEC2DefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 	destinationIpv6Cidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
@@ -414,7 +414,7 @@ func TestAccEC2DefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
+func TestAccVPCDefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -422,10 +422,10 @@ func TestAccEC2DefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigPrefixListInternetGateway(rName),
@@ -455,7 +455,7 @@ func TestAccEC2DefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultRouteTable_revokeExistingRules(t *testing.T) {
+func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rtResourceName := "aws_route_table.test"
@@ -466,10 +466,10 @@ func TestAccEC2DefaultRouteTable_revokeExistingRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRouteTableDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTable(rName),
