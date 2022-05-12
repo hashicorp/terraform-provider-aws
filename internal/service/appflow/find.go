@@ -53,10 +53,8 @@ func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 	return result, nil
 }
 
-func FindConnectorProfileByName(ctx context.Context, conn *appflow.Appflow, name string) (*appflow.ConnectorProfile, error) {
-	params := &appflow.DescribeConnectorProfilesInput{
-		ConnectorProfileNames: []*string{aws.String(name)},
-	}
+func FindConnectorProfileByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.ConnectorProfile, error) {
+	params := &appflow.DescribeConnectorProfilesInput{}
 	var result *appflow.ConnectorProfile
 
 	err := conn.DescribeConnectorProfilesPagesWithContext(ctx, params, func(page *appflow.DescribeConnectorProfilesOutput, lastPage bool) bool {
@@ -69,7 +67,7 @@ func FindConnectorProfileByName(ctx context.Context, conn *appflow.Appflow, name
 				continue
 			}
 
-			if aws.StringValue(connectorProfile.ConnectorProfileName) == name {
+			if aws.StringValue(connectorProfile.ConnectorProfileArn) == arn {
 				result = connectorProfile
 				return false
 			}
@@ -90,7 +88,7 @@ func FindConnectorProfileByName(ctx context.Context, conn *appflow.Appflow, name
 
 	if result == nil {
 		return nil, &resource.NotFoundError{
-			Message:     fmt.Sprintf("No connector profile with name %q", name),
+			Message:     fmt.Sprintf("No connector profile with arn %q", arn),
 			LastRequest: params,
 		}
 	}

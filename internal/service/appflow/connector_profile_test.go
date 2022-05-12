@@ -96,7 +96,7 @@ func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfappflow.FindConnectorProfileByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfappflow.FindConnectorProfileByArn(context.Background(), conn, rs.Primary.ID)
 
 		if _, ok := err.(*resource.NotFoundError); ok {
 			continue

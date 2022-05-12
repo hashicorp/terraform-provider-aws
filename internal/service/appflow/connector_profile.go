@@ -1412,13 +1412,17 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 		createConnectorProfileInput.KmsArn = aws.String(v)
 	}
 
-	_, err := conn.CreateConnectorProfile(&createConnectorProfileInput)
+	out, err := conn.CreateConnectorProfile(&createConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("creating AppFlow Connector Profile: %s", err)
 	}
 
-	d.SetId(name)
+	if out == nil || out.ConnectorProfileArn == nil {
+		return diag.Errorf("creating Appflow Connector Profile (%s): empty output", d.Get("name").(string))
+	}
+
+	d.SetId(aws.StringValue(out.ConnectorProfileArn))
 
 	return resourceConnectorProfileRead(ctx, d, meta)
 }
@@ -1426,7 +1430,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	connectorProfile, err := FindConnectorProfileByName(context.Background(), conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByArn(context.Background(), conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
@@ -1453,8 +1457,6 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
 	d.Set("credentials_arn", connectorProfile.CredentialsArn)
-
-	d.SetId(d.Get("name").(string))
 
 	return nil
 }
