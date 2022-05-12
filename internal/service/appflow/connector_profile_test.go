@@ -30,12 +30,12 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		CheckDestroy: testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppFlowConnectorProfile_basic(rName),
+				Config: testAccConfigConnectorProfile_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`connectorprofile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
@@ -69,18 +69,18 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		CheckDestroy: testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppFlowConnectorProfile_basic(rName),
+				Config: testAccConfigConnectorProfile_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 				),
 			},
 			{
-				Config: testAccAppFlowConnectorProfile_update(rName, testPrefix),
+				Config: testAccConfigConnectorProfile_update(rName, testPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.redshift.0.bucket_prefix", testPrefix),
 				),
 			},
@@ -102,12 +102,12 @@ func TestAccAppFlowConnectorProfile_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		CheckDestroy: testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConnectorProfile_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -120,7 +120,7 @@ func TestAccAppFlowConnectorProfile_tags(t *testing.T) {
 			{
 				Config: testAccConfigConnectorProfile_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -129,7 +129,7 @@ func TestAccAppFlowConnectorProfile_tags(t *testing.T) {
 			{
 				Config: testAccConfigConnectorProfile_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -152,12 +152,12 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppFlowConnectorProfileDestroy,
+		CheckDestroy: testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppFlowConnectorProfile_basic(rName),
+				Config: testAccConfigConnectorProfile_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppFlowConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -166,7 +166,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
+func testAccCheckConnectorProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -190,7 +190,7 @@ func testAccCheckAppFlowConnectorProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAppFlowConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
+func testAccCheckConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
 
@@ -221,7 +221,7 @@ func testAccCheckAppFlowConnectorProfileExists(n string, res *appflow.DescribeCo
 	}
 }
 
-func testAccAppFlowConnectorProfileConfigBase(connectorProfileName string, redshiftPassword string, redshiftUsername string) string {
+func testAccConnectorProfileConfigBase(connectorProfileName string, redshiftPassword string, redshiftUsername string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -327,12 +327,12 @@ resource "aws_redshift_cluster" "test" {
 `, connectorProfileName, redshiftPassword, redshiftUsername))
 }
 
-func testAccAppFlowConnectorProfile_basic(connectorProfileName string) string {
+func testAccConfigConnectorProfile_basic(connectorProfileName string) string {
 	const redshiftPassword = "testPassword123!"
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -366,12 +366,12 @@ resource "aws_appflow_connector_profile" "test" {
 	)
 }
 
-func testAccAppFlowConnectorProfile_update(connectorProfileName string, bucketPrefix string) string {
+func testAccConfigConnectorProfile_update(connectorProfileName string, bucketPrefix string) string {
 	const redshiftPassword = "testPassword123!"
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -411,7 +411,7 @@ func testAccConfigConnectorProfile_tags1(connectorProfileName string, tagKey1 st
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -454,7 +454,7 @@ func testAccConfigConnectorProfile_tags2(connectorProfileName string, tagKey1 st
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccAppFlowConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
