@@ -20,17 +20,17 @@ see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws
 ```terraform
 # create a new Lightsail container service
 resource "aws_lightsail_container_service" "my_container_service" {
-  name = "container-service-1"
-  power = "nano"
-  scale = 1
+  name        = "container-service-1"
+  power       = "nano"
+  scale       = 1
   is_disabled = false
 
   # deployment {
-    # example below
+  # example below
   # }
 
   # public_domain_names {
-    # example below
+  # example below
   # }
 
   tags = {
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
 * `power` - (Required) The power specification for the container service. The power specifies the amount of memory,
-  the number of vCPUs, and the monthly price of each node of the container service. 
+  the number of vCPUs, and the monthly price of each node of the container service.
   Possible values: `nano`, `micro`, `small`, `medium`, `large`, `xlarge`.
 * `scale` - (Required) The scale specification for the container service. The scale specifies the allocated compute
   nodes of the container service.
@@ -81,31 +81,31 @@ resource "aws_lightsail_container_service" "my_container_service" {
   deployment {
     container {
       container_name = "hello-world"
-      image = "amazon/amazon-lightsail:hello-world"
+      image          = "amazon/amazon-lightsail:hello-world"
 
       command = []
 
       environment {
-        key = "MY_ENVIRONMENT_VARIABLE"
+        key   = "MY_ENVIRONMENT_VARIABLE"
         value = "my_value"
       }
 
       # environment {
-        # maybe another environment variable
+      # maybe another environment variable
       # }
 
       port {
         port_number = 80
-        protocol = "HTTP"
+        protocol    = "HTTP"
       }
 
       # port {
-        # maybe another port
+      # maybe another port
       # }
     }
 
     # container {
-      # maybe another container
+    # maybe another container
     # }
 
     public_endpoint {
@@ -113,12 +113,12 @@ resource "aws_lightsail_container_service" "my_container_service" {
       container_port = 80
 
       health_check {
-        healthy_threshold = 2
+        healthy_threshold   = 2
         unhealthy_threshold = 2
-        timeout_seconds = 2
-        interval_seconds = 5
-        path = "/"
-        success_codes = "200-499"
+        timeout_seconds     = 2
+        interval_seconds    = 5
+        path                = "/"
+        success_codes       = "200-499"
       }
     }
   }
@@ -172,7 +172,7 @@ resource "aws_lightsail_container_service" "my_container_service" {
     }
 
     # certificate {
-      # maybe another certificate
+    # maybe another certificate
     # }
   }
 }
