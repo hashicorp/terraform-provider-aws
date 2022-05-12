@@ -141,27 +141,27 @@ The AppFlow connector profile argument layout is a complex structure.
 ##### Custom Connector Profile Credentials Arguments
 
 * `api_key` (Optional) - The API keys required for the authentication of the user.
-  * `api_key` (Required) - The API key required for API key authentication.
-  * `api_secret_key` (Optional) - The API secret key required for API key authentication.
+    * `api_key` (Required) - The API key required for API key authentication.
+    * `api_secret_key` (Optional) - The API secret key required for API key authentication.
 
 * `authentication_type` (Required) - The authentication type that the custom connector uses for authenticating while creating a connector profile. One of: `APIKEY`, `BASIC`, `CUSTOM`, `OAUTH2`.
 
 * `basic` (Optional) - The basic credentials that are required for the authentication of the user.
-  * `password` (Required) - The password to use to connect to a resource.
-  * `username` (Required) - The username to use to connect to a resource.
+    * `password` (Required) - The password to use to connect to a resource.
+    * `username` (Required) - The username to use to connect to a resource.
 
 * `custom` (Optional) - If the connector uses the custom authentication mechanism, this holds the required credentials.
-  * `credentials_map` (Optional) - A map that holds custom authentication credentials.
-  * `custom_authentication_type` (Required) - The custom authentication type that the connector uses.
+    * `credentials_map` (Optional) - A map that holds custom authentication credentials.
+    * `custom_authentication_type` (Required) - The custom authentication type that the connector uses.
 
 * `oauth2` (Optional) - The OAuth 2.0 credentials required for the authentication of the user.
-  * `access_token` (Optional) - The access token used to access the connector on your behalf.
-  * `client_id` (Optional) - The identifier for the desired client.
-  * `client_secret` (Optional) - The client secret used by the OAuth client to authenticate to the authorization server.
-  * `oauth_request` (Optional) - Used by select connectors for which the OAuth workflow is supported.
-    * `auth_code` (Optional) - The code provided by the connector when it has been authenticated via the connected app.
-    * `redirect_uri` (Optional) - The URL to which the authentication server redirects the browser after authorization has been granted.
-  * `refresh_token` (Optional) - The refresh token used to refresh an expired access token.
+    * `access_token` (Optional) - The access token used to access the connector on your behalf.
+    * `client_id` (Optional) - The identifier for the desired client.
+    * `client_secret` (Optional) - The client secret used by the OAuth client to authenticate to the authorization server.
+    * `oauth_request` (Optional) - Used by select connectors for which the OAuth workflow is supported.
+        * `auth_code` (Optional) - The code provided by the connector when it has been authenticated via the connected app.
+        * `redirect_uri` (Optional) - The URL to which the authentication server redirects the browser after authorization has been granted.
+    * `refresh_token` (Optional) - The refresh token used to refresh an expired access token.
 
 ##### Datadog Connector Profile Credentials Arguments
 
@@ -304,9 +304,9 @@ The AppFlow connector profile argument layout is a complex structure.
 ##### Custom Connector Profile Properties Arguments
 
 * `oauth2_properties` (Optional) - The OAuth 2.0 properties required for OAuth 2.0 authentication.
-  * `oauth2_grant_type` (Required) - The OAuth 2.0 grant type used by connector for OAuth 2.0 authentication. One of: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`.
-  * `token_url` (Required) - The token URL required for OAuth 2.0 authentication.
-  * `token_url_custom_properties` (Optional) - Associates your token URL with a map of properties that you define. Use this parameter to provide any additional details that the connector requires to authenticate your request.
+    * `oauth2_grant_type` (Required) - The OAuth 2.0 grant type used by connector for OAuth 2.0 authentication. One of: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`.
+    * `token_url` (Required) - The token URL required for OAuth 2.0 authentication.
+    * `token_url_custom_properties` (Optional) - Associates your token URL with a map of properties that you define. Use this parameter to provide any additional details that the connector requires to authenticate your request.
 
 * `profile_properties` (Optional) - A map of properties that are required to create a profile for the custom connector.
 
