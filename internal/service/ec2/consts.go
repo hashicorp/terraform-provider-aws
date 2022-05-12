@@ -30,6 +30,18 @@ func FleetOnDemandAllocationStrategy_Values() []string {
 }
 
 const (
+	// The AWS SDK constant ec2.SpotAllocationStrategyLowestPrice is incorrect.
+	SpotAllocationStrategyLowestPrice = "lowestPrice"
+)
+
+func SpotAllocationStrategy_Values() []string {
+	return append(
+		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
+		SpotAllocationStrategyLowestPrice,
+	)
+}
+
+const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
 	VpcEndpointStateAvailable         = "available"
 	VpcEndpointStateDeleted           = "deleted"

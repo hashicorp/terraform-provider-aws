@@ -390,16 +390,11 @@ func ResourceFleet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allocation_strategy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  "lowestPrice",
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.SpotAllocationStrategyDiversified,
-								// AWS SDK constant incorrect
-								// ec2.SpotAllocationStrategyLowestPrice,
-								"lowestPrice",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      SpotAllocationStrategyLowestPrice,
+							ValidateFunc: validation.StringInSlice(SpotAllocationStrategy_Values(), false),
 						},
 						"instance_interruption_behavior": {
 							Type:     schema.TypeString,
