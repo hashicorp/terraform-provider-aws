@@ -141,3 +141,14 @@ data "aws_networkfirewall_firewall_policy" "test" {
   name = aws_networkfirewall_firewall_policy.test.name
 }`)
 }
+
+func testAccFirewallPolicyDataSource_nameAndArn(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallPolicyDataSource_basic(rName),
+		fmt.Sprintf(`
+
+data "aws_networkfirewall_firewall_policy" "test" {
+    arn = aws_networkfirewall_firewall_policy.test.arn
+	name = aws_networkfirewall_firewall_policy.test.name
+}`))
+}
