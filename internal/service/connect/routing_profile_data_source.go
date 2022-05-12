@@ -150,7 +150,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 
 	// getting the routing profile queues uses a separate API: ListRoutingProfileQueues
-	queueConfigs, err := getConnectRoutingProfileQueueConfigs(ctx, conn, instanceID, *routingProfile.RoutingProfileId)
+	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, *routingProfile.RoutingProfileId)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", *routingProfile.RoutingProfileId, err))
