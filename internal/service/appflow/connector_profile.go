@@ -1384,9 +1384,8 @@ func ResourceConnectorProfile() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"credentials_arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
