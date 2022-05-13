@@ -18,8 +18,8 @@ import (
 func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":    testAccTransitVirtualInterface_basic,
-		"tags":     testAccTransitVirtualInterface_Tags,
-		"sitelink": testAccTransitVirtualInterfaceSiteLink_basic,
+		"tags":     testAccTransitVirtualInterface_tags,
+		"sitelink": testAccTransitVirtualInterface_siteLink,
 	}
 
 	for name, tc := range testCases {
@@ -103,7 +103,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitVirtualInterface_Tags(t *testing.T) {
+func testAccTransitVirtualInterface_tags(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -182,7 +182,7 @@ func testAccTransitVirtualInterface_Tags(t *testing.T) {
 	})
 }
 
-func testAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
+func testAccTransitVirtualInterface_siteLink(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -204,7 +204,7 @@ func testAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitVirtualInterfaceConfig_siteLinkbasic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
+				Config: testAccTransitVirtualInterfaceConfig_SiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -226,7 +226,7 @@ func testAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitVirtualInterfaceConfig_siteLinkupdated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
+				Config: testAccTransitVirtualInterfaceConfig_SiteLink_updated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -339,7 +339,7 @@ resource "aws_dx_transit_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccTransitVirtualInterfaceConfig_siteLinkbasic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccTransitVirtualInterfaceConfig_SiteLink_basic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return testAccTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family   = "ipv4"
@@ -354,7 +354,7 @@ resource "aws_dx_transit_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan, sitelink_enabled)
 }
 
-func testAccTransitVirtualInterfaceConfig_siteLinkupdated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccTransitVirtualInterfaceConfig_SiteLink_updated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return testAccTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family   = "ipv4"
