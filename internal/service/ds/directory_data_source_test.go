@@ -12,7 +12,6 @@ import (
 )
 
 func TestAccDirectoryServiceDirectoryDataSource_nonExistent(t *testing.T) {
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
@@ -39,7 +38,7 @@ func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryDataSourceConfig_SimpleAD(rName, alias, domainName),
+				Config: testAccDirectoryDataSourceConfig_simpleAD(rName, alias, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "type", directoryservice.DirectoryTypeSimpleAd),
 					resource.TestCheckResourceAttr(dataSourceName, "size", "Small"),
@@ -73,7 +72,7 @@ func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryDataSourceConfig_MicrosoftAD(rName, alias, domainName),
+				Config: testAccDirectoryDataSourceConfig_microsoftAD(rName, alias, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "type", directoryservice.DirectoryTypeMicrosoftAd),
 					resource.TestCheckResourceAttr(dataSourceName, "edition", "Standard"),
@@ -110,7 +109,7 @@ func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDirectoryServiceDirectoryConfig_connector(rName, domainName),
+				Config: testAccDirectoryDataSourceConfig_connector(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "connect_settings.0.connect_ips", resourceName, "connect_settings.0.connect_ips"),
 				),
@@ -125,7 +124,7 @@ data "aws_directory_service_directory" "test" {
 }
 `
 
-func testAccDirectoryDataSourceConfig_SimpleAD(rName, alias, domain string) string {
+func testAccDirectoryDataSourceConfig_simpleAD(rName, alias, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -152,7 +151,7 @@ resource "aws_directory_service_directory" "test-simple-ad" {
 `, alias, domain))
 }
 
-func testAccDirectoryDataSourceConfig_MicrosoftAD(rName, alias, domain string) string {
+func testAccDirectoryDataSourceConfig_microsoftAD(rName, alias, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -179,7 +178,7 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
 `, alias, domain))
 }
 
-func testAccDataSourceDirectoryServiceDirectoryConfig_connector(rName, domain string) string {
+func testAccDirectoryDataSourceConfig_connector(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
