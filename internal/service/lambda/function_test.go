@@ -386,7 +386,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckNoResourceAttr(resourceName, "environment"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
 				),
 			},
 			{
@@ -420,7 +420,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckNoResourceAttr(resourceName, "environment"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
 				),
 			},
 		},
@@ -2131,7 +2131,11 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 	for _, runtime := range lambda.Runtime_Values() {
 		// EOL runtimes.
 		switch runtime {
+		case lambda.RuntimeRuby25:
+			fallthrough
 		case lambda.RuntimeNodejs43Edge:
+			fallthrough
+		case lambda.RuntimeDotnetcore21:
 			fallthrough
 		case lambda.RuntimeDotnetcore20:
 			fallthrough
