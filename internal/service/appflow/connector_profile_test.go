@@ -293,8 +293,8 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_credentials {
       redshift {
-        password = %[2]q
-        username = %[3]q
+        password = aws_redshift_cluster.test.master_password
+        username = aws_redshift_cluster.test.master_username
       }
     }
 
@@ -332,8 +332,8 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_credentials {
       redshift {
-        password = %[2]q
-        username = %[3]q
+        password = aws_redshift_cluster.test.master_password
+        username = aws_redshift_cluster.test.master_username
       }
     }
 
