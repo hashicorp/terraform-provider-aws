@@ -40,6 +40,12 @@ func ResourceCluster() *schema.Resource {
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return verify.SemVerLessThan(new.(string), old.(string))
 			}),
+			customdiff.ComputedIf("broker_node_group_info.0.storage_info", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("broker_node_group_info.0.ebs_volume_size")
+			}),
+			customdiff.ComputedIf("broker_node_group_info.0.ebs_volume_size", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("broker_node_group_info.0.storage_info")
+			}),
 			verify.SetTagsDiff,
 		),
 
