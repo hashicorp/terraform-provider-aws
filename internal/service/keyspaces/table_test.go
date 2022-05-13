@@ -282,7 +282,8 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.status", "ENABLED"),
 				),
 			},
 		},
@@ -605,6 +606,10 @@ resource "aws_keyspaces_table" "test" {
 
   point_in_time_recovery {
     status = "DISABLED"
+  }
+
+  ttl {
+    status = "ENABLED"
   }
 }
 `, rName1, rName2)
