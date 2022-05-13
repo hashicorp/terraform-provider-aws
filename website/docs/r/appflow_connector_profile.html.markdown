@@ -71,7 +71,7 @@ resource "aws_appflow_connector_profile" "example" {
     connector_profile_properties {
       redshift {
         bucket_name  = aws_s3_bucket.example.name
-        database_url = "jdbc:redshift://${aws_redshift_cluster.example.endpoint}/${aws_redshift_cluster.example.database_name"
+        database_url = "jdbc:redshift://${aws_redshift_cluster.example.endpoint}/${aws_redshift_cluster.example.database_name}"
         role_arn     = aws_iam_role.example.arn
       }
     }
