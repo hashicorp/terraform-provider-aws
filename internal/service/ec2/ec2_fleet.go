@@ -692,43 +692,45 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.ModifyFleetInput{
-		Context:                         aws.String(d.Get("context").(string)),
-		ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
-		LaunchTemplateConfigs:           expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
-		FleetId:                         aws.String(d.Id()),
-		// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
-		// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
-		TargetCapacitySpecification: &ec2.TargetCapacitySpecificationRequest{
-			TotalTargetCapacity: aws.Int64(int64(d.Get("target_capacity_specification.0.total_target_capacity").(int))),
-		},
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyFleetInput{
+			Context:                         aws.String(d.Get("context").(string)),
+			ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
+			LaunchTemplateConfigs:           expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
+			FleetId:                         aws.String(d.Id()),
+			// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
+			// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
+			TargetCapacitySpecification: &ec2.TargetCapacitySpecificationRequest{
+				TotalTargetCapacity: aws.Int64(int64(d.Get("target_capacity_specification.0.total_target_capacity").(int))),
+			},
+		}
 
-	log.Printf("[DEBUG] Modifying EC2 Fleet (%s): %s", d.Id(), input)
-	_, err := conn.ModifyFleet(input)
+		log.Printf("[DEBUG] Modifying EC2 Fleet (%s): %s", d.Id(), input)
+		_, err := conn.ModifyFleet(input)
 
-	if err != nil {
-		return fmt.Errorf("error modifying EC2 Fleet: %s", err)
-	}
+		if err != nil {
+			return fmt.Errorf("error modifying EC2 Fleet: %s", err)
+		}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.FleetStateCodeModifying},
-		Target:  []string{ec2.FleetStateCodeActive},
-		Refresh: ec2FleetRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{ec2.FleetStateCodeModifying},
+			Target:  []string{ec2.FleetStateCodeActive},
+			Refresh: ec2FleetRefreshFunc(conn, d.Id()),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
 
-	log.Printf("[DEBUG] Waiting for EC2 Fleet (%s) modification", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Fleet (%s) modification: %s", d.Id(), err)
+		log.Printf("[DEBUG] Waiting for EC2 Fleet (%s) modification", d.Id())
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for EC2 Fleet (%s) modification: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating EC2 Fleet (%s) tags: %s", d.Id(), err)
 		}
 	}
 
