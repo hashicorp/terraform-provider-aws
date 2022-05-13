@@ -30,7 +30,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
+				Config: testAccFleetConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
@@ -78,7 +78,7 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
+				Config: testAccFleetConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFleet(), resourceName),
@@ -2718,27 +2718,66 @@ func testAccPreCheckFleet(t *testing.T) {
 	}
 }
 
+func testAccFleetConfig_BaseLaunchTemplate(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+`, rName))
+}
+
+func testAccFleetConfig_Basic(rName string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), `
+resource "aws_ec2_fleet" "test" {
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = 0
+  }
+}
+`)
+}
+
 func testAccFleetConfig_multipleNetworkInterfaces(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   cidr_block = "10.1.0.0/24"
   vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Testacc SSH security group"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
@@ -2746,17 +2785,26 @@ resource "aws_security_group" "test" {
     to_port     = 22
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     protocol    = "-1"
     from_port   = 0
     to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
   subnet_id       = aws_subnet.test.id
   security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_launch_template" "test" {
@@ -2775,6 +2823,7 @@ resource "aws_launch_template" "test" {
     delete_on_termination = true
     network_interface_id  = aws_network_interface.test.id
   }
+
   network_interfaces {
     device_index          = 1
     delete_on_termination = true
@@ -2807,34 +2856,18 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 1
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
 
-func testAccFleetConfig_BaseLaunchTemplate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.micro"
-  name          = %q
-}
-`, rName)
-}
-
 func testAccFleetConfig_ExcessCapacityTerminationPolicy(rName, excessCapacityTerminationPolicy string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  excess_capacity_termination_policy = %q
+  excess_capacity_termination_policy = %[2]q
 
   launch_template_config {
     launch_template_specification {
@@ -2847,30 +2880,24 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, excessCapacityTerminationPolicy)
+`, rName, excessCapacityTerminationPolicy))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateID(rName, launchTemplateResourceName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
-  image_id      = data.aws_ami.test.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
   name          = "%[1]s1"
 }
 
 resource "aws_launch_template" "test2" {
-  image_id      = data.aws_ami.test.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
   name          = "%[1]s2"
 }
@@ -2887,30 +2914,24 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName, launchTemplateResourceName)
+`, rName, launchTemplateResourceName))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
-  image_id      = data.aws_ami.test.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
   name          = "%[1]s1"
 }
 
 resource "aws_launch_template" "test2" {
-  image_id      = data.aws_ami.test.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
   name          = "%[1]s2"
 }
@@ -2927,26 +2948,20 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName, launchTemplateResourceName)
+`, rName, launchTemplateResourceName))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, instanceType string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = %q
-  name          = %q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = %[2]q
+  name          = %[1]q
 }
 
 resource "aws_ec2_fleet" "test" {
@@ -2961,21 +2976,19 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instanceType, rName)
+`, rName, instanceType))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName string, availabilityZoneIndex int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		testAccFleetConfig_BaseLaunchTemplate(rName),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -2984,7 +2997,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      availability_zone = data.aws_availability_zones.available.names[%d]
+      availability_zone = data.aws_availability_zones.available.names[%[2]d]
     }
   }
 
@@ -2992,12 +3005,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, availabilityZoneIndex)
+`, rName, availabilityZoneIndex))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(rName string, instanceRequirements string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+func testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(rName, instanceRequirements string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3007,7 +3024,7 @@ resource "aws_ec2_fleet" "test" {
 
     override {
       instance_requirements {
-        %s
+        %[2]s
       }
     }
   }
@@ -3016,12 +3033,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "on-demand"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instanceRequirements)
+`, rName, instanceRequirements))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, instanceType string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3030,7 +3051,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      instance_type = %q
+      instance_type = %[2]q
     }
   }
 
@@ -3038,12 +3059,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instanceType)
+`, rName, instanceType))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, maxPrice string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3052,7 +3077,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      max_price = %q
+      max_price = %[2]q
     }
   }
 
@@ -3060,12 +3085,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, maxPrice)
+`, rName, maxPrice))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_Priority(rName string, priority int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3074,7 +3103,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      priority = %d
+      priority = %[2]d
     }
   }
 
@@ -3082,12 +3111,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, priority)
+`, rName, priority))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName string, priority1, priority2 int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3097,12 +3130,12 @@ resource "aws_ec2_fleet" "test" {
 
     override {
       instance_type = aws_launch_template.test.instance_type
-      priority      = %d
+      priority      = %[2]d
     }
 
     override {
       instance_type = "t3.small"
-      priority      = %d
+      priority      = %[3]d
     }
   }
 
@@ -3110,21 +3143,21 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, priority1, priority2)
+`, rName, priority1, priority2))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_SubnetID(rName string, subnetIndex int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
-variable "TestAccNameTag" {
-  default = "tf-acc-test-ec2-fleet-launchtemplateconfig-override-subnetid"
-}
-
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = var.TestAccNameTag
+    Name = %[1]q
   }
 }
 
@@ -3135,7 +3168,7 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = var.TestAccNameTag
+    Name = %[1]q
   }
 }
 
@@ -3147,7 +3180,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      subnet_id = aws_subnet.test.*.id[%d]
+      subnet_id = aws_subnet.test.*.id[%[2]d]
     }
   }
 
@@ -3155,12 +3188,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, subnetIndex)
+`, rName, subnetIndex))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName string, weightedCapacity int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3169,7 +3206,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      weighted_capacity = %d
+      weighted_capacity = %[2]d
     }
   }
 
@@ -3177,12 +3214,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, weightedCapacity)
+`, rName, weightedCapacity))
 }
 
 func testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName string, weightedCapacity1, weightedCapacity2 int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3192,12 +3233,12 @@ resource "aws_ec2_fleet" "test" {
 
     override {
       instance_type     = aws_launch_template.test.instance_type
-      weighted_capacity = %d
+      weighted_capacity = %[2]d
     }
 
     override {
       instance_type     = "t3.small"
-      weighted_capacity = %d
+      weighted_capacity = %[3]d
     }
   }
 
@@ -3205,12 +3246,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, weightedCapacity1, weightedCapacity2)
+`, rName, weightedCapacity1, weightedCapacity2))
 }
 
 func testAccFleetConfig_OnDemandOptions_AllocationStrategy(rName, allocationStrategy string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3220,21 +3265,25 @@ resource "aws_ec2_fleet" "test" {
   }
 
   on_demand_options {
-    allocation_strategy = %q
+    allocation_strategy = %[2]q
   }
 
   target_capacity_specification {
     default_target_capacity_type = "on-demand"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, allocationStrategy)
+`, rName, allocationStrategy))
 }
 
 func testAccFleetConfig_ReplaceUnhealthyInstances(rName string, replaceUnhealthyInstances bool) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  replace_unhealthy_instances = %t
+  replace_unhealthy_instances = %[2]t
 
   launch_template_config {
     launch_template_specification {
@@ -3247,12 +3296,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, replaceUnhealthyInstances)
+`, rName, replaceUnhealthyInstances))
 }
 
 func testAccFleetConfig_SpotOptions_AllocationStrategy(rName, allocationStrategy string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3262,19 +3315,23 @@ resource "aws_ec2_fleet" "test" {
   }
 
   spot_options {
-    allocation_strategy = %q
+    allocation_strategy = %[2]q
   }
 
   target_capacity_specification {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, allocationStrategy)
+`, rName, allocationStrategy))
 }
 
 func testAccFleetConfig_SpotOptions_CapacityRebalance(rName, allocationStrategy string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3284,7 +3341,7 @@ resource "aws_ec2_fleet" "test" {
   }
 
   spot_options {
-    allocation_strategy = %[1]q
+    allocation_strategy = %[2]q
     maintenance_strategies {
       capacity_rebalance {
         replacement_strategy = "launch"
@@ -3296,12 +3353,16 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, allocationStrategy)
+`, rName, allocationStrategy))
 }
 
 func testAccFleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, instanceInterruptionBehavior string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3311,19 +3372,23 @@ resource "aws_ec2_fleet" "test" {
   }
 
   spot_options {
-    instance_interruption_behavior = %q
+    instance_interruption_behavior = %[2]q
   }
 
   target_capacity_specification {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instanceInterruptionBehavior)
+`, rName, instanceInterruptionBehavior))
 }
 
 func testAccFleetConfig_SpotOptions_InstancePoolsToUseCount(rName string, instancePoolsToUseCount int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3333,19 +3398,23 @@ resource "aws_ec2_fleet" "test" {
   }
 
   spot_options {
-    instance_pools_to_use_count = %d
+    instance_pools_to_use_count = %[2]d
   }
 
   target_capacity_specification {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instancePoolsToUseCount)
+`, rName, instancePoolsToUseCount))
 }
 
 func testAccFleetConfig_Tags(rName, key1, value1 string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3355,7 +3424,7 @@ resource "aws_ec2_fleet" "test" {
   }
 
   tags = {
-    %q = %q
+    %[1]q = %[2]q
   }
 
   target_capacity_specification {
@@ -3363,11 +3432,11 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
 }
-`, key1, value1)
+`, key1, value1))
 }
 
 func testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, defaultTargetCapacityType string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3377,15 +3446,19 @@ resource "aws_ec2_fleet" "test" {
   }
 
   target_capacity_specification {
-    default_target_capacity_type = %q
+    default_target_capacity_type = %[2]q
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, defaultTargetCapacityType)
+`, rName, defaultTargetCapacityType))
 }
 
 func testAccFleetConfig_TargetCapacitySpecification_TotalTargetCapacity(rName string, totalTargetCapacity int) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   terminate_instances = true
 
@@ -3398,16 +3471,20 @@ resource "aws_ec2_fleet" "test" {
 
   target_capacity_specification {
     default_target_capacity_type = "spot"
-    total_target_capacity        = %d
+    total_target_capacity        = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`, totalTargetCapacity)
+`, rName, totalTargetCapacity))
 }
 
 func testAccFleetConfig_TerminateInstancesWithExpiration(rName string, terminateInstancesWithExpiration bool) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  terminate_instances_with_expiration = %t
+  terminate_instances_with_expiration = %[2]t
 
   launch_template_config {
     launch_template_specification {
@@ -3420,14 +3497,18 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, terminateInstancesWithExpiration)
+`, rName, terminateInstancesWithExpiration))
 }
 
 func testAccFleetConfig_Type(rName, fleetType string) string {
-	return testAccFleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  type = %q
+  type = %[2]q
 
   launch_template_config {
     launch_template_specification {
@@ -3440,6 +3521,10 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, fleetType)
+`, rName, fleetType))
 }
