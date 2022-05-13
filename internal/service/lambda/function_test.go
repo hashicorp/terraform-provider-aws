@@ -386,7 +386,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckResourceAttr(resourceName, "environment.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
 				),
 			},
 			{
