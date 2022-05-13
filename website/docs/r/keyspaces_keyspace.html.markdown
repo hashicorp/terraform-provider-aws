@@ -38,6 +38,13 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the keyspace.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_keyspaces_keyspace` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `1 minute`) Used for keyspace creation
+- `delete` - (Default `1 minute`) Used for keyspace deletion
+
 ## Import
 
 Use the `name` to import a keyspace. For example:
