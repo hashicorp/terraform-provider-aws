@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -2246,6 +2247,23 @@ func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 	})
 }
 
+func TestAccEC2Fleet_capacityRebalanceInvalidType(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFleetConfigWithInvalidTypeForCapacityRebalance(rName),
+				ExpectError: regexp.MustCompile(`Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain`),
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -3359,6 +3377,39 @@ resource "aws_ec2_fleet" "test" {
   }
 }
 `, rName, allocationStrategy))
+}
+
+func testAccFleetConfigWithInvalidTypeForCapacityRebalance(rName string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
+resource "aws_ec2_fleet" "test" {
+  type = "request"
+
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
+
+  spot_options {
+    allocation_strategy = "diversified"
+    maintenance_strategies {
+      capacity_rebalance {
+        replacement_strategy = "launch"
+      }
+    }
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccFleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, instanceInterruptionBehavior string) string {

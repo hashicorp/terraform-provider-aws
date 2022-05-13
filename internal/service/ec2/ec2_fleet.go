@@ -1,6 +1,8 @@
 package ec2
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,7 +38,23 @@ func ResourceFleet() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				if diff.Id() == "" {
+					if diff.Get("type").(string) != ec2.FleetTypeMaintain {
+						if v, ok := diff.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+							tfMap := v.([]interface{})[0].(map[string]interface{})
+							if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
+								return errors.New(`EC2 Fleet has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.`)
+							}
+						}
+					}
+				}
+
+				return nil
+			},
+			verify.SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"context": {
@@ -550,13 +569,6 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		Type:                             aws.String(fleetType),
-	}
-
-	if fleetType != ec2.FleetTypeMaintain {
-		if input.SpotOptions.MaintenanceStrategies != nil {
-			log.Printf("[WARN] EC2 Fleet (%s) has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.", input)
-			return nil
-		}
 	}
 
 	if v, ok := d.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
