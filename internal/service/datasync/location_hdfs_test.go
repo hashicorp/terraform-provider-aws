@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDataSyncLocationHdfs_basic(t *testing.T) {
-	var locationHdfs1 datasync.DescribeLocationHdfsOutput
+func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
+	var locationHDFS1 datasync.DescribeLocationHdfsOutput
 
 	resourceName := "aws_datasync_location_hdfs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -27,12 +27,12 @@ func TestAccDataSyncLocationHdfs_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationHdfsDestroy,
+		CheckDestroy:      testAccCheckLocationHDFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHdfsConfig(rName),
+				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHdfsExists(resourceName, &locationHdfs1),
+					testAccCheckLocationHDFSExists(resourceName, &locationHDFS1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
@@ -56,8 +56,8 @@ func TestAccDataSyncLocationHdfs_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationHdfs_disappears(t *testing.T) {
-	var locationHdfs1 datasync.DescribeLocationHdfsOutput
+func TestAccDataSyncLocationHDFS_disappears(t *testing.T) {
+	var locationHDFS1 datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -65,14 +65,14 @@ func TestAccDataSyncLocationHdfs_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationHdfsDestroy,
+		CheckDestroy:      testAccCheckLocationHDFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHdfsConfig(rName),
+				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHdfsExists(resourceName, &locationHdfs1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHdfs(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHdfs(), resourceName),
+					testAccCheckLocationHDFSExists(resourceName, &locationHDFS1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,8 +80,8 @@ func TestAccDataSyncLocationHdfs_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationHdfs_tags(t *testing.T) {
-	var locationHdfs1, locationHdfs2, locationHdfs3 datasync.DescribeLocationHdfsOutput
+func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
+	var locationHDFS1, locationHDFS2, locationHDFS3 datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,12 +89,12 @@ func TestAccDataSyncLocationHdfs_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationHdfsDestroy,
+		CheckDestroy:      testAccCheckLocationHDFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHdfsTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationHDFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHdfsExists(resourceName, &locationHdfs1),
+					testAccCheckLocationHDFSExists(resourceName, &locationHDFS1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -105,20 +105,20 @@ func TestAccDataSyncLocationHdfs_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationHdfsTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationHDFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHdfsExists(resourceName, &locationHdfs2),
-					testAccCheckLocationHdfsNotRecreated(&locationHdfs1, &locationHdfs2),
+					testAccCheckLocationHDFSExists(resourceName, &locationHDFS2),
+					testAccCheckLocationHDFSNotRecreated(&locationHDFS1, &locationHDFS2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccLocationHdfsTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationHDFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHdfsExists(resourceName, &locationHdfs3),
-					testAccCheckLocationHdfsNotRecreated(&locationHdfs2, &locationHdfs3),
+					testAccCheckLocationHDFSExists(resourceName, &locationHDFS3),
+					testAccCheckLocationHDFSNotRecreated(&locationHDFS2, &locationHDFS3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -127,7 +127,7 @@ func TestAccDataSyncLocationHdfs_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationHdfsDestroy(s *terraform.State) error {
+func testAccCheckLocationHDFSDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -135,7 +135,7 @@ func testAccCheckLocationHdfsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfdatasync.FindLocationHdfsByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindLocationHDFSByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -151,7 +151,7 @@ func testAccCheckLocationHdfsDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckLocationHdfsExists(resourceName string, locationHdfs *datasync.DescribeLocationHdfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationHDFSExists(resourceName string, locationHDFS *datasync.DescribeLocationHdfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -159,7 +159,7 @@ func testAccCheckLocationHdfsExists(resourceName string, locationHdfs *datasync.
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		output, err := tfdatasync.FindLocationHdfsByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindLocationHDFSByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -169,23 +169,23 @@ func testAccCheckLocationHdfsExists(resourceName string, locationHdfs *datasync.
 			return fmt.Errorf("Location %q does not exist", rs.Primary.ID)
 		}
 
-		*locationHdfs = *output
+		*locationHDFS = *output
 
 		return nil
 	}
 }
 
-func testAccCheckLocationHdfsNotRecreated(i, j *datasync.DescribeLocationHdfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationHDFSNotRecreated(i, j *datasync.DescribeLocationHdfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("DataSync Location Hdfs was recreated")
+			return errors.New("DataSync Location HDFS was recreated")
 		}
 
 		return nil
 	}
 }
 
-func testAccLocationHdfsBaseConfig(rName string) string {
+func testAccLocationHDFSConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
@@ -278,8 +278,8 @@ resource "aws_datasync_agent" "test" {
 `, rName))
 }
 
-func testAccLocationHdfsConfig(rName string) string {
-	return testAccLocationHdfsBaseConfig(rName) + fmt.Sprintf(`
+func testAccLocationHDFSConfig_basic(rName string) string {
+	return testAccLocationHDFSConfig_base(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SIMPLE"
@@ -293,8 +293,8 @@ resource "aws_datasync_location_hdfs" "test" {
 `, rName)
 }
 
-func testAccLocationHdfsTags1Config(rName, key1, value1 string) string {
-	return testAccLocationHdfsBaseConfig(rName) + fmt.Sprintf(`
+func testAccLocationHDFSConfig_tags1(rName, key1, value1 string) string {
+	return testAccLocationHDFSConfig_base(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SIMPLE"
@@ -312,8 +312,8 @@ resource "aws_datasync_location_hdfs" "test" {
 `, rName, key1, value1)
 }
 
-func testAccLocationHdfsTags2Config(rName, key1, value1, key2, value2 string) string {
-	return testAccLocationHdfsBaseConfig(rName) + fmt.Sprintf(`
+func testAccLocationHDFSConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return testAccLocationHDFSConfig_base(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SIMPLE"

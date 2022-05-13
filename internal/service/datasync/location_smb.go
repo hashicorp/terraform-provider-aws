@@ -231,7 +231,7 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating DataSync SMB location (%s) tags: %w", d.Id(), err)
 		}
 	}
 	return resourceLocationSMBRead(d, meta)
