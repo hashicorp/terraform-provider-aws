@@ -165,7 +165,7 @@ func resourceDomainNameConfigurationRead(d *schema.ResourceData, meta interface{
 
 	d.Set("arn", out.DomainConfigurationArn)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, _ := ListTags(conn, d.Get("arn").(string))
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
