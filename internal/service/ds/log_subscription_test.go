@@ -28,7 +28,7 @@ func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// test create
 			{
-				Config: testAccDirectoryServiceLogSubscriptionConfig(rName, domainName, logGroupName),
+				Config: testAccLogSubscriptionConfig_basic(rName, domainName, logGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(
 						resourceName,
@@ -107,7 +107,7 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 	}
 }
 
-func testAccDirectoryServiceLogSubscriptionConfig(rName, domain, logGroupName string) string {
+func testAccLogSubscriptionConfig_basic(rName, domain, logGroupName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`

@@ -110,7 +110,7 @@ func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDirectoryServiceDirectoryConfig_connector(rName, domainName),
+				Config: testAccDirectoryDataSourceConfig_dataSourceDirectoryconnector(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "connect_settings.0.connect_ips", resourceName, "connect_settings.0.connect_ips"),
 				),
@@ -179,7 +179,7 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
 `, alias, domain))
 }
 
-func testAccDataSourceDirectoryServiceDirectoryConfig_connector(rName, domain string) string {
+func testAccDirectoryDataSourceConfig_dataSourceDirectoryconnector(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
