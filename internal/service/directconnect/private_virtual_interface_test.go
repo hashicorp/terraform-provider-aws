@@ -36,7 +36,7 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
+				Config: testAccPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -57,7 +57,7 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_updated(connectionId, rName, bgpAsn, vlan),
+				Config: testAccPrivateVirtualInterfaceConfig_updated(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -108,7 +108,7 @@ func TestAccDirectConnectPrivateVirtualInterface_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_tags(connectionId, rName, bgpAsn, vlan),
+				Config: testAccPrivateVirtualInterfaceConfig_tags(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -132,7 +132,7 @@ func TestAccDirectConnectPrivateVirtualInterface_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_tagsUpdated(connectionId, rName, bgpAsn, vlan),
+				Config: testAccPrivateVirtualInterfaceConfig_tagsUpdated(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -187,7 +187,7 @@ func TestAccDirectConnectPrivateVirtualInterface_dxGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_dxGateway(connectionId, rName, amzAsn, bgpAsn, vlan),
+				Config: testAccPrivateVirtualInterfaceConfig_gateway(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -239,7 +239,7 @@ func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
+				Config: testAccPrivateVirtualInterfaceConfig_SiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -261,7 +261,7 @@ func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_basicUpdated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
+				Config: testAccPrivateVirtualInterfaceConfig_SiteLink_updated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -293,14 +293,14 @@ func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 }
 
 func testAccCheckPrivateVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_private_virtual_interface")
+	return testAccCheckVirtualInterfaceDestroy(s, "aws_dx_private_virtual_interface")
 }
 
 func testAccCheckPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckDxVirtualInterfaceExists(name, vif)
+	return testAccCheckVirtualInterfaceExists(name, vif)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName string) string {
+func testAccPrivateVirtualInterfaceConfig_vpnGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -309,8 +309,8 @@ resource "aws_vpn_gateway" "test" {
 }`, rName)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
+func testAccPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
+	return testAccPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
 resource "aws_dx_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
@@ -322,8 +322,8 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_updated(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
+func testAccPrivateVirtualInterfaceConfig_updated(cid, rName string, bgpAsn, vlan int) string {
+	return testAccPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
 resource "aws_dx_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
@@ -336,8 +336,8 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_tags(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
+func testAccPrivateVirtualInterfaceConfig_tags(cid, rName string, bgpAsn, vlan int) string {
+	return testAccPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
 resource "aws_dx_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
@@ -355,8 +355,8 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_tagsUpdated(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
+func testAccPrivateVirtualInterfaceConfig_tagsUpdated(cid, rName string, bgpAsn, vlan int) string {
+	return testAccPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
 resource "aws_dx_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
@@ -374,7 +374,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_dxGateway(cid, rName string, amzAsn, bgpAsn, vlan int) string {
+func testAccPrivateVirtualInterfaceConfig_gateway(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = %[3]d
@@ -392,7 +392,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, amzAsn, bgpAsn, vlan)
 }
 
-func testAccDxPrivateVirtualInterfaceConfigSiteLink_basic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccPrivateVirtualInterfaceConfig_SiteLink_basic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = %[3]d
@@ -411,7 +411,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, amzAsn, bgpAsn, vlan, sitelink_enabled)
 }
 
-func testAccDxPrivateVirtualInterfaceConfigSiteLink_basicUpdated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccPrivateVirtualInterfaceConfig_SiteLink_updated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = %[3]d
