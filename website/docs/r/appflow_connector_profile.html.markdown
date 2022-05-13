@@ -108,7 +108,7 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `redshift` (Optional) - The connector-specific credentials required when using Amazon Redshift. See [Redshift Connector Profile Credentials](#redshift-connector-profile-credentials) for more details.
 * `salesforce` (Optional) - The connector-specific credentials required when using Salesforce. See [Salesforce Connector Profile Credentials](#salesforce-connector-profile-credentials) for more details.
 * `sapo_data` (Optional) - The connector-specific credentials required when using SAPOData. See [SAPOData Connector Profile Credentials](#sapodata-connector-profile-credentials) for more details.
-* `service_now` (Optional) - The connector-specific credentials required when using ServiceNow. See [ServiceNow Connector Profile Credentials](#service-now-connector-profile-credentials) for more details.
+* `service_now` (Optional) - The connector-specific credentials required when using ServiceNow. See [ServiceNow Connector Profile Credentials](#servicenow-connector-profile-credentials) for more details.
 * `singular` (Optional) - The connector-specific credentials required when using Singular. See [Singular Connector Profile Credentials](#singular-connector-profile-credentials) for more details.
 * `slack` (Optional) - The connector-specific credentials required when using Slack. See [Slack Connector Profile Credentials](#amplitude-connector-profile-credentials) for more details.
 * `snowflake` (Optional) - The connector-specific credentials required when using Snowflake. See [Snowflake Connector Profile Credentials](#snowflake-connector-profile-credentials) for more details.
@@ -121,7 +121,7 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 * `secret_key` (Required) - The Secret Access Key portion of the credentials.
 
-#### Custom Connector Profile Credentials Arguments
+#### Custom Connector Profile Credentials
 
 * `api_key` (Optional) - The API keys required for the authentication of the user.
     * `api_key` (Required) - The API key required for API key authentication.
@@ -188,6 +188,18 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `client_credentials_arn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
+
+#### SAPOData Connector Profile Credentials
+
+* `basic_auth_credentials` (Optional) - The SAPOData basic authentication credentials.
+    * `password` (Required) - The password to use to connect to a resource.
+    * `username` (Required) - The username to use to connect to a resource.
+* `oauth_credentials` (Optional) - The SAPOData OAuth type authentication credentials.
+    * `access_token` (Optional) - The access token used to access protected SAPOData resources.
+    * `client_id` (Required) - The identifier for the desired client.
+    * `client_secret` (Required) -  The client secret used by the OAuth client to authenticate to the authorization server.
+    * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
+    * `refresh_token` (Optional) - The refresh token used to refresh expired access token.
 
 #### ServiceNow Connector Profile Credentials
 
