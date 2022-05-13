@@ -140,16 +140,16 @@ The AppFlow connector profile argument layout is a complex structure. The follow
     * `oauth_request` (Optional) - Used by select connectors for which the OAuth workflow is supported. See [OAuth Request](#oauth-request) for more details.
     * `refresh_token` (Optional) - The refresh token used to refresh an expired access token.
 
-#### Datadog Connector Profile Credentials Arguments
+#### Datadog Connector Profile Credentials
 
 * `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 * `application_key` (Required) - Application keys, in conjunction with your API key, give you full access to Datadog’s programmatic API. Application keys are associated with the user account that created them. The application key is used to log all requests made to the API.
 
-#### Dynatrace Connector Profile Credentials Arguments
+#### Dynatrace Connector Profile Credentials
 
 * `api_token` (Required) - The API tokens used by Dynatrace API to authenticate various API calls.
 
-#### Google Analytics Connector Profile Credentials Arguments
+#### Google Analytics Connector Profile Credentials
 
 * `access_token` (Optional) - The credentials used to access protected Google Analytics resources.
 * `client_id` (Required) - The identifier for the desired client.
@@ -157,69 +157,69 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens. This is required only for OAuth2 access tokens, and is not required for OAuth1 access tokens.
 
-#### Honeycode Connector Profile Credentials Arguments
+#### Honeycode Connector Profile Credentials
 
 * `access_token` (Optional) - The credentials used to access protected Amazon Honeycode resources.
 * `oauth_request` (Optional) - Used by select connectors for which the OAuth workflow is supported, such as Salesforce, Google Analytics, Marketo, Zendesk, and Slack. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
 
-#### Infor Nexus Connector Profile Credentials Arguments
+#### Infor Nexus Connector Profile Credentials
 
 * `access_key_id` (Required) - The Access Key portion of the credentials.
 * `datakey` (Required) - The encryption keys used to encrypt data.
 * `secret_access_key` (Required) - The secret key used to sign requests.
 * `user_id` (Required) - The identifier for the user.
 
-#### Marketo Connector Profile Credentials Arguments
+#### Marketo Connector Profile Credentials
 
 * `access_token` (Optional) - The credentials used to access protected Marketo resources.
 * `client_id` (Required) - The identifier for the desired client.
 * `client_secret` (Required) - The client secret used by the OAuth client to authenticate to the authorization server.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 
-#### Redshift Connector Profile Credentials Arguments
+#### Redshift Connector Profile Credentials
 
 * `password` (Required) - The password that corresponds to the user name.
 * `username` (Required) - The name of the user.
 
-#### Salesforce Connector Profile Credentials Arguments
+#### Salesforce Connector Profile Credentials
 
 * `access_token` (Optional) - The credentials used to access protected Salesforce resources.
 * `client_credentials_arn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
 
-#### ServiceNow Connector Profile Credentials Arguments
+#### ServiceNow Connector Profile Credentials
 
 * `password` (Required) - The password that corresponds to the user name.
 * `username` (Required) - The name of the user.
 
-#### Singular Connector Profile Credentials Arguments
+#### Singular Connector Profile Credentials
 
 * `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 
-#### Slack Connector Profile Credentials Arguments
+#### Slack Connector Profile Credentials
 
 * `access_token` (Optional) - The credentials used to access protected Slack resources.
 * `client_id` (Required) - The identifier for the client.
 * `client_secret` (Required) - The client secret used by the OAuth client to authenticate to the authorization server.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 
-#### Snowflake Connector Profile Credentials Arguments
+#### Snowflake Connector Profile Credentials
 
 * `password` (Required) - The password that corresponds to the user name.
 * `username` (Required) - The name of the user.
 
-#### Trendmicro Connector Profile Credentials Arguments
+#### Trendmicro Connector Profile Credentials
 
 * `api_secret_key` (Required) - The Secret Access Key portion of the credentials.
 
-#### Veeva Connector Profile Credentials Arguments
+#### Veeva Connector Profile Credentials
 
 * `password` (Required) - The password that corresponds to the user name.
 * `username` (Required) - The name of the user.
 
-#### Zendesk Connector Profile Credentials Arguments
+#### Zendesk Connector Profile Credentials
 
 * `access_token` (Optional) - The credentials used to access protected Zendesk resources.
 * `client_id` (Required) - The identifier for the desired client.
