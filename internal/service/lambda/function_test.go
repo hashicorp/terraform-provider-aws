@@ -2085,6 +2085,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		switch runtime {
 		case lambda.RuntimeNodejs43Edge:
 			fallthrough
+		case lambda.RuntimeDotnetcore21:
+			fallthrough
 		case lambda.RuntimeDotnetcore20:
 			fallthrough
 		case lambda.RuntimeDotnetcore10:
