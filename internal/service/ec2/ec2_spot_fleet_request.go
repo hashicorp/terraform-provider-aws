@@ -2108,7 +2108,7 @@ func flattenLaunchTemplateConfig(apiObject *ec2.LaunchTemplateConfig) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecification(v)}
+		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2136,7 +2136,7 @@ func flattenLaunchTemplateConfigs(apiObjects []*ec2.LaunchTemplateConfig) []inte
 	return tfList
 }
 
-func flattenFleetLaunchTemplateSpecification(apiObject *ec2.FleetLaunchTemplateSpecification) map[string]interface{} {
+func flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(apiObject *ec2.FleetLaunchTemplateSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

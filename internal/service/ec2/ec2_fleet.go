@@ -1063,11 +1063,33 @@ func flattenFleetLaunchTemplateConfig(apiObject *ec2.FleetLaunchTemplateConfig) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecification(v)}
+		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecificationForFleet(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
 		tfMap["override"] = flattenFleetLaunchTemplateOverrideses(v)
+	}
+
+	return tfMap
+}
+
+func flattenFleetLaunchTemplateSpecificationForFleet(apiObject *ec2.FleetLaunchTemplateSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["launch_template_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateName; v != nil {
+		tfMap["launch_template_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Version; v != nil {
+		tfMap["version"] = aws.StringValue(v)
 	}
 
 	return tfMap
