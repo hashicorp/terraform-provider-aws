@@ -12,6 +12,8 @@ Manages AWS Managed Streaming for Kafka cluster
 
 ## Example Usage
 
+### Basic
+
 ```terraform
 resource "aws_vpc" "vpc" {
   cidr_block = "192.168.0.0/22"
@@ -164,6 +166,35 @@ output "bootstrap_brokers_tls" {
 }
 ```
 
+### With volume_throughput argument
+
+```terraform
+resource "aws_msk_cluster" "example" {
+  cluster_name           = "example"
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    instance_type = "kafka.m5.4xlarge"
+    client_subnets = [
+      "subnet-12345678912345678",
+      "subnet-98765432123456789",
+      "subnet-45678912345678912",
+    ]
+    storage_info {
+      ebs_storage_info {
+        provisioned_throughput {
+          enabled           = true
+          volume_throughput = 250
+        }
+        volume_size = 1000
+      }
+    }
+    security_groups = ["sg-12345678912345678"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -188,6 +219,7 @@ The following arguments are supported:
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
 * `connectivity_info` - (Optional) Information about the cluster access configuration. See below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
+* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See below.
 
 ### broker_node_group_info connectivity_info Argument Reference
 
@@ -196,6 +228,20 @@ The following arguments are supported:
 ### connectivity_info public_access Argument Reference
 
 * `type` - (Optional) Public access type. Valida values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+
+### broker_node_group_info storage_info Argument Reference
+
+* `ebs_storage_info` - (Optional) A block that contains EBS volume information. See below.
+
+### storage_info ebs_storage_info Argument Reference
+
+* `provisioned_throughput` - (Optional) A block that contains EBS volume provisioned throughput information. To provision storage throughput, you must choose broker type kafka.m5.4xlarge or larger. See below.
+* `volume_size` - (Optional) The size in GiB of the EBS volume for the data drive on each broker node. Minimum value of `1` and maximum value of `16384`.
+
+### ebs_storage_info provisioned_throughput Argument Reference
+
+* `enabled` - (Optional) Controls whether provisioned throughput is enabled or not. Default value: `false`.
+* `volume_throughput` - (Optional) Throughput value of the EBS volumes for the data drive on each kafka broker node in MiB per second. The minimum value is `250`. The maximum value varies between broker type. You can refer to the valid values for the maximum volume throughput at the following [documentation on throughput bottlenecks](https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html#throughput-bottlenecks)
 
 ### client_authentication Argument Reference
 
