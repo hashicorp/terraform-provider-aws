@@ -30,7 +30,7 @@ resource "aws_lightsail_database" "test" {
 }
 ```
 
-### Basic postrgres blueprint 
+### Basic postrgres blueprint
 
 ```terraform
 resource "aws_lightsail_database" "test" {
@@ -46,7 +46,7 @@ resource "aws_lightsail_database" "test" {
 
 ### Custom backup and maintenance windows
 
-Below is an example that sets a custom backup and maintenance window. Times are specified in UTC. This example will allow daily backups to take place between 16:00 and 16:30 each day. This example also requires any maintiance tasks (anything that would cause an outage, including changing some attributes) to take place on Tuesdays between 17:00 and 17:30. An action taken against this database that would cause an outage will wait until this time window to make the requested changes. 
+Below is an example that sets a custom backup and maintenance window. Times are specified in UTC. This example will allow daily backups to take place between 16:00 and 16:30 each day. This example also requires any maintiance tasks (anything that would cause an outage, including changing some attributes) to take place on Tuesdays between 17:00 and 17:30. An action taken against this database that would cause an outage will wait until this time window to make the requested changes.
 
 ```terraform
 resource "aws_lightsail_database" "test" {
@@ -61,9 +61,10 @@ resource "aws_lightsail_database" "test" {
   preferred_maintenance_window = "Tue:17:00-Tue:17:30"
 }
 ```
+
 ### Final Snapshots
 
-To enable creating a final snapshot of your database on deletion, use the `final_snapshot_name` argument to provide a name to be used for the snapshot. 
+To enable creating a final snapshot of your database on deletion, use the `final_snapshot_name` argument to provide a name to be used for the snapshot.
 
 ```terraform
 resource "aws_lightsail_database" "test" {
@@ -121,7 +122,7 @@ The following arguments are supported:
 
 ## Blueprint Ids
 
-A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command. 
+A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command.
 
 ### Examples
 
@@ -139,7 +140,7 @@ A Blueprint ID has a sufix of the engine version.
 
 ## Bundles
 
-A list of all available Lightsail Bundles for Relational Databases the [aws lightsail get-relational-database-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-bundles.html) aws cli command. 
+A list of all available Lightsail Bundles for Relational Databases the [aws lightsail get-relational-database-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-bundles.html) aws cli command.
 
 ### Examples
 
