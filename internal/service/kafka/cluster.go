@@ -930,6 +930,10 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 		}
 	}
 
+	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.StorageInfo = expandStorageInfo(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -942,6 +946,56 @@ func expandConnectivityInfo(tfMap map[string]interface{}) *kafka.ConnectivityInf
 
 	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 {
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.StorageInfo{}
+
+	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.EbsStorageInfo = expandEbsStorageInfo(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandEbsStorageInfo(tfMap map[string]interface{}) *kafka.EBSStorageInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.EBSStorageInfo{}
+
+	if v, ok := tfMap["provisioned_throughput"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+		apiObject.VolumeSize = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandProvisionedThroughput(tfMap map[string]interface{}) *kafka.ProvisionedThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.ProvisionedThroughput{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["volume_throughput"].(int); ok && v != 0 {
+		apiObject.VolumeThroughput = aws.Int64(int64(v))
 	}
 
 	return apiObject
