@@ -10,10 +10,10 @@ import (
 )
 
 func describeGatewayAssociationProposalsPages(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, bool) bool) error {
-	return describeGatewayAssociationProposalsPagesContext(context.Background(), conn, input, fn)
+	return describeGatewayAssociationProposalsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func describeGatewayAssociationProposalsPagesContext(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, bool) bool) error {
+func describeGatewayAssociationProposalsPagesWithContext(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeDirectConnectGatewayAssociationProposalsWithContext(ctx, input)
 		if err != nil {
@@ -31,10 +31,10 @@ func describeGatewayAssociationProposalsPagesContext(ctx context.Context, conn *
 }
 
 func describeGatewayAssociationsPages(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationsOutput, bool) bool) error {
-	return describeGatewayAssociationsPagesContext(context.Background(), conn, input, fn)
+	return describeGatewayAssociationsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func describeGatewayAssociationsPagesContext(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationsOutput, bool) bool) error {
+func describeGatewayAssociationsPagesWithContext(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeDirectConnectGatewayAssociationsWithContext(ctx, input)
 		if err != nil {
@@ -52,10 +52,10 @@ func describeGatewayAssociationsPagesContext(ctx context.Context, conn *directco
 }
 
 func describeGatewaysPages(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewaysInput, fn func(*directconnect.DescribeDirectConnectGatewaysOutput, bool) bool) error {
-	return describeGatewaysPagesContext(context.Background(), conn, input, fn)
+	return describeGatewaysPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func describeGatewaysPagesContext(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewaysInput, fn func(*directconnect.DescribeDirectConnectGatewaysOutput, bool) bool) error {
+func describeGatewaysPagesWithContext(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewaysInput, fn func(*directconnect.DescribeDirectConnectGatewaysOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeDirectConnectGatewaysWithContext(ctx, input)
 		if err != nil {
