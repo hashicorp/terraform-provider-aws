@@ -151,11 +151,13 @@ func ResourceTable() *schema.Resource {
 						"clustering_key": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 48),
 											validation.StringMatch(
@@ -167,6 +169,7 @@ func ResourceTable() *schema.Resource {
 									"order_by": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(keyspaces.SortOrder_Values(), false),
 									},
 								},
@@ -202,11 +205,13 @@ func ResourceTable() *schema.Resource {
 						"partition_key": {
 							Type:     schema.TypeSet,
 							Required: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 48),
 											validation.StringMatch(
@@ -221,11 +226,13 @@ func ResourceTable() *schema.Resource {
 						"static_column": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 48),
 											validation.StringMatch(
@@ -535,6 +542,43 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return diag.Errorf("waiting for Keyspaces Table (%s) Ttl update: %s", d.Id(), err)
+				}
+			}
+		}
+
+		if d.HasChange("schema_definition") {
+			o, n := d.GetChange("schema_definition")
+			var os, ns *schema.Set
+
+			if v, ok := o.([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
+					os = v
+				}
+			}
+			if v, ok := n.([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
+					ns = v
+				}
+			}
+
+			if os != nil && ns != nil {
+				if add := ns.Difference(os); add.Len() > 0 {
+					input := &keyspaces.UpdateTableInput{
+						AddColumns:   expandColumnDefinitions(add.List()),
+						KeyspaceName: aws.String(keyspaceName),
+						TableName:    aws.String(tableName),
+					}
+
+					log.Printf("[DEBUG] Updating Keyspaces Table: %s", input)
+					_, err := conn.UpdateTableWithContext(ctx, input)
+
+					if err != nil {
+						return diag.Errorf("updating Keyspaces Table (%s) AddColumns: %s", d.Id(), err)
+					}
+
+					if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return diag.Errorf("waiting for Keyspaces Table (%s) AddColumns update: %s", d.Id(), err)
+					}
 				}
 			}
 		}
