@@ -1583,6 +1583,10 @@ func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.
 		AuthenticationType: aws.String(m["authentication_type"].(string)),
 	}
 
+	if v, ok := m["api_key"].([]interface{}); ok && len(v) > 0 {
+		credentials.ApiKey = expandApiKeyCredentials(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := m["basic"].([]interface{}); ok && len(v) > 0 {
 		credentials.Basic = expandBasicAuthCredentials(v[0].(map[string]interface{}))
 	}
@@ -1810,6 +1814,20 @@ func expandOAuthRequest(m map[string]interface{}) *appflow.ConnectorOAuthRequest
 	}
 
 	return &r
+}
+
+func expandApiKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredentials {
+	credentials := appflow.ApiKeyCredentials{}
+
+	if v, ok := m["api_key"].(string); ok && v != "" {
+		credentials.ApiKey = aws.String(v)
+	}
+
+	if v, ok := m["api_secret_key"].(string); ok && v != "" {
+		credentials.ApiSecretKey = aws.String(v)
+	}
+
+	return &credentials
 }
 
 func expandBasicAuthCredentials(m map[string]interface{}) *appflow.BasicAuthCredentials {
