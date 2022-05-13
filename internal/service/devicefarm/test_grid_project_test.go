@@ -32,12 +32,12 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmProjectTestGridProjectDestroy,
+		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectConfig(rName),
+				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -50,9 +50,9 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectConfig(rNameUpdated),
+				Config: testAccTestGridProjectConfig_project(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`testgrid-project:.+`)),
 				),
@@ -76,12 +76,12 @@ func TestAccDeviceFarmTestGridProject_vpc(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmProjectTestGridProjectDestroy,
+		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectVpcConfig(rName),
+				Config: testAccTestGridProjectConfig_projectVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
@@ -111,12 +111,12 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmProjectTestGridProjectDestroy,
+		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectConfigTags1(rName, "key1", "value1"),
+				Config: testAccTestGridProjectConfig_projectTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -127,18 +127,18 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTestGridProjectConfig_projectTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectConfigTags1(rName, "key2", "value2"),
+				Config: testAccTestGridProjectConfig_projectTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -162,12 +162,12 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmProjectTestGridProjectDestroy,
+		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmProjectTestGridProjectConfig(rName),
+				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmProjectTestGridProjectExists(resourceName, &proj),
+					testAccCheckProjectTestGridProjectExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
 				),
@@ -177,7 +177,7 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFarmProjectTestGridProjectExists(n string, v *devicefarm.TestGridProject) resource.TestCheckFunc {
+func testAccCheckProjectTestGridProjectExists(n string, v *devicefarm.TestGridProject) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -203,7 +203,7 @@ func testAccCheckDeviceFarmProjectTestGridProjectExists(n string, v *devicefarm.
 	}
 }
 
-func testAccCheckDeviceFarmProjectTestGridProjectDestroy(s *terraform.State) error {
+func testAccCheckProjectTestGridProjectDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -227,7 +227,7 @@ func testAccCheckDeviceFarmProjectTestGridProjectDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccDeviceFarmProjectTestGridProjectConfig(rName string) string {
+func testAccTestGridProjectConfig_project(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_test_grid_project" "test" {
   name = %[1]q
@@ -235,7 +235,7 @@ resource "aws_devicefarm_test_grid_project" "test" {
 `, rName)
 }
 
-func testAccDeviceFarmProjectTestGridProjectVpcConfig(rName string) string {
+func testAccTestGridProjectConfig_projectVPC(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -276,7 +276,7 @@ resource "aws_devicefarm_test_grid_project" "test" {
 `, rName))
 }
 
-func testAccDeviceFarmProjectTestGridProjectConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccTestGridProjectConfig_projectTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_test_grid_project" "test" {
   name = %[1]q
@@ -288,7 +288,7 @@ resource "aws_devicefarm_test_grid_project" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFarmProjectTestGridProjectConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTestGridProjectConfig_projectTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_test_grid_project" "test" {
   name = %[1]q
