@@ -177,21 +177,29 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("No certificate for domain %q found in this region", target)
 	}
 
-	// get the certificate data
-	getCertInput := acm.GetCertificateInput{
-		CertificateArn: matchedCertificate.CertificateArn,
+	// Get the certificate data if the status is issued
+	var certOutput *acm.GetCertificateOutput
+	if aws.StringValue(matchedCertificate.Status) == acm.CertificateStatusIssued {
+		getCertInput := acm.GetCertificateInput{
+			CertificateArn: matchedCertificate.CertificateArn,
+		}
+		certOutput, err = conn.GetCertificate(&getCertInput)
+		if err != nil {
+			return fmt.Errorf("error getting ACM certificate (%s): %w", aws.StringValue(matchedCertificate.CertificateArn), err)
+		}
 	}
-	output, err := conn.GetCertificate(&getCertInput)
-	if err != nil {
-		return err
+	if certOutput != nil {
+		d.Set("certificate", certOutput.Certificate)
+		d.Set("certificate_chain", certOutput.CertificateChain)
+	} else {
+		d.Set("certificate", nil)
+		d.Set("certificate_chain", nil)
 	}
+
 	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
-	d.Set("certificate", output.Certificate)
-	d.Set("certificate_chain", output.CertificateChain)
 	tags, err := ListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
-
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)
 	}
