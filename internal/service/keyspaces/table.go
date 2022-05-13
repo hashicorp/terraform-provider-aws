@@ -34,7 +34,7 @@ func ResourceTable() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -656,6 +656,7 @@ func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 		Target:  []string{keyspaces.TableStatusActive},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
 		Timeout: timeout,
+		Delay:   10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
