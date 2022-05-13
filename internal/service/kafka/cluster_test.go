@@ -203,6 +203,93 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 	})
 }
 
+func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t *testing.T) {
+	var cluster1, cluster2 kafka.ClusterInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+	original_volume_size := 11
+	updated_volume_size := 112
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				// init with the deprecated ebs_volume_size
+				Config: testAccClusterBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, original_volume_size),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				// refactor deprecated ebs_volume_size to storage_info
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig1(rName, original_volume_size, "kafka.m5.large"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				// upgrade the instance type first. Multiple updates would cause a "The version of the cluster isn’t current. Check the current version and try again." error
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig1(rName, original_volume_size, "kafka.m5.4xlarge"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				// update storage and enable provisioned throughput
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig3(rName, updated_volume_size, "kafka.m5.4xlarge"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1399,6 +1486,26 @@ resource "aws_msk_cluster" "test" {
 `, rName, ebsVolumeSize))
 }
 
+func testAccClusterBrokerNodeGroupInfoStorageInfoConfig1(rName string, ebsVolumeSize int, instanceType string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    instance_type   = %[3]q
+    security_groups = [aws_security_group.example_sg.id]
+    storage_info {
+      ebs_storage_info {
+        volume_size = %[2]d
+      }
+    }
+  }
+}
+`, rName, ebsVolumeSize, instanceType))
+}
 
 func testAccClusterBrokerNodeGroupInfoStorageInfoConfig2(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
