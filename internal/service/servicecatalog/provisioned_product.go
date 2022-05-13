@@ -347,6 +347,10 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.RecordDetail.ProvisionedProductId))
 
+	if _, err := WaitProvisionedProductReady(conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Service Catalog Provisioned Product (%s) create: %w", d.Id(), err)
+	}
+
 	return resourceProvisionedProductRead(d, meta)
 }
 
@@ -368,7 +372,12 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 		acceptLanguage = v.(string)
 	}
 
-	output, err := WaitProvisionedProductReady(conn, acceptLanguage, d.Id(), "", d.Timeout(schema.TimeoutRead))
+	input := &servicecatalog.DescribeProvisionedProductInput{
+		Id:             aws.String(d.Id()),
+		AcceptLanguage: aws.String(acceptLanguage),
+	}
+
+	output, err := conn.DescribeProvisionedProduct(input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
@@ -512,6 +521,10 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if err != nil {
 		return fmt.Errorf("error updating Service Catalog Provisioned Product (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitProvisionedProductReady(conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return fmt.Errorf("error waiting for Service Catalog Provisioned Product (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceProvisionedProductRead(d, meta)

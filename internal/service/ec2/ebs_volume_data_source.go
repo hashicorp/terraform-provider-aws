@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,12 +17,6 @@ func DataSourceEBSVolume() *schema.Resource {
 		Read: dataSourceEBSVolumeRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -36,15 +29,25 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"filter": DataSourceFiltersSchema(),
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"multi_attach_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"volume_type": {
+			"outpost_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,21 +59,17 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
+			"tags": tftags.TagsSchemaComputed(),
+			"throughput": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"outpost_arn": {
+			"volume_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"volume_id": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
-			"throughput": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 		},
@@ -79,43 +78,71 @@ func DataSourceEBSVolume() *schema.Resource {
 
 func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filters, filtersOk := d.GetOk("filter")
+	input := &ec2.DescribeVolumesInput{}
 
-	params := &ec2.DescribeVolumesInput{}
-	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading EBS Volume: %s", params)
-	resp, err := conn.DescribeVolumes(params)
+	output, err := FindEBSVolumes(conn, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Volumes: %w", err)
 	}
 
-	filteredVolumes := resp.Volumes[:]
-
-	var volume *ec2.Volume
-	if len(filteredVolumes) < 1 {
+	if len(output) < 1 {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(filteredVolumes) > 1 {
+	var volume *ec2.Volume
+
+	if len(output) > 1 {
 		recent := d.Get("most_recent").(bool)
-		log.Printf("[DEBUG] aws_ebs_volume - multiple results found and `most_recent` is set to: %t", recent)
-		if recent {
-			volume = mostRecentVolume(filteredVolumes)
-		} else {
+
+		if !recent {
 			return fmt.Errorf("Your query returned more than one result. Please try a more " +
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
+
+		volume = mostRecentVolume(output)
 	} else {
 		// Query returned single result.
-		volume = filteredVolumes[0]
+		volume = output[0]
 	}
 
-	log.Printf("[DEBUG] aws_ebs_volume - Single Volume found: %s", *volume.VolumeId)
-	return volumeDescriptionAttributes(d, meta.(*conns.AWSClient), volume)
+	d.SetId(aws.StringValue(volume.VolumeId))
+
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
+	d.Set("availability_zone", volume.AvailabilityZone)
+	d.Set("encrypted", volume.Encrypted)
+	d.Set("iops", volume.Iops)
+	d.Set("kms_key_id", volume.KmsKeyId)
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+	d.Set("outpost_arn", volume.OutpostArn)
+	d.Set("size", volume.Size)
+	d.Set("snapshot_id", volume.SnapshotId)
+	d.Set("throughput", volume.Throughput)
+	d.Set("volume_id", volume.VolumeId)
+	d.Set("volume_type", volume.VolumeType)
+
+	if err := d.Set("tags", KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
+	}
+
+	return nil
 }
 
 type volumeSort []*ec2.Volume
@@ -132,35 +159,4 @@ func mostRecentVolume(volumes []*ec2.Volume) *ec2.Volume {
 	sortedVolumes := volumes
 	sort.Sort(volumeSort(sortedVolumes))
 	return sortedVolumes[len(sortedVolumes)-1]
-}
-
-func volumeDescriptionAttributes(d *schema.ResourceData, client *conns.AWSClient, volume *ec2.Volume) error {
-	d.SetId(aws.StringValue(volume.VolumeId))
-	d.Set("volume_id", volume.VolumeId)
-
-	arn := arn.ARN{
-		Partition: client.Partition,
-		Region:    client.Region,
-		Service:   ec2.ServiceName,
-		AccountID: client.AccountID,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
-
-	d.Set("availability_zone", volume.AvailabilityZone)
-	d.Set("encrypted", volume.Encrypted)
-	d.Set("iops", volume.Iops)
-	d.Set("kms_key_id", volume.KmsKeyId)
-	d.Set("size", volume.Size)
-	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("volume_type", volume.VolumeType)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("throughput", volume.Throughput)
-
-	if err := d.Set("tags", KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
 }

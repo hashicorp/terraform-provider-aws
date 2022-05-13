@@ -2,8 +2,13 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_connect_routing_profile` ([#23525](https://github.com/hashicorp/terraform-provider-aws/issues/23525))
+* **New Data Source:** `aws_connect_security_profile` ([#23524](https://github.com/hashicorp/terraform-provider-aws/issues/23524))
+* **New Data Source:** `aws_connect_user_hierarchy_structure` ([#23527](https://github.com/hashicorp/terraform-provider-aws/issues/23527))
 * **New Data Source:** `aws_location_map` ([#24693](https://github.com/hashicorp/terraform-provider-aws/issues/24693))
 * **New Resource:** `aws_appflow_flow` ([#24017](https://github.com/hashicorp/terraform-provider-aws/issues/24017))
+* **New Resource:** `aws_appintegrations_event_integration` ([#23904](https://github.com/hashicorp/terraform-provider-aws/issues/23904))
+* **New Resource:** `aws_connect_user_hierarchy_group` ([#23531](https://github.com/hashicorp/terraform-provider-aws/issues/23531))
 * **New Resource:** `aws_location_map` ([#24682](https://github.com/hashicorp/terraform-provider-aws/issues/24682))
 
 ENHANCEMENTS:
@@ -11,7 +16,9 @@ ENHANCEMENTS:
 * data-source/aws_autoscaling_group: Add `enabled_metrics` attribute ([#24691](https://github.com/hashicorp/terraform-provider-aws/issues/24691))
 * data-source/aws_codestarconnections_connection: Support lookup by `name` ([#19262](https://github.com/hashicorp/terraform-provider-aws/issues/19262))
 * data-source/aws_launch_template: Add `instance_requirements` attribute ([#24543](https://github.com/hashicorp/terraform-provider-aws/issues/24543))
+* resource/aws_ebs_volume: Add support for `multi_attach_enabled` with `io2` volumes ([#19060](https://github.com/hashicorp/terraform-provider-aws/issues/19060))
 * resource/aws_launch_template: Add `instance_requirements` argument ([#24543](https://github.com/hashicorp/terraform-provider-aws/issues/24543))
+* resource/aws_servicecatalog_provisioned_product: Wait for provisioning to finish ([#24758](https://github.com/hashicorp/terraform-provider-aws/issues/24758))
 * resource/aws_spot_fleet_request: Add `overrides.instance_requirements` argument ([#24448](https://github.com/hashicorp/terraform-provider-aws/issues/24448))
 
 BUG FIXES:
@@ -21,6 +28,7 @@ BUG FIXES:
 * resource/aws_ebs_volume: Add configurable timeouts ([#24745](https://github.com/hashicorp/terraform-provider-aws/issues/24745))
 * resource/aws_imagebuilder_image_recipe: Fix `ResourceDependencyException` errors when a dependency is modified ([#24708](https://github.com/hashicorp/terraform-provider-aws/issues/24708))
 * resource/aws_kms_key: Retry on `MalformedPolicyDocumentException` errors when updating key policy ([#24697](https://github.com/hashicorp/terraform-provider-aws/issues/24697))
+* resource/aws_servicecatalog_provisioned_product: Prevent error when retrieving a provisioned product in a non-available state ([#24758](https://github.com/hashicorp/terraform-provider-aws/issues/24758))
 * resource/aws_subnet: Fix `InvalidSubnet.Conflict` errors when associating IPv6 CIDR blocks ([#24685](https://github.com/hashicorp/terraform-provider-aws/issues/24685))
 
 ## 4.13.0 (May  5, 2022)

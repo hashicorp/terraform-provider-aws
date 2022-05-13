@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -503,6 +504,9 @@ func Provider() *schema.Provider {
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
 			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
+			"aws_connect_routing_profile":             connect.DataSourceRoutingProfile(),
+			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
+			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -961,6 +965,8 @@ func Provider() *schema.Provider {
 			"aws_appflow_connector_profile": appflow.ResourceConnectorProfile(),
 			"aws_appflow_flow":              appflow.ResourceFlow(),
 
+			"aws_appintegrations_event_integration": appintegrations.ResourceEventIntegration(),
+
 			"aws_appmesh_gateway_route":   appmesh.ResourceGatewayRoute(),
 			"aws_appmesh_mesh":            appmesh.ResourceMesh(),
 			"aws_appmesh_route":           appmesh.ResourceRoute(),
@@ -1156,6 +1162,7 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user_hierarchy_group":        connect.ResourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
