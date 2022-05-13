@@ -32,12 +32,12 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmNetworkProfileDestroy,
+		CheckDestroy:      testAccCheckNetworkProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmNetworkProfileConfig(rName),
+				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
@@ -53,9 +53,9 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmNetworkProfileConfig(rNameUpdated),
+				Config: testAccNetworkProfileConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
@@ -84,12 +84,12 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmNetworkProfileDestroy,
+		CheckDestroy:      testAccCheckNetworkProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmNetworkProfileConfigTags1(rName, "key1", "value1"),
+				Config: testAccNetworkProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -100,18 +100,18 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmNetworkProfileConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNetworkProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceFarmNetworkProfileConfigTags1(rName, "key2", "value2"),
+				Config: testAccNetworkProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -135,12 +135,12 @@ func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmNetworkProfileDestroy,
+		CheckDestroy:      testAccCheckNetworkProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmNetworkProfileConfig(rName),
+				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
@@ -165,12 +165,12 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmNetworkProfileDestroy,
+		CheckDestroy:      testAccCheckNetworkProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmNetworkProfileConfig(rName),
+				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(resourceName, &pool),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
@@ -180,7 +180,7 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFarmNetworkProfileExists(n string, v *devicefarm.NetworkProfile) resource.TestCheckFunc {
+func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -206,7 +206,7 @@ func testAccCheckDeviceFarmNetworkProfileExists(n string, v *devicefarm.NetworkP
 	}
 }
 
-func testAccCheckDeviceFarmNetworkProfileDestroy(s *terraform.State) error {
+func testAccCheckNetworkProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -230,8 +230,8 @@ func testAccCheckDeviceFarmNetworkProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDeviceFarmNetworkProfileConfig(rName string) string {
-	return testAccDeviceFarmProjectConfig(rName) + fmt.Sprintf(`
+func testAccNetworkProfileConfig_basic(rName string) string {
+	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
 resource "aws_devicefarm_network_profile" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -239,8 +239,8 @@ resource "aws_devicefarm_network_profile" "test" {
 `, rName)
 }
 
-func testAccDeviceFarmNetworkProfileConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccDeviceFarmProjectConfig(rName) + fmt.Sprintf(`
+func testAccNetworkProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
 resource "aws_devicefarm_network_profile" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -252,8 +252,8 @@ resource "aws_devicefarm_network_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFarmNetworkProfileConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccDeviceFarmProjectConfig(rName) + fmt.Sprintf(`
+func testAccNetworkProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
 resource "aws_devicefarm_network_profile" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
