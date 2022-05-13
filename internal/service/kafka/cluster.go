@@ -1316,6 +1316,10 @@ func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string
 	}
 
 	if v := apiObject.StorageInfo; v != nil {
+		tfMap["storage_info"] = flattenStorageInfo(v)
+	}
+
+	if v := apiObject.StorageInfo; v != nil {
 		if v := v.EbsStorageInfo; v != nil {
 			if v := v.VolumeSize; v != nil {
 				tfMap["ebs_volume_size"] = aws.Int64Value(v)
@@ -1338,6 +1342,56 @@ func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]inter
 	}
 
 	return tfMap
+}
+
+func flattenStorageInfo(apiObject *kafka.StorageInfo) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EbsStorageInfo; v != nil {
+		tfMap["ebs_storage_info"] = flattenEbsStorageInfo(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenEbsStorageInfo(apiObject *kafka.EBSStorageInfo) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ProvisionedThroughput; v != nil {
+		tfMap["provisioned_throughput"] = flattenProvisionedThroughput(v)
+	}
+
+	if v := apiObject.VolumeSize; v != nil {
+		tfMap["volume_size"] = aws.Int64Value(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenProvisionedThroughput(apiObject *kafka.ProvisionedThroughput) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.VolumeThroughput; v != nil {
+		tfMap["volume_throughput"] = aws.Int64Value(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {
