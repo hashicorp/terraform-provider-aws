@@ -105,7 +105,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 
 	input := &datasync.CreateLocationS3Input{
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
-		S3Config:     testAccDatasyncConfig_expandS3(d.Get("s3_config").([]interface{})),
+		S3Config:     expandS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		Tags:         Tags(tags.IgnoreAWS()),
 	}
@@ -247,4 +247,30 @@ func resourceLocationS3Delete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func flattenS3Config(s3Config *datasync.S3Config) []interface{} {
+	if s3Config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"bucket_access_role_arn": aws.StringValue(s3Config.BucketAccessRoleArn),
+	}
+
+	return []interface{}{m}
+}
+
+func expandS3Config(l []interface{}) *datasync.S3Config {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	s3Config := &datasync.S3Config{
+		BucketAccessRoleArn: aws.String(m["bucket_access_role_arn"].(string)),
+	}
+
+	return s3Config
 }

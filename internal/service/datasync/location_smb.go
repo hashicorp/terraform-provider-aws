@@ -257,3 +257,29 @@ func resourceLocationSMBDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
+
+func flattenSMBMountOptions(mountOptions *datasync.SmbMountOptions) []interface{} {
+	if mountOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"version": aws.StringValue(mountOptions.Version),
+	}
+
+	return []interface{}{m}
+}
+
+func expandSMBMountOptions(l []interface{}) *datasync.SmbMountOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	smbMountOptions := &datasync.SmbMountOptions{
+		Version: aws.String(m["version"].(string)),
+	}
+
+	return smbMountOptions
+}

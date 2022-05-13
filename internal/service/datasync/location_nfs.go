@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -104,7 +105,7 @@ func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationNfsInput{
-		OnPremConfig:   testAccDatasyncConfig_expandOnPrem(d.Get("on_prem_config").([]interface{})),
+		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           Tags(tags.IgnoreAWS()),
@@ -192,7 +193,7 @@ func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
-			OnPremConfig: testAccDatasyncConfig_expandOnPrem(d.Get("on_prem_config").([]interface{})),
+			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		}
 
@@ -262,4 +263,30 @@ func flattenNFSMountOptions(mountOptions *datasync.NfsMountOptions) []interface{
 	}
 
 	return []interface{}{m}
+}
+
+func flattenOnPremConfig(onPremConfig *datasync.OnPremConfig) []interface{} {
+	if onPremConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"agent_arns": flex.FlattenStringSet(onPremConfig.AgentArns),
+	}
+
+	return []interface{}{m}
+}
+
+func expandOnPremConfig(l []interface{}) *datasync.OnPremConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	onPremConfig := &datasync.OnPremConfig{
+		AgentArns: flex.ExpandStringSet(m["agent_arns"].(*schema.Set)),
+	}
+
+	return onPremConfig
 }

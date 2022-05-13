@@ -350,6 +350,59 @@ func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func flattenOptions(options *datasync.Options) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"atime":                  aws.StringValue(options.Atime),
+		"bytes_per_second":       aws.Int64Value(options.BytesPerSecond),
+		"gid":                    aws.StringValue(options.Gid),
+		"log_level":              aws.StringValue(options.LogLevel),
+		"mtime":                  aws.StringValue(options.Mtime),
+		"overwrite_mode":         aws.StringValue(options.OverwriteMode),
+		"posix_permissions":      aws.StringValue(options.PosixPermissions),
+		"preserve_deleted_files": aws.StringValue(options.PreserveDeletedFiles),
+		"preserve_devices":       aws.StringValue(options.PreserveDevices),
+		"task_queueing":          aws.StringValue(options.TaskQueueing),
+		"transfer_mode":          aws.StringValue(options.TransferMode),
+		"uid":                    aws.StringValue(options.Uid),
+		"verify_mode":            aws.StringValue(options.VerifyMode),
+	}
+
+	return []interface{}{m}
+}
+
+func expandOptions(l []interface{}) *datasync.Options {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	options := &datasync.Options{
+		Atime:                aws.String(m["atime"].(string)),
+		Gid:                  aws.String(m["gid"].(string)),
+		LogLevel:             aws.String(m["log_level"].(string)),
+		Mtime:                aws.String(m["mtime"].(string)),
+		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
+		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
+		PreserveDevices:      aws.String(m["preserve_devices"].(string)),
+		PosixPermissions:     aws.String(m["posix_permissions"].(string)),
+		TaskQueueing:         aws.String(m["task_queueing"].(string)),
+		TransferMode:         aws.String(m["transfer_mode"].(string)),
+		Uid:                  aws.String(m["uid"].(string)),
+		VerifyMode:           aws.String(m["verify_mode"].(string)),
+	}
+
+	if v, ok := m["bytes_per_second"]; ok && v.(int) > 0 {
+		options.BytesPerSecond = aws.Int64(int64(v.(int)))
+	}
+
+	return options
+}
+
 func expandTaskSchedule(l []interface{}) *datasync.TaskSchedule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
