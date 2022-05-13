@@ -25,11 +25,11 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tls_certificate": {
+			"certificate": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tls_certificate_full_chain": {
+			"certificate_chain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,8 +188,8 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
-	d.Set("tls_certificate", output.Certificate)
-	d.Set("tls_certificate_full_chain", output.CertificateChain)
+	d.Set("certificate", output.Certificate)
+	d.Set("certificate_chain", output.CertificateChain)
 	tags, err := ListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
