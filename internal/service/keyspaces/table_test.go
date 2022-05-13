@@ -364,6 +364,72 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 	})
 }
 
+func TestAccKeyspacesTable_delColumns(t *testing.T) {
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableNewColumnsConfig(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "message",
+						"type": "ascii",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "ts",
+						"type": "timestamp",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "amount",
+						"type": "decimal",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
+						"name": "message",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(resourceName, &v2),
+					testAccCheckTableRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "message",
+						"type": "ascii",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
+						"name": "message",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
 
@@ -429,6 +495,16 @@ func testAccCheckTableNotRecreated(i, j *keyspaces.GetTableOutput) resource.Test
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTimestamp).Equal(aws.TimeValue(j.CreationTimestamp)) {
 			return errors.New("Keyspaces Table was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTableRecreated(i, j *keyspaces.GetTableOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreationTimestamp).Equal(aws.TimeValue(j.CreationTimestamp)) {
+			return errors.New("Keyspaces Table was not recreated")
 		}
 
 		return nil

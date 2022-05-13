@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -38,7 +39,33 @@ func ResourceTable() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("schema_definition", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				// Columns can only be added.
+				o, n := diff.GetChange("schema_definition")
+				var os, ns *schema.Set
+
+				if v, ok := o.([]interface{}); ok && len(v) > 0 && v[0] != nil {
+					if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
+						os = v
+					}
+				}
+				if v, ok := n.([]interface{}); ok && len(v) > 0 && v[0] != nil {
+					if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
+						ns = v
+					}
+				}
+
+				if os != nil && ns != nil {
+					if del := os.Difference(ns); del.Len() > 0 {
+						return true
+					}
+				}
+
+				return false
+			}),
+			verify.SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
