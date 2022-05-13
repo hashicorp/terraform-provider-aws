@@ -238,20 +238,22 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `client_secret` (Required) - The client secret used by the OAuth client to authenticate to the authorization server.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 
+##### OAuth Request
+
+* `auth_code` (Optional) - The code provided by the connector when it has been authenticated via the connected app.
+* `redirect_uri` (Optional) - The URL to which the authentication server redirects the browser after authorization has been granted.
+
 ### Connector Profile Properties
 
 * `custom_connector` (Optional) - The connector-specific profile properties required when using the custom connector. See [Custom Connector Profile Properties](#custom-connector-profile-properties) for more details.
 * `datadog` (Optional) - The connector-specific properties required when using Datadog. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `dynatrace` (Optional) - The connector-specific properties required when using Dynatrace. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
-* `google_analytics` (Optional) - The connector-specific properties required when using Google Analytics. See [Google Analytics Connector Profile Properties](#google-analytics-connector-profile-properties) for more details.
-* `honeycode` (Optional) - The connector-specific properties required when using Amazon Honeycode. See [Honeycode Connector Profile Properties](#honeycode-connector-profile-properties) for more details.
 * `infor_nexus` (Optional) - The connector-specific properties required when using Infor Nexus. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `marketo` (Optional) - The connector-specific properties required when using Marketo. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `redshift` (Optional) - The connector-specific properties required when using Amazon Redshift. See [Redshift Connector Profile Properties](#redshift-connector-profile-properties) for more details.
 * `salesforce` (Optional) - The connector-specific properties required when using Salesforce. See [Salesforce Connector Profile Properties](#salesforce-connector-profile-properties) for more details.
 * `sapo_data` (Optional) - The connector-specific properties required when using SAPOData. See [SAPOData Connector Profile Properties](#sapodata-connector-profile-properties) for more details.
 * `service_now` (Optional) - The connector-specific properties required when using ServiceNow. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
-* `singular` (Optional) - The connector-specific properties required when using Singular. See [Singular Connector Profile Properties](#singular-connector-profile-properties) for more details.
 * `slack` (Optional) - The connector-specific properties required when using Slack. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `snowflake` (Optional) - The connector-specific properties required when using Snowflake. See [Snowflake Connector Profile Properties](#snowflake-connector-profile-properties) for more details.
 * `veeva` (Optional) - The connector-specific properties required when using Veeva. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
