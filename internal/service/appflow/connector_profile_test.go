@@ -340,7 +340,7 @@ resource "aws_appflow_connector_profile" "test" {
     connector_profile_properties {
       redshift {
         bucket_name   = %[1]q
-		bucket_prefix = %[4]q
+        bucket_prefix = %[4]q
         database_url  = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
         role_arn      = aws_iam_role.test.arn
       }
