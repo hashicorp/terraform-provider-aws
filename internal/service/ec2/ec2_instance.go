@@ -411,7 +411,7 @@ func ResourceInstance() *schema.Resource {
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
