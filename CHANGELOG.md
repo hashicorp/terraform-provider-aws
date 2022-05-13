@@ -1,4 +1,10 @@
 ## 4.15.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `nodejs16.x` `runtime` value ([#24768](https://github.com/hashicorp/terraform-provider-aws/issues/24768))
+* resource/aws_lambda_layer_version: Add support for `nodejs16.x` `compatible_runtimes` value ([#24768](https://github.com/hashicorp/terraform-provider-aws/issues/24768))
+
 ## 4.14.0 (May 13, 2022)
 
 FEATURES:
