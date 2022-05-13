@@ -285,6 +285,19 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `instance_url` (Optional) - The location of the Salesforce resource.
 * `is_sandbox_environment` (Optional) - Indicates whether the connector profile applies to a sandbox or production environment.
 
+#### SAPOData Connector Profile Properties
+
+* `application_host_url` (Required) - The location of the SAPOData resource.
+* `application_service_path` (Required) - The application path to catalog service.
+* `client_number` (Required) - The client number for the client creating the connection.
+* `logon_language` (Optional) - The logon language of SAPOData instance.
+* `oauth_properties` (Optional) - The SAPOData OAuth properties required for OAuth type authentication.
+    * `auth_code_url` (Required) - The authorization code url required to redirect to SAP Login Page to fetch authorization code for OAuth type authentication.
+    * `oauth_scopes` (Required) - The OAuth scopes required for OAuth type authentication.
+    * `token_url` (Required) - The token url required to fetch access/refresh tokens using authorization code and also to refresh expired access token using refresh token.
+* `port_number` (Required) - The port number of the SAPOData instance.
+* `private_link_service_name` (Optional) - The SAPOData Private Link service name to be used for private data transfers.
+
 #### Snowflake Connector Profile Properties
 
 * `account_name` (Optional) - The name of the account.
