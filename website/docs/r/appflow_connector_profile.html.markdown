@@ -95,7 +95,7 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `connector_profile_credentials` (Required) - The connector-specific credentials required by each connector. See [Connector Profile Credentials](#connector-profile-credentials) for more details.
 * `connector_profile_properties` (Required) - The connector-specific properties of the profile configuration. See [Connector Profile Properties](#connector-profile-properties) for more details.
 
-### Connector Profile Credentials 
+### Connector Profile Credentials
 
 * `amplitude` (Optional) - The connector-specific credentials required when using Amplitude. See [Amplitude Connector Profile Credentials](#amplitude-connector-profile-credentials) for more details.
 * `custom_connector` (Optional) - The connector-specific profile credentials required when using the custom connector. See [Custom Connector Profile Credentials](#custom-connector-profile-credentials) for more details.
@@ -116,14 +116,14 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `veeva` (Optional) - The connector-specific credentials required when using Veeva. See [Veeva Connector Profile Credentials](#veeva-connector-profile-credentials) for more details.
 * `zendesk` (Optional) - The connector-specific credentials required when using Zendesk. See [Zendesk Connector Profile Credentials](#zendesk-connector-profile-credentials) for more details.
 
-#### Amplitude Connector Profile Credentials 
+#### Amplitude Connector Profile Credentials
 
 * `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 * `secret_key` (Required) - The Secret Access Key portion of the credentials.
 
 #### Custom Connector Profile Credentials Arguments
 
-* `api_key` (Optional) - The API keys required for the authentication of the user. 
+* `api_key` (Optional) - The API keys required for the authentication of the user.
     * `api_key` (Required) - The API key required for API key authentication.
     * `api_secret_key` (Optional) - The API secret key required for API key authentication.
 * `authentication_type` (Required) - The authentication type that the custom connector uses for authenticating while creating a connector profile. One of: `APIKEY`, `BASIC`, `CUSTOM`, `OAUTH2`.
@@ -226,7 +226,7 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `client_secret` (Required) - The client secret used by the OAuth client to authenticate to the authorization server.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 
-### Connector Profile Properties 
+### Connector Profile Properties
 
 * `custom_connector` (Optional) - The connector-specific profile properties required when using the custom connector. See [Custom Connector Profile Properties](#custom-connector-profile-properties) for more details.
 * `datadog` (Optional) - The connector-specific properties required when using Datadog. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
@@ -245,7 +245,7 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 * `veeva` (Optional) - The connector-specific properties required when using Veeva. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `zendesk` (Optional) - The connector-specific properties required when using Zendesk. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 
-#### Custom Connector Profile Properties 
+#### Custom Connector Profile Properties
 
 * `oauth2_properties` (Optional) - The OAuth 2.0 properties required for OAuth 2.0 authentication.
     * `oauth2_grant_type` (Required) - The OAuth 2.0 grant type used by connector for OAuth 2.0 authentication. One of: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`.
@@ -253,25 +253,25 @@ The AppFlow connector profile argument layout is a complex structure. The follow
     * `token_url_custom_properties` (Optional) - Associates your token URL with a map of properties that you define. Use this parameter to provide any additional details that the connector requires to authenticate your request.
 * `profile_properties` (Optional) - A map of properties that are required to create a profile for the custom connector.
 
-#### Generic Connector Profile Properties 
+#### Generic Connector Profile Properties
 
 Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk all support the following attributes:
 
 * `instance_url` (Required) - The location of the Datadog resource.
 
-#### Redshift Connector Profile Properties 
+#### Redshift Connector Profile Properties
 
 * `bucket_name` (Required) - A name for the associated Amazon S3 bucket.
 * `bucket_prefix` (Optional) - The object key for the destination bucket in which Amazon AppFlow places the files.
 * `database_url` (Required) - The JDBC URL of the Amazon Redshift cluster.
 * `role_arn` (Required) - The Amazon Resource Name (ARN) of the IAM role.
 
-#### Salesforce Connector Profile Properties 
+#### Salesforce Connector Profile Properties
 
 * `instance_url` (Optional) - The location of the Salesforce resource.
 * `is_sandbox_environment` (Optional) - Indicates whether the connector profile applies to a sandbox or production environment.
 
-#### Snowflake Connector Profile Properties 
+#### Snowflake Connector Profile Properties
 
 * `account_name` (Optional) - The name of the account.
 * `bucket_name` (Required) - The name of the Amazon S3 bucket associated with Snowflake.
