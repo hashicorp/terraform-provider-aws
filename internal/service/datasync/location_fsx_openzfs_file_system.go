@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceLocationFSxOpenZfsFileSystem() *schema.Resource {
+func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationFSxOpenZfsFileSystemCreate,
-		Read:   resourceLocationFSxOpenZfsFileSystemRead,
-		Update: resourceLocationFSxOpenZfsFileSystemUpdate,
-		Delete: resourceLocationFSxOpenZfsFileSystemDelete,
+		Create: resourceLocationFSxOpenZFSFileSystemCreate,
+		Read:   resourceLocationFSxOpenZFSFileSystemRead,
+		Update: resourceLocationFSxOpenZFSFileSystemUpdate,
+		Delete: resourceLocationFSxOpenZFSFileSystemDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -123,7 +123,7 @@ func ResourceLocationFSxOpenZfsFileSystem() *schema.Resource {
 	}
 }
 
-func resourceLocationFSxOpenZfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -148,10 +148,10 @@ func resourceLocationFSxOpenZfsFileSystemCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationFSxOpenZfsFileSystemRead(d, meta)
+	return resourceLocationFSxOpenZFSFileSystemRead(d, meta)
 }
 
-func resourceLocationFSxOpenZfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -210,7 +210,7 @@ func resourceLocationFSxOpenZfsFileSystemRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceLocationFSxOpenZfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
@@ -221,10 +221,10 @@ func resourceLocationFSxOpenZfsFileSystemUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceLocationFSxOpenZfsFileSystemRead(d, meta)
+	return resourceLocationFSxOpenZFSFileSystemRead(d, meta)
 }
 
-func resourceLocationFSxOpenZfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
