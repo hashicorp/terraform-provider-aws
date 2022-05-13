@@ -399,6 +399,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Cookies = expandCookies(m["cookies"].([]interface{}))
 	}
 
+	if v, ok := m["json_body"]; ok && len(v.([]interface{})) > 0 {
+		f.JsonBody = expandJSONBody(v.([]interface{}))
+	}
+
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
 	}
@@ -489,6 +493,45 @@ func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
 	}
 
 	return CookieMatchPattern
+}
+
+func expandJSONBody(l []interface{}) *wafv2.JsonBody {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	b := wafv2.JsonBody{
+		MatchPattern:     expandJSONMatchPattern(m["match_pattern"].([]interface{})),
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+
+	if v, ok := m["invalid_fallback_behavior"].(string); ok && v != "" {
+		b.InvalidFallbackBehavior = aws.String(v)
+	}
+
+	return &b
+}
+
+func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	p := wafv2.JsonMatchPattern{}
+
+	if v, ok := m["all"]; ok && len(v.([]interface{})) > 0 {
+		p.All = &wafv2.All{}
+	}
+
+	if v, ok := m["included_paths"]; ok && len(v.([]interface{})) > 0 {
+		p.IncludedPaths = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	return &p
 }
 
 func expandSingleHeader(l []interface{}) *wafv2.SingleHeader {
@@ -978,6 +1021,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["cookies"] = flattenCookies(f.Cookies)
 	}
 
+	if f.JsonBody != nil {
+		m["json_body"] = flattenJSONBody(f.JsonBody)
+	}
+
 	if f.Method != nil {
 		m["method"] = make([]map[string]interface{}, 1)
 	}
@@ -1051,6 +1098,39 @@ func flattenCookiesMatchPattern(c *wafv2.CookieMatchPattern) interface{} {
 		"all":              c.All,
 		"included_cookies": aws.StringValueSlice(c.IncludedCookies),
 		"excluded_cookies": aws.StringValueSlice(c.ExcludedCookies),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJSONBody(b *wafv2.JsonBody) interface{} {
+	if b == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"invalid_fallback_behavior": aws.StringValue(b.InvalidFallbackBehavior),
+		"match_pattern":             flattenJSONMatchPattern(b.MatchPattern),
+		"match_scope":               aws.StringValue(b.MatchScope),
+		"oversize_handling":         aws.StringValue(b.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJSONMatchPattern(p *wafv2.JsonMatchPattern) []interface{} {
+	if p == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if p.All != nil {
+		m["all"] = []interface{}{map[string]interface{}{}}
+	}
+
+	if p.IncludedPaths != nil {
+		m["included_paths"] = flex.FlattenStringList(p.IncludedPaths)
 	}
 
 	return []interface{}{m}
