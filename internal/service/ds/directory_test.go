@@ -245,7 +245,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_SSO_modified(rName, domainName, alias),
+				Config: testAccDirectoryConfig_ssoModified(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -601,7 +601,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryConfig_SSO_modified(rName, domain, alias string) string {
+func testAccDirectoryConfig_ssoModified(rName, domain, alias string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
