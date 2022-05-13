@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -571,6 +570,10 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		Type:                             aws.String(fleetType),
 	}
 
+	if v, ok := d.GetOk("context"); ok {
+		input.Context = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
 		input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
 	}
@@ -600,29 +603,17 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.FleetId))
 
-	// If a request type is fulfilled immediately, we can miss the transition from active to deleted
-	// Instead of an error here, allow the Read function to trigger recreation
-	target := []string{ec2.FleetStateCodeActive}
-	if d.Get("type").(string) == ec2.FleetTypeRequest {
-		target = append(target, ec2.FleetStateCodeDeleted)
-		target = append(target, ec2.FleetStateCodeDeletedRunning)
-		target = append(target, ec2.FleetStateCodeDeletedTerminating)
-		// AWS SDK constants incorrect
-		target = append(target, "deleted_running")
-		target = append(target, "deleted_terminating")
+	// If a request type is fulfilled immediately, we can miss the transition from active to deleted.
+	// Instead of an error here, allow the Read function to trigger recreation.
+	targetStates := []string{ec2.FleetStateCodeActive}
+	if fleetType == ec2.FleetTypeRequest {
+		targetStates = append(targetStates, ec2.FleetStateCodeDeleted)
+		targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
+		targetStates = append(targetStates, ec2.FleetStateCodeDeletedTerminating)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.FleetStateCodeSubmitted},
-		Target:  target,
-		Refresh: ec2FleetRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Fleet (%s) activation", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Fleet (%s) activation: %s", d.Id(), err)
+	if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for EC2 Fleet (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceFleetRead(d, meta)
@@ -705,24 +696,15 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 			},
 		}
 
-		log.Printf("[DEBUG] Modifying EC2 Fleet (%s): %s", d.Id(), input)
+		log.Printf("[DEBUG] Modifying EC2 Fleet: %s", input)
 		_, err := conn.ModifyFleet(input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 Fleet: %s", err)
+			return fmt.Errorf("modifying EC2 Fleet (%s): %w", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{ec2.FleetStateCodeModifying},
-			Target:  []string{ec2.FleetStateCodeActive},
-			Refresh: ec2FleetRefreshFunc(conn, d.Id()),
-			Timeout: d.Timeout(schema.TimeoutUpdate),
-		}
-
-		log.Printf("[DEBUG] Waiting for EC2 Fleet (%s) modification", d.Id())
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for EC2 Fleet (%s) modification: %s", d.Id(), err)
+		if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeModifying}, []string{ec2.FleetStateCodeActive}, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for EC2 Fleet (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -771,46 +753,6 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func ec2FleetRefreshFunc(conn *ec2.EC2, fleetID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ec2.DescribeFleetsInput{
-			FleetIds: []*string{aws.String(fleetID)},
-		}
-
-		log.Printf("[DEBUG] Reading EC2 Fleet (%s): %s", fleetID, input)
-		output, err := conn.DescribeFleets(input)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
-			return nil, ec2.FleetStateCodeDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading EC2 Fleet: %s", err)
-		}
-
-		if output == nil || len(output.Fleets) == 0 {
-			return nil, ec2.FleetStateCodeDeleted, nil
-		}
-
-		var fleet *ec2.FleetData
-		for _, fleetData := range output.Fleets {
-			if fleetData == nil {
-				continue
-			}
-			if aws.StringValue(fleetData.FleetId) == fleetID {
-				fleet = fleetData
-				break
-			}
-		}
-
-		if fleet == nil {
-			return nil, ec2.FleetStateCodeDeleted, nil
-		}
-
-		return fleet, aws.StringValue(fleet.FleetState), nil
-	}
 }
 
 func expandFleetLaunchTemplateConfigRequests(tfList []interface{}) []*ec2.FleetLaunchTemplateConfigRequest {
