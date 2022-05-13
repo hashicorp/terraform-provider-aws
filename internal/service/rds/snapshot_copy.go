@@ -162,6 +162,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("snapshot_create_type", snapshot.SnapshotCreateTime)
 	d.Set("snapshot_identifier", snapshot.DBSnapshotIdentifier)
+	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("storage_type", snapshot.StorageType)
 
