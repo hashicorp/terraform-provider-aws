@@ -224,6 +224,7 @@ This configuration block supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Fleet identifier
+* `arn` - The ARN of the fleet
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
