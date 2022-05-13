@@ -155,7 +155,7 @@ func resourceLocationHdfsCreate(d *schema.ResourceData, meta interface{}) error 
 
 	input := &datasync.CreateLocationHdfsInput{
 		AgentArns:          flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		NameNodes:          expandDataSyncHdfsNameNodes(d.Get("name_node").(*schema.Set)),
+		NameNodes:          expandHdfsNameNodes(d.Get("name_node").(*schema.Set)),
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Subdirectory:       aws.String(d.Get("subdirectory").(string)),
 		Tags:               Tags(tags.IgnoreAWS()),
@@ -190,7 +190,7 @@ func resourceLocationHdfsCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.QopConfiguration = expandDataSyncHdfsQopConfiguration(v.([]interface{}))
+		input.QopConfiguration = expandHdfsQopConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location Hdfs: %s", input)
@@ -238,11 +238,11 @@ func resourceLocationHdfsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_provider_uri", output.KmsKeyProviderUri)
 	d.Set("subdirectory", subdirectory)
 
-	if err := d.Set("name_node", flattenDataSyncHdfsNameNodes(output.NameNodes)); err != nil {
+	if err := d.Set("name_node", flattenHdfsNameNodes(output.NameNodes)); err != nil {
 		return fmt.Errorf("error setting name_node: %w", err)
 	}
 
-	if err := d.Set("qop_configuration", flattenDataSyncHdfsQopConfiguration(output.QopConfiguration)); err != nil {
+	if err := d.Set("qop_configuration", flattenHdfsQopConfiguration(output.QopConfiguration)); err != nil {
 		return fmt.Errorf("error setting qop_configuration: %w", err)
 	}
 
@@ -315,11 +315,11 @@ func resourceLocationHdfsUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if d.HasChange("name_noode") {
-			input.NameNodes = expandDataSyncHdfsNameNodes(d.Get("name_node").(*schema.Set))
+			input.NameNodes = expandHdfsNameNodes(d.Get("name_node").(*schema.Set))
 		}
 
 		if d.HasChange("qop_configuration") {
-			input.QopConfiguration = expandDataSyncHdfsQopConfiguration(d.Get("qop_configuration").([]interface{}))
+			input.QopConfiguration = expandHdfsQopConfiguration(d.Get("qop_configuration").([]interface{}))
 		}
 
 		_, err := conn.UpdateLocationHdfs(input)
@@ -359,7 +359,7 @@ func resourceLocationHdfsDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandDataSyncHdfsNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
+func expandHdfsNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
 	nameNodes := make([]*datasync.HdfsNameNode, 0)
 	for _, m := range l.List() {
 		raw := m.(map[string]interface{})
@@ -373,7 +373,7 @@ func expandDataSyncHdfsNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
 	return nameNodes
 }
 
-func flattenDataSyncHdfsNameNodes(nodes []*datasync.HdfsNameNode) []map[string]interface{} {
+func flattenHdfsNameNodes(nodes []*datasync.HdfsNameNode) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(nodes))
 
 	for _, raw := range nodes {
@@ -387,7 +387,7 @@ func flattenDataSyncHdfsNameNodes(nodes []*datasync.HdfsNameNode) []map[string]i
 	return dataResources
 }
 
-func expandDataSyncHdfsQopConfiguration(l []interface{}) *datasync.QopConfiguration {
+func expandHdfsQopConfiguration(l []interface{}) *datasync.QopConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -402,7 +402,7 @@ func expandDataSyncHdfsQopConfiguration(l []interface{}) *datasync.QopConfigurat
 	return qopConfig
 }
 
-func flattenDataSyncHdfsQopConfiguration(qopConfig *datasync.QopConfiguration) []interface{} {
+func flattenHdfsQopConfiguration(qopConfig *datasync.QopConfiguration) []interface{} {
 	if qopConfig == nil {
 		return []interface{}{}
 	}

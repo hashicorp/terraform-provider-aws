@@ -131,7 +131,7 @@ func resourceLocationFSxOpenZfsFileSystemCreate(d *schema.ResourceData, meta int
 
 	input := &datasync.CreateLocationFsxOpenZfsInput{
 		FsxFilesystemArn:  aws.String(fsxArn),
-		Protocol:          expandDataSyncProtocol(d.Get("protocol").([]interface{})),
+		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              Tags(tags.IgnoreAWS()),
 	}
@@ -186,7 +186,7 @@ func resourceLocationFSxOpenZfsFileSystemRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting creation_time: %w", err)
 	}
 
-	if err := d.Set("protocol", flattenDataSyncProtocol(output.Protocol)); err != nil {
+	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return fmt.Errorf("error setting protocol: %w", err)
 	}
 
@@ -245,7 +245,7 @@ func resourceLocationFSxOpenZfsFileSystemDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandDataSyncProtocol(l []interface{}) *datasync.FsxProtocol {
+func expandProtocol(l []interface{}) *datasync.FsxProtocol {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -253,25 +253,25 @@ func expandDataSyncProtocol(l []interface{}) *datasync.FsxProtocol {
 	m := l[0].(map[string]interface{})
 
 	Protocol := &datasync.FsxProtocol{
-		NFS: expandDataSyncNFS(m["nfs"].([]interface{})),
+		NFS: expandNFS(m["nfs"].([]interface{})),
 	}
 
 	return Protocol
 }
 
-func flattenDataSyncProtocol(protocol *datasync.FsxProtocol) []interface{} {
+func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
 	if protocol == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"nfs": flattenDataSyncNFS(protocol.NFS),
+		"nfs": flattenNFS(protocol.NFS),
 	}
 
 	return []interface{}{m}
 }
 
-func expandDataSyncNFS(l []interface{}) *datasync.FsxProtocolNfs {
+func expandNFS(l []interface{}) *datasync.FsxProtocolNfs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -279,19 +279,19 @@ func expandDataSyncNFS(l []interface{}) *datasync.FsxProtocolNfs {
 	m := l[0].(map[string]interface{})
 
 	Protocol := &datasync.FsxProtocolNfs{
-		MountOptions: expandDataSyncNfsMountOptions(m["mount_options"].([]interface{})),
+		MountOptions: expandNFSMountOptions(m["mount_options"].([]interface{})),
 	}
 
 	return Protocol
 }
 
-func flattenDataSyncNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
+func flattenNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
 	if nfs == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"mount_options": flattenDataSyncNfsMountOptions(nfs.MountOptions),
+		"mount_options": flattenNFSMountOptions(nfs.MountOptions),
 	}
 
 	return []interface{}{m}

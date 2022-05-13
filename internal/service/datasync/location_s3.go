@@ -105,7 +105,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 
 	input := &datasync.CreateLocationS3Input{
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
-		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
+		S3Config:     testAccDatasyncConfig_expandS3(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		Tags:         Tags(tags.IgnoreAWS()),
 	}
@@ -187,7 +187,7 @@ func resourceLocationS3Read(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
 	d.Set("arn", output.LocationArn)
-	if err := d.Set("s3_config", flattenDataSyncS3Config(output.S3Config)); err != nil {
+	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return fmt.Errorf("error setting s3_config: %s", err)
 	}
 	d.Set("s3_storage_class", output.S3StorageClass)

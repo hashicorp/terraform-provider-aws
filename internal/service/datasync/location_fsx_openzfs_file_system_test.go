@@ -46,7 +46,7 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxOpenZfsImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccWSLocationFSxOpenZfsImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -104,7 +104,7 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_subdirectory(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxOpenZfsImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccWSLocationFSxOpenZfsImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -136,7 +136,7 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxOpenZfsImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccWSLocationFSxOpenZfsImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccLocationFSxOpenZfsTags2Config("key1", "value1updated", "key2", "value2"),
@@ -207,7 +207,7 @@ func testAccCheckLocationFSxOpenZfsExists(resourceName string, locationFsxOpenZf
 	}
 }
 
-func testAccWSDataSyncLocationFsxOpenZfsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccWSLocationFSxOpenZfsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

@@ -92,7 +92,7 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationEfsInput{
-		Ec2Config:        expandDataSyncEc2Config(d.Get("ec2_config").([]interface{})),
+		Ec2Config:        testAccDatasyncConfig_expandEC2(d.Get("ec2_config").([]interface{})),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
 		Tags:             Tags(tags.IgnoreAWS()),
@@ -139,7 +139,7 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", output.LocationArn)
 
-	if err := d.Set("ec2_config", flattenDataSyncEc2Config(output.Ec2Config)); err != nil {
+	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return fmt.Errorf("error setting ec2_config: %s", err)
 	}
 

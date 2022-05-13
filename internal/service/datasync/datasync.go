@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func expandDataSyncEc2Config(l []interface{}) *datasync.Ec2Config {
+func testAccDatasyncConfig_expandEC2(l []interface{}) *datasync.Ec2Config {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -22,7 +22,7 @@ func expandDataSyncEc2Config(l []interface{}) *datasync.Ec2Config {
 	return ec2Config
 }
 
-func expandDataSyncSmbMountOptions(l []interface{}) *datasync.SmbMountOptions {
+func expandSMBMountOptions(l []interface{}) *datasync.SmbMountOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -36,7 +36,7 @@ func expandDataSyncSmbMountOptions(l []interface{}) *datasync.SmbMountOptions {
 	return smbMountOptions
 }
 
-func expandDataSyncOnPremConfig(l []interface{}) *datasync.OnPremConfig {
+func testAccDatasyncConfig_expandOnPrem(l []interface{}) *datasync.OnPremConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -50,7 +50,7 @@ func expandDataSyncOnPremConfig(l []interface{}) *datasync.OnPremConfig {
 	return onPremConfig
 }
 
-func expandDataSyncOptions(l []interface{}) *datasync.Options {
+func expandOptions(l []interface{}) *datasync.Options {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -79,7 +79,7 @@ func expandDataSyncOptions(l []interface{}) *datasync.Options {
 	return options
 }
 
-func expandDataSyncS3Config(l []interface{}) *datasync.S3Config {
+func testAccDatasyncConfig_expandS3(l []interface{}) *datasync.S3Config {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -93,7 +93,7 @@ func expandDataSyncS3Config(l []interface{}) *datasync.S3Config {
 	return s3Config
 }
 
-func flattenDataSyncEc2Config(ec2Config *datasync.Ec2Config) []interface{} {
+func flattenEC2Config(ec2Config *datasync.Ec2Config) []interface{} {
 	if ec2Config == nil {
 		return []interface{}{}
 	}
@@ -106,7 +106,7 @@ func flattenDataSyncEc2Config(ec2Config *datasync.Ec2Config) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenDataSyncSmbMountOptions(mountOptions *datasync.SmbMountOptions) []interface{} {
+func flattenSMBMountOptions(mountOptions *datasync.SmbMountOptions) []interface{} {
 	if mountOptions == nil {
 		return []interface{}{}
 	}
@@ -118,7 +118,7 @@ func flattenDataSyncSmbMountOptions(mountOptions *datasync.SmbMountOptions) []in
 	return []interface{}{m}
 }
 
-func flattenDataSyncOnPremConfig(onPremConfig *datasync.OnPremConfig) []interface{} {
+func flattenOnPremConfig(onPremConfig *datasync.OnPremConfig) []interface{} {
 	if onPremConfig == nil {
 		return []interface{}{}
 	}
@@ -130,7 +130,7 @@ func flattenDataSyncOnPremConfig(onPremConfig *datasync.OnPremConfig) []interfac
 	return []interface{}{m}
 }
 
-func flattenDataSyncOptions(options *datasync.Options) []interface{} {
+func flattenOptions(options *datasync.Options) []interface{} {
 	if options == nil {
 		return []interface{}{}
 	}
@@ -154,7 +154,7 @@ func flattenDataSyncOptions(options *datasync.Options) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenDataSyncS3Config(s3Config *datasync.S3Config) []interface{} {
+func flattenS3Config(s3Config *datasync.S3Config) []interface{} {
 	if s3Config == nil {
 		return []interface{}{}
 	}

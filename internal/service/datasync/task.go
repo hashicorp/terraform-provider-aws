@@ -195,7 +195,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
-		Options:                expandDataSyncOptions(d.Get("options").([]interface{})),
+		Options:                expandOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
 		Tags:                   Tags(tags.IgnoreAWS()),
 	}
@@ -256,7 +256,7 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting excludes: %w", err)
 	}
 	d.Set("name", output.Name)
-	if err := d.Set("options", flattenDataSyncOptions(output.Options)); err != nil {
+	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
 	}
 	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
@@ -305,7 +305,7 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChanges("options") {
-			input.Options = expandDataSyncOptions(d.Get("options").([]interface{}))
+			input.Options = expandOptions(d.Get("options").([]interface{}))
 		}
 
 		if d.HasChanges("schedule") {
