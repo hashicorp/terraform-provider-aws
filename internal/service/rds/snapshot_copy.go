@@ -48,6 +48,18 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"engine": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -69,6 +81,10 @@ func ResourceSnapshotCopy() *schema.Resource {
 				ForceNew: true,
 			},
 			"source_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +116,6 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	in := &rds.CopyDBSnapshotInput{
-		SourceRegion:               aws.String(d.Get("source_region").(string)),
 		SourceDBSnapshotIdentifier: aws.String(d.Get("source_db_snapshot_identifier").(string)),
 		TargetDBSnapshotIdentifier: aws.String(d.Get("target_db_snapshot_identifier").(string)),
 		Tags:                       Tags(tags.IgnoreAWS()),
@@ -129,7 +144,7 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(out.DBSnapshot.DBSnapshotIdentifier))
 
-	err = waitDBSnapshotCopyAvailable(ctx, d, conn)
+	err = waitSnapshotCopyAvailable(ctx, d, meta)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -142,7 +157,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	snapshot, err := FindDBSnapshot(ctx, conn, d.Id())
+	snapshot, err := FindSnapshot(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
@@ -157,14 +172,14 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
 
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
+	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("snapshot_create_type", snapshot.SnapshotCreateTime)
-	d.Set("snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
 	d.Set("storage_type", snapshot.StorageType)
+	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 
 	tags, err := ListTags(conn, arn)
 
@@ -174,8 +189,13 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
+	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil
@@ -216,11 +236,11 @@ func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func FindDBSnapshot(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
+func FindSnapshot(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
 	in := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(id),
 	}
-	out, err := conn.DescribeDBSnapshots(in)
+	out, err := conn.DescribeDBSnapshotsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -235,7 +255,7 @@ func FindDBSnapshot(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnaps
 
 	return out.DBSnapshots[0], nil
 }
-func waitDBSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Waiting for Snapshot %s to become available...", d.Id())
 
 	stateConf := &resource.StateChangeConf{

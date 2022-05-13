@@ -22,18 +22,19 @@ func TestAccSnapshotCopy_basic(t *testing.T) {
 	}
 
 	var v rds.DBSnapshot
-	resourceName := "aws_db_snapshot_copy.test"
+	resourceName := "aws_rds_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRdsDbSnapshotCopyExists(resourceName, &v),
+					testAccCheckSnapshotCopyExists(resourceName, &v),
 				),
 			},
 			{
@@ -45,24 +46,25 @@ func TestAccSnapshotCopy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsDbSnapshotCopy_disappears(t *testing.T) {
+func TestAccSnapshotCopy_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var v rds.DBSnapshot
-	resourceName := "aws_db_snapshot_copy.test"
+	resourceName := "aws_rds_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRdsDbSnapshotCopyExists(resourceName, &v),
+					testAccCheckSnapshotCopyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,15 +83,11 @@ func testAccCheckSnapshotCopyDestroy(s *terraform.State) error {
 
 		log.Printf("[DEBUG] Checking if RDS DB Snapshot %s exists", rs.Primary.ID)
 
-		_, err := tfrds.FindDBSnapshot(context.Background(), conn, rs.Primary.ID)
-
-		if err == nil {
-			return fmt.Errorf("the RDS DB Snapshot %s still exists. Failing", rs.Primary.ID)
-		}
+		_, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
 
 		// verify error is what we want
 		if tfresource.NotFound(err) {
-			return nil
+			continue
 		}
 
 		return err
@@ -98,7 +96,7 @@ func testAccCheckSnapshotCopyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckRdsDbSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -111,7 +109,7 @@ func testAccCheckRdsDbSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		out, err := tfrds.FindDBSnapshot(context.Background(), conn, rs.Primary.ID)
+		out, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -159,7 +157,7 @@ func testAccSnapshotCopyConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotCopyBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_db_snapshot_copy" "test" {
+resource "aws_rds_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"
 }`, rName))
