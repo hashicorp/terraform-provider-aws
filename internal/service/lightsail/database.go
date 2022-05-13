@@ -3,14 +3,17 @@ package lightsail
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDatabase() *schema.Resource {
@@ -24,30 +27,24 @@ func ResourceDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"master_database_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"master_password": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			"master_username": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"backup_retention_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"blueprint_id": {
 				Type:     schema.TypeString,
@@ -59,52 +56,20 @@ func ResourceDatabase() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			// Optional attributes
-			"preferred_backup_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"preferred_maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"publicly_accessible": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"backup_retention_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"final_snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			// additional info returned from the API
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cpu_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"created_at": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"disk_size": {
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"engine": {
@@ -115,35 +80,96 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cpu_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
+			"final_snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(2, 255),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-]+[A-Za-z0-9]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+				),
 			},
-			"ram_size": {
-				Type:     schema.TypeFloat,
-				Computed: true,
+			"master_database_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
+				),
 			},
-			"disk_size": {
-				Type:     schema.TypeFloat,
+			"master_endpoint_address": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"master_endpoint_port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"master_endpoint_address": {
+			"master_password": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(8, 128),
+					validation.StringMatch(regexp.MustCompile(`^[ -~][^@\/" ]+$`), "The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces."),
+				),
+			},
+			"master_username": {
 				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
+				),
+			},
+			"preferred_backup_window": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
+			},
+			"preferred_maintenance_window": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+			},
+			"publicly_accessible": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"ram_size": {
+				Type:     schema.TypeFloat,
 				Computed: true,
+			},
+			"relational_database_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(2, 255),
+					validation.StringMatch(regexp.MustCompile(`^[^._\-]+[0-9A-Za-z-]+[^._\-]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+				),
 			},
 			"secondary_availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"support_code": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchema(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -158,7 +184,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 		MasterUsername:                aws.String(d.Get("master_username").(string)),
 		RelationalDatabaseBlueprintId: aws.String(d.Get("blueprint_id").(string)),
 		RelationalDatabaseBundleId:    aws.String(d.Get("bundle_id").(string)),
-		RelationalDatabaseName:        aws.String(d.Get("name").(string)),
+		RelationalDatabaseName:        aws.String(d.Get("relational_database_name").(string)),
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
@@ -195,7 +221,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	op := resp.Operations[0]
-	d.SetId(d.Get("name").(string))
+	d.SetId(d.Get("relational_database_name").(string))
 
 	err = waitLightsailOperation(conn, op.Id)
 	if err != nil {
@@ -287,31 +313,26 @@ func ResourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 
 	rd := resp.RelationalDatabase
 
-	//manditory attributes
-	d.Set("name", rd.Name)
+	d.Set("arn", rd.Arn)
 	d.Set("availability_zone", rd.Location.AvailabilityZone)
-	d.Set("master_database_name", rd.MasterDatabaseName)
-	d.Set("master_username", rd.MasterUsername)
+	d.Set("backup_retention_enabled", rd.BackupRetentionEnabled)
 	d.Set("blueprint_id", rd.RelationalDatabaseBlueprintId)
 	d.Set("bundle_id", rd.RelationalDatabaseBundleId)
-	d.Set("backup_retention_enabled", rd.BackupRetentionEnabled)
-
-	// optional attributes
+	d.Set("ca_certificate_identifier", rd.CaCertificateIdentifier)
+	d.Set("cpu_count", rd.Hardware.CpuCount)
+	d.Set("created_at", rd.CreatedAt.Format(time.RFC3339))
+	d.Set("disk_size", rd.Hardware.DiskSizeInGb)
+	d.Set("engine", rd.Engine)
+	d.Set("engine_version", rd.EngineVersion)
+	d.Set("master_database_name", rd.MasterDatabaseName)
+	d.Set("master_endpoint_address", rd.MasterEndpoint.Address)
+	d.Set("master_endpoint_port", rd.MasterEndpoint.Port)
+	d.Set("master_username", rd.MasterUsername)
 	d.Set("preferred_backup_window", rd.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", rd.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rd.PubliclyAccessible)
-
-	// additional attributes
-	d.Set("arn", rd.Arn)
-	d.Set("ca_certificate_identifier", rd.CaCertificateIdentifier)
-	d.Set("engine", rd.Engine)
-	d.Set("created_at", rd.CreatedAt.Format(time.RFC3339))
-	d.Set("cpu_count", rd.Hardware.CpuCount)
 	d.Set("ram_size", rd.Hardware.RamSizeInGb)
-	d.Set("disk_size", rd.Hardware.DiskSizeInGb)
-	d.Set("engine_version", rd.EngineVersion)
-	d.Set("master_endpoint_port", rd.MasterEndpoint.Port)
-	d.Set("master_endpoint_address", rd.MasterEndpoint.Address)
+	d.Set("relational_database_name", rd.Name)
 	d.Set("secondary_availability_zone", rd.SecondaryAvailabilityZone)
 	d.Set("support_code", rd.SupportCode)
 
@@ -320,6 +341,10 @@ func ResourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -356,7 +381,6 @@ func ResourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	op := resp.Operations[0]
-	d.SetId(d.Get("name").(string))
 
 	err = waitLightsailOperation(conn, op.Id)
 	if err != nil {
@@ -437,7 +461,6 @@ func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		op := resp.Operations[0]
-		d.SetId(d.Get("name").(string))
 
 		err = waitLightsailOperation(conn, op.Id)
 		if err != nil {

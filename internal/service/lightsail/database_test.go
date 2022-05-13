@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
@@ -36,7 +37,7 @@ func TestAccDatabase_basic(t *testing.T) {
 				Config: testAccDatabaseConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSDatabaseExists(resourceName, &db),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "blueprint_id", "mysql_8_0"),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", "testdatabasename"),
@@ -69,10 +70,15 @@ func TestAccDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_Name(t *testing.T) {
+func TestAccDatabase_RelationalDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rNameTooShort := "s"
+	rNameTooLong := fmt.Sprintf("%s-%s", rName, sdkacctest.RandString(255))
+	rNameContainsUnderscore := fmt.Sprintf("%s-%s", rName, "_test")
+	rNameStartingDash := fmt.Sprintf("%s-%s", "-", rName)
+	rNameEndingDash := fmt.Sprintf("%s-%s", rName, "-")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -85,10 +91,30 @@ func TestAccDatabase_Name(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccDatabaseConfigBasic(rNameTooShort),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooShort)),
+			},
+			{
+				Config:      testAccDatabaseConfigBasic(rNameTooLong),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooLong)),
+			},
+			{
+				Config:      testAccDatabaseConfigBasic(rNameContainsUnderscore),
+				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+			},
+			{
+				Config:      testAccDatabaseConfigBasic(rNameStartingDash),
+				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+			},
+			{
+				Config:      testAccDatabaseConfigBasic(rNameEndingDash),
+				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+			},
+			{
 				Config: testAccDatabaseConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSDatabaseExists(resourceName, &db),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 				),
 			},
 			{
@@ -110,6 +136,12 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
+	dbName := "randomdatabasename"
+	dbNameTooShort := ""
+	dbNameTooLong := fmt.Sprintf("%s-%s", dbName, sdkacctest.RandString(64))
+	dbNameContainsSpaces := fmt.Sprint(dbName, "string with spaces")
+	dbNameContainsStartingDigit := fmt.Sprintf("01_%s", dbName)
+	dbNameContainsUnderscore := fmt.Sprintf("%s_123456", dbName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -122,10 +154,26 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigMasterDatabaseName(rName, "databasename1"),
+				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameTooShort),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooShort)),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameTooLong),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooLong)),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameContainsSpaces),
+				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameContainsStartingDigit),
+				ExpectError: regexp.MustCompile(`Must begin with a letter`),
+			},
+			{
+				Config: testAccDatabaseConfigMasterDatabaseName(rName, dbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSDatabaseExists(resourceName, &db),
-					resource.TestCheckResourceAttr(resourceName, "master_database_name", "databasename1"),
+					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbName),
 				),
 			},
 			{
@@ -140,10 +188,10 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigMasterDatabaseName(rName, "databasename2"),
+				Config: testAccDatabaseConfigMasterDatabaseName(rName, dbNameContainsUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSDatabaseExists(resourceName, &db),
-					resource.TestCheckResourceAttr(resourceName, "master_database_name", "databasename2"),
+					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbNameContainsUnderscore),
 				),
 			},
 		},
@@ -154,6 +202,13 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
+	username := "username1"
+	usernameTooShort := ""
+	usernameTooLong := fmt.Sprintf("%s-%s", username, sdkacctest.RandString(63))
+	usernameStartingDigit := fmt.Sprintf("01%s", username)
+	usernameContainsDash := fmt.Sprintf("%s-test", username)
+	usernameContainsSpecial := fmt.Sprintf("%s@", username)
+	usernameContainsUndercore := fmt.Sprintf("%s_test", username)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -166,10 +221,30 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigMasterUsername(rName, "username1"),
+				Config:      testAccDatabaseConfigMasterUsername(rName, usernameTooShort),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooShort)),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterUsername(rName, usernameTooLong),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooLong)),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterUsername(rName, usernameStartingDigit),
+				ExpectError: regexp.MustCompile(`Must begin with a letter`),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterUsername(rName, usernameContainsDash),
+				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterUsername(rName, usernameContainsSpecial),
+				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
+			},
+			{
+				Config: testAccDatabaseConfigMasterUsername(rName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDatabaseExists(resourceName, &db),
-					resource.TestCheckResourceAttr(resourceName, "master_username", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "master_username", username),
 				),
 			},
 			{
@@ -184,20 +259,25 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigMasterUsername(rName, "username2"),
+				Config: testAccDatabaseConfigMasterUsername(rName, usernameContainsUndercore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDatabaseExists(resourceName, &db),
-					resource.TestCheckResourceAttr(resourceName, "master_username", "username2"),
+					resource.TestCheckResourceAttr(resourceName, "master_username", usernameContainsUndercore),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
-	var db lightsail.RelationalDatabase
+func TestAccDatabase_MasterPassword(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
-	resourceName := "aws_lightsail_database.test"
+	password := "testpassword"
+	passwordTooShort := "short"
+	passwordTooLong := fmt.Sprintf("%s-%s", password, sdkacctest.RandString(128))
+	passwordContainsSlash := fmt.Sprintf("%s/", password)
+	passwordContainsQuotes := fmt.Sprintf("%s\"", password)
+	passwordContainsAtSymbol := fmt.Sprintf("%s@", password)
+	passwordContainsSpaces := fmt.Sprintf("%s spaces here", password)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -209,6 +289,59 @@ func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config:      testAccDatabaseConfigMasterPassword(rName, passwordTooShort),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooShort)),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterPassword(rName, passwordTooLong),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooLong)),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsSlash),
+				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsQuotes),
+				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsAtSymbol),
+				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+			},
+			{
+				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsSpaces),
+				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+			},
+		},
+	})
+}
+
+func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
+	var db lightsail.RelationalDatabase
+	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	resourceName := "aws_lightsail_database.test"
+	backupWindowInvalidHour := "25:30-10:00"
+	backupWindowInvalidMinute := "10:00-10:70"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDatabaseConfigPreferredBackupWindow(rName, backupWindowInvalidHour),
+				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+			},
+			{
+				Config:      testAccDatabaseConfigPreferredBackupWindow(rName, backupWindowInvalidMinute),
+				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+			},
 			{
 				Config: testAccDatabaseConfigPreferredBackupWindow(rName, "09:30-10:00"),
 				Check: resource.ComposeTestCheckFunc(
@@ -242,6 +375,9 @@ func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
+	maintenanceWindowInvalidDay := "tuesday:04:30-tue:05:00"
+	maintenanceWindowInvalidHour := "tue:04:30-tue:30:00"
+	maintenanceWindowInvalidMinute := "tue:04:85-tue:05:00"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -253,6 +389,18 @@ func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config:      testAccDatabaseConfigPreferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
+				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+			},
+			{
+				Config:      testAccDatabaseConfigPreferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
+				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+			},
+			{
+				Config:      testAccDatabaseConfigPreferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
+				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+			},
 			{
 				Config: testAccDatabaseConfigPreferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
 				Check: resource.ComposeTestCheckFunc(
@@ -375,6 +523,10 @@ func TestAccDatabase_FinalSnapshotName(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
 	sName := fmt.Sprintf("%s-snapshot", rName)
+	sNameTooShort := "s"
+	sNameTooLong := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(255))
+	sNameContainsSpaces := fmt.Sprint(sName, "string with spaces")
+	sNameContainsUnderscore := fmt.Sprintf("%s_123456", sName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -386,6 +538,22 @@ func TestAccDatabase_FinalSnapshotName(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDatabaseSnapshotDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameTooShort),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooShort)),
+			},
+			{
+				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameTooLong),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooLong)),
+			},
+			{
+				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameContainsSpaces),
+				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+			},
+			{
+				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameContainsUnderscore),
+				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+			},
 			{
 				Config: testAccDatabaseConfigFinalSnapshotName(rName, sName),
 				Check: resource.ComposeTestCheckFunc(
@@ -531,7 +699,7 @@ func testAccCheckAWSDatabaseExists(n string, res *lightsail.RelationalDatabase) 
 		}
 
 		if resp == nil || resp.RelationalDatabase == nil {
-			return fmt.Errorf("Database (%s) not found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Database (%s) not found", rs.Primary.ID)
 		}
 		*res = *resp.RelationalDatabase
 		return nil
@@ -577,7 +745,7 @@ func testAccCheckAWSDatabaseSnapshotDestroy(s *terraform.State) error {
 		}
 
 		// Try and delete the snapshot before we check for the cluster not found
-		snapshot_identifier := fmt.Sprintf("%s-snapshot", rs.Primary.ID)
+		snapshot_identifier := rs.Primary.Attributes["final_snapshot_name"]
 
 		log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 		_, err := conn.DeleteRelationalDatabaseSnapshot(
@@ -629,14 +797,14 @@ func testAccDatabaseConfigBasic(rName string) string {
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  skip_final_snapshot  = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  skip_final_snapshot      = true
 }
 `, rName))
 }
@@ -646,14 +814,14 @@ func testAccDatabaseConfigMasterDatabaseName(rName string, masterDatabaseName st
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = %[2]q
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  skip_final_snapshot  = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = %[2]q
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  skip_final_snapshot      = true
 }
 `, rName, masterDatabaseName))
 }
@@ -663,16 +831,33 @@ func testAccDatabaseConfigMasterUsername(rName string, masterUsername string) st
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = %[2]q
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  skip_final_snapshot  = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = %[2]q
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  skip_final_snapshot      = true
 }
 `, rName, masterUsername))
+}
+
+func testAccDatabaseConfigMasterPassword(rName string, masterPassword string) string {
+	return acctest.ConfigCompose(
+		testAccDatabaseConfigBase(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_database" "test" {
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = %[2]q
+  master_username          = "testusername"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  skip_final_snapshot      = true
+}
+`, rName, masterPassword))
 }
 
 func testAccDatabaseConfigPreferredBackupWindow(rName string, preferredBackupWindow string) string {
@@ -680,16 +865,16 @@ func testAccDatabaseConfigPreferredBackupWindow(rName string, preferredBackupWin
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                    = %[1]q
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  master_database_name    = "testdatabasename"
-  master_password         = "testdatabasepassword"
-  master_username         = "test"
-  blueprint_id            = "mysql_8_0"
-  bundle_id               = "micro_1_0"
-  preferred_backup_window = %[2]q
-  apply_immediately       = true
-  skip_final_snapshot     = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  preferred_backup_window  = %[2]q
+  apply_immediately        = true
+  skip_final_snapshot      = true
 }
 `, rName, preferredBackupWindow))
 }
@@ -699,7 +884,7 @@ func testAccDatabaseConfigPreferredMaintenanceWindow(rName string, preferredMain
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                         = %[1]q
+  relational_database_name     = %[1]q
   availability_zone            = data.aws_availability_zones.available.names[0]
   master_database_name         = "testdatabasename"
   master_password              = "testdatabasepassword"
@@ -718,16 +903,16 @@ func testAccDatabaseConfigPubliclyAccessible(rName string, publiclyAccessible st
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  publicly_accessible  = %[2]q
-  apply_immediately    = true
-  skip_final_snapshot  = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  publicly_accessible      = %[2]q
+  apply_immediately        = true
+  skip_final_snapshot      = true
 }
 `, rName, publiclyAccessible))
 }
@@ -737,7 +922,7 @@ func testAccDatabaseConfigBackupRetentionEnabled(rName string, backupRetentionEn
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                     = %[1]q
+  relational_database_name = %[1]q
   availability_zone        = data.aws_availability_zones.available.names[0]
   master_database_name     = "test"
   master_password          = "testdatabasepassword"
@@ -756,14 +941,14 @@ func testAccDatabaseConfigFinalSnapshotName(rName string, sName string) string {
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = "test"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  final_snapshot_name  = %[2]q
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "test"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  final_snapshot_name      = %[2]q
 }
 `, rName, sName))
 }
@@ -773,14 +958,14 @@ func testAccDatabaseConfigTags1(rName string, tagKey1, tagValue1 string) string 
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  skip_final_snapshot  = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  skip_final_snapshot      = true
   tags = {
     %[2]q = %[3]q
   }
@@ -793,14 +978,14 @@ func testAccDatabaseConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 st
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
-  name                 = %[1]q
-  availability_zone    = data.aws_availability_zones.available.names[0]
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
-  skip_final_snapshot  = true
+  relational_database_name = %[1]q
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
+  skip_final_snapshot      = true
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q

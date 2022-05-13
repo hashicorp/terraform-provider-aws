@@ -12,9 +12,11 @@ Provides a Lightsail Database. Amazon Lightsail is a service to provide easy vir
 with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail)
 for more information.
 
-~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
+~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones"](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) for more details
 
 ## Example Usage
+
+### Basic mysql blueprint
 
 ```terraform
 resource "aws_lightsail_database" "test" {
@@ -28,12 +30,80 @@ resource "aws_lightsail_database" "test" {
 }
 ```
 
+### Basic postrgres blueprint 
+
+```terraform
+resource "aws_lightsail_database" "test" {
+  name                 = "test"
+  availability_zone    = "us-east-1a"
+  master_database_name = "testdatabasename"
+  master_password      = "testdatabasepassword"
+  master_username      = "test"
+  blueprint_id         = "postgres_12"
+  bundle_id            = "micro_1_0"
+}
+```
+
+### Custom backup and maintenance windows
+
+Below is an example that sets a custom backup and maintenance window. Times are specified in UTC. This example will allow daily backups to take place between 16:00 and 16:30 each day. This example also requires any maintiance tasks (anything that would cause an outage, including changing some attributes) to take place on Tuesdays between 17:00 and 17:30. An action taken against this database that would cause an outage will wait until this time window to make the requested changes. 
+
+```terraform
+resource "aws_lightsail_database" "test" {
+  name                         = "test"
+  availability_zone            = "us-east-1a"
+  master_database_name         = "testdatabasename"
+  master_password              = "testdatabasepassword"
+  master_username              = "test"
+  blueprint_id                 = "postgres_12"
+  bundle_id                    = "micro_1_0"
+  preferred_backup_window      = "16:00-16:30"
+  preferred_maintenance_window = "Tue:17:00-Tue:17:30"
+}
+```
+### Final Snapshots
+
+To enable creating a final snapshot of your database on deletion, use the `final_snapshot_name` argument to provide a name to be used for the snapshot. 
+
+```terraform
+resource "aws_lightsail_database" "test" {
+  name                         = "test"
+  availability_zone            = "us-east-1a"
+  master_database_name         = "testdatabasename"
+  master_password              = "testdatabasepassword"
+  master_username              = "test"
+  blueprint_id                 = "postgres_12"
+  bundle_id                    = "micro_1_0"
+  preferred_backup_window      = "16:00-16:30"
+  preferred_maintenance_window = "Tue:17:00-Tue:17:30"
+  final_snapshot_name          = "MyFinalSnapshot"
+}
+```
+
+### Apply Immediately
+
+To enable applying changes immediately instead of waiting for a maintiance window, use the `apply_immediately` argument.
+
+```terraform
+resource "aws_lightsail_database" "test" {
+  name                 = "test"
+  availability_zone    = "us-east-1a"
+  master_database_name = "testdatabasename"
+  master_password      = "testdatabasepassword"
+  master_username      = "test"
+  blueprint_id         = "postgres_12"
+  bundle_id            = "micro_1_0"
+  apply_immediately    = true
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
-* `availability_zone` - (Required) The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format. (see list below)
+* `availability_zone` - (Required) The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
 * `master_database_name` - (Required) The name of the master database created when the Lightsail database resource is created.
 * `master_password` - (Sensitive) The password for the master user of your new database. The password can include any printable ASCII character except "/", """, or "@".
 * `master_username` - The master user name for your new database.
@@ -48,26 +118,35 @@ The following arguments are supported:
 * `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) The name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
 
-## Availability Zones
-Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
 
-- `ap-northeast-1{a,c,d}`
-- `ap-northeast-2{a,c}`
-- `ap-south-1{a,b}`
-- `ap-southeast-1{a,b,c}`
-- `ap-southeast-2{a,b,c}`
-- `ca-central-1{a,b}`
-- `eu-central-1{a,b,c}`
-- `eu-west-1{a,b,c}`
-- `eu-west-2{a,b,c}`
-- `eu-west-3{a,b,c}`
-- `us-east-1{a,b,c,d,e,f}`
-- `us-east-2{a,b,c}`
-- `us-west-2{a,b,c}`
+## Blueprint Ids
+
+A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command. 
+
+### Examples
+
+- `mysql_8_0`
+- `postgres_12`
+
+### Prefix
+
+A Blueprint ID starts with a prefix of the engine type.
+
+### Suffix
+
+A Blueprint ID has a sufix of the engine version.
+
 
 ## Bundles
 
-Lightsail currently supports the following Bundle IDs (e.g. an instance in `ap-northeast-1` would use `small_2_0`):
+A list of all available Lightsail Bundles for Relational Databases the [aws lightsail get-relational-database-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-bundles.html) aws cli command. 
+
+### Examples
+
+- `small_1_0`
+- `small_ha_1_0`
+- `large_1_0`
+- `large_ha_1_0`
 
 ### Prefix
 
@@ -105,6 +184,7 @@ In addition to all arguments above, the following attributes are exported:
 * `master_endpoint_address` - The master endpoint fqdn for the database.
 * `secondary_availability_zone` - Describes the secondary Availability Zone of a high availability database. The secondary database is used for failover support of a high availability database.
 * `support_code` - The support code for the database. Include this code in your email to support when you have questions about a database in Lightsail. This code enables our support team to look up your Lightsail information more easily.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
