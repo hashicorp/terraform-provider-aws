@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -113,6 +114,55 @@ func ResourceMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"statistics_configurations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_statistics": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.All(
+									validation.Any(
+										validation.StringMatch(
+											regexp.MustCompile(`(^IQM$)|(^(p|tc|tm|ts|wm)(100|\d{1,2})(\.\d{0,10})?$)|(^[ou]\d+(\.\d*)?$)`),
+											"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+										),
+										validation.StringMatch(
+											regexp.MustCompile(`^(TM|TC|TS|WM)\(((((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?:((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%|((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%:(((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?)\)|(TM|TC|TS|WM|PR)\(((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)):((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?|((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?:(\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))\)$`),
+											"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+										),
+									),
+									validation.StringDoesNotMatch(
+										regexp.MustCompile(`^p0(\.0{0,10})?|p100(\.\d{0,10})?$`),
+										"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+									),
+								),
+							},
+						},
+						"include_metrics": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"metric_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"namespace": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -143,6 +193,10 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
 		params.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("statistics_configurations"); ok && v.(*schema.Set).Len() > 0 {
+		params.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Putting CloudWatch Metric Stream: %#v", params)
@@ -221,6 +275,12 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting exclude_filter error: %w", err))
+		}
+	}
+
+	if output.StatisticsConfigurations != nil {
+		if err := d.Set("statistics_configurations", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting statistics_configurations error: %w", err))
 		}
 	}
 
@@ -311,4 +371,89 @@ func flattenMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string
 	}
 
 	return nil
+}
+
+func expandMetricStreamStatisticsConfigurations(s *schema.Set) []*cloudwatch.MetricStreamStatisticsConfiguration {
+	var configurations []*cloudwatch.MetricStreamStatisticsConfiguration
+
+	for _, configurationRaw := range s.List() {
+		configuration := &cloudwatch.MetricStreamStatisticsConfiguration{}
+		mConfiguration := configurationRaw.(map[string]interface{})
+
+		if v, ok := mConfiguration["additional_statistics"].(*schema.Set); ok && v.Len() > 0 {
+			log.Printf("[DEBUG] additional_statistics: %#v", v)
+			configuration.AdditionalStatistics = flex.ExpandStringSet(v)
+		}
+
+		if v, ok := mConfiguration["include_metrics"].(*schema.Set); ok && v.Len() > 0 {
+			log.Printf("[DEBUG] include_metrics: %#v", v)
+			configuration.IncludeMetrics = expandMetricStreamStatisticsConfigurationsIncludeMetrics(v)
+		}
+
+		configurations = append(configurations, configuration)
+
+	}
+
+	log.Printf("[DEBUG] statistics_configurations: %#v", configurations)
+
+	if len(configurations) > 0 {
+		return configurations
+	}
+
+	return nil
+}
+
+func expandMetricStreamStatisticsConfigurationsIncludeMetrics(metrics *schema.Set) []*cloudwatch.MetricStreamStatisticsMetric {
+	var includeMetrics []*cloudwatch.MetricStreamStatisticsMetric
+
+	for _, metricRaw := range metrics.List() {
+		metric := &cloudwatch.MetricStreamStatisticsMetric{}
+		mMetric := metricRaw.(map[string]interface{})
+
+		if v, ok := mMetric["metric_name"].(string); ok && v != "" {
+			metric.MetricName = aws.String(v)
+		}
+
+		if v, ok := mMetric["namespace"].(string); ok && v != "" {
+			metric.Namespace = aws.String(v)
+		}
+
+		includeMetrics = append(includeMetrics, metric)
+	}
+
+	if len(includeMetrics) > 0 {
+		return includeMetrics
+	}
+
+	return nil
+}
+
+func flattenMetricStreamStatisticsConfigurations(configurations []*cloudwatch.MetricStreamStatisticsConfiguration) []map[string]interface{} {
+	flatConfigurations := make([]map[string]interface{}, 0)
+
+	for _, configuration := range configurations {
+		flatConfiguration := map[string]interface{}{
+			"additional_statistics": flex.FlattenStringSet(configuration.AdditionalStatistics),
+			"include_metrics":       flattenMetricStreamStatisticsConfigurationsIncludeMetrics(configuration.IncludeMetrics),
+		}
+
+		flatConfigurations = append(flatConfigurations, flatConfiguration)
+	}
+
+	return flatConfigurations
+}
+
+func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(metrics []*cloudwatch.MetricStreamStatisticsMetric) []map[string]interface{} {
+	flatMetrics := make([]map[string]interface{}, 0)
+
+	for _, metric := range metrics {
+		flatMetric := map[string]interface{}{
+			"metric_name": aws.StringValue(metric.MetricName),
+			"namespace":   aws.StringValue(metric.Namespace),
+		}
+
+		flatMetrics = append(flatMetrics, flatMetric)
+	}
+
+	return flatMetrics
 }

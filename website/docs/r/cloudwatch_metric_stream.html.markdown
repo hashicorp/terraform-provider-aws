@@ -152,14 +152,29 @@ The following arguments are optional:
 * `name` - (Optional, Forces new resource) Friendly name of the metric stream. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `statistics_configurations` - (Optional) For each entry in this array, you specify one or more metrics and the list of additional statistics to stream for those metrics. The additional statistics that you can stream depend on the stream's OutputFormat. If the OutputFormat is json, you can stream any additional statistic that is supported by CloudWatch, listed in [CloudWatch statistics definitions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html.html). If the OutputFormat is opentelemetry0.7, you can stream percentile statistics (p??).
 
-### `exclude_filter`
+### Nested Fields
+
+#### `exclude_filter`
 
 * `namespace` - (Required) Name of the metric namespace in the filter.
 
-### `include_filter`
+#### `include_filter`
 
 * `namespace` - (Required) Name of the metric namespace in the filter.
+
+#### `statistics_configurations`
+
+* `additional_statistics` - (Required) The additional statistics to stream for the metrics listed in `include_metrics`.
+
+* `include_metrics` - (Required) An array that defines the metrics that are to have additional statistics streamed.
+
+#### `include_metrics`
+
+* `metric_name` - (Required) The name of the metric.
+
+* `namespace` - (Required) The namespace of the metric.
 
 ## Attributes Reference
 
