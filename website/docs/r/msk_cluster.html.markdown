@@ -108,13 +108,17 @@ resource "aws_msk_cluster" "example" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    instance_type   = "kafka.m5.large"
-    ebs_volume_size = 1000
+    instance_type = "kafka.m5.large"
     client_subnets = [
       aws_subnet.subnet_az1.id,
       aws_subnet.subnet_az2.id,
       aws_subnet.subnet_az3.id,
     ]
+    storage_info {
+      ebs_storage_info {
+        volume_size = 1000
+      }
+    }
     security_groups = [aws_security_group.sg.id]
   }
 
@@ -214,7 +218,7 @@ The following arguments are supported:
 ### broker_node_group_info Argument Reference
 
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
-* `ebs_volume_size` - (Required) The size in GiB of the EBS volume for the data drive on each broker node.
+* `ebs_volume_size` - (**Deprecated**) The size in GiB of the EBS volume for the data drive on each broker node.
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
