@@ -740,45 +740,34 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteFleetsInput{
-		FleetIds:           []*string{aws.String(d.Id())},
+	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
+	output, err := conn.DeleteFleets(&ec2.DeleteFleetsInput{
+		FleetIds:           aws.StringSlice([]string{d.Id()}),
 		TerminateInstances: aws.Bool(d.Get("terminate_instances").(bool)),
+	})
+
+	if err == nil && output != nil {
+		err = DeleteFleetsError(output.UnsuccessfulFleetDeletions)
 	}
 
-	log.Printf("[DEBUG] Deleting EC2 Fleet (%s): %s", d.Id(), input)
-	_, err := conn.DeleteFleets(input)
-
-	if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFleetIdNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Fleet: %s", err)
+		return fmt.Errorf("deleting EC2 Fleet (%s): %w", d.Id(), err)
 	}
 
-	pending := []string{ec2.FleetStateCodeActive}
-	target := []string{ec2.FleetStateCodeDeleted}
+	pendingStates := []string{ec2.FleetStateCodeActive}
+	targetStates := []string{ec2.FleetStateCodeDeleted}
 	if d.Get("terminate_instances").(bool) {
-		pending = append(pending, ec2.FleetStateCodeDeletedTerminating)
-		// AWS SDK constant is incorrect: unexpected state 'deleted_terminating', wanted target 'deleted, deleted-terminating'
-		pending = append(pending, "deleted_terminating")
+		pendingStates = append(pendingStates, ec2.FleetStateCodeDeletedTerminating)
 	} else {
-		target = append(target, ec2.FleetStateCodeDeletedRunning)
-		// AWS SDK constant is incorrect: unexpected state 'deleted_running', wanted target 'deleted, deleted-running'
-		target = append(target, "deleted_running")
+		targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Refresh: ec2FleetRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Fleet (%s) deletion", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Fleet (%s) deletion: %s", d.Id(), err)
+	if _, err := WaitFleet(conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for EC2 Fleet (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

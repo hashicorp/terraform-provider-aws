@@ -121,6 +121,26 @@ func CreateFleetError(apiObjects []*ec2.CreateFleetError) error {
 	return errors.ErrorOrNil()
 }
 
+func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
+	if apiObject == nil || apiObject.Error == nil {
+		return nil
+	}
+
+	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+}
+
+func DeleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := DeleteFleetError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
+}
+
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 	if apiObject == nil {
 		return nil

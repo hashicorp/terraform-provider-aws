@@ -369,6 +369,23 @@ func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destin
 	return nil, err
 }
 
+func WaitFleet(conn *ec2.EC2, id string, pending, target []string, timeout time.Duration) (*ec2.FleetData, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: pending,
+		Target:  target,
+		Refresh: StatusFleetState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.FleetData); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitImageAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.ImageStatePending},
