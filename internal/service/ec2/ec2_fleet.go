@@ -543,23 +543,36 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	fleetType := d.Get("type").(string)
 	input := &ec2.CreateFleetInput{
 		ExcessCapacityTerminationPolicy:  aws.String(d.Get("excess_capacity_termination_policy").(string)),
-		LaunchTemplateConfigs:            expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
-		OnDemandOptions:                  expandEc2OnDemandOptionsRequest(d.Get("on_demand_options").([]interface{})),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		SpotOptions:                      expandEc2SpotOptionsRequest(d.Get("spot_options").([]interface{})),
 		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
-		TargetCapacitySpecification:      expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
-		Type:                             aws.String(d.Get("type").(string)),
+		Type:                             aws.String(fleetType),
 	}
 
-	if d.Get("type").(string) != ec2.FleetTypeMaintain {
+	if fleetType != ec2.FleetTypeMaintain {
 		if input.SpotOptions.MaintenanceStrategies != nil {
 			log.Printf("[WARN] EC2 Fleet (%s) has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.", input)
 			return nil
 		}
+	}
+
+	if v, ok := d.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
+		input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("on_demand_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OnDemandOptions = expandOnDemandOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.SpotOptions = expandSpotOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("target_capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.TargetCapacitySpecification = expandTargetCapacitySpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("context"); ok {
@@ -570,7 +583,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateFleet(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Fleet: %w", err)
+		return fmt.Errorf("creating EC2 Fleet: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.FleetId))
@@ -664,7 +677,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.ModifyFleetInput{
 		Context:                         aws.String(d.Get("context").(string)),
 		ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
-		LaunchTemplateConfigs:           expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
+		LaunchTemplateConfigs:           expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		FleetId:                         aws.String(d.Id()),
 		// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
 		// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
@@ -791,193 +804,231 @@ func ec2FleetRefreshFunc(conn *ec2.EC2, fleetID string) resource.StateRefreshFun
 	}
 }
 
-func expandEc2FleetLaunchTemplateConfigRequests(l []interface{}) []*ec2.FleetLaunchTemplateConfigRequest {
-	fleetLaunchTemplateConfigRequests := make([]*ec2.FleetLaunchTemplateConfigRequest, len(l))
-	for i, m := range l {
-		if m == nil {
-			fleetLaunchTemplateConfigRequests[i] = &ec2.FleetLaunchTemplateConfigRequest{}
+func expandFleetLaunchTemplateConfigRequests(tfList []interface{}) []*ec2.FleetLaunchTemplateConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.FleetLaunchTemplateConfigRequest
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		fleetLaunchTemplateConfigRequests[i] = expandEc2FleetLaunchTemplateConfigRequest(m.(map[string]interface{}))
-	}
-	return fleetLaunchTemplateConfigRequests
-}
+		apiObject := expandFleetLaunchTemplateConfigRequest(tfMap)
 
-func expandEc2FleetLaunchTemplateConfigRequest(m map[string]interface{}) *ec2.FleetLaunchTemplateConfigRequest {
-	fleetLaunchTemplateConfigRequest := &ec2.FleetLaunchTemplateConfigRequest{
-		LaunchTemplateSpecification: expandEc2LaunchTemplateSpecificationRequest(m["launch_template_specification"].([]interface{})),
-	}
-
-	if v, ok := m["override"]; ok {
-		fleetLaunchTemplateConfigRequest.Overrides = expandEc2FleetLaunchTemplateOverridesRequests(v.([]interface{}))
-	}
-
-	return fleetLaunchTemplateConfigRequest
-}
-
-func expandEc2FleetLaunchTemplateOverridesRequests(l []interface{}) []*ec2.FleetLaunchTemplateOverridesRequest {
-	if len(l) == 0 {
-		return nil
-	}
-
-	fleetLaunchTemplateOverridesRequests := make([]*ec2.FleetLaunchTemplateOverridesRequest, len(l))
-	for i, m := range l {
-		if m == nil {
-			fleetLaunchTemplateOverridesRequests[i] = &ec2.FleetLaunchTemplateOverridesRequest{}
+		if apiObject == nil {
 			continue
 		}
 
-		fleetLaunchTemplateOverridesRequests[i] = expandEc2FleetLaunchTemplateOverridesRequest(m.(map[string]interface{}))
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return fleetLaunchTemplateOverridesRequests
+
+	return apiObjects
 }
 
-func expandEc2FleetLaunchTemplateOverridesRequest(m map[string]interface{}) *ec2.FleetLaunchTemplateOverridesRequest {
-	fleetLaunchTemplateOverridesRequest := &ec2.FleetLaunchTemplateOverridesRequest{}
-
-	if v, ok := m["availability_zone"]; ok && v.(string) != "" {
-		fleetLaunchTemplateOverridesRequest.AvailabilityZone = aws.String(v.(string))
-	}
-
-	if v, ok := m["instance_requirements"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		fleetLaunchTemplateOverridesRequest.InstanceRequirements = expandInstanceRequirementsRequest(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := m["instance_type"]; ok && v.(string) != "" {
-		fleetLaunchTemplateOverridesRequest.InstanceType = aws.String(v.(string))
-	}
-
-	if v, ok := m["max_price"]; ok && v.(string) != "" {
-		fleetLaunchTemplateOverridesRequest.MaxPrice = aws.String(v.(string))
-	}
-
-	if v, ok := m["priority"]; ok && v.(float64) != 0.0 {
-		fleetLaunchTemplateOverridesRequest.Priority = aws.Float64(v.(float64))
-	}
-
-	if v, ok := m["subnet_id"]; ok && v.(string) != "" {
-		fleetLaunchTemplateOverridesRequest.SubnetId = aws.String(v.(string))
-	}
-
-	if v, ok := m["weighted_capacity"]; ok && v.(float64) != 0.0 {
-		fleetLaunchTemplateOverridesRequest.WeightedCapacity = aws.Float64(v.(float64))
-	}
-
-	return fleetLaunchTemplateOverridesRequest
-}
-
-func expandEc2LaunchTemplateSpecificationRequest(l []interface{}) *ec2.FleetLaunchTemplateSpecificationRequest {
-	fleetLaunchTemplateSpecificationRequest := &ec2.FleetLaunchTemplateSpecificationRequest{}
-
-	if len(l) == 0 || l[0] == nil {
-		return fleetLaunchTemplateSpecificationRequest
-	}
-
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["launch_template_id"]; ok && v.(string) != "" {
-		fleetLaunchTemplateSpecificationRequest.LaunchTemplateId = aws.String(v.(string))
-	}
-
-	if v, ok := m["launch_template_name"]; ok && v.(string) != "" {
-		fleetLaunchTemplateSpecificationRequest.LaunchTemplateName = aws.String(v.(string))
-	}
-
-	if v, ok := m["version"]; ok && v.(string) != "" {
-		fleetLaunchTemplateSpecificationRequest.Version = aws.String(v.(string))
-	}
-
-	return fleetLaunchTemplateSpecificationRequest
-}
-
-func expandEc2OnDemandOptionsRequest(l []interface{}) *ec2.OnDemandOptionsRequest {
-	if len(l) == 0 || l[0] == nil {
+func expandFleetLaunchTemplateConfigRequest(tfMap map[string]interface{}) *ec2.FleetLaunchTemplateConfigRequest {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &ec2.FleetLaunchTemplateConfigRequest{}
 
-	return &ec2.OnDemandOptionsRequest{
-		AllocationStrategy: aws.String(m["allocation_strategy"].(string)),
+	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandFleetLaunchTemplateSpecificationRequest(v[0].(map[string]interface{}))
 	}
+
+	if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Overrides = expandFleetLaunchTemplateOverridesRequests(v)
+	}
+
+	return apiObject
 }
 
-func expandEc2SpotOptionsRequest(l []interface{}) *ec2.SpotOptionsRequest {
-	if len(l) == 0 || l[0] == nil {
+func expandFleetLaunchTemplateSpecificationRequest(tfMap map[string]interface{}) *ec2.FleetLaunchTemplateSpecificationRequest {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &ec2.FleetLaunchTemplateSpecificationRequest{}
 
-	spotOptionsRequest := &ec2.SpotOptionsRequest{
-		AllocationStrategy:           aws.String(m["allocation_strategy"].(string)),
-		InstanceInterruptionBehavior: aws.String(m["instance_interruption_behavior"].(string)),
-		MaintenanceStrategies:        expandFleetSpotMaintenanceStrategiesRequest(m["maintenance_strategies"].([]interface{})),
+	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v)
 	}
 
-	// InvalidFleetConfig: InstancePoolsToUseCount option is only available with the lowestPrice allocation strategy.
-	if aws.StringValue(spotOptionsRequest.AllocationStrategy) == "lowestPrice" {
-		spotOptionsRequest.InstancePoolsToUseCount = aws.Int64(int64(m["instance_pools_to_use_count"].(int)))
+	if v, ok := tfMap["launch_template_name"].(string); ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v)
 	}
 
-	return spotOptionsRequest
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandFleetSpotMaintenanceStrategiesRequest(l []interface{}) *ec2.FleetSpotMaintenanceStrategiesRequest {
-	if len(l) == 0 || l[0] == nil {
+func expandFleetLaunchTemplateOverridesRequests(tfList []interface{}) []*ec2.FleetLaunchTemplateOverridesRequest {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	var apiObjects []*ec2.FleetLaunchTemplateOverridesRequest
 
-	fleetSpotMaintenanceStrategiesRequest := &ec2.FleetSpotMaintenanceStrategiesRequest{
-		CapacityRebalance: expandFleetSpotCapacityRebalanceRequest(m["capacity_rebalance"].([]interface{})),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFleetLaunchTemplateOverridesRequest(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return fleetSpotMaintenanceStrategiesRequest
+	return apiObjects
 }
 
-func expandFleetSpotCapacityRebalanceRequest(l []interface{}) *ec2.FleetSpotCapacityRebalanceRequest {
-	if len(l) == 0 || l[0] == nil {
+func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec2.FleetLaunchTemplateOverridesRequest {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &ec2.FleetLaunchTemplateOverridesRequest{}
 
-	capacityRebalance := &ec2.FleetSpotCapacityRebalanceRequest{}
-
-	if v, ok := m["replacement_strategy"]; ok && v.(string) != "" {
-		capacityRebalance.ReplacementStrategy = aws.String(v.(string))
+	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	return capacityRebalance
+	if v, ok := tfMap["instance_requirements"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.InstanceRequirements = expandInstanceRequirementsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["max_price"].(string); ok && v != "" {
+		apiObject.MaxPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["priority"].(float64); ok && v != 0 {
+		apiObject.Priority = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+		apiObject.SubnetId = aws.String(v)
+	}
+
+	if v, ok := tfMap["weighted_capacity"].(float64); ok && v != 0 {
+		apiObject.WeightedCapacity = aws.Float64(v)
+	}
+
+	return apiObject
 }
 
-func expandEc2TargetCapacitySpecificationRequest(l []interface{}) *ec2.TargetCapacitySpecificationRequest {
-	if len(l) == 0 || l[0] == nil {
+func expandOnDemandOptionsRequest(tfMap map[string]interface{}) *ec2.OnDemandOptionsRequest {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &ec2.OnDemandOptionsRequest{}
 
-	targetCapacitySpecificationrequest := &ec2.TargetCapacitySpecificationRequest{
-		TotalTargetCapacity: aws.Int64(int64(m["total_target_capacity"].(int))),
+	if v, ok := tfMap["allocation_strategy"].(string); ok && v != "" {
+		apiObject.AllocationStrategy = aws.String(v)
 	}
 
-	if v, ok := m["default_target_capacity_type"]; ok && v.(string) != "" {
-		targetCapacitySpecificationrequest.DefaultTargetCapacityType = aws.String(v.(string))
+	return apiObject
+}
+
+func expandSpotOptionsRequest(tfMap map[string]interface{}) *ec2.SpotOptionsRequest {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["on_demand_target_capacity"]; ok && v.(int) != 0 {
-		targetCapacitySpecificationrequest.OnDemandTargetCapacity = aws.Int64(int64(v.(int)))
+	apiObject := &ec2.SpotOptionsRequest{}
+
+	if v, ok := tfMap["allocation_strategy"].(string); ok && v != "" {
+		apiObject.AllocationStrategy = aws.String(v)
+
+		// InvalidFleetConfig: InstancePoolsToUseCount option is only available with the lowestPrice allocation strategy.
+		if v == SpotAllocationStrategyLowestPrice {
+			if v, ok := tfMap["instance_pools_to_use_count"].(int); ok {
+				apiObject.InstancePoolsToUseCount = aws.Int64(int64(v))
+			}
+		}
 	}
 
-	if v, ok := m["spot_target_capacity"]; ok && v.(int) != 0 {
-		targetCapacitySpecificationrequest.SpotTargetCapacity = aws.Int64(int64(v.(int)))
+	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
+		apiObject.InstanceInterruptionBehavior = aws.String(v)
 	}
 
-	return targetCapacitySpecificationrequest
+	if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MaintenanceStrategies = expandFleetSpotMaintenanceStrategiesRequest(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandFleetSpotMaintenanceStrategiesRequest(tfMap map[string]interface{}) *ec2.FleetSpotMaintenanceStrategiesRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.FleetSpotMaintenanceStrategiesRequest{}
+
+	if v, ok := tfMap["capacity_rebalance"].([]interface{}); ok && len(v) > 0 {
+		apiObject.CapacityRebalance = expandFleetSpotCapacityRebalanceRequest(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandFleetSpotCapacityRebalanceRequest(tfMap map[string]interface{}) *ec2.FleetSpotCapacityRebalanceRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.FleetSpotCapacityRebalanceRequest{}
+
+	if v, ok := tfMap["replacement_strategy"].(string); ok && v != "" {
+		apiObject.ReplacementStrategy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandTargetCapacitySpecificationRequest(tfMap map[string]interface{}) *ec2.TargetCapacitySpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.TargetCapacitySpecificationRequest{}
+
+	if v, ok := tfMap["default_target_capacity_type"].(string); ok && v != "" {
+		apiObject.DefaultTargetCapacityType = aws.String(v)
+	}
+
+	if v, ok := tfMap["on_demand_target_capacity"].(int); ok && v != 0 {
+		apiObject.OnDemandTargetCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["spot_target_capacity"].(int); ok && v != 0 {
+		apiObject.SpotTargetCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["total_target_capacity"].(int); ok {
+		apiObject.TotalTargetCapacity = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
 func flattenEc2FleetLaunchTemplateConfigs(fleetLaunchTemplateConfigs []*ec2.FleetLaunchTemplateConfig) []interface{} {
