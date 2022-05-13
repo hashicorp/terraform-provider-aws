@@ -1483,8 +1483,13 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
-	_, err := conn.DeleteConnectorProfile(&appflow.DeleteConnectorProfileInput{
-		ConnectorProfileName: aws.String(d.Id()),
+
+	out, _ := FindConnectorProfileByArn(ctx, conn, d.Id())
+
+	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
+
+	_, err := conn.DeleteConnectorProfileWithContext(ctx, &appflow.DeleteConnectorProfileInput{
+		ConnectorProfileName: out.ConnectorProfileName,
 	})
 
 	if err != nil {
