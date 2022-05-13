@@ -635,25 +635,31 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
-
-	if err := d.Set("launch_template_config", flattenEc2FleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
-		return fmt.Errorf("error setting launch_template_config: %s", err)
+	if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
+		return fmt.Errorf("setting launch_template_config: %w", err)
 	}
-
-	if err := d.Set("on_demand_options", flattenEc2OnDemandOptions(fleet.OnDemandOptions)); err != nil {
-		return fmt.Errorf("error setting on_demand_options: %s", err)
+	if fleet.OnDemandOptions != nil {
+		if err := d.Set("on_demand_options", []interface{}{flattenOnDemandOptions(fleet.OnDemandOptions)}); err != nil {
+			return fmt.Errorf("setting on_demand_options: %w", err)
+		}
+	} else {
+		d.Set("on_demand_options", nil)
 	}
-
 	d.Set("replace_unhealthy_instances", fleet.ReplaceUnhealthyInstances)
-
-	if err := d.Set("spot_options", flattenEc2SpotOptions(fleet.SpotOptions)); err != nil {
-		return fmt.Errorf("error setting spot_options: %s", err)
+	if fleet.SpotOptions != nil {
+		if err := d.Set("spot_options", []interface{}{flattenSpotOptions(fleet.SpotOptions)}); err != nil {
+			return fmt.Errorf("setting spot_options: %w", err)
+		}
+	} else {
+		d.Set("spot_options", nil)
 	}
-
-	if err := d.Set("target_capacity_specification", flattenEc2TargetCapacitySpecification(fleet.TargetCapacitySpecification)); err != nil {
-		return fmt.Errorf("error setting target_capacity_specification: %s", err)
+	if fleet.TargetCapacitySpecification != nil {
+		if err := d.Set("target_capacity_specification", []interface{}{flattenTargetCapacitySpecification(fleet.TargetCapacitySpecification)}); err != nil {
+			return fmt.Errorf("setting target_capacity_specification: %w", err)
+		}
+	} else {
+		d.Set("target_capacity_specification", nil)
 	}
-
 	d.Set("terminate_instances_with_expiration", fleet.TerminateInstancesWithExpiration)
 	d.Set("type", fleet.Type)
 
@@ -661,11 +667,11 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -1031,129 +1037,192 @@ func expandTargetCapacitySpecificationRequest(tfMap map[string]interface{}) *ec2
 	return apiObject
 }
 
-func flattenEc2FleetLaunchTemplateConfigs(fleetLaunchTemplateConfigs []*ec2.FleetLaunchTemplateConfig) []interface{} {
-	l := make([]interface{}, len(fleetLaunchTemplateConfigs))
+func flattenFleetLaunchTemplateConfigs(apiObjects []*ec2.FleetLaunchTemplateConfig) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
 
-	for i, fleetLaunchTemplateConfig := range fleetLaunchTemplateConfigs {
-		if fleetLaunchTemplateConfig == nil {
-			l[i] = map[string]interface{}{}
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
 			continue
 		}
-		m := map[string]interface{}{
-			"launch_template_specification": flattenEc2FleetLaunchTemplateSpecification(fleetLaunchTemplateConfig.LaunchTemplateSpecification),
-			"override":                      flattenEc2FleetLaunchTemplateOverrides(fleetLaunchTemplateConfig.Overrides),
-		}
-		l[i] = m
+
+		tfList = append(tfList, flattenFleetLaunchTemplateConfig(apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func flattenEc2FleetLaunchTemplateOverrides(fleetLaunchTemplateOverrides []*ec2.FleetLaunchTemplateOverrides) []interface{} {
-	l := make([]interface{}, len(fleetLaunchTemplateOverrides))
+func flattenFleetLaunchTemplateConfig(apiObject *ec2.FleetLaunchTemplateConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-	for i, fleetLaunchTemplateOverride := range fleetLaunchTemplateOverrides {
-		if fleetLaunchTemplateOverride == nil {
-			l[i] = map[string]interface{}{}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateSpecification; v != nil {
+		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecification(v)}
+	}
+
+	if v := apiObject.Overrides; v != nil {
+		tfMap["override"] = flattenFleetLaunchTemplateOverrideses(v)
+	}
+
+	return tfMap
+}
+
+func flattenFleetLaunchTemplateOverrideses(apiObjects []*ec2.FleetLaunchTemplateOverrides) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
 			continue
 		}
-		m := map[string]interface{}{
-			"availability_zone":     aws.StringValue(fleetLaunchTemplateOverride.AvailabilityZone),
-			"instance_requirements": []interface{}{flattenInstanceRequirements(fleetLaunchTemplateOverride.InstanceRequirements)},
-			"instance_type":         aws.StringValue(fleetLaunchTemplateOverride.InstanceType),
-			"max_price":             aws.StringValue(fleetLaunchTemplateOverride.MaxPrice),
-			"priority":              aws.Float64Value(fleetLaunchTemplateOverride.Priority),
-			"subnet_id":             aws.StringValue(fleetLaunchTemplateOverride.SubnetId),
-			"weighted_capacity":     aws.Float64Value(fleetLaunchTemplateOverride.WeightedCapacity),
-		}
-		l[i] = m
+
+		tfList = append(tfList, flattenFleetLaunchTemplateOverrides(apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func flattenEc2FleetLaunchTemplateSpecification(fleetLaunchTemplateSpecification *ec2.FleetLaunchTemplateSpecification) []interface{} {
-	if fleetLaunchTemplateSpecification == nil {
-		return []interface{}{}
+func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverrides) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"launch_template_id":   aws.StringValue(fleetLaunchTemplateSpecification.LaunchTemplateId),
-		"launch_template_name": aws.StringValue(fleetLaunchTemplateSpecification.LaunchTemplateName),
-		"version":              aws.StringValue(fleetLaunchTemplateSpecification.Version),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZone; v != nil {
+		tfMap["availability_zone"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.InstanceRequirements; v != nil {
+		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap["instance_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.MaxPrice; v != nil {
+		tfMap["max_price"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Priority; v != nil {
+		tfMap["priority"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.SubnetId; v != nil {
+		tfMap["subnet_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.WeightedCapacity; v != nil {
+		tfMap["weighted_capacity"] = aws.Float64Value(v)
+	}
+
+	return tfMap
 }
 
-func flattenEc2OnDemandOptions(onDemandOptions *ec2.OnDemandOptions) []interface{} {
-	if onDemandOptions == nil {
-		return []interface{}{}
+func flattenOnDemandOptions(apiObject *ec2.OnDemandOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"allocation_strategy": aws.StringValue(onDemandOptions.AllocationStrategy),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllocationStrategy; v != nil {
+		tfMap["allocation_strategy"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
-func flattenEc2SpotOptions(spotOptions *ec2.SpotOptions) []interface{} {
-	if spotOptions == nil {
-		return []interface{}{}
+func flattenSpotOptions(apiObject *ec2.SpotOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"allocation_strategy":            aws.StringValue(spotOptions.AllocationStrategy),
-		"instance_interruption_behavior": aws.StringValue(spotOptions.InstanceInterruptionBehavior),
-		"instance_pools_to_use_count":    aws.Int64Value(spotOptions.InstancePoolsToUseCount),
-		"maintenance_strategies":         flattenFleetSpotMaintenanceStrategies(spotOptions.MaintenanceStrategies),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllocationStrategy; v != nil {
+		tfMap["allocation_strategy"] = aws.StringValue(v)
 	}
 
-	// API will omit InstancePoolsToUseCount if AllocationStrategy is diversified, which breaks our Default: 1
-	// Here we just reset it to 1 to prevent removing the Default and setting up a special DiffSuppressFunc
-	if spotOptions.InstancePoolsToUseCount == nil && aws.StringValue(spotOptions.AllocationStrategy) == ec2.SpotAllocationStrategyDiversified {
-		m["instance_pools_to_use_count"] = 1
+	if v := apiObject.InstanceInterruptionBehavior; v != nil {
+		tfMap["instance_interruption_behavior"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.InstancePoolsToUseCount; v != nil {
+		tfMap["instance_pools_to_use_count"] = aws.Int64Value(v)
+	} else if aws.StringValue(apiObject.AllocationStrategy) == ec2.SpotAllocationStrategyDiversified {
+		// API will omit InstancePoolsToUseCount if AllocationStrategy is diversified, which breaks our Default: 1
+		// Here we just reset it to 1 to prevent removing the Default and setting up a special DiffSuppressFunc.
+		tfMap["instance_pools_to_use_count"] = 1
+	}
+
+	if v := apiObject.MaintenanceStrategies; v != nil {
+		tfMap["maintenance_strategies"] = []interface{}{flattenFleetSpotMaintenanceStrategies(v)}
+	}
+
+	return tfMap
 }
 
-func flattenFleetSpotMaintenanceStrategies(fleetSpotMaintenanceStrategies *ec2.FleetSpotMaintenanceStrategies) []interface{} {
-	if fleetSpotMaintenanceStrategies == nil {
-		return []interface{}{}
+func flattenFleetSpotMaintenanceStrategies(apiObject *ec2.FleetSpotMaintenanceStrategies) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"capacity_rebalance": flattenFleetSpotCapacityRebalance(fleetSpotMaintenanceStrategies.CapacityRebalance),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CapacityRebalance; v != nil {
+		tfMap["capacity_rebalance"] = []interface{}{flattenFleetSpotCapacityRebalance(v)}
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
-func flattenFleetSpotCapacityRebalance(fleetSpotCapacityRebalance *ec2.FleetSpotCapacityRebalance) []interface{} {
-	if fleetSpotCapacityRebalance == nil {
-		return []interface{}{}
+func flattenFleetSpotCapacityRebalance(apiObject *ec2.FleetSpotCapacityRebalance) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"replacement_strategy": aws.StringValue(fleetSpotCapacityRebalance.ReplacementStrategy),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ReplacementStrategy; v != nil {
+		tfMap["replacement_strategy"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
-func flattenEc2TargetCapacitySpecification(targetCapacitySpecification *ec2.TargetCapacitySpecification) []interface{} {
-	if targetCapacitySpecification == nil {
-		return []interface{}{}
+func flattenTargetCapacitySpecification(apiObject *ec2.TargetCapacitySpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"default_target_capacity_type": aws.StringValue(targetCapacitySpecification.DefaultTargetCapacityType),
-		"on_demand_target_capacity":    aws.Int64Value(targetCapacitySpecification.OnDemandTargetCapacity),
-		"spot_target_capacity":         aws.Int64Value(targetCapacitySpecification.SpotTargetCapacity),
-		"total_target_capacity":        aws.Int64Value(targetCapacitySpecification.TotalTargetCapacity),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DefaultTargetCapacityType; v != nil {
+		tfMap["default_target_capacity_type"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.OnDemandTargetCapacity; v != nil {
+		tfMap["on_demand_target_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SpotTargetCapacity; v != nil {
+		tfMap["spot_target_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TotalTargetCapacity; v != nil {
+		tfMap["total_target_capacity"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
