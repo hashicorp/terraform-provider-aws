@@ -171,15 +171,21 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
 
+	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set("availability_zone", snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("source_region", snapshot.SourceRegion)
+	d.Set("iops", snapshot.Iops)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set("license_model", snapshot.LicenseModel)
+	d.Set("option_group_name", snapshot.OptionGroupName)
 	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
+	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("storage_type", snapshot.StorageType)
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
+	d.Set("vpc_id", snapshot.VpcId)
 
 	tags, err := ListTags(conn, arn)
 

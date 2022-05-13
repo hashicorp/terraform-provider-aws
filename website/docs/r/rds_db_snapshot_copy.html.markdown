@@ -42,7 +42,13 @@ resource "aws_rds_db_snapshot_copy" "example" {
 
 The following arguments are supported:
 
+* `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
+* `destination_region` - (Optional) The Destination region to place snapshot copy.
+* `kms_key_id` - (Optional) KMS key ID.
+* `option_group_name`- (Optional) The name of an option group to associate with the copy of the snapshot.
+* `presigned_url` - (Optional) he URL that contains a Signature Version 4 signed request.
 * `source_db_snapshot_identifier` - (Required) Snapshot identifier of the source snapshot.
+* `target_custom_availability_zone` - (Optional) The external custom Availability Zone.
 * `target_db_snapshot_identifier` - (Required) The Identifier for the snapshot.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -51,6 +57,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - Snapshot Identifier.
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
 * `db_snapshot_arn` - The Amazon Resource Name (ARN) for the DB snapshot.
