@@ -125,9 +125,12 @@ func ResourceCluster() *schema.Resource {
 							},
 						},
 						"ebs_volume_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 16384),
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							Deprecated:    "use 'storage_info' argument instead",
+							ValidateFunc:  validation.IntBetween(1, 16384),
+							ConflictsWith: []string{"broker_node_group_info.0.storage_info"},
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -139,6 +142,55 @@ func ResourceCluster() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
+							},
+						},
+						"storage_info": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							Computed:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"broker_node_group_info.0.ebs_volume_size"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ebs_storage_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"provisioned_throughput": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															// This feature is available for
+															// storage volume larger than 10 GiB and
+															// broker types kafka.m5.4xlarge and larger.
+															"enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															// Minimum and maximum for this varies between broker type
+															// https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html
+															"volume_throughput": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(250, 2375),
+															},
+														},
+													},
+												},
+												"volume_size": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
+													ValidateFunc: validation.IntBetween(1, 16384),
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
