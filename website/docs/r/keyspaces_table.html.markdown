@@ -110,7 +110,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_keyspaces_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for table creation
-- `update` - (Default `20 minutes`) Used for table modification
+- `update` - (Default `30 minutes`) Used for table modification
 - `delete` - (Default `10 minutes`) Used for table deletion
 
 ## Import
