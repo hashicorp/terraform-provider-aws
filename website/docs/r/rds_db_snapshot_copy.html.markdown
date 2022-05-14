@@ -3,7 +3,7 @@ subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_db_snapshot"
 description: |-
-Manages an RDS database instance snapshot copy.
+  Manages an RDS database instance snapshot copy.
 ---
 
 # Resource: aws_db_snapshot
