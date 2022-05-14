@@ -6,7 +6,7 @@ description: |-
   Manages an RDS database instance snapshot copy.
 ---
 
-# Resource: aws_db_snapshot
+# Resource: aws_rds_db_snapshot_copy
 
 Manages an RDS database instance snapshot copy. For managing RDS database cluster snapshots, see the [`aws_db_cluster_snapshot` resource](/docs/providers/aws/r/db_cluster_snapshot.html).
 
