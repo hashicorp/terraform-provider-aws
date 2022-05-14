@@ -40,25 +40,13 @@ func ResourceTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("schema_definition", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIfChange("schema_definition.0.column", func(_ context.Context, o, n, meta interface{}) bool {
 				// Columns can only be added.
-				o, n := diff.GetChange("schema_definition")
-				var os, ns *schema.Set
-
-				if v, ok := o.([]interface{}); ok && len(v) > 0 && v[0] != nil {
-					if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
-						os = v
-					}
-				}
-				if v, ok := n.([]interface{}); ok && len(v) > 0 && v[0] != nil {
-					if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
-						ns = v
-					}
-				}
-
-				if os != nil && ns != nil {
-					if del := os.Difference(ns); del.Len() > 0 {
-						return true
+				if os, ok := o.(*schema.Set); ok {
+					if ns, ok := n.(*schema.Set); ok {
+						if del := os.Difference(ns); del.Len() > 0 {
+							return true
+						}
 					}
 				}
 
