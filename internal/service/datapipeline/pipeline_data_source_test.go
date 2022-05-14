@@ -22,7 +22,7 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineDataSourceConfig_pipeline(rName),
+				Config: testAccPipelineDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -33,7 +33,7 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccPipelineDataSourceConfig_pipeline(name string) string {
+func testAccPipelineDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "test" {
   name = %[1]q
