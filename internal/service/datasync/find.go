@@ -58,7 +58,7 @@ func FindTaskByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeTaskO
 	return output, nil
 }
 
-func FindLocationHdfsByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
+func FindLocationHDFSByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
 	input := &datasync.DescribeLocationHdfsInput{
 		LocationArn: aws.String(arn),
 	}
