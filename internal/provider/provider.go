@@ -1748,6 +1748,7 @@ func Provider() *schema.Provider {
 			"aws_db_proxy_target":                           rds.ResourceProxyTarget(),
 			"aws_db_security_group":                         rds.ResourceSecurityGroup(),
 			"aws_db_snapshot":                               rds.ResourceSnapshot(),
+			"aws_db_snapshot_copy":                          rds.ResourceSnapshotCopy(),
 			"aws_db_subnet_group":                           rds.ResourceSubnetGroup(),
 			"aws_rds_cluster":                               rds.ResourceCluster(),
 			"aws_rds_cluster_activity_stream":               rds.ResourceClusterActivityStream(),
