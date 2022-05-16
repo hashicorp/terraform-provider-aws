@@ -425,6 +425,8 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_ses_receipt_filter` resource](/docs/providers/aws/r/ses_receipt_filter.html)
     - [`aws_ses_receipt_rule` resource](/docs/providers/aws/r/ses_receipt_rule.html)
     - [`aws_ses_template` resource](/docs/providers/aws/r/ses_template.html)
+    - [`aws_sesv2_email_identity` resource](/docs/providers/aws/r/sesv2_email_identity.html)
+    - [`aws_sesv2_email_identity_dkim` resource](/docs/providers/aws/r/sesv2_email_identity_dkim.html)
     - [`aws_ssm_document` data source](/docs/providers/aws/d/ssm_document.html)
     - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
     - [`aws_ssm_parameter` data source](/docs/providers/aws/d/ssm_parameter.html)

@@ -158,6 +158,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
@@ -1943,6 +1944,9 @@ func Provider() *schema.Provider {
 			"aws_ses_receipt_rule":                 ses.ResourceReceiptRule(),
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
+
+			"aws_sesv2_email_identity":      sesv2.ResourceEmailIdentity(),
+			"aws_sesv2_email_identity_dkim": sesv2.ResourceEmailIdentityDKIM(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
