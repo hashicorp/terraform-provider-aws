@@ -34,6 +34,14 @@ func ResourceSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"copy_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -60,15 +68,28 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"iops": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"license_model": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"option_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"presigned_url": {
 				Type:     schema.TypeString,
@@ -81,6 +102,10 @@ func ResourceSnapshotCopy() *schema.Resource {
 				ForceNew: true,
 			},
 			"source_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"snapshot_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,6 +128,10 @@ func ResourceSnapshotCopy() *schema.Resource {
 					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9][\w-]+`), "must contain only alphanumeric, and hyphen (-) characters"),
 				),
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
@@ -181,6 +210,8 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("option_group_name", snapshot.OptionGroupName)
+	d.Set("port", snapshot.Port)
+	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
 	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("storage_type", snapshot.StorageType)

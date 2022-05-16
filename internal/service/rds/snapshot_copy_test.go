@@ -22,7 +22,7 @@ func TestAccSnapshotCopy_basic(t *testing.T) {
 	}
 
 	var v rds.DBSnapshot
-	resourceName := "aws_rds_db_snapshot_copy.test"
+	resourceName := "aws_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,13 +46,62 @@ func TestAccSnapshotCopy_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnapshotCopy_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBSnapshot
+	resourceName := "aws_db_snapshot_copy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotCopyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotCopyTagsConfig1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSnapshotCopyTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccSnapshotCopyTagsConfig1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSnapshotCopy_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var v rds.DBSnapshot
-	resourceName := "aws_rds_db_snapshot_copy.test"
+	resourceName := "aws_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,7 +126,7 @@ func testAccCheckSnapshotCopyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_db_snapshot_copy" {
+		if rs.Type != "aws_db_snapshot_copy" {
 			continue
 		}
 
@@ -157,8 +206,37 @@ func testAccSnapshotCopyConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotCopyBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_rds_db_snapshot_copy" "test" {
+resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"
 }`, rName))
+}
+
+func testAccSnapshotCopyTagsConfig1(rName, tagKey, tagValue string) string {
+	return acctest.ConfigCompose(
+		testAccSnapshotCopyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_db_snapshot_copy" "test" {
+  source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
+  target_db_snapshot_identifier = "%[1]s-target"
+
+  tags = {
+    %[2]s = %[3]q
+  }
+}`, rName, tagKey, tagValue))
+}
+
+func testAccSnapshotCopyTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccSnapshotCopyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_db_snapshot_copy" "test" {
+  source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
+  target_db_snapshot_identifier = "%[1]s-target"
+
+  tags = {
+    %[2]s = %[3]q
+    %[4]s = %[5]q    
+  }
+}`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

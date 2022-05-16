@@ -1,12 +1,12 @@
 ---
 subcategory: "RDS (Relational Database)"
 layout: "aws"
-page_title: "AWS: aws_rds_db_snapshot"
+page_title: "AWS: aws_db_snapshot_copy"
 description: |-
   Manages an RDS database instance snapshot copy.
 ---
 
-# Resource: aws_rds_db_snapshot_copy
+# Resource: aws_db_snapshot_copy
 
 Manages an RDS database instance snapshot copy. For managing RDS database cluster snapshots, see the [`aws_db_cluster_snapshot` resource](/docs/providers/aws/r/db_cluster_snapshot.html).
 
@@ -32,7 +32,7 @@ resource "aws_db_snapshot" "example" {
   db_snapshot_identifier = "%[1]s-source"
 }
 
-resource "aws_rds_db_snapshot_copy" "example" {
+resource "aws_db_snapshot_copy" "example" {
   source_db_snapshot_identifier = aws_db_snapshot.example.db_snapshot_arn
   target_db_snapshot_identifier = "testsnapshot1234"
 }
@@ -82,8 +82,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_rds_db_snapshot_copy` can be imported by using the snapshot identifier, e.g.,
+`aws_db_snapshot_copy` can be imported by using the snapshot identifier, e.g.,
 
 ```
-$ terraform import aws_rds_db_snapshot_copy.example my-snapshot
+$ terraform import aws_db_snapshot_copy.example my-snapshot
 ```
