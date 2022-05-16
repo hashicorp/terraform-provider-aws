@@ -29,12 +29,12 @@ resource "aws_db_instance" "example" {
 
 resource "aws_db_snapshot" "example" {
   db_instance_identifier = aws_db_instance.example.id
-  db_snapshot_identifier = "%[1]s-source"
+  db_snapshot_identifier = "testsnapshot1234"
 }
 
 resource "aws_db_snapshot_copy" "example" {
   source_db_snapshot_identifier = aws_db_snapshot.example.db_snapshot_arn
-  target_db_snapshot_identifier = "testsnapshot1234"
+  target_db_snapshot_identifier = "testsnapshot1234-copy"
 }
 ```
 
@@ -76,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_rds_db_snapshot_copy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_db_snapshot_copy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `20 minutes`)  Length of time to wait for the snapshot to become available
 
