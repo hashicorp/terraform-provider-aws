@@ -168,7 +168,7 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	out, err := conn.CopyDBSnapshotWithContext(ctx, in)
 	if err != nil {
-		return diag.Errorf("error creating DB Snapshot Copy %s", err)
+		return diag.Errorf("error creating RDS DB Snapshot Copy %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.DBSnapshot.DBSnapshotIdentifier))
