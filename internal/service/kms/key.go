@@ -40,6 +40,12 @@ func ResourceKey() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_key_store_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 22),
+			},
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -121,6 +127,11 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Policy = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("custom_key_store_id"); ok {
+		input.Origin = aws.String(kms.OriginTypeAwsCloudhsm)
+		input.CustomKeyStoreId = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -192,6 +203,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", key.metadata.Arn)
+	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
