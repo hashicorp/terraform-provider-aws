@@ -65,6 +65,7 @@ The following attributes are optional:
 * `dockerfile_template_uri` - (Optional) The Amazon S3 URI for the Dockerfile that will be used to build the container image.
 * `instance_configuration` - (Optional) Configuration block used to configure an instance for building and testing container images. Detailed below.
 * `kms_key_id` - (Optional) The KMS key used to encrypt the container image.
+* `platform_override` - (Optional) The platform override is used when referencing a ECR image instead of an Image Builder image. Valid values are `Linux` and `Windows`.
 * `tags` - (Optional) Key-value map of resource tags for the container recipe. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
