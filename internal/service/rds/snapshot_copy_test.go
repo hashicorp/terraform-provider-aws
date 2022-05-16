@@ -221,7 +221,7 @@ resource "aws_db_snapshot_copy" "test" {
   target_db_snapshot_identifier = "%[1]s-target"
 
   tags = {
-    %[2]s = %[3]q
+    %[2]q = %[3]q
   }
 }`, rName, tagKey, tagValue))
 }
@@ -235,8 +235,8 @@ resource "aws_db_snapshot_copy" "test" {
   target_db_snapshot_identifier = "%[1]s-target"
 
   tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q    
+    %[2]q = %[3]q
+    %[4]q = %[5]q    
   }
 }`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
