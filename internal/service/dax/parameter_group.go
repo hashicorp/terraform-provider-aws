@@ -118,7 +118,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		*desc = ""
 	}
 	d.Set("description", desc)
-	d.Set("parameters", flattenDAXParameterGroupParameters(paramresp.Parameters))
+	d.Set("parameters", flattenParameterGroupParameters(paramresp.Parameters))
 	return nil
 }
 

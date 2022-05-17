@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -503,6 +504,9 @@ func Provider() *schema.Provider {
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
 			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
+			"aws_connect_routing_profile":             connect.DataSourceRoutingProfile(),
+			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
+			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -958,7 +962,10 @@ func Provider() *schema.Provider {
 			"aws_appautoscaling_scheduled_action": appautoscaling.ResourceScheduledAction(),
 			"aws_appautoscaling_target":           appautoscaling.ResourceTarget(),
 
-			"aws_appflow_flow": appflow.ResourceFlow(),
+			"aws_appflow_connector_profile": appflow.ResourceConnectorProfile(),
+			"aws_appflow_flow":              appflow.ResourceFlow(),
+
+			"aws_appintegrations_event_integration": appintegrations.ResourceEventIntegration(),
 
 			"aws_appmesh_gateway_route":   appmesh.ResourceGatewayRoute(),
 			"aws_appmesh_mesh":            appmesh.ResourceMesh(),
@@ -1155,6 +1162,7 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user_hierarchy_group":        connect.ResourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
@@ -1168,9 +1176,9 @@ func Provider() *schema.Provider {
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
 			"aws_datasync_location_fsx_lustre_file_system":  datasync.ResourceLocationFSxLustreFileSystem(),
-			"aws_datasync_location_fsx_openzfs_file_system": datasync.ResourceLocationFSxOpenZfsFileSystem(),
+			"aws_datasync_location_fsx_openzfs_file_system": datasync.ResourceLocationFSxOpenZFSFileSystem(),
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
-			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHdfs(),
+			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHDFS(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
@@ -1566,6 +1574,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
 			"aws_keyspaces_keyspace": keyspaces.ResourceKeyspace(),
+			"aws_keyspaces_table":    keyspaces.ResourceTable(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
@@ -1739,6 +1748,7 @@ func Provider() *schema.Provider {
 			"aws_db_proxy_target":                           rds.ResourceProxyTarget(),
 			"aws_db_security_group":                         rds.ResourceSecurityGroup(),
 			"aws_db_snapshot":                               rds.ResourceSnapshot(),
+			"aws_db_snapshot_copy":                          rds.ResourceSnapshotCopy(),
 			"aws_db_subnet_group":                           rds.ResourceSubnetGroup(),
 			"aws_rds_cluster":                               rds.ResourceCluster(),
 			"aws_rds_cluster_activity_stream":               rds.ResourceClusterActivityStream(),

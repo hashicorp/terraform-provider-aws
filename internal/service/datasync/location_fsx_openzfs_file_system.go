@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceLocationFSxOpenZfsFileSystem() *schema.Resource {
+func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationFSxOpenZfsFileSystemCreate,
-		Read:   resourceLocationFSxOpenZfsFileSystemRead,
-		Update: resourceLocationFSxOpenZfsFileSystemUpdate,
-		Delete: resourceLocationFSxOpenZfsFileSystemDelete,
+		Create: resourceLocationFSxOpenZFSFileSystemCreate,
+		Read:   resourceLocationFSxOpenZFSFileSystemRead,
+		Update: resourceLocationFSxOpenZFSFileSystemUpdate,
+		Delete: resourceLocationFSxOpenZFSFileSystemDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -123,7 +123,7 @@ func ResourceLocationFSxOpenZfsFileSystem() *schema.Resource {
 	}
 }
 
-func resourceLocationFSxOpenZfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -131,7 +131,7 @@ func resourceLocationFSxOpenZfsFileSystemCreate(d *schema.ResourceData, meta int
 
 	input := &datasync.CreateLocationFsxOpenZfsInput{
 		FsxFilesystemArn:  aws.String(fsxArn),
-		Protocol:          expandDataSyncProtocol(d.Get("protocol").([]interface{})),
+		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              Tags(tags.IgnoreAWS()),
 	}
@@ -148,10 +148,10 @@ func resourceLocationFSxOpenZfsFileSystemCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationFSxOpenZfsFileSystemRead(d, meta)
+	return resourceLocationFSxOpenZFSFileSystemRead(d, meta)
 }
 
-func resourceLocationFSxOpenZfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -186,7 +186,7 @@ func resourceLocationFSxOpenZfsFileSystemRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting creation_time: %w", err)
 	}
 
-	if err := d.Set("protocol", flattenDataSyncProtocol(output.Protocol)); err != nil {
+	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return fmt.Errorf("error setting protocol: %w", err)
 	}
 
@@ -210,7 +210,7 @@ func resourceLocationFSxOpenZfsFileSystemRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceLocationFSxOpenZfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
@@ -221,10 +221,10 @@ func resourceLocationFSxOpenZfsFileSystemUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceLocationFSxOpenZfsFileSystemRead(d, meta)
+	return resourceLocationFSxOpenZFSFileSystemRead(d, meta)
 }
 
-func resourceLocationFSxOpenZfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxOpenZFSFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
@@ -245,7 +245,7 @@ func resourceLocationFSxOpenZfsFileSystemDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandDataSyncProtocol(l []interface{}) *datasync.FsxProtocol {
+func expandProtocol(l []interface{}) *datasync.FsxProtocol {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -253,25 +253,25 @@ func expandDataSyncProtocol(l []interface{}) *datasync.FsxProtocol {
 	m := l[0].(map[string]interface{})
 
 	Protocol := &datasync.FsxProtocol{
-		NFS: expandDataSyncNFS(m["nfs"].([]interface{})),
+		NFS: expandNFS(m["nfs"].([]interface{})),
 	}
 
 	return Protocol
 }
 
-func flattenDataSyncProtocol(protocol *datasync.FsxProtocol) []interface{} {
+func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
 	if protocol == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"nfs": flattenDataSyncNFS(protocol.NFS),
+		"nfs": flattenNFS(protocol.NFS),
 	}
 
 	return []interface{}{m}
 }
 
-func expandDataSyncNFS(l []interface{}) *datasync.FsxProtocolNfs {
+func expandNFS(l []interface{}) *datasync.FsxProtocolNfs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -279,19 +279,19 @@ func expandDataSyncNFS(l []interface{}) *datasync.FsxProtocolNfs {
 	m := l[0].(map[string]interface{})
 
 	Protocol := &datasync.FsxProtocolNfs{
-		MountOptions: expandDataSyncNfsMountOptions(m["mount_options"].([]interface{})),
+		MountOptions: expandNFSMountOptions(m["mount_options"].([]interface{})),
 	}
 
 	return Protocol
 }
 
-func flattenDataSyncNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
+func flattenNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
 	if nfs == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"mount_options": flattenDataSyncNfsMountOptions(nfs.MountOptions),
+		"mount_options": flattenNFSMountOptions(nfs.MountOptions),
 	}
 
 	return []interface{}{m}

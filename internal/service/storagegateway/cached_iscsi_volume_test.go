@@ -16,7 +16,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
+func TestParseVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 	var testCases = []struct {
 		Input              string
 		ExpectedGatewayARN string

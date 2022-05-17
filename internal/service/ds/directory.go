@@ -281,7 +281,7 @@ func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema
 	return *out.DirectoryId, nil
 }
 
-func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+func createSimple(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -319,7 +319,7 @@ func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	return *out.DirectoryId, nil
 }
 
-func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+func createActive(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -354,7 +354,7 @@ func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	return *out.DirectoryId, nil
 }
 
-func enableDirectoryServiceSso(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
+func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
 	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
 		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
 		if _, err := conn.EnableSso(&directoryservice.EnableSsoInput{
@@ -384,9 +384,9 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	if directoryType == directoryservice.DirectoryTypeAdconnector {
 		directoryId, err = createDirectoryConnector(conn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
-		directoryId, err = createActiveDirectoryService(conn, d, meta)
+		directoryId, err = createActive(conn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
-		directoryId, err = createSimpleDirectoryService(conn, d, meta)
+		directoryId, err = createSimple(conn, d, meta)
 	}
 
 	if err != nil {
@@ -418,7 +418,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_sso") {
-		if err := enableDirectoryServiceSso(conn, d); err != nil {
+		if err := enableSSO(conn, d); err != nil {
 			return err
 		}
 	}
@@ -430,7 +430,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	if d.HasChange("enable_sso") {
-		if err := enableDirectoryServiceSso(conn, d); err != nil {
+		if err := enableSSO(conn, d); err != nil {
 			return err
 		}
 	}

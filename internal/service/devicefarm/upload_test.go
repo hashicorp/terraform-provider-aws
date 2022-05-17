@@ -32,12 +32,12 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmUploadDestroy,
+		CheckDestroy:      testAccCheckUploadDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmUploadConfig(rName),
+				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmUploadExists(resourceName, &proj),
+					testAccCheckUploadExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "APPIUM_JAVA_TESTNG_TEST_SPEC"),
@@ -52,9 +52,9 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"url"},
 			},
 			{
-				Config: testAccDeviceFarmUploadConfig(rNameUpdated),
+				Config: testAccUploadConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmUploadExists(resourceName, &proj),
+					testAccCheckUploadExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "APPIUM_JAVA_TESTNG_TEST_SPEC"),
@@ -81,12 +81,12 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmUploadDestroy,
+		CheckDestroy:      testAccCheckUploadDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmUploadConfig(rName),
+				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmUploadExists(resourceName, &proj),
+					testAccCheckUploadExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
 				),
@@ -111,12 +111,12 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmUploadDestroy,
+		CheckDestroy:      testAccCheckUploadDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmUploadConfig(rName),
+				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmUploadExists(resourceName, &proj),
+					testAccCheckUploadExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
 				),
@@ -126,7 +126,7 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFarmUploadExists(n string, v *devicefarm.Upload) resource.TestCheckFunc {
+func testAccCheckUploadExists(n string, v *devicefarm.Upload) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -152,7 +152,7 @@ func testAccCheckDeviceFarmUploadExists(n string, v *devicefarm.Upload) resource
 	}
 }
 
-func testAccCheckDeviceFarmUploadDestroy(s *terraform.State) error {
+func testAccCheckUploadDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -176,7 +176,7 @@ func testAccCheckDeviceFarmUploadDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDeviceFarmUploadConfig(rName string) string {
+func testAccUploadConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_project" "test" {
   name = %[1]q

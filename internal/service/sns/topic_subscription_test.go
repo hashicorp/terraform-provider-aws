@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
+func TestSuppressEquivalentTopicSubscriptionDeliveryPolicy(t *testing.T) {
 	var testCases = []struct {
 		old        string
 		new        string
@@ -589,7 +589,7 @@ func testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes *map[string]
 	}
 }
 
-const awsSNSPasswordObfuscationPattern = "****"
+const passwordObfuscationPattern = "****"
 
 // returns the endpoint with obfuscated password, if any
 func obfuscateEndpoint(t *testing.T, endpoint string) string {
@@ -604,7 +604,7 @@ func obfuscateEndpoint(t *testing.T, endpoint string) string {
 	// Then, we update the user with the obfuscated version.
 	if res.User != nil {
 		if password, ok := res.User.Password(); ok {
-			obfuscatedEndpoint = strings.Replace(obfuscatedEndpoint, password, awsSNSPasswordObfuscationPattern, 1)
+			obfuscatedEndpoint = strings.Replace(obfuscatedEndpoint, password, passwordObfuscationPattern, 1)
 		}
 	}
 	return obfuscatedEndpoint

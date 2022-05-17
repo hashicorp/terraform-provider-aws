@@ -1,11 +1,14 @@
 package servicecatalog
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -514,6 +517,7 @@ func WaitProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLang
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ProvisionedProductDetail.StatusMessage)))
 		return output, err
 	}
 
@@ -547,6 +551,16 @@ func WaitRecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id str
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeRecordOutput); ok {
+		if errors := output.RecordDetail.RecordErrors; len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range output.RecordDetail.RecordErrors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.Code), aws.StringValue(err.Description)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 

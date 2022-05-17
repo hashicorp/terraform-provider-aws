@@ -188,6 +188,25 @@ func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destination
 	}
 }
 
+func StatusFleetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
+		output, err := FindFleet(conn, &ec2.DescribeFleetsInput{
+			FleetIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.FleetState), nil
+	}
+}
+
 func StatusImageState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImageByID(conn, id)

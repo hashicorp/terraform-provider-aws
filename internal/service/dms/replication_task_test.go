@@ -34,14 +34,14 @@ func TestAccReplicationTask_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsReplicationTaskConfig(rName, tags),
+				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
 			},
 			{
-				Config:             dmsReplicationTaskConfig(rName, tags),
+				Config:             testAccReplicationTaskConfig_basic(rName, tags),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -52,7 +52,7 @@ func TestAccReplicationTask_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"start_replication_task"},
 			},
 			{
-				Config: dmsReplicationTaskConfig(rName, updatedTags),
+				Config: testAccReplicationTaskConfig_basic(rName, updatedTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 				),
@@ -72,7 +72,7 @@ func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsReplicationTaskConfig_CdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
+				Config: testAccReplicationTaskConfig_cdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", "mysql-bin-changelog.000024:373"),
@@ -148,7 +148,7 @@ func TestAccReplicationTask_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsReplicationTaskConfig(rName, tags),
+				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
@@ -206,7 +206,7 @@ func testAccCheckReplicationTaskDestroy(s *terraform.State) error {
 	return nil
 }
 
-func dmsReplicationTaskConfigBase(rName string) string {
+func replicationTaskConfigBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -282,9 +282,9 @@ resource "aws_dms_replication_instance" "test" {
 `, rName))
 }
 
-func dmsReplicationTaskConfig(rName, tags string) string {
+func testAccReplicationTaskConfig_basic(rName, tags string) string {
 	return acctest.ConfigCompose(
-		dmsReplicationTaskConfigBase(rName),
+		replicationTaskConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_replication_task" "test" {
   migration_type            = "full-load"
@@ -304,9 +304,9 @@ resource "aws_dms_replication_task" "test" {
 `, rName, tags))
 }
 
-func dmsReplicationTaskConfig_CdcStartPosition(rName, cdcStartPosition string) string {
+func testAccReplicationTaskConfig_cdcStartPosition(rName, cdcStartPosition string) string {
 	return acctest.ConfigCompose(
-		dmsReplicationTaskConfigBase(rName),
+		replicationTaskConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_replication_task" "test" {
   cdc_start_position        = %[1]q

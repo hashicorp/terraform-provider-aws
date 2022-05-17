@@ -32,7 +32,7 @@ func TestAccDirectConnectGatewayAssociation_v0StateUpgrade(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicVPNGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					testAccCheckGatewayAssociationStateUpgradeV0(resourceName),
@@ -58,7 +58,7 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *test
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicVPNGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -98,7 +98,7 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testi
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicVPNGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -132,7 +132,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -173,7 +173,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *t
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -207,7 +207,7 @@ func TestAccDirectConnectGatewayAssociation_multiVPNGatewaysSingleAccount(t *tes
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_multiVPNGatewaysSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName1, &ga, &gap),
 					testAccCheckGatewayAssociationExists(resourceName2, &ga, &gap),
@@ -239,7 +239,7 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccou
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -257,7 +257,7 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccou
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccountUpdated(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNGatewaySingleAccountUpdated(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -285,7 +285,7 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccoun
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -298,7 +298,7 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccoun
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccountUpdated(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNGatewayCrossAccountUpdated(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -328,13 +328,13 @@ func TestAccDirectConnectGatewayAssociation_recreateProposal(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicVPNGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga1, &gap1),
 				),
 			},
 			{
-				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccountUpdatedProposal(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_basicVPNGatewayCrossAccountUpdatedProposal(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationExists(resourceName, &ga2, &gap2),
 					testAccCheckGatewayAssociationNotRecreated(&ga1, &ga2),
@@ -455,7 +455,7 @@ func testAccCheckGatewayAssociationStateUpgradeV0(name string) resource.TestChec
 	}
 }
 
-func testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -483,7 +483,7 @@ resource "aws_vpn_gateway_attachment" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -519,9 +519,9 @@ resource "aws_dx_gateway" "test" {
 `, rName, rBgpAsn))
 }
 
-func testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_basicVPNGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn),
 		`
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = aws_dx_gateway.test.id
@@ -530,9 +530,9 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_basicVPNGatewayCrossAccount(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
 		`
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
@@ -552,9 +552,9 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccountUpdatedProposal(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_basicVPNGatewayCrossAccountUpdatedProposal(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
 		`
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
@@ -580,7 +580,7 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccDxGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -605,7 +605,7 @@ resource "aws_dx_gateway_association" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccDxGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -649,7 +649,7 @@ resource "aws_dx_gateway_association" "test" {
 `, rName, rBgpAsn))
 }
 
-func testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_multiVPNGatewaysSingleAccount(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -690,9 +690,9 @@ resource "aws_dx_gateway_association" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_allowedPrefixesVPNGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn),
 		`
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = aws_dx_gateway.test.id
@@ -706,9 +706,9 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccountUpdated(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_allowedPrefixesVPNGatewaySingleAccountUpdated(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn),
 		`
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = aws_dx_gateway.test.id
@@ -721,9 +721,9 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_allowedPrefixesVPNGatewayCrossAccount(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
 		`
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
@@ -752,9 +752,9 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccountUpdated(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfig_allowedPrefixesVPNGatewayCrossAccountUpdated(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(
-		testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
+		testAccGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
 		`
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {

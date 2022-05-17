@@ -1633,12 +1633,14 @@ func expandAcceleratorCountRequest(tfMap map[string]interface{}) *ec2.Accelerato
 
 	apiObject := &ec2.AcceleratorCountRequest{}
 
-	if v, ok := tfMap["max"].(int); ok {
-		apiObject.Max = aws.Int64(int64(v))
+	var min int
+	if v, ok := tfMap["min"].(int); ok {
+		min = v
+		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["min"].(int); ok {
-		apiObject.Min = aws.Int64(int64(v))
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1651,12 +1653,14 @@ func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *ec2.A
 
 	apiObject := &ec2.AcceleratorTotalMemoryMiBRequest{}
 
-	if v, ok := tfMap["max"].(int); ok {
-		apiObject.Max = aws.Int64(int64(v))
+	var min int
+	if v, ok := tfMap["min"].(int); ok {
+		min = v
+		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["min"].(int); ok {
-		apiObject.Min = aws.Int64(int64(v))
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1669,12 +1673,14 @@ func expandBaselineEbsBandwidthMbpsRequest(tfMap map[string]interface{}) *ec2.Ba
 
 	apiObject := &ec2.BaselineEbsBandwidthMbpsRequest{}
 
-	if v, ok := tfMap["max"].(int); ok {
-		apiObject.Max = aws.Int64(int64(v))
+	var min int
+	if v, ok := tfMap["min"].(int); ok {
+		min = v
+		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["min"].(int); ok {
-		apiObject.Min = aws.Int64(int64(v))
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1687,12 +1693,14 @@ func expandMemoryGiBPerVCpuRequest(tfMap map[string]interface{}) *ec2.MemoryGiBP
 
 	apiObject := &ec2.MemoryGiBPerVCpuRequest{}
 
-	if v, ok := tfMap["max"].(float64); ok {
-		apiObject.Max = aws.Float64(v)
+	var min float64
+	if v, ok := tfMap["min"].(float64); ok {
+		min = v
+		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["min"].(float64); ok {
-		apiObject.Min = aws.Float64(v)
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
 	}
 
 	return apiObject
@@ -1705,12 +1713,14 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *ec2.MemoryMiBRequest 
 
 	apiObject := &ec2.MemoryMiBRequest{}
 
-	if v, ok := tfMap["max"].(int); ok {
-		apiObject.Max = aws.Int64(int64(v))
+	var min int
+	if v, ok := tfMap["min"].(int); ok {
+		min = v
+		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["min"].(int); ok {
-		apiObject.Min = aws.Int64(int64(v))
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1723,12 +1733,14 @@ func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *ec2.Netwo
 
 	apiObject := &ec2.NetworkInterfaceCountRequest{}
 
-	if v, ok := tfMap["max"].(int); ok {
-		apiObject.Max = aws.Int64(int64(v))
+	var min int
+	if v, ok := tfMap["min"].(int); ok {
+		min = v
+		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["min"].(int); ok {
-		apiObject.Min = aws.Int64(int64(v))
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1741,12 +1753,14 @@ func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *ec2.TotalLo
 
 	apiObject := &ec2.TotalLocalStorageGBRequest{}
 
-	if v, ok := tfMap["max"].(float64); ok {
-		apiObject.Max = aws.Float64(v)
+	var min float64
+	if v, ok := tfMap["min"].(float64); ok {
+		min = v
+		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["min"].(float64); ok {
-		apiObject.Min = aws.Float64(v)
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
 	}
 
 	return apiObject
@@ -1759,12 +1773,14 @@ func expandVCpuCountRangeRequest(tfMap map[string]interface{}) *ec2.VCpuCountRan
 
 	apiObject := &ec2.VCpuCountRangeRequest{}
 
-	if v, ok := tfMap["max"].(int); ok {
-		apiObject.Max = aws.Int64(int64(v))
+	min := 0
+	if v, ok := tfMap["min"].(int); ok {
+		min = v
+		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["min"].(int); ok {
-		apiObject.Min = aws.Int64(int64(v))
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
 	}
 
 	return apiObject

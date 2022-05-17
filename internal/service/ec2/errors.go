@@ -32,6 +32,7 @@ const (
 	ErrCodeInvalidConnectionNotification                  = "InvalidConnectionNotification"
 	ErrCodeInvalidCustomerGatewayIDNotFound               = "InvalidCustomerGatewayID.NotFound"
 	ErrCodeInvalidDhcpOptionIDNotFound                    = "InvalidDhcpOptionID.NotFound"
+	ErrCodeInvalidFleetIdNotFound                         = "InvalidFleetId.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                       = "InvalidFlowLogId.NotFound"
 	ErrCodeInvalidGatewayIDNotFound                       = "InvalidGatewayID.NotFound"
 	ErrCodeInvalidGroupNotFound                           = "InvalidGroup.NotFound"
@@ -102,6 +103,26 @@ func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsError
 	for _, apiObject := range apiObjects {
 		if err := CancelSpotFleetRequestError(apiObject); err != nil {
 			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
+}
+
+func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
+	if apiObject == nil || apiObject.Error == nil {
+		return nil
+	}
+
+	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+}
+
+func DeleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := DeleteFleetError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
 		}
 	}
 
