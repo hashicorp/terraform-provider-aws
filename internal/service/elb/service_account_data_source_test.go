@@ -20,7 +20,7 @@ func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSElbServiceAccountConfig,
+				Config: testAccServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -51,7 +51,7 @@ func TestAccELBServiceAccountDataSource_region(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSElbServiceAccountConfig = `
+const testAccServiceAccountDataSourceConfig_basic = `
 data "aws_elb_service_account" "main" {}
 `
 

@@ -24,7 +24,7 @@ func testAccDetector_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfig_basic1,
+				Config: testAccDetectorConfig_basic1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
@@ -40,21 +40,21 @@ func testAccDetector_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyDetectorConfig_basic2,
+				Config: testAccDetectorConfig_basic2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "false"),
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfig_basic3,
+				Config: testAccDetectorConfig_basic3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfig_basic4,
+				Config: testAccDetectorConfig_basic4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
@@ -180,23 +180,23 @@ func testAccCheckDetectorExists(name string) resource.TestCheckFunc {
 	}
 }
 
-const testAccGuardDutyDetectorConfig_basic1 = `
+const testAccDetectorConfig_basic1 = `
 resource "aws_guardduty_detector" "test" {}
 `
 
-const testAccGuardDutyDetectorConfig_basic2 = `
+const testAccDetectorConfig_basic2 = `
 resource "aws_guardduty_detector" "test" {
   enable = false
 }
 `
 
-const testAccGuardDutyDetectorConfig_basic3 = `
+const testAccDetectorConfig_basic3 = `
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
 `
 
-const testAccGuardDutyDetectorConfig_basic4 = `
+const testAccDetectorConfig_basic4 = `
 resource "aws_guardduty_detector" "test" {
   finding_publishing_frequency = "FIFTEEN_MINUTES"
 }
