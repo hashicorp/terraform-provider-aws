@@ -585,7 +585,7 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformWindows),
-					resource.TestCheckResourceAttr(resourceName, "image_os_version_override", "2022"),
+					resource.TestCheckResourceAttr(resourceName, "image_os_version_override", "Microsoft Windows Server 2022"),
 				),
 			},
 			{
@@ -1541,8 +1541,8 @@ EOF
     service         = "ECR"
   }
 
+  image_os_version_override = "Microsoft Windows Server 2022"
   platform_override = "Windows"
-  image_os_version_override = "2022"
 }
 `, rName, ecrImage))
 }
