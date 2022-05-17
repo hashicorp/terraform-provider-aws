@@ -67,15 +67,10 @@ func ResourcePolicy() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"policy_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "SimpleScaling", // preserve AWS's default to make validation easier.
-				ValidateFunc: validation.StringInSlice([]string{
-					"SimpleScaling",
-					"StepScaling",
-					"TargetTrackingScaling",
-					"PredictiveScaling",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      PolicyTypeSimpleScaling, // preserve AWS's default to make validation easier.
+				ValidateFunc: validation.StringInSlice(PolicyType_Values(), false),
 			},
 			"predictive_scaling_configuration": {
 				Type:     schema.TypeList,
@@ -197,7 +192,7 @@ func ResourcePolicy() *schema.Resource {
 						"max_capacity_breach_behavior": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "HonorMaxCapacity",
+							Default:      autoscaling.PredictiveScalingMaxCapacityBreachBehaviorHonorMaxCapacity,
 							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMaxCapacityBreachBehavior_Values(), false),
 						},
 						"max_capacity_buffer": {
@@ -208,7 +203,7 @@ func ResourcePolicy() *schema.Resource {
 						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "ForecastOnly",
+							Default:      autoscaling.PredictiveScalingModeForecastOnly,
 							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMode_Values(), false),
 						},
 						"scheduling_buffer_time": {
