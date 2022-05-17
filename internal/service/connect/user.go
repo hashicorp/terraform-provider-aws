@@ -22,6 +22,7 @@ func ResourceUser() *schema.Resource {
 		CreateContext: resourceUserCreate,
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,
+		DeleteContext: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -353,6 +354,27 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return resourceUserRead(ctx, d, meta)
+}
+
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, userID, err := UserParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteUserWithContext(ctx, &connect.DeleteUserInput{
+		InstanceId: aws.String(instanceID),
+		UserId:     aws.String(userID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting User (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func UserParseID(id string) (string, string, error) {
