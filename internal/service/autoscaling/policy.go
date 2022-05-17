@@ -8,13 +8,15 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -432,17 +434,19 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	p, err := getPolicy(d, meta)
-	if err != nil {
-		return err
-	}
-	if p == nil && !d.IsNewResource() {
-		log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
+	conn := meta.(*conns.AWSClient).AutoScalingConn
+
+	p, err := FindScalingPolicy(conn, d.Get("autoscaling_group_name").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	log.Printf("[DEBUG] Read Scaling Policy: ASG: %s, SP: %s, Obj: %s", d.Get("autoscaling_group_name"), d.Get("name"), p)
+	if err != nil {
+		return fmt.Errorf("reading Auto Scaling Policy (%s): %w", d.Id(), err)
+	}
 
 	d.Set("adjustment_type", p.AdjustmentType)
 	d.Set("autoscaling_group_name", p.AutoScalingGroupName)
@@ -488,21 +492,19 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
-	p, err := getPolicy(d, meta)
-	if err != nil {
-		return err
-	}
-	if p == nil {
+
+	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
+	_, err := conn.DeletePolicy(&autoscaling.DeletePolicyInput{
+		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		PolicyName:           aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil
 	}
 
-	params := autoscaling.DeletePolicyInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		PolicyName:           aws.String(d.Get("name").(string)),
-	}
-	log.Printf("[DEBUG] Deleting Autoscaling Policy opts: %s", params)
-	if _, err := conn.DeletePolicy(&params); err != nil {
-		return fmt.Errorf("Autoscaling Scaling Policy: %s ", err)
+	if err != nil {
+		return fmt.Errorf("deleting Auto Scaling Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -522,6 +524,51 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	d.SetId(policyName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindScalingPolicy(conn *autoscaling.AutoScaling, asgName, policyName string) (*autoscaling.ScalingPolicy, error) {
+	input := &autoscaling.DescribePoliciesInput{
+		AutoScalingGroupName: aws.String(asgName),
+		PolicyNames:          aws.StringSlice([]string{policyName}),
+	}
+	var output []*autoscaling.ScalingPolicy
+
+	err := conn.DescribePoliciesPages(input, func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ScalingPolicies {
+			if v == nil || aws.StringValue(v.PolicyName) != policyName {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
 // PutScalingPolicy can safely resend all parameters without destroying the
@@ -615,42 +662,6 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (autoscaling.PutScalingPol
 	}
 
 	return params, nil
-}
-
-func getPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPolicy, error) {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
-
-	params := autoscaling.DescribePoliciesInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		PolicyNames:          []*string{aws.String(d.Get("name").(string))},
-	}
-
-	log.Printf("[DEBUG] AutoScaling Scaling Policy Describe Params: %#v", params)
-	resp, err := conn.DescribePolicies(&params)
-	if err != nil {
-		//A ValidationError here can mean that either the Policy is missing OR the Autoscaling Group is missing
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ValidationError" {
-			log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
-			d.SetId("")
-
-			return nil, nil
-		}
-		return nil, fmt.Errorf("Error retrieving scaling policies: %s", err)
-	}
-
-	// find scaling policy
-	name := d.Get("name")
-	for idx, sp := range resp.ScalingPolicies {
-		if sp == nil {
-			continue
-		}
-
-		if aws.StringValue(sp.PolicyName) == name {
-			return resp.ScalingPolicies[idx], nil
-		}
-	}
-	// policy not found
-	return nil, nil
 }
 
 func resourceScalingAdjustmentHash(v interface{}) int {
