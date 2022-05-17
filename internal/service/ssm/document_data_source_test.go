@@ -45,7 +45,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMDocumentDataSource_awsManaged(t *testing.T) {
+func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 	resourceName := "data.aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
