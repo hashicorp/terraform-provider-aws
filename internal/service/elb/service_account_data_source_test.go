@@ -41,7 +41,7 @@ func TestAccELBServiceAccountDataSource_region(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSElbServiceAccountExplicitRegionConfig,
+				Config: testAccServiceAccountDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -55,7 +55,7 @@ const testAccServiceAccountDataSourceConfig_basic = `
 data "aws_elb_service_account" "main" {}
 `
 
-const testAccCheckAWSElbServiceAccountExplicitRegionConfig = `
+const testAccServiceAccountDataSourceConfig_explicitRegion = `
 data "aws_region" "current" {}
 
 data "aws_elb_service_account" "regional" {
