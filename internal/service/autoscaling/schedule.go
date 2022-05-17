@@ -30,12 +30,38 @@ func ResourceSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"scheduled_action_name": {
+			"autoscaling_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"autoscaling_group_name": {
+			"desired_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"end_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validScheduleTimestamp,
+			},
+			"max_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"min_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"recurrence": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"scheduled_action_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -46,34 +72,8 @@ func ResourceSchedule() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validScheduleTimestamp,
 			},
-			"end_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validScheduleTimestamp,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"recurrence": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"min_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"max_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"desired_capacity": {
-				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
