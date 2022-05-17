@@ -21,6 +21,7 @@ func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
 		ReadContext:   resourceUserRead,
+		UpdateContext: resourceUserUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -247,6 +248,111 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	return nil
+}
+
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, userID, err := UserParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// User has 5 update APIs
+	// UpdateUserHierarchyWithContext: Assigns the specified hierarchy group to the specified user.
+	// UpdateUserIdentityInfoWithContext: Updates the identity information for the specified user.
+	// UpdateUserPhoneConfigWithContext: Updates the phone configuration settings for the specified user.
+	// UpdateUserRoutingProfileWithContext: Assigns the specified routing profile to the specified user.
+	// UpdateUserSecurityProfilesWithContext: Assigns the specified security profiles to the specified user.
+
+	// updates to hierarchy_group_id
+	if d.HasChange("hierarchy_group_id") {
+		input := &connect.UpdateUserHierarchyInput{
+			InstanceId: aws.String(instanceID),
+			UserId:     aws.String(userID),
+		}
+
+		if v, ok := d.GetOk("hierarchy_group_id"); ok {
+			input.HierarchyGroupId = aws.String(v.(string))
+		}
+
+		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User hierarchy_group_id (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to identity_info
+	if d.HasChange("identity_info") {
+		input := &connect.UpdateUserIdentityInfoInput{
+			IdentityInfo: expandIdentityInfo(d.Get("identity_info").([]interface{})),
+			InstanceId:   aws.String(instanceID),
+			UserId:       aws.String(userID),
+		}
+
+		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User identity_info (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to phone_config
+	if d.HasChange("phone_config") {
+		input := &connect.UpdateUserPhoneConfigInput{
+			InstanceId:  aws.String(instanceID),
+			PhoneConfig: expandPhoneConfig(d.Get("phone_config").([]interface{})),
+			UserId:      aws.String(userID),
+		}
+
+		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User phone_config (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to routing_profile_id
+	if d.HasChange("routing_profile_id") {
+		input := &connect.UpdateUserRoutingProfileInput{
+			InstanceId:       aws.String(instanceID),
+			RoutingProfileId: aws.String(d.Get("routing_profile_id").(string)),
+			UserId:           aws.String(userID),
+		}
+
+		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User routing_profile_id (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to security_profile_ids
+	if d.HasChange("security_profile_ids") {
+		input := &connect.UpdateUserSecurityProfilesInput{
+			InstanceId:         aws.String(instanceID),
+			SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
+			UserId:             aws.String(userID),
+		}
+
+		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User security_profile_ids (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to tags
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceUserRead(ctx, d, meta)
 }
 
 func UserParseID(id string) (string, string, error) {
