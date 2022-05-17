@@ -122,7 +122,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, 11),
+				Config: testAccClusterDeprecatedBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, 11),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
@@ -139,7 +139,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 			},
 			{
 				// BadRequestException: The minimum increase in storage size of the cluster should be atleast 100GB
-				Config: testAccClusterBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, 112),
+				Config: testAccClusterDeprecatedBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, 112),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -218,7 +218,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t 
 		Steps: []resource.TestStep{
 			{
 				// init with the deprecated ebs_volume_size
-				Config: testAccClusterBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, original_volume_size),
+				Config: testAccClusterDeprecatedBrokerNodeGroupInfoEbsVolumeSizeConfig(rName, original_volume_size),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
@@ -1469,7 +1469,7 @@ resource "aws_msk_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterBrokerNodeGroupInfoEbsVolumeSizeConfig(rName string, ebsVolumeSize int) string {
+func testAccClusterDeprecatedBrokerNodeGroupInfoEbsVolumeSizeConfig(rName string, ebsVolumeSize int) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
