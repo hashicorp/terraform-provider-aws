@@ -198,8 +198,9 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
-				Description: "The passphrase used to decrypt PEM-encrypted private keys\n" +
-					"without storing them decrypted.",
+				DefaultFunc: schema.EnvDefaultFunc("AWS_ACM_PRIVATE_KEY_PASSPHRASE", ""),
+				Description: "The passphrase used to decrypt PEM-encrypted private keys without storing them decrypted.\n" +
+					"Can also be configured using the `AWS_ACM_PRIVATE_KEY_PASSPHRASE` environment variable.",
 			},
 			"allowed_account_ids": {
 				Type:          schema.TypeSet,
