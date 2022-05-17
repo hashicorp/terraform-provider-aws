@@ -294,14 +294,8 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("platform_override"); ok {
-		switch v.(string) {
-		case imagebuilder.PlatformLinux:
-			input.PlatformOverride = aws.String(imagebuilder.PlatformLinux)
-		case imagebuilder.PlatformWindows:
-			input.PlatformOverride = aws.String(imagebuilder.PlatformWindows)
-		}
+		input.PlatformOverride = aws.String(v.(string))
 	}
-
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
