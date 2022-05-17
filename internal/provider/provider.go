@@ -184,7 +184,7 @@ import (
 func Provider() *schema.Provider {
 	// TODO: Move the validation to this, requires conditional schemas
 	// TODO: Move the configuration to this, requires validation
-
+	log.Printf("YOOOO")
 	// The actual provider
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -435,6 +435,8 @@ func Provider() *schema.Provider {
 
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
+
+			"aws_athena_named_query": athena.DataSourceNamedQuery(),
 
 			"aws_autoscaling_group":    autoscaling.DataSourceGroup(),
 			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),

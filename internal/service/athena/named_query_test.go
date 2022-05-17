@@ -15,8 +15,8 @@ import (
 )
 
 func TestAccAthenaNamedQuery_basic(t *testing.T) {
+	var output athena.NamedQuery
 	resourceName := "aws_athena_named_query.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
@@ -26,7 +26,7 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 			{
 				Config: testAccNamedQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(resourceName),
+					testAccCheckNamedQueryExists(resourceName, &output),
 				),
 			},
 			{
@@ -39,6 +39,7 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 }
 
 func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
+	var output athena.NamedQuery
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +51,7 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 			{
 				Config: testAccNamedWorkGroupQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(resourceName),
+					testAccCheckNamedQueryExists(resourceName, &output),
 				),
 			},
 			{
@@ -87,7 +88,7 @@ func testAccCheckNamedQueryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
+func testAccCheckNamedQueryExists(name string, output *athena.NamedQuery) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -100,8 +101,13 @@ func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
 			NamedQueryId: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetNamedQuery(input)
-		return err
+		resp, err := conn.GetNamedQuery(input)
+		if err != nil {
+			return err
+		}
+		*output = *resp.NamedQuery
+
+		return nil
 	}
 }
 
