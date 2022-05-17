@@ -287,7 +287,7 @@ func testAccConfigPlaceIndex_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"
-  index_name    = %[1]q
+  index_name  = %[1]q
 
   tags = {
     %[2]q = %[3]q
