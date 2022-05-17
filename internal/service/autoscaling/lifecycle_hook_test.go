@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
-	resourceName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(10))
+	resourceName := "aws_autoscaling_lifecycle_hook.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -23,28 +25,29 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecycleHookConfig(resourceName),
+				Config: testAccLifecycleHookConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecycleHookExists("aws_autoscaling_lifecycle_hook.foobar"),
-					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "autoscaling_group_name", resourceName),
-					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "default_result", "CONTINUE"),
-					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "heartbeat_timeout", "2000"),
-					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "lifecycle_transition", "autoscaling:EC2_INSTANCE_LAUNCHING"),
+					testAccCheckLifecycleHookExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "autoscaling_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "default_result", "CONTINUE"),
+					resource.TestCheckResourceAttr(resourceName, "heartbeat_timeout", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_transition", "autoscaling:EC2_INSTANCE_LAUNCHING"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_lifecycle_hook.foobar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccLifecycleHookImportStateIdFunc("aws_autoscaling_lifecycle_hook.foobar"),
+				ImportStateIdFunc: testAccLifecycleHookImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
-	rName := sdkacctest.RandString(10)
-	rInt := sdkacctest.RandInt()
+func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
+	resourceName := "aws_autoscaling_lifecycle_hook.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -52,10 +55,32 @@ func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
 		CheckDestroy:      testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecycleHookConfig_omitDefaultResult(rName, rInt),
+				Config: testAccLifecycleHookConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecycleHookExists("aws_autoscaling_lifecycle_hook.foobar"),
-					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "default_result", "ABANDON"),
+					testAccCheckLifecycleHookExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceLifecycleHook(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
+	resourceName := "aws_autoscaling_lifecycle_hook.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLifecycleHookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecycleHookConfig_omitDefaultResult(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecycleHookExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "default_result", "ABANDON"),
 				),
 			},
 		},
@@ -69,49 +94,41 @@ func testAccCheckLifecycleHookExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		return checkLifecycleHookExistsByName(
-			rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
-	}
-}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Auto Scaling Lifecycle Hook ID is set")
+		}
 
-func checkLifecycleHookExistsByName(asgName, hookName string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-	params := &autoscaling.DescribeLifecycleHooksInput{
-		AutoScalingGroupName: aws.String(asgName),
-		LifecycleHookNames:   []*string{aws.String(hookName)},
-	}
-	resp, err := conn.DescribeLifecycleHooks(params)
-	if err != nil {
-		return err
-	}
-	if len(resp.LifecycleHooks) == 0 {
-		return fmt.Errorf("LifecycleHook not found")
-	}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
-	return nil
+		_, err := tfautoscaling.FindLifecycleHook(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckLifecycleHookDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_group" {
+		if rs.Type != "aws_autoscaling_lifecycle_hook" {
 			continue
 		}
 
-		params := autoscaling.DescribeLifecycleHooksInput{
-			AutoScalingGroupName: aws.String(rs.Primary.Attributes["autoscaling_group_name"]),
-			LifecycleHookNames:   []*string{aws.String(rs.Primary.ID)},
+		_, err := tfautoscaling.FindLifecycleHook(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeLifecycleHooks(&params)
-
-		if err == nil {
-			if len(resp.LifecycleHooks) != 0 &&
-				*resp.LifecycleHooks[0].LifecycleHookName == rs.Primary.ID {
-				return fmt.Errorf("Lifecycle Hook Still Exists: %s", rs.Primary.ID)
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Auto Scaling Lifecycle Hook %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -124,93 +141,75 @@ func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportS
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID), nil
 	}
 }
 
-func testAccLifecycleHookConfig(name string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
-  name          = "%s"
+func testAccLifecycleHookConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
-resource "aws_sqs_queue" "foobar" {
-  name                      = "foobar"
+resource "aws_sqs_queue" "test" {
+  name                      = %[1]q
   delay_seconds             = 90
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
 }
 
-resource "aws_iam_role" "foobar" {
-  name = "foobar"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
   "Version" : "2012-10-17",
-  "Statement": [ {
+  "Statement": [{
     "Effect": "Allow",
     "Principal": {"AWS": "*"},
-    "Action": [ "sts:AssumeRole" ]
-  } ]
+    "Action": ["sts:AssumeRole"]
+  }]
 }
 EOF
 }
 
-resource "aws_iam_role_policy" "foobar" {
-  name = "foobar"
-  role = aws_iam_role.foobar.id
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
-    "Version" : "2012-10-17",
-    "Statement": [ {
-      "Effect": "Allow",
-      "Action": [
-	"sqs:SendMessage",
-	"sqs:GetQueueUrl",
-	"sns:Publish"
-      ],
-      "Resource": [
-	"${aws_sqs_queue.foobar.arn}"
-      ]
-    } ]
+  "Version" : "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["sqs:SendMessage", "sqs:GetQueueUrl", "sns:Publish"],
+    "Resource": ["${aws_sqs_queue.test.arn}"]
+  }]
 }
 EOF
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_autoscaling_group" "foobar" {
+resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = "%s"
+  name                      = %[1]q
   max_size                  = 5
   min_size                  = 2
   health_check_grace_period = 300
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
+  launch_configuration      = aws_launch_configuration.test.name
 }
 
-resource "aws_autoscaling_lifecycle_hook" "foobar" {
-  name                   = "foobar"
-  autoscaling_group_name = aws_autoscaling_group.foobar.name
+resource "aws_autoscaling_lifecycle_hook" "test" {
+  name                   = %[1]q
+  autoscaling_group_name = aws_autoscaling_group.test.name
   default_result         = "CONTINUE"
   heartbeat_timeout      = 2000
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
@@ -221,95 +220,77 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 }
 EOF
 
-  notification_target_arn = aws_sqs_queue.foobar.arn
-  role_arn                = aws_iam_role.foobar.arn
+  notification_target_arn = aws_sqs_queue.test.arn
+  role_arn                = aws_iam_role.test.arn
 }
-`, name, name)
+`, rName))
 }
 
-func testAccLifecycleHookConfig_omitDefaultResult(name string, rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
-  name          = "%s"
+func testAccLifecycleHookConfig_omitDefaultResult(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
-resource "aws_sqs_queue" "foobar" {
-  name                      = "foobar-%d"
+resource "aws_sqs_queue" "test" {
+  name                      = %[1]q
   delay_seconds             = 90
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
 }
 
-resource "aws_iam_role" "foobar" {
-  name = "foobar-%d"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
   "Version" : "2012-10-17",
-  "Statement": [ {
+  "Statement": [{
     "Effect": "Allow",
     "Principal": {"AWS": "*"},
-    "Action": [ "sts:AssumeRole" ]
-  } ]
+    "Action": ["sts:AssumeRole"]
+  }]
 }
 EOF
 }
 
-resource "aws_iam_role_policy" "foobar" {
-  name = "foobar-%d"
-  role = aws_iam_role.foobar.id
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
-    "Version" : "2012-10-17",
-    "Statement": [ {
-      "Effect": "Allow",
-      "Action": [
-	"sqs:SendMessage",
-	"sqs:GetQueueUrl",
-	"sns:Publish"
-      ],
-      "Resource": [
-	"${aws_sqs_queue.foobar.arn}"
-      ]
-    } ]
+  "Version" : "2012-10-17",
+  "Statement": [ {
+    "Effect": "Allow",
+    "Action": ["sqs:SendMessage", "sqs:GetQueueUrl", "sns:Publish"],
+    "Resource": ["${aws_sqs_queue.test.arn}"]
+  }]
 }
 EOF
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_autoscaling_group" "foobar" {
+resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = "%s"
+  name                      = %[1]q
   max_size                  = 5
   min_size                  = 2
   health_check_grace_period = 300
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
+  launch_configuration      = aws_launch_configuration.test.name
 }
 
-resource "aws_autoscaling_lifecycle_hook" "foobar" {
-  name                   = "foobar-%d"
-  autoscaling_group_name = aws_autoscaling_group.foobar.name
+resource "aws_autoscaling_lifecycle_hook" "test" {
+  name                   = %[1]q
+  autoscaling_group_name = aws_autoscaling_group.test.name
   heartbeat_timeout      = 2000
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 
@@ -319,8 +300,8 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 }
 EOF
 
-  notification_target_arn = aws_sqs_queue.foobar.arn
-  role_arn                = aws_iam_role.foobar.arn
+  notification_target_arn = aws_sqs_queue.test.arn
+  role_arn                = aws_iam_role.test.arn
 }
-`, name, rInt, rInt, rInt, name, rInt)
+`, rName))
 }

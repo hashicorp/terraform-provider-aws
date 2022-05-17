@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -1195,12 +1194,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Verify the error
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidGroup.NotFound" {
+		if err != nil {
 			return err
 		}
 	}

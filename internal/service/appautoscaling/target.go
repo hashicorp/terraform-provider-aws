@@ -95,46 +95,35 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating application autoscaling target: %s", err)
+		return fmt.Errorf("creating Application AutoScaling Target: %w", err)
 	}
 
 	d.SetId(d.Get("resource_id").(string))
-	log.Printf("[INFO] Application AutoScaling Target ID: %s", d.Id())
 
 	return resourceTargetRead(d, meta)
 }
 
 func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	var t *applicationautoscaling.ScalableTarget
-
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
-	namespace := d.Get("service_namespace").(string)
-	dimension := d.Get("scalable_dimension").(string)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(2*time.Minute,
+		func() (interface{}, error) {
+			return FindTargetByThreePartKey(conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+		},
+		d.IsNewResource(),
+	)
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		t, err = GetTarget(d.Id(), namespace, dimension, conn)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if d.IsNewResource() && t == nil {
-			return resource.RetryableError(&resource.NotFoundError{})
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		t, err = GetTarget(d.Id(), namespace, dimension, conn)
-	}
-
-	if err != nil {
-		return err
-	}
-	if t == nil && !d.IsNewResource() {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Application AutoScaling Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("reading Application AutoScaling Target (%s): %w", d.Id(), err)
+	}
+
+	t := outputRaw.(*applicationautoscaling.ScalableTarget)
 
 	d.Set("max_capacity", t.MaxCapacity)
 	d.Set("min_capacity", t.MinCapacity)
@@ -150,11 +139,12 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
-		ResourceId:        aws.String(d.Get("resource_id").(string)),
-		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
+		ResourceId:        aws.String(d.Id()),
 		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 
+	log.Printf("[INFO] Deleting Application AutoScaling Target: %s", d.Id())
 	_, err := conn.DeregisterScalableTarget(input)
 
 	if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
@@ -162,52 +152,63 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Application AutoScaling Target (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Application AutoScaling Target (%s): %w", d.Id(), err)
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		t, err := GetTarget(d.Get("resource_id").(string), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string), conn)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if t != nil {
-			return resource.RetryableError(fmt.Errorf("Application AutoScaling Target (%s) still exists", d.Id()))
-		}
-
-		return nil
+	_, err = tfresource.RetryUntilNotFound(5*time.Minute, func() (interface{}, error) {
+		return FindTargetByThreePartKey(conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Application AutoScaling Target (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
-func GetTarget(resourceId, namespace, dimension string,
-	conn *applicationautoscaling.ApplicationAutoScaling) (*applicationautoscaling.ScalableTarget, error) {
-
-	describeOpts := applicationautoscaling.DescribeScalableTargetsInput{
-		ResourceIds:      []*string{aws.String(resourceId)},
-		ServiceNamespace: aws.String(namespace),
+func FindTargetByThreePartKey(conn *applicationautoscaling.ApplicationAutoScaling, resourceID, namespace, dimension string) (*applicationautoscaling.ScalableTarget, error) {
+	input := &applicationautoscaling.DescribeScalableTargetsInput{
+		ResourceIds:       aws.StringSlice([]string{resourceID}),
+		ScalableDimension: aws.String(dimension),
+		ServiceNamespace:  aws.String(namespace),
 	}
+	var output []*applicationautoscaling.ScalableTarget
 
-	log.Printf("[DEBUG] Application AutoScaling Target describe configuration: %#v", describeOpts)
-	describeTargets, err := conn.DescribeScalableTargets(&describeOpts)
+	err := conn.DescribeScalableTargetsPages(input, func(page *applicationautoscaling.DescribeScalableTargetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ScalableTargets {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		// @TODO: We should probably send something else back if we're trying to access an unknown Resource ID
-		// targetserr, ok := err.(awserr.Error)
-		// if ok && targetserr.Code() == ""
-		return nil, fmt.Errorf("Error retrieving Application AutoScaling Target: %s", err)
+		return nil, err
 	}
 
-	for idx, tgt := range describeTargets.ScalableTargets {
-		if tgt == nil {
-			continue
-		}
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
 
-		if aws.StringValue(tgt.ResourceId) == resourceId && aws.StringValue(tgt.ScalableDimension) == dimension {
-			return describeTargets.ScalableTargets[idx], nil
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	target := output[0]
+
+	if aws.StringValue(target.ResourceId) != resourceID || aws.StringValue(target.ScalableDimension) != dimension || aws.StringValue(target.ServiceNamespace) != namespace {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
 		}
 	}
 
-	return nil, nil
+	return target, nil
 }
 
 func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
