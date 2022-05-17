@@ -235,7 +235,7 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 	})
 }
 
-func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
+func TestDiffIPSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
