@@ -27,11 +27,6 @@ func ResourceLifecycleHook() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"autoscaling_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -48,6 +43,11 @@ func ResourceLifecycleHook() *schema.Resource {
 			"lifecycle_transition": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"notification_metadata": {
 				Type:     schema.TypeString,
