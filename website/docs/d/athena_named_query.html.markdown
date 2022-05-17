@@ -3,7 +3,7 @@ subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_named_query"
 description: |-
-Provides an Athena Named Query resource.
+    Provides an Athena Named Query resource.
 ---
 
 # Resource: aws_athena_named_query
