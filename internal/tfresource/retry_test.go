@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestRetryWhenAWSErrCodeEquals(t *testing.T) {
+func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:aws-in-func-name
 	var retryCount int32
 
 	testCases := []struct {
@@ -75,7 +75,7 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) {
 	}
 }
 
-func TestRetryWhenAWSErrMessageContains(t *testing.T) {
+func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:aws-in-func-name
 	var retryCount int32
 
 	testCases := []struct {
