@@ -544,7 +544,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 func TestAccImageBuilderContainerRecipe_platform_override_linux(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
-	ecrImage := acctest.ImageBuilderECRImageFromEnv(t)
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformLinux)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -571,7 +571,7 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux(t *testing.T) {
 func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
-	ecrImage := acctest.ImageBuilderECRImageFromEnv(t)
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformWindows)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },

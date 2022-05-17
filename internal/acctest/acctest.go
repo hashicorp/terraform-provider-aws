@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -1979,8 +1980,21 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 	}
 }
 
-func ImageBuilderECRImageFromEnv(t *testing.T) string {
-	ecrImage := os.Getenv("IMAGE_BUILDER_ECR_IMAGE")
+func imageBuilderPlatformIsValid(platform string) bool {
+	for _, p := range imagebuilder.Platform_Values() {
+		if p == platform {
+			return true
+		}
+	}
+	return false
+}
+
+func ImageBuilderECRImageFromEnv(t *testing.T, platform string) string {
+	if !imageBuilderPlatformIsValid(platform) {
+		t.Skip(fmt.Sprintf("Platform %q is not valid for Image Builder. Valid values are %v.", platform, imagebuilder.Platform_Values()))
+	}
+
+	ecrImage := os.Getenv(fmt.Sprintf("IMAGE_BUILDER_ECR_IMAGE_%s", strings.ToUpper(platform)))
 
 	if ecrImage == "" {
 		t.Skip(
