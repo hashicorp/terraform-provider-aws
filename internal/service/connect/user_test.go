@@ -18,8 +18,9 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectUser_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccUser_basic,
-		"disappears": testAccUser_disappears,
+		"basic":                     testAccUser_basic,
+		"disappears":                testAccUser_disappears,
+		"update_hierarchy_group_id": testAccUser_updateHierarchyGroupId,
 	}
 
 	for name, tc := range testCases {
@@ -67,6 +68,46 @@ func testAccUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccUser_updateHierarchyGroupId(t *testing.T) {
+	var v connect.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	resourceName := "aws_connect_user.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserHierarchyGroupIdConfig(rName, rName2, rName3, rName4, rName5, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.parent", "hierarchy_group_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccUserHierarchyGroupIdConfig(rName, rName2, rName3, rName4, rName5, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.child", "hierarchy_group_id"),
 				),
 			},
 		},
@@ -281,4 +322,36 @@ resource "aws_connect_user" "test" {
   }
 }
 `, rName5))
+}
+
+func testAccUserHierarchyGroupIdConfig(rName, rName2, rName3, rName4, rName5, selectHierarchyGroupId string) string {
+	return acctest.ConfigCompose(
+		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+locals {
+  select_hierarchy_group_id = %[2]q
+}
+
+resource "aws_connect_user" "test" {
+  instance_id        = aws_connect_instance.test.id
+  name               = %[1]q
+  password           = "Password123"
+  routing_profile_id = data.aws_connect_routing_profile.test.routing_profile_id
+  hierarchy_group_id = local.select_hierarchy_group_id == "first" ? aws_connect_user_hierarchy_group.parent.hierarchy_group_id : aws_connect_user_hierarchy_group.child.hierarchy_group_id
+
+  security_profile_ids = [
+    data.aws_connect_security_profile.agent.security_profile_id
+  ]
+
+  identity_info {
+    first_name = "example"
+    last_name  = "example2"
+  }
+
+  phone_config {
+    after_contact_work_time_limit = 0
+    phone_type                    = "SOFT_PHONE"
+  }
+}
+`, rName5, selectHierarchyGroupId))
 }
