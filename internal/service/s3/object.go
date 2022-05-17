@@ -30,7 +30,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const s3ObjectCreationTimeout = 2 * time.Minute
+const objectCreationTimeout = 2 * time.Minute
 
 func ResourceObject() *schema.Resource {
 	return &schema.Resource{
@@ -205,7 +205,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *s3.HeadObjectOutput
 
-	err := resource.Retry(s3ObjectCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(objectCreationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.HeadObject(input)
