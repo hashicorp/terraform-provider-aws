@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
+const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
@@ -261,10 +261,10 @@ func modifyClusterParameterGroupParameters(conn *neptune.Neptune, name string, p
 	// we've got them all.
 	for parameters != nil {
 		var paramsToModify []*neptune.Parameter
-		if len(parameters) <= neptuneClusterParameterGroupMaxParamsBulkEdit {
+		if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
 			paramsToModify, parameters = parameters[:], nil
 		} else {
-			paramsToModify, parameters = parameters[:neptuneClusterParameterGroupMaxParamsBulkEdit], parameters[neptuneClusterParameterGroupMaxParamsBulkEdit:]
+			paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
 		}
 
 		modifyOpts := neptune.ModifyDBClusterParameterGroupInput{
