@@ -194,7 +194,7 @@ resource "aws_msk_cluster" "example" {
         volume_size = 1000
       }
     }
-    security_groups = ["sg-12345678912345678"]
+    security_groups = [aws_security_group.sg.id]
   }
 }
 ```
