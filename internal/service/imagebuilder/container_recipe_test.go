@@ -1505,7 +1505,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-windows/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
