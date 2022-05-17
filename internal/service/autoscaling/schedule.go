@@ -245,9 +245,11 @@ func FindScheduledUpdateGroupAction(conn *autoscaling.AutoScaling, asgName, acti
 		}
 
 		for _, v := range page.ScheduledUpdateGroupActions {
-			if v != nil {
-				output = append(output, v)
+			if v == nil || aws.StringValue(v.ScheduledActionName) != actionName {
+				continue
 			}
+
+			output = append(output, v)
 		}
 
 		return !lastPage
@@ -272,13 +274,5 @@ func FindScheduledUpdateGroupAction(conn *autoscaling.AutoScaling, asgName, acti
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	v := output[0]
-
-	if aws.StringValue(v.ScheduledActionName) != actionName {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return v, nil
+	return output[0], nil
 }
