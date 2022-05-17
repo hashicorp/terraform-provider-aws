@@ -2,6 +2,7 @@ package connect_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,6 +23,7 @@ func TestAccConnectUser_serial(t *testing.T) {
 		"disappears":                testAccUser_disappears,
 		"update_hierarchy_group_id": testAccUser_updateHierarchyGroupId,
 		"update_identity_info":      testAccUser_updateIdentityInfo,
+		"update_phone_config":       testAccUser_updatePhoneConfig,
 	}
 
 	for name, tc := range testCases {
@@ -161,6 +163,75 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", email_updated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", first_name_updated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", last_name_updated),
+				),
+			},
+		},
+	})
+}
+
+func testAccUser_updatePhoneConfig(t *testing.T) {
+	var v connect.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	after_contact_work_time_limit_original := 0
+	auto_accept_original := false
+	desk_phone_number_original := "+112345678912"
+	after_contact_work_time_limit_updated := 1
+	auto_accept_updated := true
+	desk_phone_number_updated := "+112345678913"
+
+	resourceName := "aws_connect_user.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeSoftPhone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccUserPhoneConfigDeskPhoneConfig(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_original, auto_accept_original, desk_phone_number_original),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_original)),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_original)),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_original),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccUserPhoneConfigDeskPhoneConfig(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_updated, auto_accept_updated, desk_phone_number_updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_updated)),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_updated)),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_updated),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
 				),
 			},
 		},
@@ -435,4 +506,37 @@ resource "aws_connect_user" "test" {
   }
 }
 `, rName5, email, first_name, last_name))
+}
+
+func testAccUserPhoneConfigDeskPhoneConfig(rName, rName2, rName3, rName4, rName5 string, after_contact_work_time_limit int, auto_accept bool, desk_phone_number string) string {
+	return acctest.ConfigCompose(
+		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_connect_user" "test" {
+  instance_id        = aws_connect_instance.test.id
+  name               = %[1]q
+  password           = "Password123"
+  routing_profile_id = data.aws_connect_routing_profile.test.routing_profile_id
+
+  security_profile_ids = [
+    data.aws_connect_security_profile.agent.security_profile_id
+  ]
+
+  identity_info {
+    first_name = "example"
+    last_name  = "example2"
+  }
+
+  phone_config {
+    after_contact_work_time_limit = %[2]d
+    auto_accept                   = %[3]t
+    desk_phone_number             = %[4]q
+    phone_type                    = "DESK_PHONE"
+  }
+
+  tags = {
+    "Key1" = "Value1",
+  }
+}
+`, rName5, after_contact_work_time_limit, auto_accept, desk_phone_number))
 }
