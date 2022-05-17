@@ -1803,7 +1803,7 @@ func testAccEndpointConfig_mySQL(rName string, engine string) string {
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
-  engine_name                 = "%[2]q"
+  engine_name                 = %[2]q
   server_name                 = "tftest"
   port                        = 3306
   username                    = "tftest"
@@ -1873,7 +1873,7 @@ EOF
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
-  engine_name                     = "%[2]q"
+  engine_name                     = %[2]q
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
 
@@ -1895,7 +1895,7 @@ func testAccEndpointConfig_mySQLUpdate(rName string, engine string) string {
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
-  engine_name                 = "%[2]q"
+  engine_name                 = %[2]q
   server_name                 = "tftest-new-server_name"
   port                        = 3307
   username                    = "tftest-new-username"
