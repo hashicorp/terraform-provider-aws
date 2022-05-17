@@ -14,7 +14,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestDecodeStorageGatewayCacheID(t *testing.T) {
+func TestDecodeCacheID(t *testing.T) {
 	var testCases = []struct {
 		Input              string
 		ExpectedGatewayARN string
