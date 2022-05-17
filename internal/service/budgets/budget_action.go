@@ -227,7 +227,7 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Creating Budget Action: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.CreateBudgetAction(input)
 	}, budgets.ErrCodeAccessDeniedException)
 

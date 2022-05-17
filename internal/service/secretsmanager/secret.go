@@ -389,7 +389,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
-			_, err = tfresource.RetryWhenAWSErrMessageContains(PropagationTimeout,
+			_, err = tfresource.RetryWhenErrMessageContains(PropagationTimeout,
 				func() (interface{}, error) {
 					return conn.PutResourcePolicy(input)
 				},

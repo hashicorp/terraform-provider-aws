@@ -64,7 +64,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfigurationWithContext(ctx, input)
 	})
 

@@ -366,7 +366,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return ObjectListTags(conn, bucket, key)
 	})
 

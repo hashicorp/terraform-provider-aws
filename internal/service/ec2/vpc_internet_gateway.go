@@ -171,7 +171,7 @@ func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(internetGatewayDeletedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(internetGatewayDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteInternetGateway(input)
 	}, ErrCodeDependencyViolation)
 
@@ -193,7 +193,7 @@ func attachInternetGateway(conn *ec2.EC2, internetGatewayID, vpcID string) error
 	}
 
 	log.Printf("[INFO] Attaching EC2 Internet Gateway: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.AttachInternetGateway(input)
 	}, ErrCodeInvalidInternetGatewayIDNotFound)
 
@@ -217,7 +217,7 @@ func detachInternetGateway(conn *ec2.EC2, internetGatewayID, vpcID string) error
 	}
 
 	log.Printf("[INFO] Detaching EC2 Internet Gateway: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(internetGatewayDetachedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(internetGatewayDetachedTimeout, func() (interface{}, error) {
 		return conn.DetachInternetGateway(input)
 	}, ErrCodeDependencyViolation)
 

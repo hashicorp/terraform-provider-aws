@@ -274,7 +274,7 @@ func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
 			SnapshotId: aws.String(d.Id()),
 		})

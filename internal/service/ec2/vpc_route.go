@@ -234,7 +234,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(
+	_, err = tfresource.RetryWhenErrCodeEquals(
 		d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
@@ -431,7 +431,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Route: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(
+	_, err = tfresource.RetryWhenErrCodeEquals(
 		d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteRoute(input)

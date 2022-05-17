@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestRetryWhenAWSErrCodeEquals(t *testing.T) {
+func TestRetryWhenErrCodeEquals(t *testing.T) {
 	var retryCount int32
 
 	testCases := []struct {
@@ -64,7 +64,7 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(5*time.Second, testCase.F, "TestCode1", "TestCode2")
+			_, err := tfresource.RetryWhenErrCodeEquals(5*time.Second, testCase.F, "TestCode1", "TestCode2")
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -75,7 +75,7 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) {
 	}
 }
 
-func TestRetryWhenAWSErrMessageContains(t *testing.T) {
+func TestRetryWhenErrMessageContains(t *testing.T) {
 	var retryCount int32
 
 	testCases := []struct {
@@ -126,7 +126,7 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Second, testCase.F, "TestCode1", "TestMessage1")
+			_, err := tfresource.RetryWhenErrMessageContains(5*time.Second, testCase.F, "TestCode1", "TestMessage1")
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")

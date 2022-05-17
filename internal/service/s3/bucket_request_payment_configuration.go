@@ -64,7 +64,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketRequestPaymentWithContext(ctx, input)
 	})
 

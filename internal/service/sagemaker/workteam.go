@@ -151,7 +151,7 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateWorkteam(input)
 	}, "ValidationException")
 

@@ -1164,7 +1164,7 @@ func testAccCheckBucketReplicationConfigurationDestroy(s *terraform.State, provi
 		}
 		input := &s3.GetBucketReplicationInput{Bucket: aws.String(rs.Primary.ID)}
 
-		output, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		output, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 			return conn.GetBucketReplication(input)
 		})
 

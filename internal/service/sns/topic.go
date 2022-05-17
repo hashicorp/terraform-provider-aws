@@ -465,7 +465,7 @@ func putTopicAttribute(conn *sns.SNS, arn string, name, value string) error {
 	}
 
 	log.Printf("[DEBUG] Setting SNS Topic attribute: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(topicPutAttributeTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(topicPutAttributeTimeout, func() (interface{}, error) {
 		return conn.SetTopicAttributes(input)
 	}, sns.ErrCodeInvalidParameterException)
 

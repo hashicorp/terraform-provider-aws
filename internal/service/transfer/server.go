@@ -709,7 +709,7 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+	_, err := tfresource.RetryWhenErrMessageContains(1*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteServer(&transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),

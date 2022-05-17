@@ -189,7 +189,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.CreateResolver(input)
 	})
 
@@ -300,7 +300,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.UpdateResolver(input)
 	})
 
@@ -330,7 +330,7 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err = verify.RetryOnErrCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.DeleteResolver(input)
 	})
 

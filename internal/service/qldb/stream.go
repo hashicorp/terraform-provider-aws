@@ -223,7 +223,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Stream: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenErrCodeEqualsContext(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.CancelJournalKinesisStreamWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)

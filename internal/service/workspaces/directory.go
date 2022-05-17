@@ -222,7 +222,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+	_, err := tfresource.RetryWhenErrCodeEquals(
 		DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectory(input)
@@ -449,7 +449,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+	_, err := tfresource.RetryWhenErrCodeEquals(
 		DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{

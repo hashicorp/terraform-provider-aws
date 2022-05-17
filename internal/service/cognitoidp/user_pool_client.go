@@ -471,7 +471,7 @@ func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
 
-	_, err := verify.RetryOnAWSCode(cognitoidentityprovider.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(cognitoidentityprovider.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.UpdateUserPoolClient(params)
 	})
 	if err != nil {

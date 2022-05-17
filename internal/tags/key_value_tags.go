@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	AwsTagKeyPrefix                             = `aws:`
+	TagKeyPrefix                                = `aws:`
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	RdsTagKeyPrefix                             = `rds:`
@@ -41,7 +41,7 @@ func (tags KeyValueTags) IgnoreAWS() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if !strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if !strings.HasPrefix(k, TagKeyPrefix) {
 			result[k] = v
 		}
 	}
@@ -105,7 +105,7 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, TagKeyPrefix) {
 			continue
 		}
 
@@ -152,7 +152,7 @@ func (tags KeyValueTags) IgnoreRds() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, TagKeyPrefix) {
 			continue
 		}
 
@@ -171,7 +171,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, TagKeyPrefix) {
 			continue
 		}
 

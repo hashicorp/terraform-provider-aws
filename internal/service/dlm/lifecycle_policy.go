@@ -507,7 +507,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
-	out, err := verify.RetryOnAWSCode(dlm.ErrCodeInvalidRequestException, func() (interface{}, error) {
+	out, err := verify.RetryOnErrCode(dlm.ErrCodeInvalidRequestException, func() (interface{}, error) {
 		return conn.CreateLifecyclePolicy(&input)
 	})
 

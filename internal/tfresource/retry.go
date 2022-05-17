@@ -57,8 +57,8 @@ func RetryWhen(timeout time.Duration, f func() (interface{}, error), retryable R
 	return RetryWhenContext(context.Background(), timeout, f, retryable)
 }
 
-// RetryWhenAWSErrCodeEqualsContext retries the specified function when it returns one of the specified AWS error code.
-func RetryWhenAWSErrCodeEqualsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
+// RetryWhenErrCodeEqualsContext retries the specified function when it returns one of the specified AWS error code.
+func RetryWhenErrCodeEqualsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
 	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeEquals(err, codes...) {
 			return true, err
@@ -68,13 +68,13 @@ func RetryWhenAWSErrCodeEqualsContext(ctx context.Context, timeout time.Duration
 	})
 }
 
-// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
-func RetryWhenAWSErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
-	return RetryWhenAWSErrCodeEqualsContext(context.Background(), timeout, f, codes...)
+// RetryWhenErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
+func RetryWhenErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
+	return RetryWhenErrCodeEqualsContext(context.Background(), timeout, f, codes...)
 }
 
-// RetryWhenAWSErrMessageContainsContext retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
+// RetryWhenErrMessageContainsContext retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenErrMessageContainsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
 	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
 			return true, err
@@ -84,9 +84,9 @@ func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Dur
 	})
 }
 
-// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContains(timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
-	return RetryWhenAWSErrMessageContainsContext(context.Background(), timeout, f, code, message)
+// RetryWhenErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenErrMessageContains(timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
+	return RetryWhenErrMessageContainsContext(context.Background(), timeout, f, code, message)
 }
 
 var resourceFoundError = errors.New(`found resource`)

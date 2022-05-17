@@ -152,7 +152,7 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).KeyspacesConn
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenErrMessageContains(d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteKeyspaceWithContext(ctx, &keyspaces.DeleteKeyspaceInput{
 				KeyspaceName: aws.String(d.Id()),

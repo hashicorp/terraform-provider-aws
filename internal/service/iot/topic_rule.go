@@ -1172,7 +1172,7 @@ func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule: %s", input)
-	_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+	_, err := tfresource.RetryWhenErrMessageContains(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRule(input)
 		},

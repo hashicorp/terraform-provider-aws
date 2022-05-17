@@ -140,7 +140,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Creating IoT Provisioning Template: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenErrMessageContainsContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateProvisioningTemplateWithContext(ctx, input)
 		},
@@ -234,7 +234,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[DEBUG] Updating IoT Provisioning Template: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenErrMessageContainsContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateProvisioningTemplateWithContext(ctx, input)
 			},

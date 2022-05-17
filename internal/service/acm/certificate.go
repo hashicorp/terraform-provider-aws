@@ -438,7 +438,7 @@ func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(AcmCertificateCrossServicePropagationTimeout,
+	_, err := tfresource.RetryWhenErrCodeEquals(AcmCertificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCertificate(&acm.DeleteCertificateInput{
 				CertificateArn: aws.String(d.Id()),

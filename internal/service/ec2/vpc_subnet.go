@@ -365,7 +365,7 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Lambda ENIs for EC2 Subnet (%s): %w", d.Id(), err)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteSubnet(&ec2.DeleteSubnetInput{
 			SubnetId: aws.String(d.Id()),
 		})

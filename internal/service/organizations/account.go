@@ -117,7 +117,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
+	outputRaw, err := tfresource.RetryWhenErrCodeEquals(4*time.Minute,
 		func() (interface{}, error) {
 			return conn.CreateAccount(input)
 		},

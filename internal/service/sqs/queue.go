@@ -214,7 +214,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateQueue(input)
 	}, sqs.ErrCodeQueueDeletedRecently)
 
@@ -223,7 +223,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
 
 		input.Tags = nil
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+		outputRaw, err = tfresource.RetryWhenErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
 			return conn.CreateQueue(input)
 		}, sqs.ErrCodeQueueDeletedRecently)
 	}
@@ -304,7 +304,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
+	outputRaw, err = tfresource.RetryWhenErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
 		return ListTags(conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 

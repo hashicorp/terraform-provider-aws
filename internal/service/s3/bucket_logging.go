@@ -119,7 +119,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketLoggingWithContext(ctx, input)
 	})
 
@@ -148,7 +148,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	resp, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	resp, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.GetBucketLoggingWithContext(ctx, input)
 	})
 
@@ -215,7 +215,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err = verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketLoggingWithContext(ctx, input)
 	})
 

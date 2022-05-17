@@ -79,7 +79,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	// KMS is eventually consistent.
 	log.Printf("[DEBUG] Creating KMS Alias: %s", input)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(KeyRotationUpdatedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(KeyRotationUpdatedTimeout, func() (interface{}, error) {
 		return conn.CreateAlias(input)
 	}, kms.ErrCodeNotFoundException)
 

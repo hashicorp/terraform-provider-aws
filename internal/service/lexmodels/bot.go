@@ -248,7 +248,7 @@ func resourceBotCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *lexmodelbuildingservice.PutBotOutput
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		var err error
 
 		if output != nil {
@@ -372,7 +372,7 @@ func resourceBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBot(input)
 	}, lexmodelbuildingservice.ErrCodeConflictException)
 
@@ -395,7 +395,7 @@ func resourceBotDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Bot: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteBot(input)
 	}, lexmodelbuildingservice.ErrCodeConflictException)
 

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func RetryOnAWSCode(code string, f func() (interface{}, error)) (interface{}, error) {
+func RetryOnErrCode(code string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error

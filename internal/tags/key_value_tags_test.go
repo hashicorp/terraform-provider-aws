@@ -291,6 +291,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}
 }
 
+// nosemgrep: aws-in-func-name
 func TestKeyValueTagsIgnoreAWS(t *testing.T) {
 	testCases := []struct {
 		name string

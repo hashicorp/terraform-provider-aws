@@ -203,7 +203,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenErrCodeEqualsContext(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteLedgerWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)

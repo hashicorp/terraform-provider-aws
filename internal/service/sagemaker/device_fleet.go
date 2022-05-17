@@ -108,7 +108,7 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateDeviceFleet(input)
 	})
 	if err != nil {

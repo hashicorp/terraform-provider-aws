@@ -832,7 +832,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			} else {
-				_, err := tfresource.RetryWhenAWSErrCodeEquals(
+				_, err := tfresource.RetryWhenErrCodeEquals(
 					clusterInvalidClusterStateFaultTimeout,
 					func() (interface{}, error) {
 						return conn.DisableLogging(&redshift.DisableLoggingInput{
@@ -878,7 +878,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+	_, err := tfresource.RetryWhenErrCodeEquals(
 		clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCluster(input)
@@ -926,7 +926,7 @@ func enableLogging(conn *redshift.Redshift, clusterID string, tfMap map[string]i
 		input.S3KeyPrefix = aws.String(v)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+	_, err := tfresource.RetryWhenErrCodeEquals(
 		clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.EnableLogging(input)

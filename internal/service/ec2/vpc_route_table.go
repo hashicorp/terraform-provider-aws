@@ -510,7 +510,7 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	input.RouteTableId = aws.String(routeTableID)
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+	_, err := tfresource.RetryWhenErrCodeEquals(
 		timeout,
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
@@ -652,7 +652,7 @@ func ec2RouteTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gateway
 	}
 
 	log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+	_, err := tfresource.RetryWhenErrCodeEquals(
 		timeout,
 		func() (interface{}, error) {
 			return conn.EnableVgwRoutePropagation(input)

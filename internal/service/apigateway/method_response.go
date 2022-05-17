@@ -104,7 +104,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 	resourceMethodResponseMutex.Lock()
 	defer resourceMethodResponseMutex.Unlock()
 
-	_, err := verify.RetryOnAWSCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
 		return conn.PutMethodResponse(&apigateway.PutMethodResponseInput{
 			HttpMethod:         aws.String(d.Get("http_method").(string)),
 			ResourceId:         aws.String(d.Get("resource_id").(string)),

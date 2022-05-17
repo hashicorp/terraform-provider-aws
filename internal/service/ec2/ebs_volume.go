@@ -275,7 +275,7 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteVolume(&ec2.DeleteVolumeInput{
 				VolumeId: aws.String(d.Id()),

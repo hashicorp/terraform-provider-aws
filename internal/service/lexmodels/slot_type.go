@@ -149,7 +149,7 @@ func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *lexmodelbuildingservice.PutSlotTypeOutput
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		var err error
 
 		if output != nil {
@@ -221,7 +221,7 @@ func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutSlotType(input)
 	}, lexmodelbuildingservice.ErrCodeConflictException)
 
@@ -240,7 +240,7 @@ func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Slot Type: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteSlotType(input)
 	}, lexmodelbuildingservice.ErrCodeConflictException)
 

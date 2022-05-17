@@ -405,7 +405,7 @@ func updateKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
@@ -444,7 +444,7 @@ func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLoc
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
+	_, err = tfresource.RetryWhenErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
@@ -478,7 +478,7 @@ func updateKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
+	_, err := tfresource.RetryWhenErrCodeEquals(KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key rotation enabled (%t): %w", keyID, enabled, err)

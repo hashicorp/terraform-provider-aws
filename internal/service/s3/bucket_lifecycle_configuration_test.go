@@ -983,7 +983,7 @@ func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		output, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 			return conn.GetBucketLifecycleConfiguration(input)
 		})
 
@@ -1029,7 +1029,7 @@ func testAccCheckBucketLifecycleConfigurationExists(n string) resource.TestCheck
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := verify.RetryOnAWSCode(tfs3.ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
+		output, err := verify.RetryOnErrCode(tfs3.ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
 			return conn.GetBucketLifecycleConfiguration(input)
 		})
 

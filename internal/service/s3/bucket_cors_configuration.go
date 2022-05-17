@@ -98,7 +98,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := verify.RetryOnErrCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketCorsWithContext(ctx, input)
 	})
 
@@ -127,7 +127,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	corsResponse, err := verify.RetryOnAWSCode(ErrCodeNoSuchCORSConfiguration, func() (interface{}, error) {
+	corsResponse, err := verify.RetryOnErrCode(ErrCodeNoSuchCORSConfiguration, func() (interface{}, error) {
 		return conn.GetBucketCorsWithContext(ctx, input)
 	})
 

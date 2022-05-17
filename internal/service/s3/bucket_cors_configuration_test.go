@@ -367,7 +367,7 @@ func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.Tes
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		corsResponse, err := verify.RetryOnAWSCode(tfs3.ErrCodeNoSuchCORSConfiguration, func() (interface{}, error) {
+		corsResponse, err := verify.RetryOnErrCode(tfs3.ErrCodeNoSuchCORSConfiguration, func() (interface{}, error) {
 			return conn.GetBucketCors(input)
 		})
 
