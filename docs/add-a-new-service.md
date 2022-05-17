@@ -68,7 +68,7 @@ name in the list of customizable endpoints.
 
 Before adding a new service to the provider its a good idea to familarize yourself with the primary workflows practioners are likely to want to accomplish with the provider to ensure the provider design can solve for for this. Its not always necessary to cover 100% of the AWS service offering to unblock most workflows.
 
-You should have an idea of what resources and datasources should be added, their dependencies and relative imprortance in relation to the workflow. This should give you an idea of the order in which resources to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
+You should have an idea of what resources and datasources should be added, their dependencies and relative importance in relation to the workflow. This should give you an idea of the order in which resources to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
 
 Using the AWS API documentation as a reference, identify the various API's which correspond to the CRUD operations which consist of the management surface for that resource. These will be the set of API's called from the new resource. The API's model attributes will correspond to your resource schema.
 

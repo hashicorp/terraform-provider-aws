@@ -1,12 +1,24 @@
 ## Add a New Region
 
-These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. Since April 2019, new regions added to AWS now require being explicitly enabled before they can be used. Examples of this can be found when `me-south-1` was announced:
+New regions can typically be used immediately with the provider, with two caveats:
 
-- [Terraform AWS Provider issue](https://github.com/hashicorp/terraform-provider-aws/issues/9545)
-- [Terraform AWS Provider AWS Go SDK update pull request](https://github.com/hashicorp/terraform-provider-aws/pull/9538)
-- [Terraform AWS Provider data source update pull request](https://github.com/hashicorp/terraform-provider-aws/pull/9547)
-- [Terraform S3 Backend issue](https://github.com/hashicorp/terraform/issues/22254)
-- [Terraform S3 Backend pull request](https://github.com/hashicorp/terraform/pull/22253)
+- Regions often need to be explicitly enabled via the AWS console. See [ap-east-1](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to do that.
+- Until the provider is aware of the new region, automatic region validation will fail. In order to use the region before validation support is added to the provider you will need to disable region validation:
+
+```
+provider "aws" {
+  # ... potentially other configuration ...
+
+  region                 = "me-south-1"
+  skip_region_validation = true
+}
+```
+
+### Enabling Region Validation
+
+Support for region validation needs to be added in two places, the provider itself and the S3 backend which is currently part of Terraform. In both cases, simply updating the AWS Go SDK dependency to a version which supports that region will be enough to enable region validation. These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. 
+
+Some datasources will need to be manually updated to include 
 
 Typically our process for new regions is as follows:
 
