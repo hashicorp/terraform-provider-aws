@@ -40,6 +40,8 @@ The following arguments are optional:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `create_time` - The timestamp for when the place index resource was created in ISO 8601 format.
 * `index_arn` - The Amazon Resource Name (ARN) for the place index resource. Used to specify a resource across AWS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
