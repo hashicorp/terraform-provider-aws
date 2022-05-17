@@ -244,14 +244,6 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"current_version",
-				},
-			},
-			{
 				// update storage and enable provisioned throughput
 				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabledConfig(rName, updated_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
