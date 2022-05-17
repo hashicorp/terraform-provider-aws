@@ -801,8 +801,14 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if twoPhases {
 		for _, hook := range generatePutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			if err = resourceLifecycleHookPutOp(conn, &hook); err != nil {
-				return fmt.Errorf("Error creating initial lifecycle hooks: %s", err)
+			_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+				func() (interface{}, error) {
+					return conn.PutLifecycleHook(&hook)
+				},
+				ErrCodeValidationError, "Unable to publish test message to notification target")
+
+			if err != nil {
+				return fmt.Errorf("creating Auto Scaling Group (%s) Lifecycle Hook: %w", d.Id(), err)
 			}
 		}
 

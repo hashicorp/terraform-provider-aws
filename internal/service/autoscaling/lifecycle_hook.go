@@ -71,6 +71,7 @@ func resourceLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {
 	input := getPutLifecycleHookInput(d)
 	name := d.Get("name").(string)
 
+	log.Printf("[INFO] Putting Auto Scaling Lifecycle Hook: %s", input)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
 		func() (interface{}, error) {
 			return conn.PutLifecycleHook(input)
