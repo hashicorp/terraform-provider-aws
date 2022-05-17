@@ -620,6 +620,13 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch d.Get("engine_name").(string) {
+	case engineNameAurora:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			request.MySQLSettings = &dms.MySQLSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+			}
+		}
 	case engineNameDynamoDB:
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
@@ -658,6 +665,13 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.ServerName = aws.String(d.Get("server_name").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
+	case engineNameMySQL:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			request.MySQLSettings = &dms.MySQLSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+			}
+		}
 	case engineNameOracle:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			request.OracleSettings = &dms.OracleSettings{
