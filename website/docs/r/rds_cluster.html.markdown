@@ -129,7 +129,7 @@ resource "aws_rds_cluster" "example" {
   engine_version     = "13.6"
   database_name      = "test"
   master_username    = "test"
-  master_password    = "mustbeeightcharaters"
+  master_password    = "must_be_eight_characters"
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
