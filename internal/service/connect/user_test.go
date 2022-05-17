@@ -24,6 +24,7 @@ func TestAccConnectUser_serial(t *testing.T) {
 		"update_hierarchy_group_id": testAccUser_updateHierarchyGroupId,
 		"update_identity_info":      testAccUser_updateIdentityInfo,
 		"update_phone_config":       testAccUser_updatePhoneConfig,
+		"update_routing_profile_id": testAccUser_updateRoutingProfileId,
 	}
 
 	for name, tc := range testCases {
@@ -232,6 +233,46 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_updated),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
+				),
+			},
+		},
+	})
+}
+
+func testAccUser_updateRoutingProfileId(t *testing.T) {
+	var v connect.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	resourceName := "aws_connect_user.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserRoutingProfileIdConfig(rName, rName2, rName3, rName4, rName5, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "aws_connect_routing_profile.test", "routing_profile_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccUserRoutingProfileIdConfig(rName, rName2, rName3, rName4, rName5, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
 				),
 			},
 		},
@@ -539,4 +580,35 @@ resource "aws_connect_user" "test" {
   }
 }
 `, rName5, after_contact_work_time_limit, auto_accept, desk_phone_number))
+}
+
+func testAccUserRoutingProfileIdConfig(rName, rName2, rName3, rName4, rName5, selectRoutingProfileId string) string {
+	return acctest.ConfigCompose(
+		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+locals {
+  selectRoutingProfileId = %[2]q
+}
+
+resource "aws_connect_user" "test" {
+  instance_id        = aws_connect_instance.test.id
+  name               = %[1]q
+  password           = "Password123"
+  routing_profile_id = local.selectRoutingProfileId == "first" ? aws_connect_routing_profile.test.routing_profile_id : data.aws_connect_routing_profile.test.routing_profile_id
+
+  security_profile_ids = [
+    data.aws_connect_security_profile.agent.security_profile_id
+  ]
+
+  identity_info {
+    first_name = "example"
+    last_name  = "example2"
+  }
+
+  phone_config {
+    after_contact_work_time_limit = 0
+    phone_type                    = "SOFT_PHONE"
+  }
+}
+`, rName5, selectRoutingProfileId))
 }
