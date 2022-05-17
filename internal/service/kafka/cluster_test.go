@@ -165,7 +165,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig2(rName, original_volume_size, "kafka.m5.4xlarge"),
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabledConfig(rName, original_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
@@ -186,7 +186,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 			},
 			{
 				// update broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig3(rName, updated_volume_size, "kafka.m5.4xlarge"),
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabledConfig(rName, updated_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -235,7 +235,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t 
 			},
 			{
 				// refactor deprecated ebs_volume_size to storage_info
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig1(rName, original_volume_size, "kafka.m5.large"),
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeOnlyConfig(rName, original_volume_size, "kafka.m5.large"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
@@ -254,7 +254,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t 
 			},
 			{
 				// upgrade the instance type first. Multiple updates would cause a "The version of the cluster isn’t current. Check the current version and try again." error
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig1(rName, original_volume_size, "kafka.m5.4xlarge"),
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeOnlyConfig(rName, original_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
@@ -273,7 +273,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t 
 			},
 			{
 				// update storage and enable provisioned throughput
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoConfig3(rName, updated_volume_size, "kafka.m5.4xlarge"),
+				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabledConfig(rName, updated_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -1486,7 +1486,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, ebsVolumeSize))
 }
 
-func testAccClusterBrokerNodeGroupInfoStorageInfoConfig1(rName string, ebsVolumeSize int, instanceType string) string {
+func testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeOnlyConfig(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1507,7 +1507,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, ebsVolumeSize, instanceType))
 }
 
-func testAccClusterBrokerNodeGroupInfoStorageInfoConfig2(rName string, ebsVolumeSize int, instanceType string) string {
+func testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabledConfig(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1531,7 +1531,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, ebsVolumeSize, instanceType))
 }
 
-func testAccClusterBrokerNodeGroupInfoStorageInfoConfig3(rName string, ebsVolumeSize int, instanceType string) string {
+func testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabledConfig(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
