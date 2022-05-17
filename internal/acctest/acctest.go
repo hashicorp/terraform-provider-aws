@@ -1978,3 +1978,17 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 
 	}
 }
+
+func ImageBuilderECRImageFromEnv(t *testing.T) string {
+	ecrImage := os.Getenv("IMAGE_BUILDER_ECR_IMAGE")
+
+	if ecrImage == "" {
+		t.Skip(
+			"Environment variable IMAGE_BUILDER_ECR_IMAGE is not set. " +
+				"For AWS EC2 Image Builder tests using an ECR Image" +
+				"as the Parent Image the ECR Image must be accessible for" +
+				"testing.")
+	}
+
+	return ecrImage
+}

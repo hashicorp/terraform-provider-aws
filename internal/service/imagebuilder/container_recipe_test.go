@@ -544,6 +544,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 func TestAccImageBuilderContainerRecipe_platform_override(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -552,14 +553,14 @@ func TestAccImageBuilderContainerRecipe_platform_override(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipePlatformOverrideLinuxConfig(rName),
+				Config: testAccContainerRecipePlatformOverrideLinuxConfig(rName, ecrImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformLinux),
 				),
 			},
 			{
-				Config: testAccContainerRecipePlatformOverrideWindowsConfig(rName),
+				Config: testAccContainerRecipePlatformOverrideWindowsConfig(rName, ecrImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformWindows),
@@ -1461,7 +1462,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipePlatformOverrideLinuxConfig(rName string) string {
+func testAccContainerRecipePlatformOverrideLinuxConfig(rName, ecrImage string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1469,7 +1470,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-	parent_image   = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/centos:7.9.2009"
+	parent_image   = %[2]q
   version        = "1.0.0"
 
   component {
@@ -1489,10 +1490,10 @@ EOF
 
 	platform_override = "Linux"
 }
-`, rName))
+`, rName, ecrImage))
 }
 
-func testAccContainerRecipePlatformOverrideWindowsConfig(rName string) string {
+func testAccContainerRecipePlatformOverrideWindowsConfig(rName, ecrImage string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1500,7 +1501,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-	parent_image   = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/windows:20HC"
+	parent_image   = %[2]q
   version        = "1.0.0"
 
   component {
@@ -1520,5 +1521,5 @@ EOF
 
 	platform_override = "Windows"
 }
-`, rName))
+`, rName, ecrImage))
 }
