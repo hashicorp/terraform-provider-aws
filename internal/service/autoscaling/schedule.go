@@ -225,8 +225,12 @@ func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
 		ScheduledActionName:  aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("deleting Auto Scaling Scheduled Action: %w", err)
+		return fmt.Errorf("deleting Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -255,7 +259,7 @@ func FindScheduledUpdateGroupAction(conn *autoscaling.AutoScaling, asgName, acti
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeValidationError) {
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
