@@ -236,7 +236,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{imagebuilder.PlatformLinux, imagebuilder.PlatformWindows}, false),
+				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
