@@ -119,7 +119,7 @@ resource "aws_rds_cluster" "example" {
 
 -> More information about RDS Serverless v2 Clusters can be found in the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
 
-To create a Serverless v2 RDS cluster, you must additionally specify the `engine_mode` and `serverlessv2_scaling_configuration` attributes. An `aws_rds_cluster_instance` must also be added to the cluster with the `instance_class` attribute specified.
+To create a Serverless v2 RDS cluster, you must additionally specify the `engine_mode` and `serverlessv2_scaling_configuration` attributes. An `aws_rds_cluster_instance` resource must also be added to the cluster with the `instance_class` attribute specified.
 
 ```terraform
 resource "aws_rds_cluster" "example" {
