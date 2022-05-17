@@ -21,10 +21,10 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSOrganizationResourceOnlyConfig,
+				Config: testAccOrganizationConfig_resourceOnly,
 			},
 			{
-				Config: testAccCheckAWSOrganizationConfig,
+				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -43,17 +43,17 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 			{
 				// This is to make sure the data source isn't around trying to read the resource
 				// when the resource is being destroyed
-				Config: testAccCheckAWSOrganizationResourceOnlyConfig,
+				Config: testAccOrganizationConfig_resourceOnly,
 			},
 		},
 	})
 }
 
-const testAccCheckAWSOrganizationResourceOnlyConfig = `
+const testAccOrganizationConfig_resourceOnly = `
 resource "aws_organizations_organization" "test" {}
 `
 
-const testAccCheckAWSOrganizationConfig = `
+const testAccOrganizationConfig_basic = `
 resource "aws_organizations_organization" "test" {}
 
 data "aws_organizations_organization" "test" {}
