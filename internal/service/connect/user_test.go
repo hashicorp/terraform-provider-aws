@@ -21,6 +21,7 @@ func TestAccConnectUser_serial(t *testing.T) {
 		"basic":                     testAccUser_basic,
 		"disappears":                testAccUser_disappears,
 		"update_hierarchy_group_id": testAccUser_updateHierarchyGroupId,
+		"update_identity_info":      testAccUser_updateIdentityInfo,
 	}
 
 	for name, tc := range testCases {
@@ -108,6 +109,58 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.child", "hierarchy_group_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccUser_updateIdentityInfo(t *testing.T) {
+	var v connect.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	email_original := "exampleoriginal@example.com"
+	first_name_original := "example-first-name-original"
+	last_name_original := "example-last-name-original"
+	email_updated := "exampleupdated@example.com"
+	first_name_updated := "example-first-name-updated"
+	last_name_updated := "example-last-name-updated"
+
+	resourceName := "aws_connect_user.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserIdentityInfoConfig(rName, rName2, rName3, rName4, rName5, email_original, first_name_original, last_name_original),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", email_original),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", first_name_original),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", last_name_original),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccUserIdentityInfoConfig(rName, rName2, rName3, rName4, rName5, email_updated, first_name_updated, last_name_updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", email_updated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", first_name_updated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", last_name_updated),
 				),
 			},
 		},
@@ -354,4 +407,32 @@ resource "aws_connect_user" "test" {
   }
 }
 `, rName5, selectHierarchyGroupId))
+}
+
+func testAccUserIdentityInfoConfig(rName, rName2, rName3, rName4, rName5, email, first_name, last_name string) string {
+	return acctest.ConfigCompose(
+		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_connect_user" "test" {
+  instance_id        = aws_connect_instance.test.id
+  name               = %[1]q
+  password           = "Password123"
+  routing_profile_id = data.aws_connect_routing_profile.test.routing_profile_id
+
+  security_profile_ids = [
+    data.aws_connect_security_profile.agent.security_profile_id
+  ]
+
+  identity_info {
+    email      = %[2]q
+    first_name = %[3]q
+    last_name  = %[4]q
+  }
+
+  phone_config {
+    after_contact_work_time_limit = 0
+    phone_type                    = "SOFT_PHONE"
+  }
+}
+`, rName5, email, first_name, last_name))
 }
