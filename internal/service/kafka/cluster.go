@@ -648,24 +648,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		// case: deprecated ebs_volume_size replaced with storage_info
 		if d.HasChange("broker_node_group_info.0.storage_info") {
-			if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
-					{
-						KafkaBrokerNodeId:     aws.String("All"),
-						ProvisionedThroughput: expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{})),
-						VolumeSizeGB:          aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
-					},
-				}
-
-			} else {
-				// ProvisionedThroughput not specified when ebs_volume_size replaced with storage_info
-				input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
-					{
-						KafkaBrokerNodeId: aws.String("All"),
-						VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
-					},
-				}
+			ebsVolumeInfo := &kafka.BrokerEBSVolumeInfo{
+				KafkaBrokerNodeId: aws.String("All"),
+				VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
 			}
+			if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				ebsVolumeInfo.ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+			}
+			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{ebsVolumeInfo}
 		} else {
 			// case: regular update of deprecated ebs_volume_size
 			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
@@ -704,23 +694,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
-		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
-				{
-					KafkaBrokerNodeId:     aws.String("All"),
-					ProvisionedThroughput: expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{})),
-					VolumeSizeGB:          aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
-				},
-			}
-
-		} else {
-			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
-				{
-					KafkaBrokerNodeId: aws.String("All"),
-					VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
-				},
-			}
+		ebsVolumeInfo := &kafka.BrokerEBSVolumeInfo{
+			KafkaBrokerNodeId: aws.String("All"),
+			VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
 		}
+		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			ebsVolumeInfo.ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+		input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{ebsVolumeInfo}
 
 		output, err := conn.UpdateBrokerStorageWithContext(ctx, input)
 
