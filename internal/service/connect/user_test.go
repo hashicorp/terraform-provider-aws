@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -44,4 +45,37 @@ func testAccCheckUserExists(resourceName string, function *connect.DescribeUserO
 
 		return nil
 	}
+}
+
+func testAccCheckUserDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_connect_user" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		instanceID, userID, err := tfconnect.UserParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		params := &connect.DescribeUserInput{
+			UserId:     aws.String(userID),
+			InstanceId: aws.String(instanceID),
+		}
+
+		_, err = conn.DescribeUser(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
