@@ -68,7 +68,7 @@ func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
+				Config: testAccWebACLAssociationConfig_multipleAssociations,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					testAccCheckWebACLAssociationExists("aws_wafregional_web_acl_association.bar"),
@@ -254,7 +254,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 `
 
-const testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations = testAccWebACLAssociationConfig_basic + `
+const testAccWebACLAssociationConfig_multipleAssociations = testAccWebACLAssociationConfig_basic + `
 resource "aws_alb" "bar" {
   internal = true
   subnets  = [aws_subnet.foo.id, aws_subnet.bar.id]

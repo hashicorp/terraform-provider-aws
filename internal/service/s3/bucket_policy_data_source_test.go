@@ -15,7 +15,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestAccDataSourceBucketPolicy_basic(t *testing.T) {
+func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 	var conf s3.GetBucketPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_bucket_policy.test"
