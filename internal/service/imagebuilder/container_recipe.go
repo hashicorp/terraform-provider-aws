@@ -100,6 +100,13 @@ func ResourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"image_os_version_override": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.StringIsNotEmpty,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
+			},
 			"instance_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -294,9 +301,14 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 		input.ContainerType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("image_os_version_override"); ok {
+		input.ImageOsVersionOverride = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("platform_override"); ok {
 		input.PlatformOverride = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}

@@ -39,6 +39,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_os_version_override", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -584,6 +585,7 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformWindows),
+					resource.TestCheckResourceAttr(resourceName, "image_os_version_override", "2022"),
 				),
 			},
 			{
@@ -1508,7 +1510,7 @@ EOF
     service         = "ECR"
   }
 
-	platform_override = "Linux"
+  platform_override = "Linux"
 }
 `, rName, ecrImage))
 }
@@ -1539,7 +1541,8 @@ EOF
     service         = "ECR"
   }
 
-	platform_override = "Windows"
+  platform_override = "Windows"
+  image_os_version_override = "2022"
 }
 `, rName, ecrImage))
 }
