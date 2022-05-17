@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
-func TestGenerateIAMPassword(t *testing.T) {
+func TestGeneratePassword(t *testing.T) {
 	p, err := tfiam.GeneratePassword(6)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -39,7 +39,7 @@ func TestGenerateIAMPassword(t *testing.T) {
 	}
 }
 
-func TestIAMPasswordPolicyCheck(t *testing.T) {
+func TestPasswordPolicyCheck(t *testing.T) {
 	for _, tc := range []struct {
 		pass  string
 		valid bool
