@@ -415,20 +415,21 @@ func customizedMetricDataQuerySchema() *schema.Schema {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params, err := getPutScalingPolicyInput(d)
-	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Create: %#v", params)
+	name := d.Get("name").(string)
+	input, err := getPutScalingPolicyInput(d)
+
 	if err != nil {
 		return err
 	}
 
-	resp, err := conn.PutScalingPolicy(&params)
+	log.Printf("[DEBUG] Creating Auto Scaling Policy: %s", input)
+	_, err = conn.PutScalingPolicy(input)
+
 	if err != nil {
-		return fmt.Errorf("Error putting scaling policy: %s", err)
+		return fmt.Errorf("creating Auto Scaling Policy (%s): %w", name, err)
 	}
 
-	d.Set("arn", resp.PolicyARN)
-	d.SetId(d.Get("name").(string))
-	log.Printf("[INFO] AutoScaling Scaling PolicyARN: %s", d.Get("arn").(string))
+	d.SetId(name)
 
 	return resourcePolicyRead(d, meta)
 }
@@ -449,6 +450,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("adjustment_type", p.AdjustmentType)
+	d.Set("arn", p.PolicyARN)
 	d.Set("autoscaling_group_name", p.AutoScalingGroupName)
 	d.Set("cooldown", p.Cooldown)
 	d.Set("estimated_instance_warmup", p.EstimatedInstanceWarmup)
@@ -457,7 +459,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if p.MinAdjustmentMagnitude != nil {
 		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 	}
-	d.Set("arn", p.PolicyARN)
+
 	d.Set("name", p.PolicyName)
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
@@ -476,15 +478,17 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params, inputErr := getPutScalingPolicyInput(d)
-	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Update: %#v", params)
-	if inputErr != nil {
-		return inputErr
-	}
+	input, err := getPutScalingPolicyInput(d)
 
-	_, err := conn.PutScalingPolicy(&params)
 	if err != nil {
 		return err
+	}
+
+	log.Printf("[DEBUG] Updating Auto Scaling Policy: %s", input)
+	_, err = conn.PutScalingPolicy(input)
+
+	if err != nil {
+		return fmt.Errorf("updating Auto Scaling Policy (%s): %w", d.Id(), err)
 	}
 
 	return resourcePolicyRead(d, meta)
@@ -574,8 +578,8 @@ func FindScalingPolicy(conn *autoscaling.AutoScaling, asgName, policyName string
 // PutScalingPolicy can safely resend all parameters without destroying the
 // resource, so create and update can share this common function. It will error
 // if certain mutually exclusive values are set.
-func getPutScalingPolicyInput(d *schema.ResourceData) (autoscaling.PutScalingPolicyInput, error) {
-	var params = autoscaling.PutScalingPolicyInput{
+func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPolicyInput, error) {
+	var params = &autoscaling.PutScalingPolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		PolicyName:           aws.String(d.Get("name").(string)),
 	}
