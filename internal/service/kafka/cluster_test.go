@@ -229,14 +229,8 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEbsVolumeSizeToStorageInfo(t 
 			},
 			{
 				// refactor deprecated ebs_volume_size to storage_info
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeOnlyConfig(rName, original_volume_size, "kafka.m5.large"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
-				),
+				Config:   testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeOnlyConfig(rName, original_volume_size, "kafka.m5.large"),
+				PlanOnly: true,
 			},
 			{
 				// upgrade the instance type first. Multiple updates would cause a "The version of the cluster isn’t current. Check the current version and try again." error
