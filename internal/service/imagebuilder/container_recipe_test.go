@@ -541,7 +541,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccImageBuilderContainerRecipe_platform_override(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_platform_override_linux(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
 	ecrImage := acctest.ImageBuilderECRImageFromEnv(t)
@@ -559,6 +559,26 @@ func TestAccImageBuilderContainerRecipe_platform_override(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformLinux),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContainerRecipeDestroy,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerRecipePlatformOverrideWindowsConfig(rName, ecrImage),
 				Check: resource.ComposeTestCheckFunc(
