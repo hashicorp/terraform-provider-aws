@@ -19,7 +19,7 @@ func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSBillingServiceAccountConfig,
+				Config: testAccBillingServiceAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", billingAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", billingAccountID, "iam", "root"),
@@ -29,6 +29,6 @@ func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSBillingServiceAccountConfig = `
+const testAccBillingServiceAccountConfig_basic = `
 data "aws_billing_service_account" "main" {}
 `
