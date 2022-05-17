@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -66,39 +65,23 @@ func ResourceLifecycleHook() *schema.Resource {
 	}
 }
 
-func resourceLifecycleHookPutOp(conn *autoscaling.AutoScaling, params *autoscaling.PutLifecycleHookInput) error {
-	log.Printf("[DEBUG] AutoScaling PutLifecyleHook: %s", params)
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutLifecycleHook(params)
-
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if strings.Contains(awsErr.Message(), "Unable to publish test message to notification target") {
-					return resource.RetryableError(fmt.Errorf("Retrying AWS AutoScaling Lifecycle Hook: %w", awsErr))
-				}
-			}
-			return resource.NonRetryableError(fmt.Errorf("Error putting lifecycle hook: %w", err))
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutLifecycleHook(params)
-	}
-	if err != nil {
-		return fmt.Errorf("Error putting autoscaling lifecycle hook: %w", err)
-	}
-	return nil
-}
-
 func resourceLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
-	params := getPutLifecycleHookInput(d)
 
-	if err := resourceLifecycleHookPutOp(conn, &params); err != nil {
-		return err
+	input := getPutLifecycleHookInput(d)
+	name := d.Get("name").(string)
+
+	_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+		func() (interface{}, error) {
+			return conn.PutLifecycleHook(input)
+		},
+		ErrCodeValidationError, "Unable to publish test message to notification target")
+
+	if err != nil {
+		return fmt.Errorf("putting Auto Scaling Lifecycle Hook (%s): %w", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
 	return resourceLifecycleHookRead(d, meta)
 }
@@ -149,8 +132,8 @@ func resourceLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func getPutLifecycleHookInput(d *schema.ResourceData) autoscaling.PutLifecycleHookInput {
-	var params = autoscaling.PutLifecycleHookInput{
+func getPutLifecycleHookInput(d *schema.ResourceData) *autoscaling.PutLifecycleHookInput {
+	var params = &autoscaling.PutLifecycleHookInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		LifecycleHookName:    aws.String(d.Get("name").(string)),
 	}
