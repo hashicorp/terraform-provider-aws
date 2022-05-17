@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccSnapshotCopy_basic(t *testing.T) {
+func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -46,7 +46,7 @@ func TestAccSnapshotCopy_basic(t *testing.T) {
 	})
 }
 
-func TestAccSnapshotCopy_tags(t *testing.T) {
+func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -95,7 +95,7 @@ func TestAccSnapshotCopy_tags(t *testing.T) {
 	})
 }
 
-func TestAccSnapshotCopy_disappears(t *testing.T) {
+func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
