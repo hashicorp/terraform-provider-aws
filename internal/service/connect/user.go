@@ -19,7 +19,8 @@ import (
 
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceUserRead,
+		CreateContext: resourceUserCreate,
+		ReadContext:   resourceUserRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -133,6 +134,58 @@ func ResourceUser() *schema.Resource {
 	}
 }
 
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	name := d.Get("name").(string)
+
+	input := &connect.CreateUserInput{
+		InstanceId:         aws.String(instanceID),
+		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
+		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
+		SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
+		Username:           aws.String(name),
+	}
+
+	if v, ok := d.GetOk("directory_user_id"); ok {
+		input.DirectoryUserId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("hierarchy_group_id"); ok {
+		input.HierarchyGroupId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("identity_info"); ok {
+		input.IdentityInfo = expandIdentityInfo(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("password"); ok {
+		input.Password = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect User %s", input)
+	output, err := conn.CreateUserWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect User (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect User (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.UserId)))
+
+	return resourceUserRead(ctx, d, meta)
+}
+
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -204,6 +257,62 @@ func UserParseID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func expandIdentityInfo(identityInfo []interface{}) *connect.UserIdentityInfo {
+	if len(identityInfo) == 0 || identityInfo[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := identityInfo[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.UserIdentityInfo{}
+
+	if v, ok := tfMap["email"].(string); ok && v != "" {
+		result.Email = aws.String(v)
+	}
+
+	if v, ok := tfMap["first_name"].(string); ok && v != "" {
+		result.FirstName = aws.String(v)
+	}
+
+	if v, ok := tfMap["last_name"].(string); ok && v != "" {
+		result.LastName = aws.String(v)
+	}
+
+	return result
+}
+
+func expandPhoneConfig(phoneConfig []interface{}) *connect.UserPhoneConfig {
+	if len(phoneConfig) == 0 || phoneConfig[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := phoneConfig[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.UserPhoneConfig{
+		PhoneType: aws.String(tfMap["phone_type"].(string)),
+	}
+
+	if v, ok := tfMap["after_contact_work_time_limit"].(int); ok && v >= 0 {
+		result.AfterContactWorkTimeLimit = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["auto_accept"].(bool); ok {
+		result.AutoAccept = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["desk_phone_number"].(string); ok && v != "" {
+		result.DeskPhoneNumber = aws.String(v)
+	}
+
+	return result
 }
 
 func flattenIdentityInfo(identityInfo *connect.UserIdentityInfo) []interface{} {
