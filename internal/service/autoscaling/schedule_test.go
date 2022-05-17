@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAutoScalingSchedule_basic(t *testing.T) {
@@ -208,29 +209,26 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
-func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScalingScheduleExists(n string, v *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-		params := &autoscaling.DescribeScheduledActionsInput{
-			AutoScalingGroupName: aws.String(autoScalingGroup),
-			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Auto Scaling Scheduled Action ID is set")
 		}
 
-		resp, err := conn.DescribeScheduledActions(params)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+
+		output, err := tfautoscaling.FindScheduledUpdateGroupAction(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.ScheduledUpdateGroupActions) == 0 {
-			return fmt.Errorf("Scaling Schedule not found")
-		}
 
-		*policy = *resp.ScheduledUpdateGroupActions[0]
+		*v = *output
 
 		return nil
 	}
@@ -244,20 +242,17 @@ func testAccCheckScheduleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
-		params := &autoscaling.DescribeScheduledActionsInput{
-			AutoScalingGroupName: aws.String(autoScalingGroup),
-			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
+		_, err := tfautoscaling.FindScheduledUpdateGroupAction(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeScheduledActions(params)
-
-		if err == nil {
-			if len(resp.ScheduledUpdateGroupActions) != 0 &&
-				*resp.ScheduledUpdateGroupActions[0].ScheduledActionName == rs.Primary.ID {
-				return fmt.Errorf("Scaling Schedule Still Exists: %s", rs.Primary.ID)
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Auto Scaling Scheduled Action %s still exists", rs.Primary.ID)
 	}
 
 	return nil
