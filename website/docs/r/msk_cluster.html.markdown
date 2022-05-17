@@ -181,9 +181,9 @@ resource "aws_msk_cluster" "example" {
   broker_node_group_info {
     instance_type = "kafka.m5.4xlarge"
     client_subnets = [
-      "subnet-12345678912345678",
-      "subnet-98765432123456789",
-      "subnet-45678912345678912",
+      aws_subnet.subnet_az1.id,
+      aws_subnet.subnet_az2.id,
+      aws_subnet.subnet_az3.id,
     ]
     storage_info {
       ebs_storage_info {
