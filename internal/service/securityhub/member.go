@@ -15,12 +15,9 @@ import (
 const (
 	// Associated is the member status naming for regions that do not support Organizations
 	memberStatusAssociated = "Associated"
-	memberStatusCreated    = "Created"
 	memberStatusInvited    = "Invited"
 	memberStatusEnabled    = "Enabled"
-	memberStatusRemoved    = "Removed"
 	memberStatusResigned   = "Resigned"
-	memberStatusDeleted    = "Deleted"
 )
 
 func ResourceMember() *schema.Resource {
