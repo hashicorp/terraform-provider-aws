@@ -758,12 +758,3 @@ rules:
         - pattern: fmt.Errorf(..., $ERR.Code(), ...)
         - pattern: fmt.Errorf(..., $ERR.Message(), ...)
     severity: WARNING
-
-  - id: avoid-awserr-Error
-    languages: [go]
-    message: Use `tfawserr` helpers instead of type conversion to `awserr.Error`
-    paths:
-      include:
-        - internal/
-    pattern: $ORIGINALERR.(awserr.Error)
-    severity: WARNING
