@@ -20,11 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -1154,7 +1154,7 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupExists(n string, group *autoscaling.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1167,21 +1167,13 @@ func testAccCheckGroupExists(n string, group *autoscaling.Group) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
-		describeGroups, err := conn.DescribeAutoScalingGroups(
-			&autoscaling.DescribeAutoScalingGroupsInput{
-				AutoScalingGroupNames: []*string{aws.String(rs.Primary.ID)},
-			})
+		output, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describeGroups.AutoScalingGroups) != 1 ||
-			*describeGroups.AutoScalingGroups[0].AutoScalingGroupName != rs.Primary.ID {
-			return fmt.Errorf("Auto Scaling Group not found")
-		}
-
-		*group = *describeGroups.AutoScalingGroups[0]
+		*v = *output
 
 		return nil
 	}
@@ -1195,22 +1187,17 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the Group
-		describeGroups, err := conn.DescribeAutoScalingGroups(
-			&autoscaling.DescribeAutoScalingGroupsInput{
-				AutoScalingGroupNames: []*string{aws.String(rs.Primary.ID)},
-			})
+		_, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(describeGroups.AutoScalingGroups) != 0 &&
-				*describeGroups.AutoScalingGroups[0].AutoScalingGroupName == rs.Primary.ID {
-				return fmt.Errorf("Auto Scaling Group still exists")
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("Auto Scaling Group %s still exists", rs.Primary.ID)
 	}
 
 	return nil
