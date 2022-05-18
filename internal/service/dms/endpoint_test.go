@@ -97,12 +97,15 @@ func TestAccDMSEndpoint_Aurora_secretID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_access_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
 		},
 	})
@@ -642,12 +645,15 @@ func TestAccDMSEndpoint_MySQL_secretID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_access_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
 		},
 	})
@@ -1988,11 +1994,9 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "mysql"
+
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
-
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
 
   tags = {
     Name   = %[1]q
