@@ -2303,6 +2303,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 					"tag",
 					"tags",
 					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
 				},
 			},
 		},
