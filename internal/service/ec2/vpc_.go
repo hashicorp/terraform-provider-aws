@@ -469,7 +469,7 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(vpcDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteVpc(input)
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return nil

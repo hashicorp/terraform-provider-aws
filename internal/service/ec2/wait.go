@@ -1324,7 +1324,7 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil, nil
 	}
 

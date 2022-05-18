@@ -124,7 +124,7 @@ func resourceEgressOnlyInternetGatewayDelete(d *schema.ResourceData, meta interf
 		EgressOnlyInternetGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidGatewayIDNotFound) {
 		return nil
 	}
 

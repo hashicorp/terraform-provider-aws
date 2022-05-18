@@ -64,7 +64,7 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 
 	err = routeTableDisableVgwRoutePropagation(conn, routeTableID, gatewayID)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil
 	}
 

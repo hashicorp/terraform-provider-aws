@@ -205,7 +205,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Deleting Route: %s", input)
 		_, err := conn.DeleteRoute(input)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
 			continue
 		}
 

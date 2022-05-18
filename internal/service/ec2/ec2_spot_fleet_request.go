@@ -944,7 +944,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		func() (interface{}, error) {
 			return conn.RequestSpotFleet(input)
 		},
-		ErrCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
+		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
 	)
 
 	if err != nil {

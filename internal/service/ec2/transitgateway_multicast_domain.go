@@ -225,7 +225,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil
 	}
 

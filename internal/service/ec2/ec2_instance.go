@@ -808,12 +808,12 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
 			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
 				return true, err
 			}
 
 			// IAM roles can also take time to propagate in AWS:
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, " has no associated IAM Roles") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
 				return true, err
 			}
 
@@ -1173,7 +1173,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
-		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
 			err = nil
 		}
 
@@ -1761,7 +1761,7 @@ func disableInstanceAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 		InstanceId: aws.String(id),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeUnsupportedOperation, "not supported for spot instances") {
+	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
 		return nil
 	}
@@ -1795,7 +1795,7 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 				InstanceIds: aws.StringSlice([]string{id}),
 			})
 		},
-		ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
+		errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
 	)
 
 	if err != nil {
@@ -2706,7 +2706,7 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 		InstanceIds: aws.StringSlice([]string{id}),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil
 	}
 

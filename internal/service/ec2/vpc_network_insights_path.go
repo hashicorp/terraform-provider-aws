@@ -168,7 +168,7 @@ func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceDa
 		NetworkInsightsPathId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
 		return nil
 	}
 

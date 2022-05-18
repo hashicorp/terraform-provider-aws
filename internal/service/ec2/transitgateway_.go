@@ -299,9 +299,9 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		return conn.DeleteTransitGateway(&ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})
-	}, ErrCodeIncorrectState)
+	}, errCodeIncorrectState)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayIDNotFound) {
 		return nil
 	}
 

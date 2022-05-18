@@ -208,7 +208,7 @@ func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.Reso
 		TransitGatewayConnectPeerId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayConnectPeerIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayConnectPeerIDNotFound) {
 		return nil
 	}
 

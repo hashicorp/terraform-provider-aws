@@ -180,7 +180,7 @@ func resourceCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCustomerGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
 		return nil
 	}
 

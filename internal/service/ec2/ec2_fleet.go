@@ -745,7 +745,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		err = DeleteFleetsError(output.UnsuccessfulFleetDeletions)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFleetIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidFleetIdNotFound) {
 		return nil
 	}
 

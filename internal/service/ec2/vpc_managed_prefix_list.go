@@ -309,7 +309,7 @@ func resourceManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) e
 		PrefixListId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidPrefixListIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
 		return nil
 	}
 

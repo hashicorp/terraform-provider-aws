@@ -1128,7 +1128,7 @@ func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) erro
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidLaunchTemplateIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound) {
 		return nil
 	}
 

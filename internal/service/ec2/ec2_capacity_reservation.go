@@ -262,7 +262,7 @@ func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{})
 		CapacityReservationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCapacityReservationIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
 		return nil
 	}
 

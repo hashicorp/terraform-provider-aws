@@ -195,7 +195,7 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteVpnGateway(&ec2.DeleteVpnGatewayInput{
 			VpnGatewayId: aws.String(d.Id()),
 		})
-	}, ErrCodeIncorrectState)
+	}, errCodeIncorrectState)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil

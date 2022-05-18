@@ -546,7 +546,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
-		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
 			err = nil
 		}
 

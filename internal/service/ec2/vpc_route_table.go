@@ -390,7 +390,7 @@ func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil
 	}
 
@@ -515,8 +515,8 @@ func routeTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]int
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
 		},
-		ErrCodeInvalidParameterException,
-		ErrCodeInvalidTransitGatewayIDNotFound,
+		errCodeInvalidParameterException,
+		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
 	if err != nil {
@@ -559,7 +559,7 @@ func routeTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	log.Printf("[DEBUG] Deleting Route: %s", input)
 	_, err := conn.DeleteRoute(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
 		return nil
 	}
 
@@ -657,7 +657,7 @@ func routeTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID 
 		func() (interface{}, error) {
 			return conn.EnableVgwRoutePropagation(input)
 		},
-		ErrCodeGatewayNotAttached,
+		errCodeGatewayNotAttached,
 	)
 
 	if err != nil {

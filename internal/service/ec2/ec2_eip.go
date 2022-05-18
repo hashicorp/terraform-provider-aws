@@ -387,7 +387,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAllocationIDNotFound) {
+				if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -518,7 +518,7 @@ func disassociateEIP(d *schema.ResourceData, meta interface{}) error {
 	// is the case, then it was already disassociated somehow,
 	// and that is okay. The most commmon reason for this is that
 	// the instance or ENI it was attached it was destroyed.
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		err = nil
 	}
 
@@ -545,7 +545,7 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID
 	err := resource.Retry(addressAssociationClassicTimeout, func() *resource.RetryError {
 		output, err := conn.DescribeAddresses(input)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAddressNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound) {
 			return resource.RetryableError(err)
 		}
 

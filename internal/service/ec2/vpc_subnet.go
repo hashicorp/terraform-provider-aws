@@ -369,9 +369,9 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteSubnet(&ec2.DeleteSubnetInput{
 			SubnetId: aws.String(d.Id()),
 		})
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 		return nil
 	}
 

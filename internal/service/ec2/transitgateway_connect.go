@@ -237,7 +237,7 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 		TransitGatewayAttachmentId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayAttachmentIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return nil
 	}
 

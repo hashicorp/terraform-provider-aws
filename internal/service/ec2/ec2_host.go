@@ -218,7 +218,7 @@ func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeClientInvalidHostIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeClientInvalidHostIDNotFound) {
 		return nil
 	}
 

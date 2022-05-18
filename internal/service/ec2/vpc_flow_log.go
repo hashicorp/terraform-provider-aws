@@ -306,7 +306,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFlowLogIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidFlowLogIdNotFound) {
 		return nil
 	}
 

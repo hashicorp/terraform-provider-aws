@@ -66,7 +66,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 		func() (interface{}, error) {
 			return conn.AssociateRouteTable(input)
 		},
-		ErrCodeInvalidRouteTableIDNotFound,
+		errCodeInvalidRouteTableIDNotFound,
 	)
 
 	if err != nil {
@@ -123,7 +123,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	// This whole thing with the resource ID being changed on update seems unsustainable.
 	// Keeping it here for backwards compatibility...
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		// Not found, so just create a new one
 		return resourceRouteTableAssociationCreate(d, meta)
 	}
@@ -205,7 +205,7 @@ func routeTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 		AssociationId: aws.String(associationID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return nil
 	}
 

@@ -162,7 +162,7 @@ func resourceNATGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		NatGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNatGatewayNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeNatGatewayNotFound) {
 		return nil
 	}
 

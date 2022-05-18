@@ -169,7 +169,7 @@ func resourcePlacementGroupDelete(d *schema.ResourceData, meta interface{}) erro
 		GroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidPlacementGroupUnknown) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
 		return nil
 	}
 

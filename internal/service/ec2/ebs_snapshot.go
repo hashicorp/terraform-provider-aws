@@ -278,7 +278,7 @@ func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
 			SnapshotId: aws.String(d.Id()),
 		})
-	}, ErrCodeInvalidSnapshotInUse)
+	}, errCodeInvalidSnapshotInUse)
 
 	if err != nil {
 		return fmt.Errorf("error deleting EBS Snapshot (%s): %w", d.Id(), err)

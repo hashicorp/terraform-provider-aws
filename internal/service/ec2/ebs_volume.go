@@ -281,9 +281,9 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 				VolumeId: aws.String(d.Id()),
 			})
 		},
-		ErrCodeVolumeInUse)
+		errCodeVolumeInUse)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVolumeNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
 		return nil
 	}
 
