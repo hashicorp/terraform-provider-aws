@@ -64,13 +64,13 @@ func ResourceIPAMScope() *schema.Resource {
 }
 
 const (
-	IpamScopeCreateTimeout = 3 * time.Minute
-	IpamScopeCreateDeley   = 5 * time.Second
-	IpamScopeDeleteTimeout = 3 * time.Minute
-	IpamScopeDeleteDelay   = 5 * time.Second
+	ipamScopeCreateTimeout = 3 * time.Minute
+	ipamScopeCreateDeley   = 5 * time.Second
+	IPAMScopeDeleteTimeout = 3 * time.Minute
+	ipamScopeDeleteDelay   = 5 * time.Second
 
-	IpamScopeStatusAvailable   = "Available"
-	InvalidIpamScopeIdNotFound = "InvalidIpamScopeId.NotFound"
+	ipamScopeStatusAvailable   = "Available"
+	invalidIPAMScopeIDNotFound = "InvalidIpamScopeId.NotFound"
 )
 
 func ResourceIPAMScopeCreate(d *schema.ResourceData, meta interface{}) error {
@@ -96,7 +96,7 @@ func ResourceIPAMScopeCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.IpamScope.IpamScopeId))
 	log.Printf("[INFO] IPAM Scope ID: %s", d.Id())
 
-	if _, err = waitIPAMScopeAvailable(conn, d.Id(), IpamScopeCreateTimeout); err != nil {
+	if _, err = waitIPAMScopeAvailable(conn, d.Id(), ipamScopeCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM Scope (%s) to be Available: %w", d.Id(), err)
 	}
 
@@ -185,7 +185,7 @@ func ResourceIPAMScopeDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting IPAM Scope: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = WaitIPAMScopeDeleted(conn, d.Id(), IpamScopeDeleteTimeout); err != nil {
+	if _, err = WaitIPAMScopeDeleted(conn, d.Id(), IPAMScopeDeleteTimeout); err != nil {
 		if tfresource.NotFound(err) {
 			return nil
 		}
@@ -218,7 +218,7 @@ func findIPAMScopeById(conn *ec2.EC2, id string) (*ec2.IpamScope, error) {
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, InvalidIpamScopeIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, invalidIPAMScopeIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -246,7 +246,7 @@ func waitIPAMScopeAvailable(conn *ec2.EC2, ipamScopeId string, timeout time.Dura
 		Target:  []string{ec2.IpamScopeStateCreateComplete},
 		Refresh: statusIPAMScopeStatus(conn, ipamScopeId),
 		Timeout: timeout,
-		Delay:   IpamScopeCreateDeley,
+		Delay:   ipamScopeCreateDeley,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -261,10 +261,10 @@ func waitIPAMScopeAvailable(conn *ec2.EC2, ipamScopeId string, timeout time.Dura
 func WaitIPAMScopeDeleted(conn *ec2.EC2, ipamScopeId string, timeout time.Duration) (*ec2.IpamScope, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamScopeStateCreateComplete, ec2.IpamScopeStateModifyComplete},
-		Target:  []string{InvalidIpamScopeIdNotFound, ec2.IpamScopeStateDeleteComplete},
+		Target:  []string{invalidIPAMScopeIDNotFound, ec2.IpamScopeStateDeleteComplete},
 		Refresh: statusIPAMScopeStatus(conn, ipamScopeId),
 		Timeout: timeout,
-		Delay:   IpamScopeDeleteDelay,
+		Delay:   ipamScopeDeleteDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -282,7 +282,7 @@ func statusIPAMScopeStatus(conn *ec2.EC2, ipamScopeId string) resource.StateRefr
 		output, err := findIPAMScopeById(conn, ipamScopeId)
 
 		if tfresource.NotFound(err) {
-			return output, InvalidIpamScopeIdNotFound, nil
+			return output, invalidIPAMScopeIDNotFound, nil
 		}
 
 		// there was an unhandled error in the Finder

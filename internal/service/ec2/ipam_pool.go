@@ -114,12 +114,12 @@ func ResourceIPAMPool() *schema.Resource {
 }
 
 const (
-	IpamPoolCreateTimeout     = 3 * time.Minute
-	InvalidIpamPoolIdNotFound = "InvalidIpamPoolId.NotFound"
-	IpamPoolUpdateTimeout     = 3 * time.Minute
-	IpamPoolDeleteTimeout     = 3 * time.Minute
-	IpamPoolAvailableDelay    = 5 * time.Second
-	IpamPoolDeleteDelay       = 5 * time.Second
+	ipamPoolCreateTimeout     = 3 * time.Minute
+	InvalidIPAMPoolIDNotFound = "InvalidIpamPoolId.NotFound"
+	ipamPoolUpdateTimeout     = 3 * time.Minute
+	IPAMPoolDeleteTimeout     = 3 * time.Minute
+	ipamPoolAvailableDelay    = 5 * time.Second
+	ipamPoolDeleteDelay       = 5 * time.Second
 )
 
 func ResourceIPAMPoolCreate(d *schema.ResourceData, meta interface{}) error {
@@ -182,7 +182,7 @@ func ResourceIPAMPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.IpamPool.IpamPoolId))
 	log.Printf("[INFO] IPAM Pool ID: %s", d.Id())
 
-	if _, err = WaitIPAMPoolAvailable(conn, d.Id(), IpamPoolCreateTimeout); err != nil {
+	if _, err = WaitIPAMPoolAvailable(conn, d.Id(), ipamPoolCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM Pool (%s) to be Available: %w", d.Id(), err)
 	}
 
@@ -196,7 +196,7 @@ func ResourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	pool, err := FindIPAMPoolById(conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIpamPoolIdNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
 		return err
 	}
 
@@ -290,7 +290,7 @@ func ResourceIPAMPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating IPAM Pool (%s): %w", d.Id(), err)
 	}
 
-	if _, err = WaitIPAMPoolUpdate(conn, d.Id(), IpamPoolUpdateTimeout); err != nil {
+	if _, err = WaitIPAMPoolUpdate(conn, d.Id(), ipamPoolUpdateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM Pool (%s) to be Available: %w", d.Id(), err)
 	}
 
@@ -309,7 +309,7 @@ func ResourceIPAMPoolDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting IPAM Pool: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = WaitIPAMPoolDeleted(conn, d.Id(), IpamPoolDeleteTimeout); err != nil {
+	if _, err = WaitIPAMPoolDeleted(conn, d.Id(), IPAMPoolDeleteTimeout); err != nil {
 		if tfresource.NotFound(err) {
 			return nil
 		}
@@ -343,7 +343,7 @@ func WaitIPAMPoolAvailable(conn *ec2.EC2, ipamPoolId string, timeout time.Durati
 		Target:  []string{ec2.IpamPoolStateCreateComplete},
 		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
 		Timeout: timeout,
-		Delay:   IpamPoolAvailableDelay,
+		Delay:   ipamPoolAvailableDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -361,7 +361,7 @@ func WaitIPAMPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration)
 		Target:  []string{ec2.IpamPoolStateModifyComplete},
 		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
 		Timeout: timeout,
-		Delay:   IpamPoolAvailableDelay,
+		Delay:   ipamPoolAvailableDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -376,10 +376,10 @@ func WaitIPAMPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration)
 func WaitIPAMPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
-		Target:  []string{InvalidIpamPoolIdNotFound},
+		Target:  []string{InvalidIPAMPoolIDNotFound},
 		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
 		Timeout: timeout,
-		Delay:   IpamPoolDeleteDelay,
+		Delay:   ipamPoolDeleteDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -396,8 +396,8 @@ func statusIPAMPoolStatus(conn *ec2.EC2, ipamPoolId string) resource.StateRefres
 
 		output, err := FindIPAMPoolById(conn, ipamPoolId)
 
-		if tfawserr.ErrCodeEquals(err, InvalidIpamPoolIdNotFound) {
-			return output, InvalidIpamPoolIdNotFound, nil
+		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
+			return output, InvalidIPAMPoolIDNotFound, nil
 		}
 
 		// there was an unhandled error in the Finder

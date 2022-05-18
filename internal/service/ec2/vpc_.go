@@ -471,7 +471,7 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteVpc(input)
 	}, ErrCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return nil
 	}
 

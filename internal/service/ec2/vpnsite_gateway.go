@@ -197,7 +197,7 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 	}, ErrCodeIncorrectState)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil
 	}
 
@@ -217,7 +217,7 @@ func attachVPNGatewayToVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	log.Printf("[INFO] Attaching EC2 VPN Gateway (%s) to VPC (%s)", vpnGatewayID, vpcID)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.AttachVpnGateway(input)
-	}, ErrCodeInvalidVpnGatewayIDNotFound)
+	}, errCodeInvalidVPNGatewayIDNotFound)
 
 	if err != nil {
 		return fmt.Errorf("error attaching EC2 VPN Gateway (%s) to VPC (%s): %w", vpnGatewayID, vpcID, err)
@@ -241,7 +241,7 @@ func detachVPNGatewayFromVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	log.Printf("[INFO] Detaching EC2 VPN Gateway (%s) from VPC (%s)", vpnGatewayID, vpcID)
 	_, err := conn.DetachVpnGateway(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayAttachmentNotFound, ErrCodeInvalidVpnGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayAttachmentNotFound, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil
 	}
 

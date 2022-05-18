@@ -51,7 +51,7 @@ func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 }
 
 const (
-	Ipam_service_principal = "ipam.amazonaws.com"
+	IPAMServicePrincipal = "ipam.amazonaws.com"
 )
 
 func resourceIPAMOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
@@ -81,7 +81,7 @@ func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta inter
 	org_conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.ListDelegatedAdministratorsInput{
-		ServicePrincipal: aws.String(Ipam_service_principal),
+		ServicePrincipal: aws.String(IPAMServicePrincipal),
 	}
 
 	output, err := org_conn.ListDelegatedAdministrators(input)
@@ -102,7 +102,7 @@ func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta inter
 	d.Set("delegated_admin_account_id", admin_account.Id)
 	d.Set("email", admin_account.Email)
 	d.Set("name", admin_account.Name)
-	d.Set("service_principal", Ipam_service_principal)
+	d.Set("service_principal", IPAMServicePrincipal)
 
 	return nil
 }

@@ -35,7 +35,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMOrganizationAdminAccountExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.Ipam_service_principal),
+					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("account/.+")),
 				),
 			},
@@ -58,7 +58,7 @@ func testAccCheckIPAMOrganizationAdminAccountDestroy(s *terraform.State) error {
 		id := rs.Primary.ID
 
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(tfec2.Ipam_service_principal),
+			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
 		}
 
 		output, err := conn.ListDelegatedAdministrators(input)
@@ -90,7 +90,7 @@ func testAccCheckIPAMOrganizationAdminAccountExists(n string, org *organizations
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(tfec2.Ipam_service_principal),
+			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
 		}
 
 		output, err := conn.ListDelegatedAdministrators(input)

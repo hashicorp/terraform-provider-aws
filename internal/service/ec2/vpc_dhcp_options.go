@@ -86,7 +86,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	dhcpConfigurations, err := optionsMap.resourceDataToDhcpConfigurations(d)
+	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
 
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 			VpcId:         aws.String(vpcID),
 		})
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 			continue
 		}
 
@@ -214,7 +214,7 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 		return conn.DeleteDhcpOptions(input)
 	}, ErrCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidDhcpOptionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
 		return nil
 	}
 
@@ -270,7 +270,7 @@ func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*
 }
 
 // resourceDataToNewDhcpConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
-func (m *dhcpOptionsMap) resourceDataToDhcpConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
+func (m *dhcpOptionsMap) resourceDataToDHCPConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
 	var output []*ec2.NewDhcpConfiguration
 
 	for tfName, apiName := range m.tfToApi {

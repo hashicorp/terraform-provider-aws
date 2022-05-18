@@ -71,12 +71,12 @@ func ResourceIPAM() *schema.Resource {
 }
 
 const (
-	IpamStatusAvailable   = "Available"
-	InvalidIpamIdNotFound = "InvalidIpamId.NotFound"
-	IpamCreateTimeout     = 3 * time.Minute
-	IpamCreateDeley       = 5 * time.Second
-	IpamDeleteTimeout     = 3 * time.Minute
-	IpamDeleteDelay       = 5 * time.Second
+	ipamStatusAvailable   = "Available"
+	invalidIPAMIDNotFound = "InvalidIpamId.NotFound"
+	ipamCreateTimeout     = 3 * time.Minute
+	ipamCreateDelay       = 5 * time.Second
+	IPAMDeleteTimeout     = 3 * time.Minute
+	ipamDeleteDelay       = 5 * time.Second
 )
 
 func resourceIPAMCreate(d *schema.ResourceData, meta interface{}) error {
@@ -108,7 +108,7 @@ func resourceIPAMCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.Ipam.IpamId))
 	log.Printf("[INFO] IPAM ID: %s", d.Id())
 
-	if _, err = WaitIPAMAvailable(conn, d.Id(), IpamCreateTimeout); err != nil {
+	if _, err = WaitIPAMAvailable(conn, d.Id(), ipamCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM (%s) to be Available: %w", d.Id(), err)
 	}
 
@@ -122,7 +122,7 @@ func resourceIPAMRead(d *schema.ResourceData, meta interface{}) error {
 
 	ipam, err := findIPAMById(conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
 		return err
 	}
 
@@ -223,8 +223,8 @@ func resourceIPAMDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting IPAM: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = WaiterIPAMDeleted(conn, d.Id(), IpamDeleteTimeout); err != nil {
-		if tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
+	if _, err = WaiterIPAMDeleted(conn, d.Id(), IPAMDeleteTimeout); err != nil {
+		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for IPAM (%s) to be deleted: %w", d.Id(), err)
@@ -257,7 +257,7 @@ func WaitIPAMAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 		Target:  []string{ec2.IpamStateCreateComplete},
 		Refresh: statusIPAMStatus(conn, ipamId),
 		Timeout: timeout,
-		Delay:   IpamCreateDeley,
+		Delay:   ipamCreateDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -272,10 +272,10 @@ func WaitIPAMAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 func WaiterIPAMDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
-		Target:  []string{InvalidIpamIdNotFound},
+		Target:  []string{invalidIPAMIDNotFound},
 		Refresh: statusIPAMStatus(conn, ipamId),
 		Timeout: timeout,
-		Delay:   IpamDeleteDelay,
+		Delay:   ipamDeleteDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -292,8 +292,8 @@ func statusIPAMStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
 
 		output, err := findIPAMById(conn, ipamId)
 
-		if tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
-			return output, InvalidIpamIdNotFound, nil
+		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
+			return output, invalidIPAMIDNotFound, nil
 		}
 
 		// there was an unhandled error in the Finder

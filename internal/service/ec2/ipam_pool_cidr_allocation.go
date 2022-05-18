@@ -87,7 +87,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 }
 
 const (
-	IpamPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
+	IPAMPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
 )
 
 func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface{}) error {
@@ -170,7 +170,7 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Releasing IPAM Pool CIDR Allocation: %s", input)
 	output, err := conn.ReleaseIpamPoolAllocation(input)
 	if err != nil || !aws.BoolValue(output.Success) {
-		if tfawserr.ErrCodeEquals(err, InvalidIpamPoolIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error releasing IPAM CIDR Allocation: (%s): %w", d.Id(), err)

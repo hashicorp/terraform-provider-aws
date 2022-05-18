@@ -65,11 +65,11 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 }
 
 const (
-	IpamPoolCidrCreateTimeout = 10 * time.Minute
+	ipamPoolCIDRCreateTimeout = 10 * time.Minute
 	// allocations releases are eventually consistent with a max time of 20m
-	IpamPoolCidrDeleteTimeout  = 32 * time.Minute
-	IpamPoolCidrAvailableDelay = 5 * time.Second
-	IpamPoolCidrDeleteDelay    = 5 * time.Second
+	ipamPoolCIDRDeleteTimeout  = 32 * time.Minute
+	ipamPoolCIDRAvailableDelay = 5 * time.Second
+	ipamPoolCIDRDeleteDelay    = 5 * time.Second
 )
 
 func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error {
@@ -97,7 +97,7 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 	cidr := aws.StringValue(output.IpamPoolCidr.Cidr)
 	id := encodeIPAMPoolCIDRId(cidr, pool_id)
 
-	if _, err = WaitIPAMPoolCIDRAvailable(conn, id, IpamPoolCidrCreateTimeout); err != nil {
+	if _, err = WaitIPAMPoolCIDRAvailable(conn, id, ipamPoolCIDRCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", id, err)
 	}
 
@@ -140,7 +140,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 		Cidr:       aws.String(cidr),
 		IpamPoolId: aws.String(pool_id),
 	}
-	return resource.Retry(IpamPoolCidrDeleteTimeout, func() *resource.RetryError {
+	return resource.Retry(ipamPoolCIDRDeleteTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Deprovisioning IPAM Pool Cidr: %s", input)
 		// releasing allocations is eventually consistent and can cause deprovisioning to fail
 		_, err = conn.DeprovisionIpamPoolCidr(input)
@@ -148,7 +148,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			// IncorrectState err can mean: State = "deprovisioned" || State = "pending-deprovision"
 			if tfawserr.ErrCodeEquals(err, "IncorrectState") {
-				output, err := WaitIPAMPoolCIDRDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
+				output, err := WaitIPAMPoolCIDRDeleted(conn, d.Id(), ipamPoolCIDRDeleteTimeout)
 				if err != nil {
 					// State = failed-deprovision
 					return resource.RetryableError(fmt.Errorf("Expected cidr to be deprovisioned but was in state %s", aws.StringValue(output.State)))
@@ -159,7 +159,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 			return resource.NonRetryableError(fmt.Errorf("error deprovisioning ipam pool cidr: (%s): %w", cidr, err))
 		}
 
-		output, err := WaitIPAMPoolCIDRDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
+		output, err := WaitIPAMPoolCIDRDeleted(conn, d.Id(), ipamPoolCIDRDeleteTimeout)
 		if err != nil {
 			// State = failed-deprovision
 			return resource.RetryableError(fmt.Errorf("Expected cidr to be deprovisioned but was in state %s", aws.StringValue(output.State)))
@@ -203,7 +203,7 @@ func WaitIPAMPoolCIDRAvailable(conn *ec2.EC2, id string, timeout time.Duration) 
 		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
 		Refresh: statusIPAMPoolCIDRStatus(conn, id),
 		Timeout: timeout,
-		Delay:   IpamPoolCidrAvailableDelay,
+		Delay:   ipamPoolCIDRAvailableDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -221,7 +221,7 @@ func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*
 		Target:  []string{ec2.IpamPoolCidrStateDeprovisioned},
 		Refresh: statusIPAMPoolCIDRStatus(conn, id),
 		Timeout: timeout,
-		Delay:   IpamPoolCidrDeleteDelay,
+		Delay:   ipamPoolCIDRDeleteDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

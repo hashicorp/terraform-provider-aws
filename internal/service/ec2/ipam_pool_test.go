@@ -155,7 +155,7 @@ func testAccCheckIPAMPoolDestroy(s *terraform.State) error {
 
 		id := rs.Primary.ID
 
-		if _, err := tfec2.WaitIPAMPoolDeleted(conn, id, tfec2.IpamPoolDeleteTimeout); err != nil {
+		if _, err := tfec2.WaitIPAMPoolDeleted(conn, id, tfec2.IPAMPoolDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}

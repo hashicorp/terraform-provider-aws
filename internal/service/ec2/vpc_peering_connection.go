@@ -259,7 +259,7 @@ func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}
 		VpcPeeringConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCPeeringConnectionIDNotFound) {
 		return nil
 	}
 

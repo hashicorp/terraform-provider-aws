@@ -76,7 +76,7 @@ func testAccCheckIPAMProvisionedPoolCIDRDestroy(s *terraform.State) error {
 			return fmt.Errorf("error decoding ID (%s): %w", id, err)
 		}
 
-		if _, err = tfec2.WaitIPAMPoolDeleted(conn, pool_id, tfec2.IpamPoolDeleteTimeout); err != nil {
+		if _, err = tfec2.WaitIPAMPoolDeleted(conn, pool_id, tfec2.IPAMPoolDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}

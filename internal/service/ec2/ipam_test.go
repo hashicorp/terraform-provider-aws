@@ -176,7 +176,7 @@ func testAccCheckIPAMDestroy(s *terraform.State) error {
 
 		id := aws.String(rs.Primary.ID)
 
-		if _, err := tfec2.WaiterIPAMDeleted(conn, *id, tfec2.IpamDeleteTimeout); err != nil {
+		if _, err := tfec2.WaiterIPAMDeleted(conn, *id, tfec2.IPAMDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}

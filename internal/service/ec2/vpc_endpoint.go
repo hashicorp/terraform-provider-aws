@@ -390,7 +390,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointNotFound) {
 		return nil
 	}
 

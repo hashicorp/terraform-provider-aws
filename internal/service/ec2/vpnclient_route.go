@@ -82,7 +82,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Creating EC2 Client VPN Route: %s", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.CreateClientVpnRoute(input)
-	}, ErrCodeInvalidClientVpnActiveAssociationNotFound)
+	}, errCodeInvalidClientVPNActiveAssociationNotFound)
 
 	if err != nil {
 		return fmt.Errorf("error creating EC2 Client VPN Route (%s): %w", id, err)
@@ -144,7 +144,7 @@ func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) erro
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound, ErrCodeInvalidClientVpnRouteNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound, errCodeInvalidClientVPNRouteNotFound) {
 		return nil
 	}
 

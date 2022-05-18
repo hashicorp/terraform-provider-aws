@@ -183,7 +183,7 @@ func deleteVPCEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, sec
 	log.Printf("[DEBUG] Deleting VPC Endpoint Security Group Association: %s", input)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound, ErrCodeInvalidGroupNotFound, ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIDNotFound, ErrCodeInvalidGroupNotFound, ErrCodeInvalidParameter) {
 		return nil
 	}
 

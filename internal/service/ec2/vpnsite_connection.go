@@ -542,41 +542,41 @@ func ResourceVPNConnection() *schema.Resource {
 
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
 var (
-	defaultVPNTunnelOptionsDPDTimeoutAction           = VpnTunnelOptionsDPDTimeoutActionClear
+	defaultVPNTunnelOptionsDPDTimeoutAction           = vpnTunnelOptionsDPDTimeoutActionClear
 	defaultVPNTunnelOptionsDPDTimeoutSeconds          = 30
-	defaultVPNTunnelOptionsIKEVersions                = []string{VpnTunnelOptionsIKEVersion1, VpnTunnelOptionsIKEVersion2}
+	defaultVPNTunnelOptionsIKEVersions                = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
 	defaultVPNTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
 	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms = []string{
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
 	}
 	defaultVPNTunnelOptionsPhase1IntegrityAlgorithms = []string{
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
 	}
 	defaultVPNTunnelOptionsPhase1LifetimeSeconds      = 28800
 	defaultVPNTunnelOptionsPhase2DHGroupNumbers       = []int{2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
 	defaultVPNTunnelOptionsPhase2EncryptionAlgorithms = []string{
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
 	}
 	defaultVPNTunnelOptionsPhase2IntegrityAlgorithms = []string{
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
 	}
 	defaultVPNTunnelOptionsPhase2LifetimeSeconds  = 3600
 	defaultVPNTunnelOptionsRekeyFuzzPercentage    = 100
 	defaultVPNTunnelOptionsRekeyMarginTimeSeconds = 540
 	defaultVPNTunnelOptionsReplayWindowSize       = 1024
-	defaultVPNTunnelOptionsStartupAction          = VpnTunnelOptionsStartupActionAdd
+	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
 )
 
 func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
@@ -860,7 +860,7 @@ func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error
 		VpnConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return nil
 	}
 

@@ -288,7 +288,7 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteNetworkAcl(input)
 	}, ErrCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound) {
 		return nil
 	}
 

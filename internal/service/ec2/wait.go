@@ -1815,7 +1815,7 @@ func WaitVPNConnectionDeleted(conn *ec2.EC2, id string) (*ec2.VpnConnection, err
 
 func WaitVPNConnectionUpdated(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VpnStateModifying},
+		Pending:    []string{vpnStateModifying},
 		Target:     []string{ec2.VpnStateAvailable},
 		Refresh:    StatusVPNConnectionState(conn, id),
 		Timeout:    vpnConnectionUpdatedTimeout,

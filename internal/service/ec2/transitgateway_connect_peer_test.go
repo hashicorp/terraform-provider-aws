@@ -82,7 +82,7 @@ func testAccTransitGatewayConnectPeerConfig_bgpASN(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerConfig_bgpAsn2(rName, "4294967294"),
+				Config: testAccTransitGatewayConnectPeerConfig_bgpASN2(rName, "4294967294"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "4294967294"),
@@ -292,7 +292,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayConnectPeerConfig_bgpAsn2(rName string, bgpAsn string) string {
+func testAccTransitGatewayConnectPeerConfig_bgpASN2(rName string, bgpAsn string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

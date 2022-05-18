@@ -210,7 +210,7 @@ func FindClientVPNEndpoints(conn *ec2.EC2, input *ec2.DescribeClientVpnEndpoints
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -303,7 +303,7 @@ func FindClientVPNAuthorizationRules(conn *ec2.EC2, input *ec2.DescribeClientVpn
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -369,7 +369,7 @@ func FindClientVPNNetworkAssociations(conn *ec2.EC2, input *ec2.DescribeClientVp
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound, ErrCodeInvalidClientVpnAssociationIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound, errCodeInvalidClientVPNAssociationIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -449,7 +449,7 @@ func FindClientVPNRoutes(conn *ec2.EC2, input *ec2.DescribeClientVpnRoutesInput)
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1150,7 +1150,7 @@ func FindNetworkACLs(conn *ec2.EC2, input *ec2.DescribeNetworkAclsInput) ([]*ec2
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2165,7 +2165,7 @@ func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, erro
 
 	output, err := conn.DescribeVpcAttribute(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return false, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2204,7 +2204,7 @@ func FindVPCClassicLinkEnabled(conn *ec2.EC2, vpcID string) (bool, error) {
 
 	output, err := conn.DescribeVpcClassicLink(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound, ErrCodeUnsupportedOperation) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound, ErrCodeUnsupportedOperation) {
 		return false, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2242,7 +2242,7 @@ func FindVPCClassicLinkDNSSupported(conn *ec2.EC2, vpcID string) (bool, error) {
 
 	output, err := conn.DescribeVpcClassicLinkDnsSupport(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound, ErrCodeUnsupportedOperation) ||
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound, ErrCodeUnsupportedOperation) ||
 		tfawserr.ErrMessageContains(err, ErrCodeAuthFailure, "This request has been administratively disabled") {
 		return false, &resource.NotFoundError{
 			LastError:   err,
@@ -2309,7 +2309,7 @@ func FindVPCs(conn *ec2.EC2, input *ec2.DescribeVpcsInput) ([]*ec2.Vpc, error) {
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2480,7 +2480,7 @@ func FindVPCEndpoints(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) ([]*e
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2614,7 +2614,7 @@ func FindVPCPeeringConnections(conn *ec2.EC2, input *ec2.DescribeVpcPeeringConne
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCPeeringConnectionIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2734,7 +2734,7 @@ func FindVPNGatewayByID(conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
 func FindVPNGateway(conn *ec2.EC2, input *ec2.DescribeVpnGatewaysInput) (*ec2.VpnGateway, error) {
 	output, err := conn.DescribeVpnGateways(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2840,7 +2840,7 @@ func FindVPNConnectionByID(conn *ec2.EC2, id string) (*ec2.VpnConnection, error)
 func FindVPNConnection(conn *ec2.EC2, input *ec2.DescribeVpnConnectionsInput) (*ec2.VpnConnection, error) {
 	output, err := conn.DescribeVpnConnections(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -3761,7 +3761,7 @@ func FindDHCPOptionses(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) ([]*e
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidDhcpOptionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
