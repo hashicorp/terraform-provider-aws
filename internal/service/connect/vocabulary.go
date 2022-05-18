@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,9 +21,13 @@ import (
 
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceVocabularyRead,
+		CreateContext: resourceVocabularyCreate,
+		ReadContext:   resourceVocabularyRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(connectVocabularyCreatedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -76,6 +81,49 @@ func ResourceVocabulary() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	vocabularyName := d.Get("name").(string)
+
+	input := &connect.CreateVocabularyInput{
+		ClientToken:    aws.String(resource.UniqueId()),
+		InstanceId:     aws.String(instanceID),
+		Content:        aws.String(d.Get("content").(string)),
+		LanguageCode:   aws.String(d.Get("language_code").(string)),
+		VocabularyName: aws.String(vocabularyName),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect Security Profile %s", input)
+	output, err := conn.CreateVocabularyWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): %w", vocabularyName, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): empty output", vocabularyName))
+	}
+
+	vocabularyID := aws.StringValue(output.VocabularyId)
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, vocabularyID))
+
+	// waiter since the status changes from CREATION_IN_PROGRESS to either ACTIVE or CREATION_FAILED
+	if _, err := waitVocabularyCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), instanceID, vocabularyID); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Vocabulary (%s) creation: %w", d.Id(), err))
+	}
+
+	return resourceVocabularyRead(ctx, d, meta)
 }
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
