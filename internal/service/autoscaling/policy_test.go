@@ -32,26 +32,30 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "adjustment_type", "ChangeInCapacity"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "300"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "name", rName+"-simple"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "scaling_adjustment", "2"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "autoscaling_group_name", rName),
+					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "300"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "name", rName+"-simple"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "scaling_adjustment", "2"),
 
 					testAccCheckScalingPolicyExists(resourceStepName, &v),
 					resource.TestCheckResourceAttr(resourceStepName, "adjustment_type", "ChangeInCapacity"),
-					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
-					resource.TestCheckResourceAttr(resourceStepName, "name", rName+"-step"),
-					resource.TestCheckResourceAttr(resourceStepName, "metric_aggregation_type", "Minimum"),
-					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr(resourceStepName, "autoscaling_group_name", rName),
+					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "200"),
+					resource.TestCheckResourceAttr(resourceStepName, "metric_aggregation_type", "Minimum"),
+					resource.TestCheckResourceAttr(resourceStepName, "name", rName+"-step"),
+					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
 						"scaling_adjustment": "1",
 					}),
+
 					testAccCheckScalingPolicyExists(resourceTargetTrackingName, &v),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "name", rName+"-tracking"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "autoscaling_group_name", rName),
+					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, "name", rName+"-tracking"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.predefined_metric_specification.#", "1"),
@@ -81,15 +85,20 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basicUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
-					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "30"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
+
 					testAccCheckScalingPolicyExists(resourceStepName, &v),
-					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "20"),
+					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
 						"scaling_adjustment": "10",
 					}),
+
 					testAccCheckScalingPolicyExists(resourceTargetTrackingName, &v),
+					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "1"),
@@ -520,6 +529,7 @@ resource "aws_autoscaling_policy" "test_step" {
   policy_type               = "StepScaling"
   estimated_instance_warmup = 200
   metric_aggregation_type   = "Minimum"
+  enabled                   = false
 
   step_adjustment {
     scaling_adjustment          = 1
@@ -533,6 +543,7 @@ resource "aws_autoscaling_policy" "test_tracking" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
   autoscaling_group_name = aws_autoscaling_group.test.name
+  enabled                = true
 
   target_tracking_configuration {
     predefined_metric_specification {
@@ -697,6 +708,7 @@ resource "aws_autoscaling_policy" "test_step" {
   policy_type               = "StepScaling"
   estimated_instance_warmup = 20
   metric_aggregation_type   = "Minimum"
+  enabled                   = true
 
   step_adjustment {
     scaling_adjustment          = 10
@@ -710,6 +722,7 @@ resource "aws_autoscaling_policy" "test_tracking" {
   name                   = "%[1]s-tracking"
   policy_type            = "TargetTrackingScaling"
   autoscaling_group_name = aws_autoscaling_group.test.name
+  enabled                = false
 
   target_tracking_configuration {
     customized_metric_specification {

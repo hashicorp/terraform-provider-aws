@@ -52,6 +52,11 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"estimated_instance_warmup": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -448,14 +453,15 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", p.PolicyARN)
 	d.Set("autoscaling_group_name", p.AutoScalingGroupName)
 	d.Set("cooldown", p.Cooldown)
+	d.Set("enabled", p.Enabled)
 	d.Set("estimated_instance_warmup", p.EstimatedInstanceWarmup)
 	d.Set("metric_aggregation_type", p.MetricAggregationType)
+	d.Set("name", p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
 	if p.MinAdjustmentMagnitude != nil {
 		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 	}
 
-	d.Set("name", p.PolicyName)
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
 		return fmt.Errorf("error setting predictive_scaling_configuration: %s", err)
@@ -576,6 +582,7 @@ func FindScalingPolicy(conn *autoscaling.AutoScaling, asgName, policyName string
 func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPolicyInput, error) {
 	var params = &autoscaling.PutScalingPolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		Enabled:              aws.Bool(d.Get("enabled").(bool)),
 		PolicyName:           aws.String(d.Get("name").(string)),
 	}
 
