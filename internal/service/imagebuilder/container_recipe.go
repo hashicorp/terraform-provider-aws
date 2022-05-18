@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -413,14 +412,6 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("owner", containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
-
-	// platform override is only used when the parent image is an ECR uri
-	// the only way to know if an ECR uri is passed is to determine if the
-	// parent image is not a valid ARN
-	_, errArnParse := arn.Parse(*containerRecipe.ParentImage)
-	if errArnParse != nil {
-		d.Set("platform_override", containerRecipe.Platform)
-	}
 
 	tags := KeyValueTags(containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

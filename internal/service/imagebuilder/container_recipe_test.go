@@ -562,9 +562,10 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_override"},
 			},
 		},
 	})
@@ -590,9 +591,10 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux_wrong_parent_ima
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_override"},
 			},
 		},
 	})
@@ -618,9 +620,10 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux_without_override
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_override"},
 			},
 		},
 	})
@@ -650,7 +653,7 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"image_os_version_override"},
+				ImportStateVerifyIgnore: []string{"platform_override", "image_os_version_override"},
 			},
 		},
 	})
@@ -680,7 +683,7 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows_without_platfo
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"image_os_version_override"},
+				ImportStateVerifyIgnore: []string{"platform_override", "image_os_version_override"},
 			},
 		},
 	})
@@ -710,7 +713,7 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows_without_image_
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"image_os_version_override"},
+				ImportStateVerifyIgnore: []string{"platform_override", "image_os_version_override"},
 			},
 		},
 	})
