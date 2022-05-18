@@ -172,7 +172,7 @@ func testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(v *ec2.VpcEn
 	}
 }
 
-func testAccVPCEndpointSecurityGroupAssociationConfig_ase(rName string) string {
+func testAccVPCEndpointSecurityGroupAssociationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -208,7 +208,7 @@ resource "aws_vpc_endpoint" "test" {
 
 func testAccVPCEndpointSecurityGroupAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEndpointSecurityGroupAssociationConfig_ase(rName),
+		testAccVPCEndpointSecurityGroupAssociationConfig_base(rName),
 		`
 resource "aws_vpc_endpoint_security_group_association" "test" {
   vpc_endpoint_id   = aws_vpc_endpoint.test.id
@@ -219,7 +219,7 @@ resource "aws_vpc_endpoint_security_group_association" "test" {
 
 func testAccVPCEndpointSecurityGroupAssociationConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEndpointSecurityGroupAssociationConfig_ase(rName),
+		testAccVPCEndpointSecurityGroupAssociationConfig_base(rName),
 		`
 resource "aws_vpc_endpoint_security_group_association" "test" {
   count = length(aws_security_group.test)
@@ -232,7 +232,7 @@ resource "aws_vpc_endpoint_security_group_association" "test" {
 
 func testAccVPCEndpointSecurityGroupAssociationConfig_replaceDefaultAssociation(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEndpointSecurityGroupAssociationConfig_ase(rName),
+		testAccVPCEndpointSecurityGroupAssociationConfig_base(rName),
 		`
 resource "aws_vpc_endpoint_security_group_association" "test" {
   vpc_endpoint_id   = aws_vpc_endpoint.test.id
