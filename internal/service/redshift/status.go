@@ -38,3 +38,35 @@ func statusClusterAvailabilityZoneRelocation(conn *redshift.Redshift, id string)
 		return output, aws.StringValue(output.AvailabilityZoneRelocationStatus), nil
 	}
 }
+
+func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindClusterByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ClusterStatus), nil
+	}
+}
+
+func statusClusterAqua(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindClusterByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.AquaConfiguration.AquaStatus), nil
+	}
+}

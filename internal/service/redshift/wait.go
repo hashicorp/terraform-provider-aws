@@ -90,3 +90,43 @@ func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*r
 
 	return nil, err
 }
+
+func waitClusterRebooted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{clusterStatusRebooting},
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusCluster(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterAquaApplied(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{redshift.AquaStatusApplying},
+		Target:     []string{redshift.AquaStatusDisabled, redshift.AquaStatusEnabled},
+		Refresh:    statusClusterAqua(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}

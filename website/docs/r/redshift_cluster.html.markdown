@@ -51,13 +51,15 @@ The following arguments are supported:
   Format: ddd:hh24:mi-ddd:hh24:mi
 * `cluster_parameter_group_name` - (Optional) The name of the parameter group to be associated with this cluster.
 * `automated_snapshot_retention_period` - (Optional) The number of days that automated snapshots are retained. If the value is 0, automated snapshots are disabled. Even if automated snapshots are disabled, you can still create manual snapshots when you want with create-cluster-snapshot. Default is 1.
-* `port` - (Optional) The port number on which the cluster accepts incoming connections.
+* `port` - (Optional) The port number on which the cluster accepts incoming connections. Valid values are between `1115` and `65535`.
   The cluster is accessible only via the JDBC and ODBC connection strings.
   Part of the connection string requires the port on which the cluster will listen for incoming connections.
-  Default port is 5439.
+  Default port is `5439`.
 * `cluster_version` - (Optional) The version of the Amazon Redshift engine software that you want to deploy on the cluster.
   The version selected runs on all the nodes in the cluster.
-* `allow_version_upgrade` - (Optional) If true , major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. Default is true
+* `allow_version_upgrade` - (Optional) If true , major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. Default is `true`.
+* `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `aqua_configuration_status` - (Optional) The value represents how the cluster is configured to use AQUA (Advanced Query Accelerator) after the cluster is restored. Possible values are `enabled`, `disabled`, and `auto`. Requires Cluster reboot.
 * `number_of_nodes` - (Optional) The number of compute nodes in the cluster. This parameter is required when the ClusterType parameter is specified as multi-node. Default is 1.
 * `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `true`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
