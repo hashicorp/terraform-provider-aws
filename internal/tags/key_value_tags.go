@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	awsTagKeyPrefix                             = `aws:` // nosemgrep:aws-in-func-name,aws-in-var-name
+	awsTagKeyPrefix                             = `aws:` // nosemgrep:aws-in-const-name,aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	RdsTagKeyPrefix                             = `rds:`
