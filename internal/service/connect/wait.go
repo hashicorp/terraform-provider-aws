@@ -42,7 +42,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId 
 func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.InstanceStatusActive},
-		Target:  []string{InstanceStatusStatusNotFound},
+		Target:  []string{connect.ErrCodeResourceNotFoundException},
 		Refresh: statusInstance(ctx, conn, instanceId),
 		Timeout: instanceDeletedTimeout,
 	}
