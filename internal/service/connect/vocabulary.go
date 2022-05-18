@@ -23,6 +23,7 @@ func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceVocabularyCreate,
 		ReadContext:   resourceVocabularyRead,
+		UpdateContext: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
