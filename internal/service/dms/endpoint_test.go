@@ -1985,7 +1985,6 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "mysql"
-
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
 
