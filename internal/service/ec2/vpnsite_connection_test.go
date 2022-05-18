@@ -1032,7 +1032,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNConnection_withStaticRoutes(t *testing.T) {
+func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1060,7 +1060,7 @@ func TestAccSiteVPNConnection_withStaticRoutes(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNConnection_withEnableAcceleration(t *testing.T) {
+func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1088,7 +1088,7 @@ func TestAccSiteVPNConnection_withEnableAcceleration(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNConnection_withIPv6(t *testing.T) {
+func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"

@@ -97,7 +97,7 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNGateway_withAmazonSideASN(t *testing.T) {
+func TestAccSiteVPNGateway_amazonSideASN(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

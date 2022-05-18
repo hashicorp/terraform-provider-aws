@@ -155,7 +155,7 @@ func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfig4ByteASN(rName, rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_4ByteASN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
@@ -326,7 +326,7 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccCustomerGatewayConfig4ByteASN(rName, rBgpAsn string) string {
+func testAccSiteVPNCustomerGatewayConfig_4ByteASN(rName, rBgpAsn string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]q

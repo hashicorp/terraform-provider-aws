@@ -261,7 +261,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ValidateFunc: validVPNConnection(),
+				ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
 			},
 			"tunnel1_rekey_fuzz_percentage": {
 				Type:         schema.TypeInt,
@@ -441,7 +441,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ValidateFunc: validVPNConnection(),
+				ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
 			},
 			"tunnel2_rekey_fuzz_percentage": {
 				Type:         schema.TypeInt,
@@ -1458,7 +1458,7 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 	return tunnelInfo, nil
 }
 
-func validVPNConnection() schema.SchemaValidateFunc {
+func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
 		validation.StringDoesNotMatch(regexp.MustCompile(`^0`), "cannot start with zero character"),
