@@ -23,7 +23,7 @@ func ResourceContainerRecipe() *schema.Resource {
 		Update: resourceContainerRecipeUpdate,
 		Delete: resourceContainerRecipeDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
