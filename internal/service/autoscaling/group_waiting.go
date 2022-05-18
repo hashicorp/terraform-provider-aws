@@ -148,7 +148,7 @@ func isELBCapacitySatisfied(d *schema.ResourceData, meta interface{}, g *autosca
 			}
 		}
 		if inAllLbs {
-			haveELB++
+			haveELB += capacity
 		}
 	}
 
