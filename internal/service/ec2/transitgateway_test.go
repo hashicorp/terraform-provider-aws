@@ -30,8 +30,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"ConnectPeer": {
 			"basic":                 testAccTransitGatewayConnectPeer_basic,
 			"disappears":            testAccTransitGatewayConnectPeer_disappears,
-			"BgpAsn":                testAccTransitGatewayConnectPeerConfig_bgpASN,
-			"InsideCidrBlocks":      testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks,
+			"BgpAsn":                testAccTransitGatewayConnectPeer_bgpASN,
+			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
 			"Tags":                  testAccTransitGatewayConnectPeer_tags,
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},

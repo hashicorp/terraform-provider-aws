@@ -70,7 +70,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnectPeerConfig_bgpASN(t *testing.T) {
+func testAccTransitGatewayConnectPeer_bgpASN(t *testing.T) {
 	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -92,7 +92,7 @@ func testAccTransitGatewayConnectPeerConfig_bgpASN(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks(t *testing.T) {
+func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T) {
 	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
