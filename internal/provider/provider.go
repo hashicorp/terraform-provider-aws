@@ -184,7 +184,6 @@ import (
 func Provider() *schema.Provider {
 	// TODO: Move the validation to this, requires conditional schemas
 	// TODO: Move the configuration to this, requires validation
-	log.Printf("YOOOO")
 	// The actual provider
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
