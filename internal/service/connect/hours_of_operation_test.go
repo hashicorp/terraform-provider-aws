@@ -34,6 +34,9 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalDescription := "original description"
+	updatedDescription := "updated description"
+
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
@@ -43,18 +46,37 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Created"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
+						"day":                  "MONDAY",
+						"end_time.#":           "1",
+						"end_time.0.hours":     "23",
+						"end_time.0.minutes":   "8",
+						"start_time.#":         "1",
+						"start_time.0.hours":   "8",
+						"start_time.0.minutes": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
+						"day":                  "TUESDAY",
+						"end_time.#":           "1",
+						"end_time.0.hours":     "21",
+						"end_time.0.minutes":   "0",
+						"start_time.#":         "1",
+						"start_time.0.hours":   "9",
+						"start_time.0.minutes": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "time_zone", "EST"),
 				),
 			},
 			{
@@ -63,18 +85,37 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Updated"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
+						"day":                  "MONDAY",
+						"end_time.#":           "1",
+						"end_time.0.hours":     "23",
+						"end_time.0.minutes":   "8",
+						"start_time.#":         "1",
+						"start_time.0.hours":   "8",
+						"start_time.0.minutes": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
+						"day":                  "TUESDAY",
+						"end_time.#":           "1",
+						"end_time.0.hours":     "21",
+						"end_time.0.minutes":   "0",
+						"start_time.#":         "1",
+						"start_time.0.hours":   "9",
+						"start_time.0.minutes": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "time_zone", "EST"),
 				),
 			},
 		},
