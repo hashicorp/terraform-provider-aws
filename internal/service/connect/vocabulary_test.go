@@ -18,7 +18,8 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectVocabulary_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccVocabulary_basic,
+		"basic":      testAccVocabulary_basic,
+		"disappears": testAccVocabulary_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -65,6 +66,34 @@ func testAccVocabulary_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccVocabulary_disappears(t *testing.T) {
+	var v connect.DescribeVocabularyOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	content := "Phrase\tIPA\tSoundsLike\tDisplayAs\nLos-Angeles\t\t\tLos Angeles\nF.B.I.\tɛ f b i aɪ\t\tFBI\nEtienne\t\teh-tee-en\t"
+	languageCode := "en-US"
+
+	resourceName := "aws_connect_vocabulary.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVocabularyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVocabularyBasicConfig(rName, rName2, content, languageCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceVocabulary(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
