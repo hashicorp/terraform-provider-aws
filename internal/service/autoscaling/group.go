@@ -552,6 +552,11 @@ func ResourceGroup() *schema.Resource {
 										Default:      90,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
+									"skip_matching": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 								},
 							},
 						},
@@ -2277,6 +2282,10 @@ func expandGroupInstanceRefreshPreferences(l []interface{}) *autoscaling.Refresh
 
 	if v, ok := m["min_healthy_percentage"]; ok {
 		refreshPreferences.MinHealthyPercentage = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := m["skip_matching"]; ok {
+		refreshPreferences.SkipMatching = aws.Bool(v.(bool))
 	}
 
 	return refreshPreferences
