@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -108,9 +109,9 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateDeviceFleet(input)
-	})
+	}, "ValidationException")
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker Device Fleet %s: %w", name, err)
 	}

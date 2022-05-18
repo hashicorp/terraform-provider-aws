@@ -152,7 +152,7 @@ func testAccStreamImportStateIdFunc(resourceName string) resource.ImportStateIdF
 	}
 }
 
-func TestValidateCloudWatchLogStreamName(t *testing.T) {
+func TestValidateStreamName(t *testing.T) {
 	validNames := []string{
 		"test-log-stream",
 		"my_sample_log_stream",

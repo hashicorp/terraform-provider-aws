@@ -25,14 +25,18 @@ resource "aws_organizations_account" "account" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `name` - (Required) A friendly name for the member account.
-* `email` - (Required) The email address of the owner to assign to the new member account. This email address must not already be associated with another AWS account.
+* `email` - (Required) Email address of the owner to assign to the new member account. This email address must not already be associated with another AWS account.
+* `name` - (Required) Friendly name for the member account.
+
+The following arguments are optional:
+
+* `close_on_deletion` - (Optional) If true, a deletion event will close the account. Otherwise, it will only remove from the organization. This is not supported for GovCloud accounts.
+* `create_govcloud` - (Optional) Whether to also create a GovCloud account. The GovCloud account is tied to the main (commercial) account this resource creates. If `true`, the GovCloud account ID is available in the `govcloud_id` attribute. The only way to manage the GovCloud account with Terraform is to subsequently import the account using this resource.
 * `iam_user_access_to_billing` - (Optional) If set to `ALLOW`, the new account enables IAM users to access account billing information if they have the required permissions. If set to `DENY`, then only the root user of the new account can access account billing information.
 * `parent_id` - (Optional) Parent Organizational Unit ID or Root ID for the account. Defaults to the Organization default Root ID. A configuration must be present for this argument to perform drift detection.
 * `role_name` - (Optional) The name of an IAM role that Organizations automatically preconfigures in the new member account. This role trusts the master account, allowing users in the master account to assume the role, as permitted by the master account administrator. The role has administrator permissions in the new member account. The Organizations API provides no method for reading this information after account creation, so Terraform cannot perform drift detection on its value and will always show a difference for a configured value after import unless [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is used.
-* `close_on_deletion` - (Optional) If true, a deletion event will close the account. Otherwise, it will only remove from the organization.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
@@ -40,6 +44,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN for this account.
+* `govcloud_id` - ID for a GovCloud account created with the account.
 * `id` - The AWS account id
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

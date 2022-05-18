@@ -17,16 +17,11 @@ import (
 )
 
 func testAccPreCheck(t *testing.T) {
-	// Checking for service fails in all partitions!
-	// acctest.PreCheckPartitionHasService(keyspaces.EndpointsID, t)
-
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("Keyspaces is not supported in %s partition", got)
-	}
+	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 }
 
 func TestAccKeyspacesKeyspace_basic(t *testing.T) {
-	rName := "tf_test_" + sdkacctest.RandString(8)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,7 +49,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 }
 
 func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
-	rName := "tf_test_" + sdkacctest.RandString(8)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -76,7 +71,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 }
 
 func TestAccKeyspacesKeyspace_tags(t *testing.T) {
-	rName := "tf_test_" + sdkacctest.RandString(8)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{

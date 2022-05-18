@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppFlowFlow_basic(t *testing.T) {
@@ -23,10 +24,10 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
@@ -67,10 +68,10 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 	description := "test description"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
@@ -97,10 +98,10 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_tags1(rSourceName, rDestinationName, rFlowName, "key1", "value1"),
@@ -144,10 +145,10 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
@@ -482,9 +483,10 @@ func testAccCheckFlowDestroy(s *terraform.State) error {
 
 		_, err := tfappflow.FindFlowByArn(context.Background(), conn, rs.Primary.ID)
 
-		if _, ok := err.(*resource.NotFoundError); ok {
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}

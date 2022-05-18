@@ -235,7 +235,7 @@ func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	})
 }
 
-func TestDiffWafIpSetDescriptors(t *testing.T) {
+func TestDiffIPSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}

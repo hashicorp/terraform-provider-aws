@@ -253,7 +253,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == elasticacheDefaultRedisPort {
+					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
 						return true
 					}
 					return false

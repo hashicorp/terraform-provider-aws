@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
@@ -27,10 +28,10 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 	resourceName := "aws_appflow_connector_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectorProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConnectorProfile_basic(rName),
@@ -66,10 +67,10 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 	testPrefix := "test-prefix"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectorProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConnectorProfile_basic(rName),
@@ -99,10 +100,10 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	resourceName := "aws_appflow_connector_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectorProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectorProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConnectorProfile_basic(rName),
@@ -126,7 +127,7 @@ func testAccCheckConnectorProfileDestroy(s *terraform.State) error {
 
 		_, err := tfappflow.FindConnectorProfileByArn(context.Background(), conn, rs.Primary.ID)
 
-		if _, ok := err.(*resource.NotFoundError); ok {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
