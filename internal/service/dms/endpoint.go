@@ -620,28 +620,6 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch d.Get("engine_name").(string) {
-	case engineNameAurora:
-		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			request.MySQLSettings = &dms.MySQLSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-			}
-		} else {
-			request.MySQLSettings = &dms.MySQLSettings{
-				Username:     aws.String(d.Get("username").(string)),
-				Password:     aws.String(d.Get("password").(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int64(int64(d.Get("port").(int))),
-				DatabaseName: aws.String(d.Get("database_name").(string)),
-			}
-
-			// Set connection info in top-level namespace as well
-			request.Username = aws.String(d.Get("username").(string))
-			request.Password = aws.String(d.Get("password").(string))
-			request.ServerName = aws.String(d.Get("server_name").(string))
-			request.Port = aws.Int64(int64(d.Get("port").(int)))
-			request.DatabaseName = aws.String(d.Get("database_name").(string))
-		}
 	case engineNameDynamoDB:
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
@@ -680,6 +658,8 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.ServerName = aws.String(d.Get("server_name").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
+	case engineNameAurora:
+		fallthrough
 	case engineNameMySQL:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			request.MySQLSettings = &dms.MySQLSettings{
@@ -947,6 +927,36 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			request.Port = aws.Int64(int64(d.Get("port").(int)))
 			request.DatabaseName = aws.String(d.Get("database_name").(string))
 
+			hasChanges = true
+		}
+	case engineNameAurora:
+		fallthrough
+	case engineNameMySQL:
+		if d.HasChanges(
+			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+			"secrets_manager_arn") {
+			if _, ok := d.GetOk("secrets_manager_arn"); ok {
+				request.MySQLSettings = &dms.MySQLSettings{
+					SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+					SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				}
+			} else {
+				request.MySQLSettings = &dms.MySQLSettings{
+					Username:     aws.String(d.Get("username").(string)),
+					Password:     aws.String(d.Get("password").(string)),
+					ServerName:   aws.String(d.Get("server_name").(string)),
+					Port:         aws.Int64(int64(d.Get("port").(int))),
+					DatabaseName: aws.String(d.Get("database_name").(string)),
+				}
+				request.EngineName = aws.String(d.Get("engine_name").(string))
+
+				// Update connection info in top-level namespace as well
+				request.Username = aws.String(d.Get("username").(string))
+				request.Password = aws.String(d.Get("password").(string))
+				request.ServerName = aws.String(d.Get("server_name").(string))
+				request.Port = aws.Int64(int64(d.Get("port").(int)))
+				request.DatabaseName = aws.String(d.Get("database_name").(string))
+			}
 			hasChanges = true
 		}
 	case engineNameOracle:

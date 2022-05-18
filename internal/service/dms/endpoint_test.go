@@ -97,15 +97,12 @@ func TestAccDMSEndpoint_Aurora_secretID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_access_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_arn"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -645,15 +642,12 @@ func TestAccDMSEndpoint_MySQL_secretID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_access_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_arn"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
