@@ -270,6 +270,47 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_deprecatedTags(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfigDeprecatedTags1(rName, "key1", "value1", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tag.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tags.*", map[string]string{
+						"key":                 "key1",
+						"value":               "value1",
+						"propagate_at_launch": "true",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_simple(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4207,49 +4248,6 @@ func testAccCheckGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) reso
 	}
 }
 
-// testAccCheckTags can be used to check the tags on a resource.
-func testAccCheckTags(ts *[]*autoscaling.TagDescription, key string, expected map[string]interface{}) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := tagDescriptionsToMap(ts)
-		v, ok := m[key]
-		if !ok {
-			return fmt.Errorf("Missing tag: %s", key)
-		}
-
-		if v["value"] != expected["value"].(string) ||
-			v["propagate_at_launch"] != expected["propagate_at_launch"].(bool) {
-			return fmt.Errorf("%s: bad value: %s", key, v)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := tagDescriptionsToMap(ts)
-		if _, ok := m[key]; ok {
-			return fmt.Errorf("Tag exists when it should not: %s", key)
-		}
-
-		return nil
-	}
-}
-
-func tagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
-	tags := make(map[string]map[string]interface{})
-	for _, t := range *ts {
-		tag := map[string]interface{}{
-			"key":                 aws.StringValue(t.Key),
-			"value":               aws.StringValue(t.Value),
-			"propagate_at_launch": aws.BoolValue(t.PropagateAtLaunch),
-		}
-		tags[aws.StringValue(t.Key)] = tag
-	}
-
-	return tags
-}
-
 // testAccCheckALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
 // sure that all instances in it are healthy.
 func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
@@ -4362,6 +4360,24 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagPropagateAtLaunch1, tagKey2, tagValue2, tagPropagateAtLaunch2))
+}
+
+func testAccGroupConfigDeprecatedTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  tags = [{
+    "key"                 = %[2]q
+    "value"               = %[3]q
+    "propagate_at_launch" = %[4]t
+  }]
+}
+`, rName, tagKey1, tagValue1, tagPropagateAtLaunch1))
 }
 
 func testAccGroupSimpleConfig(rName string) string {
