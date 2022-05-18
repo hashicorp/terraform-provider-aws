@@ -35,6 +35,7 @@ func ResourceGroup() *schema.Resource {
 		Read:   resourceGroupRead,
 		Update: resourceGroupUpdate,
 		Delete: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,30 +45,158 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zones": {
+				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 255),
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_zone_identifier"},
 			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
+			"capacity_rebalance": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
-
+			"default_cooldown": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"desired_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"enabled_metrics": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"force_delete_warm_pool": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"health_check_grace_period": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  300,
+			},
+			"health_check_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"initial_lifecycle_hook": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_result": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"heartbeat_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"lifecycle_transition": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"notification_metadata": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"notification_target_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"instance_refresh": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"preferences": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"checkpoint_delay": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"checkpoint_percentages": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeInt,
+										},
+									},
+									"instance_warmup": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"min_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      90,
+										ValidateFunc: validation.IntBetween(0, 100),
+									},
+									"skip_matching": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
+						},
+						"strategy": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(autoscaling.RefreshStrategy_Values(), false),
+						},
+						"triggers": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
+							},
+						},
+					},
+				},
+			},
 			"launch_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
-
 			"launch_template": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -78,15 +207,15 @@ func ResourceGroup() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
-							ConflictsWith: []string{"launch_template.0.name"},
 							ValidateFunc:  verify.ValidLaunchTemplateID,
+							ConflictsWith: []string{"launch_template.0.name"},
 						},
 						"name": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
-							ConflictsWith: []string{"launch_template.0.id"},
 							ValidateFunc:  verify.ValidLaunchTemplateName,
+							ConflictsWith: []string{"launch_template.0.id"},
 						},
 						"version": {
 							Type:         schema.TypeString,
@@ -97,7 +226,32 @@ func ResourceGroup() *schema.Resource {
 				},
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
-
+			"load_balancers": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"max_instance_lifetime": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"max_size": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"metrics_granularity": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "1Minute",
+			},
+			"min_elb_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"min_size": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
 			"mixed_instances_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -478,216 +632,56 @@ func ResourceGroup() *schema.Resource {
 				},
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
-
-			"capacity_rebalance": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"desired_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-
-			"min_elb_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-
-			"min_size": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-
-			"max_size": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-
-			"max_instance_lifetime": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-
-			"default_cooldown": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-
-			"force_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"health_check_grace_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  300,
-			},
-
-			"health_check_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"availability_zones": {
-				Type:          schema.TypeSet,
+			"name": {
+				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"vpc_zone_identifier"},
+				ForceNew:      true,
+				ValidateFunc:  validation.StringLenBetween(0, 255),
+				ConflictsWith: []string{"name_prefix"},
 			},
-
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
+				ConflictsWith: []string{"name"},
+			},
 			"placement_group": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"load_balancers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"vpc_zone_identifier": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"availability_zones"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-			},
-
-			"termination_policies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"wait_for_capacity_timeout": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "10m",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %s", k, err))
-					}
-					if duration < 0 {
-						errors = append(errors, fmt.Errorf(
-							"%q must be greater than zero", k))
-					}
-					return
-				},
-			},
-
-			"wait_for_elb_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-
-			"enabled_metrics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"suspended_processes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"metrics_granularity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1Minute",
-			},
-
 			"protect_from_scale_in": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"target_group_arns": {
+			"service_linked_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"suspended_processes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"initial_lifecycle_hook": {
+			"tag": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"default_result": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"heartbeat_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"lifecycle_transition": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"notification_metadata": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"notification_target_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-
-			"tag": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
 						"propagate_at_launch": {
 							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
@@ -702,17 +696,16 @@ func ResourceGroup() *schema.Resource {
 
 					return create.StringHashcode(buf.String())
 				},
+				ConflictsWith: []string{"tags"},
 			},
-
 			"tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Deprecated: "Use tag instead",
+				Type:       schema.TypeSet,
+				Optional:   true,
 				Elem: &schema.Schema{
 					Type: schema.TypeMap,
 					Elem: &schema.Schema{Type: schema.TypeString},
 				},
-				ConflictsWith: []string{"tag"},
-				Deprecated:    "Use tag instead",
 				// Terraform 0.11 and earlier can provide incorrect type
 				// information during difference handling, in which boolean
 				// values are represented as "0" and "1". This Set function
@@ -748,97 +741,41 @@ func ResourceGroup() *schema.Resource {
 
 					return create.StringHashcode(buf.String())
 				},
+				ConflictsWith: []string{"tag"},
 			},
-
-			"service_linked_role_arn": {
-				Type:     schema.TypeString,
+			"target_group_arns": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"instance_refresh": {
+			"termination_policies": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"strategy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(autoscaling.RefreshStrategy_Values(), false),
-						},
-						"preferences": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"checkpoint_delay": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"checkpoint_percentages": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeInt,
-										},
-									},
-									"instance_warmup": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"min_healthy_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      90,
-										ValidateFunc: validation.IntBetween(0, 100),
-									},
-									"skip_matching": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-								},
-							},
-						},
-						"triggers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
-							},
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
+			"vpc_zone_identifier": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"availability_zones"},
+			},
+			"wait_for_capacity_timeout": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "10m",
+				ValidateFunc: verify.ValidDuration,
+			},
+			"wait_for_elb_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"warm_pool": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"pool_state": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "Stopped",
-							ValidateFunc: validation.StringInSlice(autoscaling.WarmPoolState_Values(), false),
-						},
-						"min_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
-						},
-						"max_group_prepared_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  -1,
-						},
 						"instance_reuse_policy": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -853,14 +790,24 @@ func ResourceGroup() *schema.Resource {
 								},
 							},
 						},
+						"max_group_prepared_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  -1,
+						},
+						"min_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+						"pool_state": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      autoscaling.WarmPoolStateStopped,
+							ValidateFunc: validation.StringInSlice(autoscaling.WarmPoolState_Values(), false),
+						},
 					},
 				},
-			},
-
-			"force_delete_warm_pool": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 
