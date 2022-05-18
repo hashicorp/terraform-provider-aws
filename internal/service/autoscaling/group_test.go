@@ -326,27 +326,30 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 				Config: testAccGroupSimpleConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					testAccCheckGroupHealthyCapacity(&group, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
-					testAccCheckInstanceRefreshCount(&group, 0),
+					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete_warm_pool", "false"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
-					resource.TestCheckNoResourceAttr(resourceName, "initial_lifecycle_hook.#"),
-					resource.TestCheckNoResourceAttr(resourceName, "instance_refresh.#"),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "5"),
 					resource.TestCheckResourceAttr(resourceName, "metrics_granularity", "1Minute"),
+					resource.TestCheckNoResourceAttr(resourceName, "min_elb_capacity"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "false"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
@@ -358,6 +361,9 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "OldestInstance"),
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_capacity_timeout", "10m"),
+					resource.TestCheckNoResourceAttr(resourceName, "wait_for_elb_capacity"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
 				),
 			},
 			{
@@ -372,6 +378,49 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					"wait_for_capacity_timeout",
 					"wait_for_elb_capacity",
 				},
+			},
+			{
+				Config: testAccGroupSimpleUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete_warm_pool", "false"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "400"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "6"),
+					resource.TestCheckResourceAttr(resourceName, "metrics_granularity", "1Minute"),
+					resource.TestCheckNoResourceAttr(resourceName, "min_elb_capacity"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "3"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "true"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
+					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "ClosestToNextInstanceHour"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_capacity_timeout", "10m"),
+					resource.TestCheckNoResourceAttr(resourceName, "wait_for_elb_capacity"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
+				),
 			},
 		},
 	})
@@ -4381,16 +4430,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupSimpleConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-}
-
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   name                 = %[1]q
@@ -4405,17 +4445,8 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupUpdateConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-}
-
+func testAccGroupSimpleUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
 resource "aws_launch_configuration" "test2" {
   name          = "%[1]s-2"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4425,16 +4456,17 @@ resource "aws_launch_configuration" "test2" {
 resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
   name                      = %[1]q
-  max_size                  = 5
-  min_size                  = 2
-  health_check_grace_period = 300
+  max_size                  = 6
+  min_size                  = 3
+  health_check_grace_period = 400
   health_check_type         = "ELB"
-  desired_capacity          = 5
+  desired_capacity          = 4
   force_delete              = true
   termination_policies      = ["ClosestToNextInstanceHour"]
   protect_from_scale_in     = true
 
   launch_configuration = aws_launch_configuration.test2.name
+}
 `, rName))
 }
 
