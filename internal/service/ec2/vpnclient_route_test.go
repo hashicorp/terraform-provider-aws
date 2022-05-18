@@ -28,7 +28,7 @@ func testAccClientVPNRoute_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNclientRouteConfig_clientVpnRouteBasic(rName),
+				Config: testAccRouteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
@@ -60,7 +60,7 @@ func testAccClientVPNRoute_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNclientRouteConfig_clientVpnRouteBasic(rName),
+				Config: testAccRouteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
@@ -83,7 +83,7 @@ func testAccClientVPNRoute_description(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNclientRouteConfig_clientVpnRouteDescription(rName),
+				Config: testAccRouteConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
@@ -186,7 +186,7 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount))
 }
 
-func testAccVPNclientRouteConfig_clientVpnRouteBasic(rName string) string {
+func testAccRouteConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNRouteConfigBase(rName, 1), `
 resource "aws_ec2_client_vpn_route" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_network_association.test.client_vpn_endpoint_id
@@ -201,7 +201,7 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 `)
 }
 
-func testAccVPNclientRouteConfig_clientVpnRouteDescription(rName string) string {
+func testAccRouteConfig_description(rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNRouteConfigBase(rName, 1), `
 resource "aws_ec2_client_vpn_route" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_network_association.test.client_vpn_endpoint_id

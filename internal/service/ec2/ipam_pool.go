@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVPCIpamPool() *schema.Resource {
+func ResourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
 		Create:        ResourceVPCIpamPoolCreate,
 		Read:          ResourceVPCIpamPoolRead,
@@ -207,7 +207,7 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("address_family", pool.AddressFamily)
-	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPamAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -424,7 +424,7 @@ func ipamResourceTags(tags tftags.KeyValueTags) []*ec2.RequestIpamResourceTag {
 	return result
 }
 
-func tagsFromIPamAllocationTags(rts []*ec2.IpamResourceTag) []*ec2.Tag {
+func tagsFromIPAMAllocationTags(rts []*ec2.IpamResourceTag) []*ec2.Tag {
 	if len(rts) == 0 {
 		return nil
 	}

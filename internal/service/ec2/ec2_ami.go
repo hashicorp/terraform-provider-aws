@@ -22,10 +22,10 @@ import (
 )
 
 const (
-	AWSAMIRetryTimeout    = 40 * time.Minute
-	AMIDeleteRetryTimeout = 90 * time.Minute
-	AWSAMIRetryDelay      = 5 * time.Second
-	AMIRetryMinTimeout    = 3 * time.Second
+	amiRetryTimeout    = 40 * time.Minute
+	amiDeleteTimeout   = 90 * time.Minute
+	amiRetryDelay      = 5 * time.Second
+	amiRetryMinTimeout = 3 * time.Second
 )
 
 func ResourceAMI() *schema.Resource {
@@ -43,9 +43,9 @@ func ResourceAMI() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
+			Create: schema.DefaultTimeout(amiRetryTimeout),
+			Update: schema.DefaultTimeout(amiRetryTimeout),
+			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -325,11 +325,11 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		input.BlockDeviceMappings = expandBlockDeviceMappingsForamIEBSBlockDevice(v.(*schema.Set).List())
+		input.BlockDeviceMappings = expandBlockDeviceMappingsForAMIEBSBlockDevice(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
-		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForamIEphemeralBlockDevice(v.(*schema.Set).List())...)
+		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
 	output, err := conn.RegisterImage(input)
@@ -422,11 +422,11 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set("ebs_block_device", flattenBlockDeviceMappingsForamIEBSBlockDevice(image.BlockDeviceMappings)); err != nil {
+	if err := d.Set("ebs_block_device", flattenBlockDeviceMappingsForAMIEBSBlockDevice(image.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting ebs_block_device: %w", err)
 	}
 
-	if err := d.Set("ephemeral_block_device", flattenBlockDeviceMappingsForamIEphemeralBlockDevice(image.BlockDeviceMappings)); err != nil {
+	if err := d.Set("ephemeral_block_device", flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(image.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting ephemeral_block_device: %w", err)
 	}
 
@@ -543,7 +543,7 @@ func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error 
 	return nil
 }
 
-func expandBlockDeviceMappingForamIEBSBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
 	if tfMap == nil {
 		return nil
 	}
@@ -590,7 +590,7 @@ func expandBlockDeviceMappingForamIEBSBlockDevice(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandBlockDeviceMappingsForamIEBSBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingsForAMIEBSBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -604,7 +604,7 @@ func expandBlockDeviceMappingsForamIEBSBlockDevice(tfList []interface{}) []*ec2.
 			continue
 		}
 
-		apiObject := expandBlockDeviceMappingForamIEBSBlockDevice(tfMap)
+		apiObject := expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -616,7 +616,7 @@ func expandBlockDeviceMappingsForamIEBSBlockDevice(tfList []interface{}) []*ec2.
 	return apiObjects
 }
 
-func flattenBlockDeviceMappingForamIEBSBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
+func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -666,7 +666,7 @@ func flattenBlockDeviceMappingForamIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	return tfMap
 }
 
-func flattenBlockDeviceMappingsForamIEBSBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+func flattenBlockDeviceMappingsForAMIEBSBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -682,7 +682,7 @@ func flattenBlockDeviceMappingsForamIEBSBlockDevice(apiObjects []*ec2.BlockDevic
 			continue
 		}
 
-		tfList = append(tfList, flattenBlockDeviceMappingForamIEBSBlockDevice(apiObject))
+		tfList = append(tfList, flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject))
 	}
 
 	return tfList
@@ -706,7 +706,7 @@ func expandBlockDeviceMappingForamIEphemeralBlockDevice(tfMap map[string]interfa
 	return apiObject
 }
 
-func expandBlockDeviceMappingsForamIEphemeralBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingsForAMIEphemeralBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -750,7 +750,7 @@ func flattenBlockDeviceMappingForamIEphemeralBlockDevice(apiObject *ec2.BlockDev
 	return tfMap
 }
 
-func flattenBlockDeviceMappingsForamIEphemeralBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

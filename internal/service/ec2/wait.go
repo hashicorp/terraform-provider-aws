@@ -392,8 +392,8 @@ func WaitImageAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.I
 		Target:     []string{ec2.ImageStateAvailable},
 		Refresh:    StatusImageState(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AMIRetryMinTimeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -415,8 +415,8 @@ func WaitImageDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ima
 		Target:     []string{},
 		Refresh:    StatusImageState(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AMIRetryMinTimeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

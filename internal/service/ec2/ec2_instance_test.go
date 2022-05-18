@@ -26,14 +26,16 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(ec2.EndpointsID, testAccErrorCheckSkipEC2)
+	acctest.RegisterServiceErrorCheckFunc(ec2.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"VolumeTypeNotAvailableInRegion",
 		"Invalid value specified for Phase",
 		"You have reached the maximum allowed number of license configurations created in one day",
+		"specified zone does not support multi-attach-enabled volumes",
+		"Unsupported volume type",
 	)
 }
 
@@ -271,13 +273,13 @@ func TestAccEC2Instance_inEC2Classic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2InstanceConfig_instanceInClassic(),
+				Config: testAccInstanceConfig_ec2Classic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceClassicExists(resourceName, &v),
 				),
 			},
 			{
-				Config:            testAccEC2InstanceConfig_instanceInClassic(),
+				Config:            testAccInstanceConfig_ec2Classic(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1024,7 +1026,7 @@ func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2InstanceConfig_instanceDedicatedInstance(rName),
+				Config: testAccInstanceConfig_dedicated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
@@ -4942,7 +4944,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccEC2InstanceConfig_instanceInClassic() string {
+func testAccInstanceConfig_ec2Classic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -5475,7 +5477,7 @@ resource "aws_instance" "test" {
 `, rName, val))
 }
 
-func testAccEC2InstanceConfig_instanceDedicatedInstance(rName string) string {
+func testAccInstanceConfig_dedicated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		// Prevent frequent errors like

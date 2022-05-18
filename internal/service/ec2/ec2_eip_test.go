@@ -217,7 +217,7 @@ func TestAccEC2EIP_Instance_ec2Classic(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2EIPConfig_eIPInstanceClassic(),
+				Config: testAccEIPConfig_instanceClassic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, true, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -314,7 +314,7 @@ func TestAccEC2EIP_TagsEC2VPC_withVPCTrue(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2EIPConfig_eIPTagsVPC(rName, "vpc = true"),
+				Config: testAccEIPConfig_tagsVPC(rName, "vpc = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -330,7 +330,7 @@ func TestAccEC2EIP_TagsEC2VPC_withVPCTrue(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2EIPConfig_eIPTagsVPC(rName2, "vpc = true"),
+				Config: testAccEIPConfig_tagsVPC(rName2, "vpc = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -357,7 +357,7 @@ func TestAccEC2EIP_TagsEC2VPC_withoutVPCTrue(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2EIPConfig_eIPTagsVPC(rName, ""),
+				Config: testAccEIPConfig_tagsVPC(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -373,7 +373,7 @@ func TestAccEC2EIP_TagsEC2VPC_withoutVPCTrue(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2EIPConfig_eIPTagsVPC(rName2, ""),
+				Config: testAccEIPConfig_tagsVPC(rName2, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -399,7 +399,7 @@ func TestAccEC2EIP_TagsEC2Classic_withVPCTrue(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2EIPConfig_eIPTagsClassic(rName, "vpc = true"),
+				Config: testAccEIPConfig_tagsClassic(rName, "vpc = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, true, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -415,7 +415,7 @@ func TestAccEC2EIP_TagsEC2Classic_withVPCTrue(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2EIPConfig_eIPTagsClassic(rName2, "vpc = true"),
+				Config: testAccEIPConfig_tagsClassic(rName2, "vpc = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, true, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -438,7 +438,7 @@ func TestAccEC2EIP_TagsEC2Classic_withoutVPCTrue(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEC2EIPConfig_eIPTagsClassic(rName, ""),
+				Config:      testAccEIPConfig_tagsClassic(rName, ""),
 				ExpectError: regexp.MustCompile(`tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP`),
 			},
 		},
@@ -887,7 +887,7 @@ resource "aws_eip" "test" {
 }
 `
 
-func testAccEC2EIPConfig_eIPTagsVPC(rName, vpcConfig string) string {
+func testAccEIPConfig_tagsVPC(rName, vpcConfig string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   %[1]s
@@ -900,7 +900,7 @@ resource "aws_eip" "test" {
 `, vpcConfig, rName)
 }
 
-func testAccEC2EIPConfig_eIPTagsClassic(rName, vpcConfig string) string {
+func testAccEIPConfig_tagsClassic(rName, vpcConfig string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
@@ -930,7 +930,7 @@ resource "aws_eip" "test" {
 `, poolName)
 }
 
-func testAccEC2EIPConfig_eIPInstanceClassic() string {
+func testAccEIPConfig_instanceClassic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		testAccLatestAmazonLinuxPVEBSAMIConfig(),

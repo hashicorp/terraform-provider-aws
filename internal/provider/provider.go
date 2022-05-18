@@ -1344,7 +1344,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_subnet_association":                  ec2.ResourceVPCEndpointSubnetAssociation(),
 			"aws_vpc_ipam":                                         ec2.ResourceVPCIpam(),
 			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceVPCIpamOrganizationAdminAccount(),
-			"aws_vpc_ipam_pool":                                    ec2.ResourceVPCIpamPool(),
+			"aws_vpc_ipam_pool":                                    ec2.ResourceIPAMPool(),
 			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceVPCIpamPoolCidrAllocation(),
 			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceVPCIpamPoolCidr(),
 			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceVPCIpamPreviewNextCidr(),

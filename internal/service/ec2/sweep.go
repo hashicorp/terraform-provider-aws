@@ -2371,7 +2371,7 @@ func sweepIPAMPools(region string) error {
 		}
 
 		for _, v := range page.IpamPools {
-			r := ResourceVPCIpamPool()
+			r := ResourceIPAMPool()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamPoolId))
 
