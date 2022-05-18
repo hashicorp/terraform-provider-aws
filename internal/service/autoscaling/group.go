@@ -1004,26 +1004,24 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceGroupRead(d, meta)
 }
 
-// TODO: wrap all top-level error returns
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	g, err := getGroup(d.Id(), conn)
-	if err != nil {
-		return err
-	}
-	if g == nil && !d.IsNewResource() {
-		log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
+	g, err := FindGroupByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err := d.Set("availability_zones", flex.FlattenStringList(g.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
+	if err != nil {
+		return fmt.Errorf("reading Auto Scaling Group (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", g.AutoScalingGroupARN)
+	d.Set("availability_zones", aws.StringValueSlice(g.AvailabilityZones))
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("desired_capacity", g.DesiredCapacity)
