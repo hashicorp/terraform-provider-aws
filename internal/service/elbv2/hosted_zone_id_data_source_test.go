@@ -48,10 +48,8 @@ data "aws_lb_hosted_zone_id" "main" {}
 `
 
 const testAccCheckAWSLbHostedZoneIdExplicitRegionConfig = `
-data "aws_region" "current" {}
-
 data "aws_lb_hosted_zone_id" "regional" {
-  region = data.aws_region.current.name
+  region = "eu-west-1"
 }
 `
 
@@ -62,10 +60,8 @@ data "aws_lb_hosted_zone_id" "network" {
 `
 
 const testAccCheckAWSLbHostedZoneIdExplicitNetworkRegionConfig = `
-data "aws_region" "current" {}
-
 data "aws_lb_hosted_zone_id" "network-regional" {
-  region             = data.aws_region.current.name
+  region             = "eu-west-1"
   load_balancer_type = "network"
 }
 `
