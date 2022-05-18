@@ -589,9 +589,10 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"image_os_version_override"},
 			},
 		},
 	})
