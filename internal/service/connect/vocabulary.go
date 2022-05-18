@@ -1,16 +1,26 @@
 package connect
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"regexp"
+	"strings"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
+		ReadContext: resourceVocabularyRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -66,4 +76,70 @@ func ResourceVocabulary() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	resp, err := conn.DescribeVocabularyWithContext(ctx, &connect.DescribeVocabularyInput{
+		InstanceId:   aws.String(instanceID),
+		VocabularyId: aws.String(vocabularyID),
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || resp.Vocabulary == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): empty response", d.Id()))
+	}
+
+	vocabulary := resp.Vocabulary
+
+	d.Set("arn", vocabulary.Arn)
+	d.Set("content", vocabulary.Content)
+	d.Set("failure_reason", vocabulary.FailureReason)
+	d.Set("instance_id", instanceID)
+	d.Set("language_code", vocabulary.LanguageCode)
+	d.Set("last_modified_time", vocabulary.LastModifiedTime.Format(time.RFC3339))
+	d.Set("name", vocabulary.Name)
+	d.Set("state", vocabulary.State)
+	d.Set("vocabulary_id", vocabulary.Id)
+
+	tags := KeyValueTags(vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+func VocabularyParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:vocabularyID", id)
+	}
+
+	return parts[0], parts[1], nil
 }
