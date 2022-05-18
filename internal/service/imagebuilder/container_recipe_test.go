@@ -571,28 +571,17 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux(t *testing.T) {
 
 func TestAccImageBuilderContainerRecipe_platform_override_linux_wrong_parent_image(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_imagebuilder_container_recipe.test"
 	parentImage := "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipContainerRecipe(t),
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipePlatformOverrideLinuxConfig(rName, parentImage),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerRecipeExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parent_image", parentImage),
-					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformLinux),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"platform_override"},
+				Config:      testAccContainerRecipePlatformOverrideLinuxConfig(rName, parentImage),
+				ExpectError: regexp.MustCompile("You cannot specify a platform override when using an Image Builder Image as your parent."),
 			},
 		},
 	})
@@ -600,28 +589,17 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux_wrong_parent_ima
 
 func TestAccImageBuilderContainerRecipe_platform_override_linux_without_override(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_imagebuilder_container_recipe.test"
 	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformLinux)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipContainerRecipe(t),
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipePlatformOverrideLinuxWithoutPlatformOverrideConfig(rName, ecrImage),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerRecipeExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parent_image", ecrImage),
-					resource.TestCheckNoResourceAttr(resourceName, "platform_override"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"platform_override"},
+				Config:      testAccContainerRecipePlatformOverrideLinuxWithoutPlatformOverrideConfig(rName, ecrImage),
+				ExpectError: regexp.MustCompile("You must specify a platform override when using ECR Public Repositories as your parent image."),
 			},
 		},
 	})
@@ -659,29 +637,17 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) 
 
 func TestAccImageBuilderContainerRecipe_platform_override_windows_without_platform_override(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_imagebuilder_container_recipe.test"
 	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformWindows)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipContainerRecipe(t),
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipePlatformOverrideWindowsWithoutPlatformOverrideConfig(rName, ecrImage),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerRecipeExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parent_image", ecrImage),
-					resource.TestCheckNoResourceAttr(resourceName, "platform_override"),
-					resource.TestCheckResourceAttr(resourceName, "image_os_version_override", "Microsoft Windows Server 2022"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"platform_override", "image_os_version_override"},
+				Config:      testAccContainerRecipePlatformOverrideWindowsWithoutPlatformOverrideConfig(rName, ecrImage),
+				ExpectError: regexp.MustCompile("You must specify a platform override when using ECR Public Repositories as your parent image."),
 			},
 		},
 	})
@@ -689,29 +655,17 @@ func TestAccImageBuilderContainerRecipe_platform_override_windows_without_platfo
 
 func TestAccImageBuilderContainerRecipe_platform_override_windows_without_image_os_version_override(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_imagebuilder_container_recipe.test"
 	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformWindows)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipContainerRecipe(t),
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipePlatformOverrideWindowsWithoutImageOSVersionOverrideConfig(rName, ecrImage),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerRecipeExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parent_image", ecrImage),
-					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformWindows),
-					resource.TestCheckNoResourceAttr(resourceName, "image_os_version_override"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"platform_override", "image_os_version_override"},
+				Config:      testAccContainerRecipePlatformOverrideWindowsWithoutImageOSVersionOverrideConfig(rName, ecrImage),
+				ExpectError: regexp.MustCompile("You must specify an image OsVersion override when using ECR Repositories as your parent image for Windows Platform."),
 			},
 		},
 	})
@@ -785,15 +739,6 @@ func TestAccImageBuilderContainerRecipe_workingDirectory(t *testing.T) {
 			},
 		},
 	})
-}
-
-// testAccErrorCheckSkipContainerRecipe skips Image Builder container recipe tests that have error messages indicating bad configuration
-func testAccErrorCheckSkipContainerRecipe(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"You cannot specify a platform override when using an Image Builder Image as your parent.",
-		"You must specify a platform override when using ECR Public Repositories as your parent image.",
-		"You must specify an image OsVersion override when using ECR Repositories as your parent image for Windows Platform.",
-	)
 }
 
 func testAccCheckContainerRecipeDestroy(s *terraform.State) error {
