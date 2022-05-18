@@ -1169,6 +1169,22 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		if err := d.Set("mongodb_settings", flattenMongoDBSettings(endpoint.MongoDbSettings)); err != nil {
 			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
 		}
+	case engineNameAurora:
+		fallthrough
+	case engineNameMySQL:
+		if endpoint.MySQLSettings != nil {
+			d.Set("username", endpoint.MySQLSettings.Username)
+			d.Set("server_name", endpoint.MySQLSettings.ServerName)
+			d.Set("port", endpoint.MySQLSettings.Port)
+			d.Set("database_name", endpoint.MySQLSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.MySQLSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.MySQLSettings.SecretsManagerSecretId)
+		} else {
+			d.Set("username", endpoint.Username)
+			d.Set("server_name", endpoint.ServerName)
+			d.Set("port", endpoint.Port)
+			d.Set("database_name", endpoint.DatabaseName)
+		}
 	case engineNameOracle:
 		if endpoint.OracleSettings != nil {
 			d.Set("username", endpoint.OracleSettings.Username)
