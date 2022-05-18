@@ -822,47 +822,6 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
-func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autoscaling.PutLifecycleHookInput {
-	res := make([]autoscaling.PutLifecycleHookInput, 0, len(cfgs))
-
-	for _, raw := range cfgs {
-		cfg := raw.(map[string]interface{})
-
-		input := autoscaling.PutLifecycleHookInput{
-			AutoScalingGroupName: &asgName,
-			LifecycleHookName:    aws.String(cfg["name"].(string)),
-		}
-
-		if v, ok := cfg["default_result"]; ok && v.(string) != "" {
-			input.DefaultResult = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["heartbeat_timeout"]; ok && v.(int) > 0 {
-			input.HeartbeatTimeout = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := cfg["lifecycle_transition"]; ok && v.(string) != "" {
-			input.LifecycleTransition = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["notification_metadata"]; ok && v.(string) != "" {
-			input.NotificationMetadata = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["notification_target_arn"]; ok && v.(string) != "" {
-			input.NotificationTargetARN = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["role_arn"]; ok && v.(string) != "" {
-			input.RoleARN = aws.String(v.(string))
-		}
-
-		res = append(res, input)
-	}
-
-	return res
-}
-
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
@@ -1161,78 +1120,6 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("warm_pool", FlattenWarmPoolConfiguration(g.WarmPoolConfiguration)); err != nil {
 		return fmt.Errorf("error setting warm_pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func waitUntilGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
-	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	var tgRemoving bool
-
-	for {
-		output, err := conn.DescribeLoadBalancerTargetGroups(input)
-
-		if err != nil {
-			return err
-		}
-
-		for _, tg := range output.LoadBalancerTargetGroups {
-			if aws.StringValue(tg.State) == "Removing" {
-				tgRemoving = true
-				break
-			}
-		}
-
-		if tgRemoving {
-			tgRemoving = false
-			input.NextToken = nil
-			continue
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
-
-func waitUntilGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
-	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	var tgAdding bool
-
-	for {
-		output, err := conn.DescribeLoadBalancerTargetGroups(input)
-
-		if err != nil {
-			return err
-		}
-
-		for _, tg := range output.LoadBalancerTargetGroups {
-			if aws.StringValue(tg.State) == "Adding" {
-				tgAdding = true
-				break
-			}
-		}
-
-		if tgAdding {
-			tgAdding = false
-			input.NextToken = nil
-			continue
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
 	}
 
 	return nil
@@ -1655,6 +1542,78 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func waitUntilGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgRemoving bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Removing" {
+				tgRemoving = true
+				break
+			}
+		}
+
+		if tgRemoving {
+			tgRemoving = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func waitUntilGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgAdding bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Adding" {
+				tgAdding = true
+				break
+			}
+		}
+
+		if tgAdding {
+			tgAdding = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
 func resourceGroupWarmPoolDelete(g *autoscaling.Group, d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
@@ -1970,11 +1929,9 @@ func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	}
 
 	return nil
-
 }
 
 func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
-
 	o, n := d.GetChange("enabled_metrics")
 	if o == nil {
 		o = new(schema.Set)
@@ -2014,6 +1971,47 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	}
 
 	return nil
+}
+
+func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autoscaling.PutLifecycleHookInput {
+	res := make([]autoscaling.PutLifecycleHookInput, 0, len(cfgs))
+
+	for _, raw := range cfgs {
+		cfg := raw.(map[string]interface{})
+
+		input := autoscaling.PutLifecycleHookInput{
+			AutoScalingGroupName: &asgName,
+			LifecycleHookName:    aws.String(cfg["name"].(string)),
+		}
+
+		if v, ok := cfg["default_result"]; ok && v.(string) != "" {
+			input.DefaultResult = aws.String(v.(string))
+		}
+
+		if v, ok := cfg["heartbeat_timeout"]; ok && v.(int) > 0 {
+			input.HeartbeatTimeout = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := cfg["lifecycle_transition"]; ok && v.(string) != "" {
+			input.LifecycleTransition = aws.String(v.(string))
+		}
+
+		if v, ok := cfg["notification_metadata"]; ok && v.(string) != "" {
+			input.NotificationMetadata = aws.String(v.(string))
+		}
+
+		if v, ok := cfg["notification_target_arn"]; ok && v.(string) != "" {
+			input.NotificationTargetARN = aws.String(v.(string))
+		}
+
+		if v, ok := cfg["role_arn"]; ok && v.(string) != "" {
+			input.RoleARN = aws.String(v.(string))
+		}
+
+		res = append(res, input)
+	}
+
+	return res
 }
 
 // getELBInstanceStates returns a mapping of the instance states of all the ELBs attached to the
