@@ -48,27 +48,30 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					testAccCheckGroupHealthyCapacity(&group, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
-					testAccCheckInstanceRefreshCount(&group, 0),
+					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
-					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete_warm_pool", "false"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
-					resource.TestCheckNoResourceAttr(resourceName, "initial_lifecycle_hook.#"),
-					resource.TestCheckNoResourceAttr(resourceName, "instance_refresh.#"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_type", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "0"),
-					resource.TestCheckResourceAttr(resourceName, "max_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metrics_granularity", "1Minute"),
-					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
+					resource.TestCheckNoResourceAttr(resourceName, "min_elb_capacity"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "false"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
@@ -76,10 +79,11 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "OldestInstance"),
-					resource.TestCheckResourceAttr(resourceName, "termination_policies.1", "ClosestToNextInstanceHour"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_capacity_timeout", "10m"),
+					resource.TestCheckNoResourceAttr(resourceName, "wait_for_elb_capacity"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
 				),
 			},
 			{
@@ -99,7 +103,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_Name_generated(t *testing.T) {
+func TestAccAutoScalingGroup_nameGenerated(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
@@ -152,6 +156,72 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 					testAccCheckGroupExists(resourceName, &group),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_simple(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupSimpleConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupHealthyCapacity(&group, 2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					testAccCheckInstanceRefreshCount(&group, 0),
+					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
+					resource.TestCheckNoResourceAttr(resourceName, "initial_lifecycle_hook.#"),
+					resource.TestCheckNoResourceAttr(resourceName, "instance_refresh.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "metrics_granularity", "1Minute"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "false"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
+					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "OldestInstance"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.1", "ClosestToNextInstanceHour"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "0"),
 				),
 			},
 			{
@@ -252,7 +322,7 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(randName),
+				Config: testAccGroupSimpleConfig(randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckTags(&group.Tags, "FromTags1", map[string]interface{}{
@@ -509,7 +579,7 @@ func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(randName),
+				Config: testAccGroupSimpleConfig(randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckNoResourceAttr(
@@ -552,7 +622,7 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(randName),
+				Config: testAccGroupSimpleConfig(randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
@@ -4174,7 +4244,7 @@ func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestChec
 	}
 }
 
-func testAccGroupNameGeneratedConfig(rName string) string {
+func testAccGroupLaunchConfigurationBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -4184,38 +4254,45 @@ resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
+`, rName))
+}
 
+func testAccGroupConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
   min_size             = 0
+  name                 = %[1]q
   launch_configuration = aws_launch_configuration.test.name
 }
 `, rName))
 }
 
-func testAccGroupNamePrefixConfig(rName, namePrefix string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-}
-
+func testAccGroupNameGeneratedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
   min_size             = 0
-  name_prefix          = %[2]q
   launch_configuration = aws_launch_configuration.test.name
 }
-`, rName, namePrefix))
+`)
 }
 
-func testAccGroupConfig(rName string) string {
+func testAccGroupNamePrefixConfig(rName, namePrefix string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name_prefix          = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+}
+`, namePrefix))
+}
+
+func testAccGroupSimpleConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
