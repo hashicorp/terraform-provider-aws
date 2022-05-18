@@ -39,10 +39,10 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserHierarchyGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupBasicConfig(rName, rName2),
@@ -96,10 +96,10 @@ func testAccUserHierarchyGroup_parentGroupId(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserHierarchyGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupParentGroupIdConfig(rName, rName2, rName3),
@@ -133,10 +133,10 @@ func testAccUserHierarchyGroup_disappears(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserHierarchyGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupBasicConfig(rName, rName2),
