@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -161,13 +163,34 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error creating ElastiCache Global Replication Group: %w", err)
 	}
 
+	if output == nil || output.GlobalReplicationGroup == nil {
+		return errors.New("error creating ElastiCache Global Replication Group: empty result")
+	}
+
 	d.SetId(aws.StringValue(output.GlobalReplicationGroup.GlobalReplicationGroupId))
 
-	if _, err := WaitGlobalReplicationGroupAvailable(conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+	globalReplicationGroup, err := WaitGlobalReplicationGroupAvailable(conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout)
+	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceGlobalReplicationGroupUpdate(d, meta)
+	if v, ok := d.GetOk("engine_version"); ok {
+		requestedVersion, _ := normalizeEngineVersion(v.(string))
+
+		engineVersion, err := gversion.NewVersion(aws.StringValue(globalReplicationGroup.EngineVersion))
+		if err != nil {
+			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: error reading engine version: %w", d.Id(), err)
+		}
+
+		if requestedVersion.GreaterThan(engineVersion) {
+			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionUpdater(v.(string)))
+			if err != nil {
+				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
+			}
+		}
+	}
+
+	return resourceGlobalReplicationGroupRead(d, meta)
 }
 
 func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
@@ -209,18 +232,16 @@ func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
+type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
+
 func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Only one field can be changed per request
 	updaters := map[string]globalReplicationGroupUpdater{}
-	if !d.IsNewResource() {
-		updaters["engine_version"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
-		}
-		updaters["global_replication_group_description"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
-			input.GlobalReplicationGroupDescription = aws.String(d.Get("global_replication_group_description").(string))
-		}
+	updaters["engine_version"] = globalReplicationGroupEngineVersionUpdater(d.Get("engine_version").(string))
+	updaters["global_replication_group_description"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.GlobalReplicationGroupDescription = aws.String(d.Get("global_replication_group_description").(string))
 	}
 
 	for k, f := range updaters {
@@ -234,7 +255,11 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 	return resourceGlobalReplicationGroupRead(d, meta)
 }
 
-type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
+func globalReplicationGroupEngineVersionUpdater(version string) globalReplicationGroupUpdater {
+	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.EngineVersion = aws.String(version)
+	}
+}
 
 func updateGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, f globalReplicationGroupUpdater) error {
 	input := &elasticache.ModifyGlobalReplicationGroupInput{

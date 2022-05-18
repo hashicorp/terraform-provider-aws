@@ -304,6 +304,43 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	})
 }
 
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup elasticache.GlobalReplicationGroup
+	var rg elasticache.ReplicationGroup
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalReplicationGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.0", "6.2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
+					testAccCheckReplicationGroupExists(primaryReplicationGroupResourceName, &rg),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					testAccMatchReplicationGroupActualVersion(&rg, regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgrade(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -406,6 +443,23 @@ func testAccPreCheckGlobalReplicationGroup(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccMatchReplicationGroupActualVersion(j *elasticache.ReplicationGroup, r *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+
+		cacheCluster := j.NodeGroups[0].NodeGroupMembers[0]
+		cluster, err := tfelasticache.FindCacheClusterByID(conn, aws.StringValue(cacheCluster.CacheClusterId))
+		if err != nil {
+			return err
+		}
+
+		if !r.MatchString(aws.StringValue(cluster.EngineVersion)) {
+			return fmt.Errorf("Actual engine version didn't match %q, got %q", r.String(), aws.StringValue(cluster.EngineVersion))
+		}
+		return nil
 	}
 }
 
@@ -634,13 +688,13 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, primaryReplicationGroupId, repGroupEngineVersion)
 }
 
-func testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, repGroupEngineVersion, engineVersion string) string {
+func testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
   primary_replication_group_id       = aws_elasticache_replication_group.test.id
 
-  engine_version = %[3]q
+  engine_version = %[4]q
 }
 
 resource "aws_elasticache_replication_group" "test" {
@@ -648,7 +702,7 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "test"
 
   engine                = "redis"
-  engine_version        = %[4]q
+  engine_version        = %[3]q
   node_type             = "cache.m5.large"
   number_cache_clusters = 1
 
@@ -656,7 +710,7 @@ resource "aws_elasticache_replication_group" "test" {
     ignore_changes = [engine_version]
   }
 }
-`, rName, primaryReplicationGroupId, engineVersion, repGroupEngineVersion)
+`, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion)
 }
 
 func testAccVPCBaseWithProvider(rName, name, provider string, subnetCount int) string {
