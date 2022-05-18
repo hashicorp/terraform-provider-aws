@@ -145,7 +145,7 @@ The following arguments are supported:
 * `password` - (Optional) The password for the user account. A password is required if you are using Amazon Connect for identity management. Otherwise, it is an error to include a password.
 * `phone_config` - (Required) A block that contains information about the phone settings for the user. Documented below.
 * `routing_profile_id` - (Required) The identifier of the routing profile for the user.
-* `security_profile_ids` - (Required) A list of identifiers for the security profiles for the user. Specify a minimum of 1 and maximum of 10 security profile ids.
+* `security_profile_ids` - (Required) A list of identifiers for the security profiles for the user. Specify a minimum of 1 and maximum of 10 security profile ids. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `tags` - (Optional) Tags to apply to the user. If configured with a provider
 [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
