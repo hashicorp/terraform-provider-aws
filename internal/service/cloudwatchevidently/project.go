@@ -146,7 +146,7 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -185,7 +185,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -242,7 +242,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn
 
 	arn := d.Id()
 
@@ -302,7 +302,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn
 
 	arn := d.Id()
 

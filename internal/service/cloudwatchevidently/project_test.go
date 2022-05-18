@@ -257,7 +257,7 @@ func TestAccProject_disappears(t *testing.T) {
 }
 
 func testAccCheckProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEvidentlyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatchevidently_project" {
 			continue
@@ -287,7 +287,7 @@ func testAccCheckProjectExists(name string, project *cloudwatchevidently.GetProj
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEvidentlyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 		input := &cloudwatchevidently.GetProjectInput{
 			Project: aws.String(rs.Primary.ID),
 		}
