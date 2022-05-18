@@ -66,7 +66,7 @@ func TestAccDMSEndpoint_Aurora_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_mySQL(rName, "aurora"),
+				Config: testAccEndpointConfig_aurora(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -93,7 +93,7 @@ func TestAccDMSEndpoint_Aurora_secretID(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_mySQLSecretID(rName, "aurora"),
+				Config: testAccEndpointConfig_auroraSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -119,14 +119,14 @@ func TestAccDMSEndpoint_Aurora_update(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_mySQL(rName, "aurora"),
+				Config: testAccEndpointConfig_aurora(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_mySQLUpdate(rName, "aurora"),
+				Config: testAccEndpointConfig_auroraUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -611,7 +611,7 @@ func TestAccDMSEndpoint_MySQL_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_mySQL(rName, "mysql"),
+				Config: testAccEndpointConfig_mySQL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -638,7 +638,7 @@ func TestAccDMSEndpoint_MySQL_secretID(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_mySQLSecretID(rName, "mysql"),
+				Config: testAccEndpointConfig_mySQLSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -664,14 +664,14 @@ func TestAccDMSEndpoint_MySQL_update(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_mySQL(rName, "mysql"),
+				Config: testAccEndpointConfig_mySQL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_mySQLUpdate(rName, "mysql"),
+				Config: testAccEndpointConfig_mySQLUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -1081,6 +1081,120 @@ resource "aws_dms_endpoint" "test" {
   }
 
   username = "tftestupdate"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_aurora(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "aurora"
+  server_name                 = "tftest"
+  port                        = 3306
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_auroraSecretID(rName string) string {
+	return fmt.Sprintf(`
+data "aws_kms_alias" "dms" {
+  name = "alias/aws/dms"
+}
+
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Action": "secretsmanager:*",
+        "Effect": "Allow",
+        "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "aurora"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_auroraUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "aurora"
+  server_name                 = "tftest-new-server_name"
+  port                        = 3307
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
 }
 `, rName)
 }
@@ -1798,12 +1912,12 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_mySQL(rName string, engine string) string {
+func testAccEndpointConfig_mySQL(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
-  engine_name                 = %[2]q
+  engine_name                 = "mysql"
   server_name                 = "tftest"
   port                        = 3306
   username                    = "tftest"
@@ -1818,10 +1932,10 @@ resource "aws_dms_endpoint" "test" {
     Remove = "to-remove"
   }
 }
-`, rName, engine)
+`, rName)
 }
 
-func testAccEndpointConfig_mySQLSecretID(rName string, engine string) string {
+func testAccEndpointConfig_mySQLSecretID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1873,11 +1987,10 @@ EOF
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
-  engine_name                     = %[2]q
+  engine_name                     = "mysql"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
 
-  database_name               = "tftest"
   ssl_mode                    = "none"
   extra_connection_attributes = ""
 
@@ -1887,15 +2000,15 @@ resource "aws_dms_endpoint" "test" {
     Remove = "to-remove"
   }
 }
-`, rName, engine)
+`, rName)
 }
 
-func testAccEndpointConfig_mySQLUpdate(rName string, engine string) string {
+func testAccEndpointConfig_mySQLUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
-  engine_name                 = %[2]q
+  engine_name                 = "mysql"
   server_name                 = "tftest-new-server_name"
   port                        = 3307
   username                    = "tftest-new-username"
@@ -1910,7 +2023,7 @@ resource "aws_dms_endpoint" "test" {
     Add    = "added"
   }
 }
-`, rName, engine)
+`, rName)
 }
 
 func testAccEndpointConfig_oracle(rName string) string {
