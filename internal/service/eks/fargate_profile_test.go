@@ -24,10 +24,10 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFargateProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFargateProfileFargateProfileNameConfig(rName),
@@ -58,10 +58,10 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFargateProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFargateProfileFargateProfileNameConfig(rName),
@@ -82,10 +82,10 @@ func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 	resourceName2 := "aws_eks_fargate_profile.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFargateProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFargateProfileFargateProfileMultipleConfig(rName),
@@ -104,10 +104,10 @@ func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFargateProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFargateProfileSelectorLabels1Config(rName, "key1", "value1"),
@@ -130,10 +130,10 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFargateProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckFargateProfile(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFargateProfileTags1Config(rName, "key1", "value1"),

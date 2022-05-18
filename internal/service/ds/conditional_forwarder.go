@@ -78,7 +78,7 @@ func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}
 func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	directoryId, domainName, err := ParseDSConditionalForwarderID(d.Id())
+	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) 
 func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	directoryId, domainName, err := ParseDSConditionalForwarderID(d.Id())
+	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}
 func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	directoryId, domainName, err := ParseDSConditionalForwarderID(d.Id())
+	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func ParseDSConditionalForwarderID(id string) (directoryId, domainName string, err error) {
+func ParseConditionalForwarderID(id string) (directoryId, domainName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 
 	if len(parts) != 2 {

@@ -20,10 +20,10 @@ func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetBasicConfig(rName),
@@ -47,10 +47,10 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetTagsSingleConfig(rName, "key1", "value1"),
@@ -101,10 +101,10 @@ func TestAccSSOAdminPermissionSet_updateDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetBasicConfig(rName),
@@ -134,10 +134,10 @@ func TestAccSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetBasicConfig(rName),
@@ -167,10 +167,10 @@ func TestAccSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetBasicConfig(rName),
@@ -202,10 +202,10 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetRelayStateConfig(rName),
@@ -241,10 +241,10 @@ func TestAccSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetBasicConfig(rName),

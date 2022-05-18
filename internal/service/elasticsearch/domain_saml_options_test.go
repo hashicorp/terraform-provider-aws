@@ -25,10 +25,10 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -59,10 +59,10 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -84,10 +84,10 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -110,10 +110,10 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
@@ -144,10 +144,10 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),

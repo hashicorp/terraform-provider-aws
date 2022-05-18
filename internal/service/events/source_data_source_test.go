@@ -27,9 +27,9 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartnerEventSourceDataSourceConfig(busName),

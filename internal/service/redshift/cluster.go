@@ -584,7 +584,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
-	if err := d.Set("cluster_nodes", flattenRedshiftClusterNodes(rsc.ClusterNodes)); err != nil {
+	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return fmt.Errorf("error setting cluster_nodes: %w", err)
 	}
 	d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
@@ -964,7 +964,7 @@ func enableSnapshotCopy(conn *redshift.Redshift, clusterID string, tfMap map[str
 	return nil
 }
 
-func flattenRedshiftClusterNode(apiObject *redshift.ClusterNode) map[string]interface{} {
+func flattenClusterNode(apiObject *redshift.ClusterNode) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -986,7 +986,7 @@ func flattenRedshiftClusterNode(apiObject *redshift.ClusterNode) map[string]inte
 	return tfMap
 }
 
-func flattenRedshiftClusterNodes(apiObjects []*redshift.ClusterNode) []interface{} {
+func flattenClusterNodes(apiObjects []*redshift.ClusterNode) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -998,7 +998,7 @@ func flattenRedshiftClusterNodes(apiObjects []*redshift.ClusterNode) []interface
 			continue
 		}
 
-		tfList = append(tfList, flattenRedshiftClusterNode(apiObject))
+		tfList = append(tfList, flattenClusterNode(apiObject))
 	}
 
 	return tfList

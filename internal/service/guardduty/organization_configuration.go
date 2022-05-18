@@ -75,7 +75,7 @@ func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DataSources = expandGuardDutyOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
+		input.DataSources = expandOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.UpdateOrganizationConfiguration(input)
@@ -115,7 +115,7 @@ func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interfac
 	d.Set("auto_enable", output.AutoEnable)
 
 	if output.DataSources != nil {
-		if err := d.Set("datasources", []interface{}{flattenGuardDutyOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
+		if err := d.Set("datasources", []interface{}{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
 			return fmt.Errorf("error setting datasources: %w", err)
 		}
 	} else {
@@ -127,7 +127,7 @@ func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func expandGuardDutyOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.OrganizationDataSourceConfigurations {
+func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.OrganizationDataSourceConfigurations {
 	if tfMap == nil {
 		return nil
 	}
@@ -135,13 +135,13 @@ func expandGuardDutyOrganizationDataSourceConfigurations(tfMap map[string]interf
 	apiObject := &guardduty.OrganizationDataSourceConfigurations{}
 
 	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandGuardDutyOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
+		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandGuardDutyOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationS3LogsConfiguration {
+func expandOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationS3LogsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -155,7 +155,7 @@ func expandGuardDutyOrganizationS3LogsConfiguration(tfMap map[string]interface{}
 	return apiObject
 }
 
-func flattenGuardDutyOrganizationDataSourceConfigurationsResult(apiObject *guardduty.OrganizationDataSourceConfigurationsResult) map[string]interface{} {
+func flattenOrganizationDataSourceConfigurationsResult(apiObject *guardduty.OrganizationDataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -163,13 +163,13 @@ func flattenGuardDutyOrganizationDataSourceConfigurationsResult(apiObject *guard
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenGuardDutyOrganizationS3LogsConfigurationResult(v)}
+		tfMap["s3_logs"] = []interface{}{flattenOrganizationS3LogsConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenGuardDutyOrganizationS3LogsConfigurationResult(apiObject *guardduty.OrganizationS3LogsConfigurationResult) map[string]interface{} {
+func flattenOrganizationS3LogsConfigurationResult(apiObject *guardduty.OrganizationS3LogsConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

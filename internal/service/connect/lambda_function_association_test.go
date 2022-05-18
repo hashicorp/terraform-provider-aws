@@ -36,13 +36,13 @@ func testAccLambdaFunctionAssociation_basic(t *testing.T) {
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -64,13 +64,13 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
@@ -185,7 +185,7 @@ resource "aws_connect_instance" "test" {
 `, rName, rName2)
 }
 
-func testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationConfigBasic(rName string, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaFunctionAssociationConfigBase(rName, rName2), `
 resource "aws_connect_lambda_function_association" "test" {

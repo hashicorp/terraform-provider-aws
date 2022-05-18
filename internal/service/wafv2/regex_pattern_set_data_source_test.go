@@ -17,9 +17,9 @@ func TestAccWAFV2RegexPatternSetDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck: acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRegexPatternSetDataSource_NonExistent(name),

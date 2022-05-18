@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	AwsTagKeyPrefix                             = `aws:`
+	awsTagKeyPrefix                             = `aws:` // nosemgrep:aws-in-func-name,aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	RdsTagKeyPrefix                             = `rds:`
@@ -37,11 +37,11 @@ type IgnoreConfig struct {
 type KeyValueTags map[string]*TagData
 
 // IgnoreAWS returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAWS() KeyValueTags {
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:aws-in-func-name
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if !strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if !strings.HasPrefix(k, awsTagKeyPrefix) {
 			result[k] = v
 		}
 	}
@@ -105,7 +105,7 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, awsTagKeyPrefix) {
 			continue
 		}
 
@@ -152,7 +152,7 @@ func (tags KeyValueTags) IgnoreRds() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, awsTagKeyPrefix) {
 			continue
 		}
 
@@ -171,7 +171,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, awsTagKeyPrefix) {
 			continue
 		}
 

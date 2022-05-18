@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceIdentityProvider() *schema.Resource {
@@ -129,19 +131,24 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 		UserPoolId:   aws.String(userPoolID),
 	})
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if ret == nil || ret.IdentityProvider == nil {
-		log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id(), errors.New("not found after creation"))
 	}
 
 	ip := ret.IdentityProvider

@@ -1,13 +1,25 @@
 # HCL Changelog
 
-## v2.11.1 (Dec 1, 2021)
+## v2.12.0 (April 22, 2022)
+
+### Enhancements
+
+* hclsyntax: Evaluation of conditional expressions will now produce more precise error messages about inconsistencies between the types of the true and false result expressions, particularly in cases where both are of the same structural type kind but differ in their nested elements. ([#530](https://github.com/hashicorp/hcl/pull/530))
+* hclsyntax: The lexer will no longer allocate a small object on the heap for each token. Instead, in that situation it will allocate only when needed to return a diagnostic message with source location information. ([#490](https://github.com/hashicorp/hcl/pull/490))
+* hclwrite: New functions `TokensForTuple`, `TokensForObject`, and `TokensForFunctionCall` allow for more easily constructing the three constructs which are supported for static analysis and which HCL-based languages typically use in contexts where an expression is used only for its syntax, and not evaluated to produce a real value. For example, these new functions together are sufficient to construct all valid type constraint expressions from [the Type Expressions Extension](./ext/typeexpr/), which is the basis of variable type constraints in the Terraform language at the time of writing. ([#502](https://github.com/hashicorp/hcl/pull/502))
+* json: New functions `IsJSONExpression` and `IsJSONBody` to determine if a given expression or body was created by the JSON syntax parser. In normal situations it's better not to worry about what syntax a particular expression/body originated in, but this can be useful in some trickier cases where an application needs to shim for backwards-compatibility or for static analysis that needs to have special handling of the JSON syntax's embedded expression/template conventions. ([#524](https://github.com/hashicorp/hcl/pull/524))
+
+### Bugs Fixed
+
+* gohcl: Fix docs about supported types for blocks. ([#507](https://github.com/hashicorp/hcl/pull/507))
+
+## v2.11.1 (December 1, 2021)
 
 ### Bugs Fixed
 
 * hclsyntax: The type for an upgraded unknown value with a splat expression cannot be known ([#495](https://github.com/hashicorp/hcl/pull/495))
 
-
-## v2.11.0 (Dec 1, 2021)
+## v2.11.0 (December 1, 2021)
 
 ### Enhancements
 

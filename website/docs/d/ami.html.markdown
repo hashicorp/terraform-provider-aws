@@ -86,6 +86,7 @@ interpolation.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - The virtual device name (for instance stores).
 * `creation_date` - The date and time the image was created.
+* `deprecation_time` - The date and time when the image will be deprecated.
 * `description` - The description of the AMI that was provided during image
   creation.
 * `hypervisor` - The hypervisor type of the image.

@@ -5,8 +5,8 @@ The AWSAT002 analyzer reports hardcoded AMI IDs. AMI IDs are region dependent an
 ## Flagged Code
 
 ```go
-func testAccAWSSpotFleetRequestConfig(rName string, rInt int, validUntil string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+func testAccEC2SpotFleetRequestConfig(rName string, rInt int, validUntil string) string {
+	return testAccEC2SpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
@@ -20,8 +20,8 @@ resource "aws_spot_fleet_request" "test" {
 ## Passing Code
 
 ```go
-func testAccAWSSpotFleetRequestConfig(rName string, rInt int, validUntil string) string {
-    return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+func testAccEC2SpotFleetRequestConfig(rName string, rInt int, validUntil string) string {
+    return testAccEC2SpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]

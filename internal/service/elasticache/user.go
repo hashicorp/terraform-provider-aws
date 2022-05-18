@@ -53,10 +53,13 @@ func ResourceUser() *schema.Resource {
 				Default:  false,
 			},
 			"passwords": {
-				Type:      schema.TypeSet,
-				Optional:  true,
-				MaxItems:  2,
-				Elem:      &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(16, 128),
+				},
 				Sensitive: true,
 			},
 			"tags":     tftags.TagsSchema(),

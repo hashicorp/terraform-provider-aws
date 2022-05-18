@@ -617,7 +617,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	params := &quicksight.CreateDataSourceInput{
 		AwsAccountId:         aws.String(awsAccountId),
 		DataSourceId:         aws.String(id),
-		DataSourceParameters: expandQuickSightDataSourceParameters(d.Get("parameters").([]interface{})),
+		DataSourceParameters: expandDataSourceParameters(d.Get("parameters").([]interface{})),
 		Name:                 aws.String(d.Get("name").(string)),
 		Type:                 aws.String(d.Get("type").(string)),
 	}
@@ -627,19 +627,19 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.Credentials = expandQuickSightDataSourceCredentials(v.([]interface{}))
+		params.Credentials = expandDataSourceCredentials(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permission"); ok && v.(*schema.Set).Len() > 0 {
-		params.Permissions = expandQuickSightDataSourcePermissions(v.(*schema.Set).List())
+		params.Permissions = expandDataSourcePermissions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-		params.SslProperties = expandQuickSightDataSourceSslProperties(v.([]interface{}))
+		params.SslProperties = expandDataSourceSSLProperties(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.VpcConnectionProperties = expandQuickSightDataSourceVpcConnectionProperties(v.([]interface{}))
+		params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
 	}
 
 	_, err := conn.CreateDataSourceWithContext(ctx, params)
@@ -694,11 +694,11 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("data_source_id", dataSource.DataSourceId)
 	d.Set("name", dataSource.Name)
 
-	if err := d.Set("parameters", flattenQuickSightParameters(dataSource.DataSourceParameters)); err != nil {
+	if err := d.Set("parameters", flattenParameters(dataSource.DataSourceParameters)); err != nil {
 		return diag.Errorf("error setting parameters: %s", err)
 	}
 
-	if err := d.Set("ssl_properties", flattenQuickSightSslProperties(dataSource.SslProperties)); err != nil {
+	if err := d.Set("ssl_properties", flattenSSLProperties(dataSource.SslProperties)); err != nil {
 		return diag.Errorf("error setting ssl_properties: %s", err)
 	}
 
@@ -721,7 +721,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("type", dataSource.Type)
 
-	if err := d.Set("vpc_connection_properties", flattenQuickSightVpcConnectionProperties(dataSource.VpcConnectionProperties)); err != nil {
+	if err := d.Set("vpc_connection_properties", flattenVPCConnectionProperties(dataSource.VpcConnectionProperties)); err != nil {
 		return diag.Errorf("error setting vpc_connection_properties: %s", err)
 	}
 
@@ -734,7 +734,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permission", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set("permission", flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("error setting permission: %s", err)
 	}
 
@@ -757,19 +757,19 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("credentials") {
-			params.Credentials = expandQuickSightDataSourceCredentials(d.Get("credentials").([]interface{}))
+			params.Credentials = expandDataSourceCredentials(d.Get("credentials").([]interface{}))
 		}
 
 		if d.HasChange("parameters") {
-			params.DataSourceParameters = expandQuickSightDataSourceParameters(d.Get("parameters").([]interface{}))
+			params.DataSourceParameters = expandDataSourceParameters(d.Get("parameters").([]interface{}))
 		}
 
 		if d.HasChange("ssl_properties") {
-			params.SslProperties = expandQuickSightDataSourceSslProperties(d.Get("ssl_properties").([]interface{}))
+			params.SslProperties = expandDataSourceSSLProperties(d.Get("ssl_properties").([]interface{}))
 		}
 
 		if d.HasChange("vpc_connection_properties") {
-			params.VpcConnectionProperties = expandQuickSightDataSourceVpcConnectionProperties(d.Get("vpc_connection_properties").([]interface{}))
+			params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(d.Get("vpc_connection_properties").([]interface{}))
 		}
 
 		_, err = conn.UpdateDataSourceWithContext(ctx, params)
@@ -852,7 +852,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func expandQuickSightDataSourceCredentials(tfList []interface{}) *quicksight.DataSourceCredentials {
+func expandDataSourceCredentials(tfList []interface{}) *quicksight.DataSourceCredentials {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -870,13 +870,13 @@ func expandQuickSightDataSourceCredentials(tfList []interface{}) *quicksight.Dat
 	}
 
 	if v, ok := tfMap["credential_pair"].([]interface{}); ok && len(v) > 0 {
-		credentials.CredentialPair = expandQuickSightDataSourceCredentialPair(v)
+		credentials.CredentialPair = expandDataSourceCredentialPair(v)
 	}
 
 	return credentials
 }
 
-func expandQuickSightDataSourceCredentialPair(tfList []interface{}) *quicksight.CredentialPair {
+func expandDataSourceCredentialPair(tfList []interface{}) *quicksight.CredentialPair {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -900,7 +900,7 @@ func expandQuickSightDataSourceCredentialPair(tfList []interface{}) *quicksight.
 	return credentialPair
 }
 
-func expandQuickSightDataSourceParameters(tfList []interface{}) *quicksight.DataSourceParameters {
+func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourceParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1274,8 +1274,8 @@ func expandQuickSightDataSourceParameters(tfList []interface{}) *quicksight.Data
 }
 
 func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
-	old := expandQuickSightDataSourcePermissions(o)
-	new := expandQuickSightDataSourcePermissions(n)
+	old := expandDataSourcePermissions(o)
+	new := expandDataSourcePermissions(n)
 
 	var toGrant, toRevoke []*quicksight.ResourcePermission
 
@@ -1337,7 +1337,7 @@ func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*q
 	return toGrant, toRevoke
 }
 
-func expandQuickSightDataSourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
+func expandDataSourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
 	permissions := make([]*quicksight.ResourcePermission, len(tfList))
 
 	for i, tfListRaw := range tfList {
@@ -1353,7 +1353,7 @@ func expandQuickSightDataSourcePermissions(tfList []interface{}) []*quicksight.R
 	return permissions
 }
 
-func expandQuickSightDataSourceSslProperties(tfList []interface{}) *quicksight.SslProperties {
+func expandDataSourceSSLProperties(tfList []interface{}) *quicksight.SslProperties {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1372,7 +1372,7 @@ func expandQuickSightDataSourceSslProperties(tfList []interface{}) *quicksight.S
 	return props
 }
 
-func expandQuickSightDataSourceVpcConnectionProperties(tfList []interface{}) *quicksight.VpcConnectionProperties {
+func expandDataSourceVPCConnectionProperties(tfList []interface{}) *quicksight.VpcConnectionProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1392,7 +1392,7 @@ func expandQuickSightDataSourceVpcConnectionProperties(tfList []interface{}) *qu
 	return props
 }
 
-func flattenQuickSightParameters(parameters *quicksight.DataSourceParameters) []interface{} {
+func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{} {
 	if parameters == nil {
 		return []interface{}{}
 	}
@@ -1633,7 +1633,7 @@ func flattenQuickSightParameters(parameters *quicksight.DataSourceParameters) []
 	return params
 }
 
-func flattenQuickSightPermissions(perms []*quicksight.ResourcePermission) []interface{} {
+func flattenPermissions(perms []*quicksight.ResourcePermission) []interface{} {
 	if len(perms) == 0 {
 		return []interface{}{}
 	}
@@ -1661,7 +1661,7 @@ func flattenQuickSightPermissions(perms []*quicksight.ResourcePermission) []inte
 	return values
 }
 
-func flattenQuickSightSslProperties(props *quicksight.SslProperties) []interface{} {
+func flattenSSLProperties(props *quicksight.SslProperties) []interface{} {
 	if props == nil {
 		return []interface{}{}
 	}
@@ -1675,7 +1675,7 @@ func flattenQuickSightSslProperties(props *quicksight.SslProperties) []interface
 	return []interface{}{m}
 }
 
-func flattenQuickSightVpcConnectionProperties(props *quicksight.VpcConnectionProperties) []interface{} {
+func flattenVPCConnectionProperties(props *quicksight.VpcConnectionProperties) []interface{} {
 	if props == nil {
 		return []interface{}{}
 	}

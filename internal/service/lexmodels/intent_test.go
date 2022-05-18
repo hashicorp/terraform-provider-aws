@@ -27,9 +27,9 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -76,9 +76,9 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -121,9 +121,9 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_conclusionStatement(testIntentID),
@@ -177,9 +177,9 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_confirmationPromptAndRejectionStatement(testIntentID),
@@ -243,9 +243,9 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -279,9 +279,9 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_followUpPrompt(testIntentID),
@@ -351,9 +351,9 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -389,9 +389,9 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_sampleUtterances(testIntentID),
@@ -434,9 +434,9 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_slots(testIntentID),
@@ -490,9 +490,9 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -537,9 +537,9 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -600,9 +600,9 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -638,9 +638,9 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(

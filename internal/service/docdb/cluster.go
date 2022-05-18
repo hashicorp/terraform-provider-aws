@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -354,7 +353,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] DocDB Cluster restore from snapshot configuration: %s", opts)
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshot(&opts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
@@ -448,7 +447,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[DEBUG] DocDB Cluster create options: %s", createOpts)
 		var resp *docdb.CreateDBClusterOutput
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			resp, err = conn.CreateDBCluster(createOpts)
 			if err != nil {
@@ -501,7 +500,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for DocDB Cluster (%s) to be available", d.Id())
-		err = waitForDocDBClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DocDB Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -679,7 +678,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		req.CloudwatchLogsExportConfiguration = buildDocDBCloudwatchLogsExportConfiguration(d)
+		req.CloudwatchLogsExportConfiguration = buildCloudWatchLogsExportConfiguration(d)
 		requestUpdate = true
 	}
 
@@ -742,7 +741,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for DocDB Cluster (%s) to be available", d.Id())
-		err = waitForDocDBClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DocDB Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -855,7 +854,7 @@ func resourceClusterStateRefreshFunc(conn *docdb.DocDB, dbClusterIdentifier stri
 		var dbc *docdb.DBCluster
 
 		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == dbClusterIdentifier {
+			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
 				dbc = c
 			}
 		}
@@ -895,7 +894,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForDocDBClusterUpdate(conn *docdb.DocDB, id string, timeout time.Duration) error {
+func waitForClusterUpdate(conn *docdb.DocDB, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
@@ -908,7 +907,7 @@ func waitForDocDBClusterUpdate(conn *docdb.DocDB, id string, timeout time.Durati
 	return err
 }
 
-func buildDocDBCloudwatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration {
+func buildCloudWatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration {
 
 	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
 	o := oraw.([]interface{})

@@ -20,7 +20,15 @@ build: fmtcheck
 	go install
 
 gen:
+	rm -f .github/labeler-issue-triage.yml
+	rm -f .github/labeler-pr-triage.yml
+	rm -f infrastructure/repository/labels-service.tf
+	rm -f internal/conns/*_gen.go
 	rm -f internal/service/**/*_gen.go
+	rm -f internal/sweep/sweep_test.go
+	rm -f names/*_gen.go
+	rm -f website/allowed-subcategories.txt
+	rm -f website/docs/guides/custom-service-endpoints.html.md
 	go generate ./...
 
 sweep:
@@ -34,10 +42,10 @@ test: fmtcheck
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
-		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
 		echo ""; \
-		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
-		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
+		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
@@ -46,7 +54,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -93,6 +101,10 @@ docscheck:
 
 lint: golangci-lint providerlint importlint
 
+gh-workflows-lint:
+	@echo "==> Checking github workflows with actionlint..."
+	@actionlint
+
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run ./$(PKG_NAME)/...
@@ -137,6 +149,7 @@ tools:
 	cd tools && go install github.com/terraform-linters/tflint
 	cd tools && go install github.com/pavius/impi/cmd/impi
 	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -178,4 +191,4 @@ semgrep:
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
 
-.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep

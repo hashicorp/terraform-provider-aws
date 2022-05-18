@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -141,7 +140,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Creating IoT Provisioning Template: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, tfiam.PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateProvisioningTemplateWithContext(ctx, input)
 		},
@@ -235,7 +234,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[DEBUG] Updating IoT Provisioning Template: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, tfiam.PropagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateProvisioningTemplateWithContext(ctx, input)
 			},

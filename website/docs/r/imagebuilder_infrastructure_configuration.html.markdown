@@ -47,6 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description for the configuration.
+* `instance_metadata_options` - (Optional) Configuration block with instance metadata options for the HTTP requests that pipeline builds use to launch EC2 build and test instances. Detailed below.
 * `instance_types` - (Optional) Set of EC2 Instance Types.
 * `key_pair` - (Optional) Name of EC2 Key Pair.
 * `logging` - (Optional) Configuration block with logging settings. Detailed below.
@@ -56,6 +57,13 @@ The following arguments are optional:
 * `subnet_id` - (Optional) EC2 Subnet identifier. Also requires `security_group_ids` argument.
 * `tags` - (Optional) Key-value map of resource tags to assign to the configuration. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminate_instance_on_failure` - (Optional) Enable if the instance should be terminated when the pipeline fails. Defaults to `false`.
+
+### instance_metadata_options
+
+The following arguments are optional:
+
+* `http_put_response_hop_limit` - The number of hops that an instance can traverse to reach its destonation.
+* `http_tokens` - Whether a signed token is required for instance metadata retrieval requests. Valid values: `required`, `optional`.
 
 ### logging
 

@@ -301,10 +301,10 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &acmpca.CreateCertificateAuthorityInput{
-		CertificateAuthorityConfiguration: expandAcmpcaCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
+		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
 		IdempotencyToken:                  aws.String(resource.UniqueId()),
-		RevocationConfiguration:           expandAcmpcaRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
+		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -372,7 +372,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("arn", certificateAuthority.Arn)
 
-	if err := d.Set("certificate_authority_configuration", flattenAcmpcaCertificateAuthorityConfiguration(certificateAuthority.CertificateAuthorityConfiguration)); err != nil {
+	if err := d.Set("certificate_authority_configuration", flattenCertificateAuthorityConfiguration(certificateAuthority.CertificateAuthorityConfiguration)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -380,7 +380,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 
-	if err := d.Set("revocation_configuration", flattenAcmpcaRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
+	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -477,7 +477,7 @@ func resourceCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("revocation_configuration") {
-		input.RevocationConfiguration = expandAcmpcaRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
+		input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
 		updateCertificateAuthority = true
 	}
 
@@ -536,7 +536,7 @@ func resourceCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func expandAcmpcaASN1Subject(l []interface{}) *acmpca.ASN1Subject {
+func expandASN1Subject(l []interface{}) *acmpca.ASN1Subject {
 	if len(l) == 0 {
 		return nil
 	}
@@ -587,7 +587,7 @@ func expandAcmpcaASN1Subject(l []interface{}) *acmpca.ASN1Subject {
 	return subject
 }
 
-func expandAcmpcaCertificateAuthorityConfiguration(l []interface{}) *acmpca.CertificateAuthorityConfiguration {
+func expandCertificateAuthorityConfiguration(l []interface{}) *acmpca.CertificateAuthorityConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
@@ -597,13 +597,13 @@ func expandAcmpcaCertificateAuthorityConfiguration(l []interface{}) *acmpca.Cert
 	config := &acmpca.CertificateAuthorityConfiguration{
 		KeyAlgorithm:     aws.String(m["key_algorithm"].(string)),
 		SigningAlgorithm: aws.String(m["signing_algorithm"].(string)),
-		Subject:          expandAcmpcaASN1Subject(m["subject"].([]interface{})),
+		Subject:          expandASN1Subject(m["subject"].([]interface{})),
 	}
 
 	return config
 }
 
-func expandAcmpcaCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
+func expandCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
@@ -630,7 +630,7 @@ func expandAcmpcaCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 	return config
 }
 
-func expandAcmpcaRevocationConfiguration(l []interface{}) *acmpca.RevocationConfiguration {
+func expandRevocationConfiguration(l []interface{}) *acmpca.RevocationConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
@@ -638,13 +638,13 @@ func expandAcmpcaRevocationConfiguration(l []interface{}) *acmpca.RevocationConf
 	m := l[0].(map[string]interface{})
 
 	config := &acmpca.RevocationConfiguration{
-		CrlConfiguration: expandAcmpcaCrlConfiguration(m["crl_configuration"].([]interface{})),
+		CrlConfiguration: expandCrlConfiguration(m["crl_configuration"].([]interface{})),
 	}
 
 	return config
 }
 
-func flattenAcmpcaASN1Subject(subject *acmpca.ASN1Subject) []interface{} {
+func flattenASN1Subject(subject *acmpca.ASN1Subject) []interface{} {
 	if subject == nil {
 		return []interface{}{}
 	}
@@ -668,7 +668,7 @@ func flattenAcmpcaASN1Subject(subject *acmpca.ASN1Subject) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenAcmpcaCertificateAuthorityConfiguration(config *acmpca.CertificateAuthorityConfiguration) []interface{} {
+func flattenCertificateAuthorityConfiguration(config *acmpca.CertificateAuthorityConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -676,13 +676,13 @@ func flattenAcmpcaCertificateAuthorityConfiguration(config *acmpca.CertificateAu
 	m := map[string]interface{}{
 		"key_algorithm":     aws.StringValue(config.KeyAlgorithm),
 		"signing_algorithm": aws.StringValue(config.SigningAlgorithm),
-		"subject":           flattenAcmpcaASN1Subject(config.Subject),
+		"subject":           flattenASN1Subject(config.Subject),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAcmpcaCrlConfiguration(config *acmpca.CrlConfiguration) []interface{} {
+func flattenCrlConfiguration(config *acmpca.CrlConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -698,13 +698,13 @@ func flattenAcmpcaCrlConfiguration(config *acmpca.CrlConfiguration) []interface{
 	return []interface{}{m}
 }
 
-func flattenAcmpcaRevocationConfiguration(config *acmpca.RevocationConfiguration) []interface{} {
+func flattenRevocationConfiguration(config *acmpca.RevocationConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"crl_configuration": flattenAcmpcaCrlConfiguration(config.CrlConfiguration),
+		"crl_configuration": flattenCrlConfiguration(config.CrlConfiguration),
 	}
 
 	return []interface{}{m}

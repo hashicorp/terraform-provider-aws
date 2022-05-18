@@ -8,7 +8,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
 			"basic":                      testAccOrganization_basic,
-			"AwsServiceAccessPrincipals": testAccOrganization_AwsServiceAccessPrincipals,
+			"AwsServiceAccessPrincipals": testAccOrganization_serviceAccessPrincipals,
 			"EnabledPolicyTypes":         testAccOrganization_EnabledPolicyTypes,
 			"FeatureSet_Basic":           testAccOrganization_FeatureSet,
 			"FeatureSet_Update":          testAccOrganization_FeatureSetUpdate,
@@ -40,7 +40,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_Backup":            testAccPolicy_type_Backup,
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
-			"ImportAwsManagedPolicy": testAccPolicy_ImportAwsManagedPolicy,
+			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccPolicyAttachment_Account,

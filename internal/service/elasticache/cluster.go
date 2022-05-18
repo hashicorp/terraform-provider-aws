@@ -305,7 +305,7 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
 			CustomizeDiffValidateClusterEngineVersion,
-			CustomizeDiffEngineVersion,
+			customizeDiffEngineVersionForceNewOnDowngrade,
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
@@ -488,7 +488,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if c.NotificationConfiguration != nil {
-		if *c.NotificationConfiguration.TopicStatus == "active" {
+		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -565,7 +565,13 @@ func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.Cac
 	if engineVersion.Segments()[0] < 6 {
 		d.Set("engine_version", engineVersion.String())
 	} else {
-		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		// Handle major-only version number
+		configVersion := d.Get("engine_version").(string)
+		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
+			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		} else {
+			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+		}
 	}
 	d.Set("engine_version_actual", engineVersion.String())
 
@@ -753,10 +759,10 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			"id":                *node.CacheNodeId,
-			"address":           *node.Endpoint.Address,
-			"port":              int(*node.Endpoint.Port),
-			"availability_zone": *node.CustomerAvailabilityZone,
+			"id":                aws.StringValue(node.CacheNodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
 		})
 	}
 
@@ -769,7 +775,7 @@ func (b byCacheNodeId) Len() int      { return len(b) }
 func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byCacheNodeId) Less(i, j int) bool {
 	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		*b[i].CacheNodeId < *b[j].CacheNodeId
+		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {

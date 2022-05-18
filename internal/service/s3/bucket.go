@@ -13,7 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -745,18 +744,18 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// S3 Object Lock can only be enabled on bucket creation.
-	objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+	objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
 		req.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateBucket(req)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == ErrCodeOperationAborted {
-				return resource.RetryableError(fmt.Errorf("error creating S3 Bucket (%s), retrying: %w", bucket, err))
-			}
+
+		if tfawserr.ErrCodeEquals(err, ErrCodeOperationAborted) {
+			return resource.RetryableError(fmt.Errorf("error creating S3 Bucket (%s), retrying: %w", bucket, err))
 		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -782,10 +781,10 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		// Retry due to S3 eventual consistency
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			terr := BucketUpdateTags(conn, d.Id(), o, n)
 			return nil, terr
-		})
+		}, s3.ErrCodeNoSuchBucket)
 		if err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -937,11 +936,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
 
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource
-	pol, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	pol, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The call to HeadBucket above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -964,11 +963,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the Grant ACL.
 	// In the event grants are not configured on the bucket, the API returns an empty array
-	apResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	apResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketAcl(&s3.GetBucketAclInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -992,11 +991,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the CORS
-	corsResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketCors(&s3.GetBucketCorsInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1020,11 +1019,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the website configuration
-	wsResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	wsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1058,11 +1057,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the versioning configuration
 
-	versioningResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	versioningResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1085,11 +1084,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the acceleration status
 
-	accelerateResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	accelerateResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1111,11 +1110,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the request payer configuration.
 
-	payerResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	payerResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1135,11 +1134,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the logging configuration if configured outside this resource
-	loggingResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	loggingResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketLogging(&s3.GetBucketLoggingInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1164,11 +1163,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the lifecycle configuration
 
-	lifecycleResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	lifecycleResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1193,11 +1192,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the bucket replication configuration if configured outside this resource
 
-	replicationResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	replicationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketReplication(&s3.GetBucketReplicationInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1223,11 +1222,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the bucket server side encryption configuration
 
-	encryptionResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	encryptionResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1251,11 +1250,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Object Lock configuration.
-	resp, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetObjectLockConfiguration(&s3.GetObjectLockConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1279,7 +1278,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	if output, ok := resp.(*s3.GetObjectLockConfigurationOutput); ok && output.ObjectLockConfiguration != nil {
 		d.Set("object_lock_enabled", aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled)
-		if err := d.Set("object_lock_configuration", flattenS3ObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
+		if err := d.Set("object_lock_configuration", flattenObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
 	} else {
@@ -1288,7 +1287,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Add the region as an attribute
-	discoveredRegion, err := verify.RetryOnAWSCode("NotFound", func() (interface{}, error) {
+	discoveredRegion, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return s3manager.GetBucketRegionWithClient(context.Background(), conn, d.Id(), func(r *request.Request) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
@@ -1302,7 +1301,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			// Use the current credentials when getting the bucket region.
 			r.Config.Credentials = conn.Config.Credentials
 		})
-	})
+	}, "NotFound")
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1362,9 +1361,9 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return BucketListTags(conn, d.Id())
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
 	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
@@ -1431,7 +1430,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
 			var objectLockEnabled bool
-			objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+			objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 			if objectLockConfiguration != nil {
 				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
 			}
@@ -1500,13 +1499,13 @@ func websiteEndpoint(client *conns.AWSClient, d *schema.ResourceData) (*S3Websit
 
 	// Lookup the region for this bucket
 
-	locationResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	locationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return client.S3Conn.GetBucketLocation(
 			&s3.GetBucketLocationInput{
 				Bucket: aws.String(bucket),
 			},
 		)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 	if err != nil {
 		return nil, err
 	}
@@ -1559,9 +1558,9 @@ func resourceBucketInternalAccelerationUpdate(conn *s3.S3, d *schema.ResourceDat
 		},
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfiguration(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1578,9 +1577,9 @@ func resourceBucketInternalACLUpdate(conn *s3.S3, d *schema.ResourceData) error 
 		ACL:    aws.String(acl),
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAcl(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1590,11 +1589,11 @@ func resourceBucketInternalCorsUpdate(conn *s3.S3, d *schema.ResourceData) error
 
 	if len(rawCors) == 0 {
 		// Delete CORS
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
 				Bucket: aws.String(d.Id()),
 			})
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
 			return fmt.Errorf("error deleting S3 Bucket (%s) CORS: %w", d.Id(), err)
@@ -1644,9 +1643,9 @@ func resourceBucketInternalCorsUpdate(conn *s3.S3, d *schema.ResourceData) error
 		},
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketCors(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1664,11 +1663,11 @@ func resourceBucketInternalGrantsUpdate(conn *s3.S3, d *schema.ResourceData) err
 		return nil
 	}
 
-	resp, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketAcl(&s3.GetBucketAclInput{
 			Bucket: aws.String(d.Id()),
 		})
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
@@ -1688,9 +1687,9 @@ func resourceBucketInternalGrantsUpdate(conn *s3.S3, d *schema.ResourceData) err
 		},
 	}
 
-	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAcl(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1844,9 +1843,9 @@ func resourceBucketInternalLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) 
 		},
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1874,9 +1873,9 @@ func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) er
 		BucketLoggingStatus: loggingStatus,
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLogging(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1885,12 +1884,12 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Id()),
-		ObjectLockConfiguration: expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
+		ObjectLockConfiguration: expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutObjectLockConfiguration(req)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -1903,11 +1902,11 @@ func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) err
 	}
 
 	if policy == "" {
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
 				Bucket: aws.String(d.Id()),
 			})
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
 			return fmt.Errorf("error deleting S3 Bucket (%s) policy: %w", d.Id(), err)
@@ -2003,9 +2002,9 @@ func resourceBucketInternalRequestPayerUpdate(conn *s3.S3, d *schema.ResourceDat
 		},
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketRequestPayment(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -2080,9 +2079,9 @@ func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioni
 		VersioningConfiguration: versioningConfig,
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketVersioning(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -2095,9 +2094,9 @@ func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) er
 			Bucket: aws.String(d.Id()),
 		}
 
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.DeleteBucketWebsite(input)
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
 			return fmt.Errorf("error deleting S3 Bucket (%s) Website: %w", d.Id(), err)
@@ -2119,9 +2118,9 @@ func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) er
 		WebsiteConfiguration: websiteConfig,
 	}
 
-	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketWebsite(input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	return err
 }
@@ -2434,7 +2433,7 @@ func flattenBucketLoggingEnabled(loggingEnabled *s3.LoggingEnabled) []interface{
 
 // Object Lock Configuration functions
 
-func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfiguration {
+func expandObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfiguration {
 	if len(vConf) == 0 || vConf[0] == nil {
 		return nil
 	}
@@ -2472,7 +2471,7 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 	return conf
 }
 
-func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
+func flattenObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
 	if conf == nil {
 		return []interface{}{}
 	}

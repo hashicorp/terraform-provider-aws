@@ -378,10 +378,10 @@ resource "aws_cloudwatch_event_rule" "example" {
 ## Argument Reference
 
 -> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must setup the right permissions
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
    using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
    or [`aws_sns_topic.policy`](/docs/providers/aws/r/sns_topic.html#policy).
-   More info [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/resource-based-policies-cwe.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are supported:
 

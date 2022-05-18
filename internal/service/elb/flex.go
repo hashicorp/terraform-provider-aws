@@ -19,19 +19,19 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 
 	r := make(map[string]interface{})
 	if l.S3BucketName != nil {
-		r["bucket"] = *l.S3BucketName
+		r["bucket"] = aws.StringValue(l.S3BucketName)
 	}
 
 	if l.S3BucketPrefix != nil {
-		r["bucket_prefix"] = *l.S3BucketPrefix
+		r["bucket_prefix"] = aws.StringValue(l.S3BucketPrefix)
 	}
 
 	if l.EmitInterval != nil {
-		r["interval"] = *l.EmitInterval
+		r["interval"] = aws.Int64Value(l.EmitInterval)
 	}
 
 	if l.Enabled != nil {
-		r["enabled"] = *l.Enabled
+		r["enabled"] = aws.BoolValue(l.Enabled)
 	}
 
 	result = append(result, r)
@@ -57,11 +57,11 @@ func FlattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	chk := make(map[string]interface{})
-	chk["unhealthy_threshold"] = *check.UnhealthyThreshold
-	chk["healthy_threshold"] = *check.HealthyThreshold
-	chk["target"] = *check.Target
-	chk["timeout"] = *check.Timeout
-	chk["interval"] = *check.Interval
+	chk["unhealthy_threshold"] = aws.Int64Value(check.UnhealthyThreshold)
+	chk["healthy_threshold"] = aws.Int64Value(check.HealthyThreshold)
+	chk["target"] = aws.StringValue(check.Target)
+	chk["timeout"] = aws.Int64Value(check.Timeout)
+	chk["interval"] = aws.Int64Value(check.Interval)
 
 	result = append(result, chk)
 
@@ -110,7 +110,7 @@ func ExpandListeners(configured []interface{}) ([]*elb.Listener, error) {
 		}
 
 		var valid bool
-		if l.SSLCertificateId != nil && *l.SSLCertificateId != "" {
+		if aws.StringValue(l.SSLCertificateId) != "" {
 			// validate the protocol is correct
 			for _, p := range []string{"https", "ssl"} {
 				if (strings.ToLower(*l.InstanceProtocol) == p) || (strings.ToLower(*l.Protocol) == p) {
@@ -143,7 +143,7 @@ func flattenListeners(list []*elb.ListenerDescription) []map[string]interface{} 
 		}
 		// SSLCertificateID is optional, and may be nil
 		if i.Listener.SSLCertificateId != nil {
-			l["ssl_certificate_id"] = *i.Listener.SSLCertificateId
+			l["ssl_certificate_id"] = aws.StringValue(i.Listener.SSLCertificateId)
 		}
 		result = append(result, l)
 	}

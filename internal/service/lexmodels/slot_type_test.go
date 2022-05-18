@@ -25,9 +25,9 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -70,9 +70,9 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -116,9 +116,9 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -160,9 +160,9 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -210,9 +210,9 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID1),
@@ -254,9 +254,9 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -298,9 +298,9 @@ func TestAccLexModelsSlotType_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -330,9 +330,9 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(

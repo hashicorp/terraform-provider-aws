@@ -25,12 +25,12 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqConfigurationConfig(rName),
+				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
@@ -48,7 +48,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMqConfigurationConfig_descriptionUpdated(rName),
+				Config: testAccConfigurationConfig_descriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
@@ -73,12 +73,12 @@ func TestAccMQConfiguration_withData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqConfigurationWithDataConfig(rName),
+				Config: testAccConfigurationConfig_data(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
@@ -108,12 +108,12 @@ func TestAccMQConfiguration_withLdapData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqConfigurationWithLdapDataConfig(rName),
+				Config: testAccConfigurationConfig_ldapData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
@@ -144,12 +144,12 @@ func TestAccMQConfiguration_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigurationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqConfigurationConfig_updateTags1(rName),
+				Config: testAccConfigurationConfig_updateTags1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -162,7 +162,7 @@ func TestAccMQConfiguration_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMqConfigurationConfig_updateTags2(rName),
+				Config: testAccConfigurationConfig_updateTags2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -171,7 +171,7 @@ func TestAccMQConfiguration_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMqConfigurationConfig_updateTags3(rName),
+				Config: testAccConfigurationConfig_updateTags3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -221,7 +221,7 @@ func testAccCheckConfigurationExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccMqConfigurationConfig(rName string) string {
+func testAccConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
@@ -239,7 +239,7 @@ DATA
 `, rName)
 }
 
-func testAccMqConfigurationConfig_descriptionUpdated(rName string) string {
+func testAccConfigurationConfig_descriptionUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration Updated"
@@ -256,7 +256,7 @@ DATA
 `, rName)
 }
 
-func testAccMqConfigurationWithDataConfig(rName string) string {
+func testAccConfigurationConfig_data(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
@@ -291,7 +291,7 @@ DATA
 `, rName)
 }
 
-func testAccMqConfigurationWithLdapDataConfig(rName string) string {
+func testAccConfigurationConfig_ldapData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
@@ -319,7 +319,7 @@ DATA
 `, rName)
 }
 
-func testAccMqConfigurationConfig_updateTags1(rName string) string {
+func testAccConfigurationConfig_updateTags1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
@@ -340,7 +340,7 @@ DATA
 `, rName)
 }
 
-func testAccMqConfigurationConfig_updateTags2(rName string) string {
+func testAccConfigurationConfig_updateTags2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
@@ -362,7 +362,7 @@ DATA
 `, rName)
 }
 
-func testAccMqConfigurationConfig_updateTags3(rName string) string {
+func testAccConfigurationConfig_updateTags3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"

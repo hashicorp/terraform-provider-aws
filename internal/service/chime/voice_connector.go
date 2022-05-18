@@ -108,11 +108,6 @@ func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if _, err := conn.UpdateVoiceConnectorWithContext(ctx, updateInput); err != nil {
-			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
-				log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
-				d.SetId("")
-				return nil
-			}
 			return diag.Errorf("Error updating Voice connector (%s): %s", d.Id(), err)
 		}
 	}

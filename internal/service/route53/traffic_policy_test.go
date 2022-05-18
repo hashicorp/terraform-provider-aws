@@ -21,15 +21,15 @@ func TestAccRoute53TrafficPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53TrafficPolicyDestroy,
+		CheckDestroy:      testAccCheckTrafficPolicyDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyExists(resourceName, &v),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "A"),
@@ -52,15 +52,15 @@ func TestAccRoute53TrafficPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53TrafficPolicyDestroy,
+		CheckDestroy:      testAccCheckTrafficPolicyDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyExists(resourceName, &v),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceTrafficPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,22 +77,22 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 	commentUpdated := `comment updated`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoute53TrafficPolicyDestroy,
+		CheckDestroy:      testAccCheckTrafficPolicyDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyConfigComplete(rName, comment),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyExists(resourceName, &v),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
 				Config: testAccTrafficPolicyConfigComplete(rName, commentUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53TrafficPolicyExists(resourceName, &v),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", commentUpdated),
 				),
 			},
@@ -106,7 +106,7 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53TrafficPolicyExists(n string, v *route53.TrafficPolicy) resource.TestCheckFunc {
+func testAccCheckTrafficPolicyExists(n string, v *route53.TrafficPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -131,7 +131,7 @@ func testAccCheckRoute53TrafficPolicyExists(n string, v *route53.TrafficPolicy) 
 	}
 }
 
-func testAccCheckRoute53TrafficPolicyDestroy(s *terraform.State) error {
+func testAccCheckTrafficPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {

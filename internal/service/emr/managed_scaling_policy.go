@@ -135,7 +135,7 @@ func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("cluster_id", d.Id())
-	d.Set("compute_limits", flattenEmrComputeLimits(resp.ManagedScalingPolicy.ComputeLimits))
+	d.Set("compute_limits", flattenComputeLimits(resp.ManagedScalingPolicy.ComputeLimits))
 
 	return nil
 }
@@ -164,7 +164,7 @@ func resourceManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func flattenEmrComputeLimits(apiObject *emr.ComputeLimits) []interface{} {
+func flattenComputeLimits(apiObject *emr.ComputeLimits) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

@@ -181,7 +181,7 @@ func updateSqlInjectionMatchSetResourceWR(id string, oldT, newT []interface{}, c
 		req := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(id),
-			Updates:                diffWafSqlInjectionMatchTuplesWR(oldT, newT),
+			Updates:                diffSQLInjectionMatchTuplesWR(oldT, newT),
 		}
 
 		log.Printf("[INFO] Updating Regional WAF SQL Injection Match Set: %s", req)
@@ -191,7 +191,7 @@ func updateSqlInjectionMatchSetResourceWR(id string, oldT, newT []interface{}, c
 	return err
 }
 
-func diffWafSqlInjectionMatchTuplesWR(oldT, newT []interface{}) []*waf.SqlInjectionMatchSetUpdate {
+func diffSQLInjectionMatchTuplesWR(oldT, newT []interface{}) []*waf.SqlInjectionMatchSetUpdate {
 	updates := make([]*waf.SqlInjectionMatchSetUpdate, 0)
 
 	for _, od := range oldT {

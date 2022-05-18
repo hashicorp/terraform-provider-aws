@@ -139,8 +139,8 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 
 			if err != nil {
 				// Add the original error and the new error.
-				deleteErrs = multierror.Append(deleteErrs, newDeleteS3ObjectVersionError(v))
-				deleteErrs = multierror.Append(deleteErrs, fmt.Errorf("removing legal hold: %w", newS3ObjectVersionError(key, versionID, err)))
+				deleteErrs = multierror.Append(deleteErrs, newDeleteObjectVersionError(v))
+				deleteErrs = multierror.Append(deleteErrs, fmt.Errorf("removing legal hold: %w", newObjectVersionError(key, versionID, err)))
 			} else {
 				// Attempt to delete the object once the legal hold has been removed.
 				_, err := conn.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
@@ -150,13 +150,13 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 				})
 
 				if err != nil {
-					deleteErrs = multierror.Append(deleteErrs, fmt.Errorf("deleting: %w", newS3ObjectVersionError(key, versionID, err)))
+					deleteErrs = multierror.Append(deleteErrs, fmt.Errorf("deleting: %w", newObjectVersionError(key, versionID, err)))
 				} else {
 					nObjects++
 				}
 			}
 		} else {
-			deleteErrs = multierror.Append(deleteErrs, newDeleteS3ObjectVersionError(v))
+			deleteErrs = multierror.Append(deleteErrs, newDeleteObjectVersionError(v))
 		}
 	}
 
@@ -207,7 +207,7 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 	var deleteErrs *multierror.Error
 
 	for _, v := range output.Errors {
-		deleteErrs = multierror.Append(deleteErrs, newDeleteS3ObjectVersionError(v))
+		deleteErrs = multierror.Append(deleteErrs, newDeleteObjectVersionError(v))
 	}
 
 	if err := deleteErrs.ErrorOrNil(); err != nil {
@@ -217,7 +217,7 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 	return nObjects, nil
 }
 
-func newS3ObjectVersionError(key, versionID string, err error) error {
+func newObjectVersionError(key, versionID string, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -229,12 +229,12 @@ func newS3ObjectVersionError(key, versionID string, err error) error {
 	return fmt.Errorf("S3 object (%s) version (%s): %w", key, versionID, err)
 }
 
-func newDeleteS3ObjectVersionError(err *s3.Error) error {
+func newDeleteObjectVersionError(err *s3.Error) error {
 	if err == nil {
 		return nil
 	}
 
 	awsErr := awserr.New(aws.StringValue(err.Code), aws.StringValue(err.Message), nil)
 
-	return fmt.Errorf("deleting: %w", newS3ObjectVersionError(aws.StringValue(err.Key), aws.StringValue(err.VersionId), awsErr))
+	return fmt.Errorf("deleting: %w", newObjectVersionError(aws.StringValue(err.Key), aws.StringValue(err.VersionId), awsErr))
 }

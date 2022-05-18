@@ -69,6 +69,10 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 			protov5: c.ProtoV5ProviderFactories,
 			protov6: c.ProtoV6ProviderFactories})
 		if err != nil {
+			logging.HelperResourceError(ctx,
+				"Error retrieving state, there may be dangling resources",
+				map[string]interface{}{logging.KeyError: err},
+			)
 			t.Fatalf("Error retrieving state, there may be dangling resources: %s", err.Error())
 			return
 		}
@@ -76,6 +80,10 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 		if !stateIsEmpty(statePreDestroy) {
 			err := runPostTestDestroy(ctx, t, c, wd, c.ProviderFactories, c.ProtoV5ProviderFactories, c.ProtoV6ProviderFactories, statePreDestroy)
 			if err != nil {
+				logging.HelperResourceError(ctx,
+					"Error running post-test destroy, there may be dangling resources",
+					map[string]interface{}{logging.KeyError: err},
+				)
 				t.Fatalf("Error running post-test destroy, there may be dangling resources: %s", err.Error())
 			}
 		}
@@ -85,12 +93,20 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 
 	providerCfg, err := testProviderConfig(c)
 	if err != nil {
-		t.Fatal(err)
+		logging.HelperResourceError(ctx,
+			"Error creating test provider configuration",
+			map[string]interface{}{logging.KeyError: err},
+		)
+		t.Fatalf("Error creating test provider configuration: %s", err.Error())
 	}
 
 	err = wd.SetConfig(ctx, providerCfg)
 	if err != nil {
-		t.Fatalf("Error setting test config: %s", err)
+		logging.HelperResourceError(ctx,
+			"Error setting test provider configuration",
+			map[string]interface{}{logging.KeyError: err},
+		)
+		t.Fatalf("Error setting test provider configuration: %s", err)
 	}
 	err = runProviderCommand(ctx, t, func() error {
 		return wd.Init(ctx)
@@ -99,6 +115,10 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 		protov5: c.ProtoV5ProviderFactories,
 		protov6: c.ProtoV6ProviderFactories})
 	if err != nil {
+		logging.HelperResourceError(ctx,
+			"Error running init",
+			map[string]interface{}{logging.KeyError: err},
+		)
 		t.Fatalf("Error running init: %s", err.Error())
 		return
 	}
@@ -125,7 +145,11 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 
 			skip, err := step.SkipFunc()
 			if err != nil {
-				t.Fatal(err)
+				logging.HelperResourceError(ctx,
+					"Error calling TestStep SkipFunc",
+					map[string]interface{}{logging.KeyError: err},
+				)
+				t.Fatalf("Error calling TestStep SkipFunc: %s", err.Error())
 			}
 
 			logging.HelperResourceDebug(ctx, "Called TestStep SkipFunc")
@@ -144,17 +168,29 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 			if step.ExpectError != nil {
 				logging.HelperResourceDebug(ctx, "Checking TestStep ExpectError")
 				if err == nil {
+					logging.HelperResourceError(ctx,
+						"Error running import: expected an error but got none",
+					)
 					t.Fatalf("Step %d/%d error running import: expected an error but got none", i+1, len(c.Steps))
 				}
 				if !step.ExpectError.MatchString(err.Error()) {
+					logging.HelperResourceError(ctx,
+						fmt.Sprintf("Error running import: expected an error with pattern (%s)", step.ExpectError.String()),
+						map[string]interface{}{logging.KeyError: err},
+					)
 					t.Fatalf("Step %d/%d error running import, expected an error with pattern (%s), no match on: %s", i+1, len(c.Steps), step.ExpectError.String(), err)
 				}
 			} else {
 				if err != nil && c.ErrorCheck != nil {
 					logging.HelperResourceDebug(ctx, "Calling TestCase ErrorCheck")
 					err = c.ErrorCheck(err)
+					logging.HelperResourceDebug(ctx, "Called TestCase ErrorCheck")
 				}
 				if err != nil {
+					logging.HelperResourceError(ctx,
+						"Error running import",
+						map[string]interface{}{logging.KeyError: err},
+					)
 					t.Fatalf("Step %d/%d error running import: %s", i+1, len(c.Steps), err)
 				}
 			}
@@ -172,9 +208,16 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 				logging.HelperResourceDebug(ctx, "Checking TestStep ExpectError")
 
 				if err == nil {
+					logging.HelperResourceError(ctx,
+						"Expected an error but got none",
+					)
 					t.Fatalf("Step %d/%d, expected an error but got none", i+1, len(c.Steps))
 				}
 				if !step.ExpectError.MatchString(err.Error()) {
+					logging.HelperResourceError(ctx,
+						fmt.Sprintf("Expected an error with pattern (%s)", step.ExpectError.String()),
+						map[string]interface{}{logging.KeyError: err},
+					)
 					t.Fatalf("Step %d/%d, expected an error with pattern, no match on: %s", i+1, len(c.Steps), err)
 				}
 			} else {
@@ -186,6 +229,10 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 					logging.HelperResourceDebug(ctx, "Called TestCase ErrorCheck")
 				}
 				if err != nil {
+					logging.HelperResourceError(ctx,
+						"Unexpected error",
+						map[string]interface{}{logging.KeyError: err},
+					)
 					t.Fatalf("Step %d/%d error: %s", i+1, len(c.Steps), err)
 				}
 			}
@@ -197,7 +244,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 			continue
 		}
 
-		t.Fatal("Unsupported test mode")
+		t.Fatalf("Step %d/%d, unsupported test mode", i+1, len(c.Steps))
 	}
 }
 

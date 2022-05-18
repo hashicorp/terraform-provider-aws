@@ -93,7 +93,7 @@ func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &devicefarm.CreateDevicePoolInput{
 		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Rules:      expandAwsDevicefarmDevicePoolRules(d.Get("rule").(*schema.Set)),
+		Rules:      expandDevicePoolRules(d.Get("rule").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -146,14 +146,14 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", devicePool.Description)
 	d.Set("max_devices", devicePool.MaxDevices)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "devicepool", meta)
+	projectArn, err := decodeProjectARN(arn, "devicepool", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
 
 	d.Set("project_arn", projectArn)
 
-	if err := d.Set("rule", flattenAwsDevicefarmDevicePoolRules(devicePool.Rules)); err != nil {
+	if err := d.Set("rule", flattenDevicePoolRules(devicePool.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
@@ -194,7 +194,7 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("rule") {
-			input.Rules = expandAwsDevicefarmDevicePoolRules(d.Get("rule").(*schema.Set))
+			input.Rules = expandDevicePoolRules(d.Get("rule").(*schema.Set))
 		}
 
 		if d.HasChange("max_devices") {
@@ -244,7 +244,7 @@ func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsDevicefarmDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
+func expandDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	rules := make([]*devicefarm.Rule, 0)
 
 	for _, r := range s.List() {
@@ -268,7 +268,7 @@ func expandAwsDevicefarmDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	return rules
 }
 
-func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
 	if len(list) == 0 {
 		return nil
 	}
@@ -294,7 +294,7 @@ func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]i
 	return result
 }
 
-func decodeDevicefarmProjectArn(id, typ string, meta interface{}) (string, error) {
+func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 	poolArn, err := arn.Parse(id)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing '%s': %w", id, err)

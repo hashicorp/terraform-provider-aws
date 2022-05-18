@@ -20,15 +20,15 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyCorsConfigConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "false"),
@@ -61,7 +61,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 			{
 				Config: testAccResponseHeadersPolicyCorsConfigUpdatedConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "true"),
@@ -95,15 +95,15 @@ func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyCustomHeadersConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
@@ -138,15 +138,15 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicySecurityHeadersConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
@@ -184,7 +184,7 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 			{
 				Config: testAccResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
@@ -215,15 +215,15 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyCorsConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceResponseHeadersPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -232,7 +232,7 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudFrontResponseHeadersPolicyDestroy(s *terraform.State) error {
+func testAccCheckResponseHeadersPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -256,7 +256,7 @@ func testAccCheckCloudFrontResponseHeadersPolicyDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckCloudFrontResponseHeadersPolicyExists(n string) resource.TestCheckFunc {
+func testAccCheckResponseHeadersPolicyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

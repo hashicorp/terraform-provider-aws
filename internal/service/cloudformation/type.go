@@ -313,7 +313,7 @@ func expandCloudformationLoggingConfig(tfMap map[string]interface{}) *cloudforma
 	return apiObject
 }
 
-func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
+func expandOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
 	if tfMap == nil {
 		return nil
 	}
@@ -337,6 +337,18 @@ func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *clo
 	}
 	if v, ok := tfMap["region_order"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.RegionOrder = flex.ExpandStringSet(v)
+	}
+
+	if ftc, ftp := aws.Int64Value(apiObject.FailureToleranceCount), aws.Int64Value(apiObject.FailureTolerancePercentage); ftp == 0 {
+		apiObject.FailureTolerancePercentage = nil
+	} else if ftc == 0 {
+		apiObject.FailureToleranceCount = nil
+	}
+
+	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcp == 0 {
+		apiObject.MaxConcurrentPercentage = nil
+	} else if mcc == 0 {
+		apiObject.MaxConcurrentCount = nil
 	}
 
 	return apiObject

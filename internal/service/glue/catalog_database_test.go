@@ -20,16 +20,16 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueCatalogDatabase_basic(rName),
+				Config:  testAccCatalogDatabaseConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -44,10 +44,10 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccGlueCatalogDatabase_full(rName, "A test catalog from terraform"),
+				Config:  testAccCatalogDatabaseConfig_full(rName, "A test catalog from terraform"),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
@@ -56,9 +56,9 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCatalogDatabase_full(rName, "An updated test catalog from terraform"),
+				Config: testAccCatalogDatabaseConfig_full(rName, "An updated test catalog from terraform"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "An updated test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
@@ -75,16 +75,16 @@ func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueCatalogDatabasePermissionConfig(rName, "ALTER"),
+				Config:  testAccCatalogDatabaseConfig_permission(rName, "ALTER"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALTER"),
@@ -98,10 +98,10 @@ func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccGlueCatalogDatabasePermissionConfig(rName, "SELECT"),
+				Config:  testAccCatalogDatabaseConfig_permission(rName, "SELECT"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "SELECT"),
@@ -118,16 +118,16 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueCatalogDatabaseConfigTargetDatabase(rName),
+				Config:  testAccCatalogDatabaseConfig_targetDatabase(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", "name"),
@@ -139,10 +139,10 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccGlueCatalogDatabaseConfigTargetDatabaseWithLocation(rName),
+				Config:  testAccCatalogDatabaseConfig_targetDatabaseLocation(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", "name"),
@@ -157,15 +157,15 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCatalogDatabase_basic(rName),
+				Config: testAccCatalogDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckCatalogDatabaseExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -174,7 +174,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
+func testAccCheckDatabaseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -204,7 +204,7 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlueCatalogDatabase_basic(rName string) string {
+func testAccCatalogDatabaseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -212,7 +212,7 @@ resource "aws_glue_catalog_database" "test" {
 `, rName)
 }
 
-func testAccGlueCatalogDatabase_full(rName, desc string) string {
+func testAccCatalogDatabaseConfig_full(rName, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name         = %[1]q
@@ -228,7 +228,7 @@ resource "aws_glue_catalog_database" "test" {
 `, rName, desc)
 }
 
-func testAccGlueCatalogDatabaseConfigTargetDatabase(rName string) string {
+func testAccCatalogDatabaseConfig_targetDatabase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -245,7 +245,7 @@ resource "aws_glue_catalog_database" "test2" {
 `, rName)
 }
 
-func testAccGlueCatalogDatabaseConfigTargetDatabaseWithLocation(rName string) string {
+func testAccCatalogDatabaseConfig_targetDatabaseLocation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -263,7 +263,7 @@ resource "aws_glue_catalog_database" "test2" {
 `, rName)
 }
 
-func testAccGlueCatalogDatabasePermissionConfig(rName, permission string) string {
+func testAccCatalogDatabaseConfig_permission(rName, permission string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -279,7 +279,7 @@ resource "aws_glue_catalog_database" "test" {
 `, rName, permission)
 }
 
-func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
+func testAccCheckCatalogDatabaseExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

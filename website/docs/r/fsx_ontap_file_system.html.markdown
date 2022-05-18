@@ -28,11 +28,11 @@ resource "aws_fsx_ontap_file_system" "test" {
 The following arguments are supported:
 
 * `storage_capacity` - (Optional) The storage capacity (GiB) of the file system. Valid values between `1024` and `196608`.
-* `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Exactly 2 subnets need to be provided.
+* `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Upto 2 subnets can be provided.
 * `preferred_subnet_id` - (Required) The ID for a subnet. A subnet is a range of IP addresses in your virtual private cloud (VPC).
 * `security_group_ids` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
-* `deployment_type` - (Optional) - The filesystem deployment type. Only `MULTI_AZ_1` is supported.
+* `deployment_type` - (Optional) - The filesystem deployment type. Supports `MULTI_AZ_1` and `SINGLE_AZ_1`.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
 * `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `daily_automatic_backup_start_time` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.

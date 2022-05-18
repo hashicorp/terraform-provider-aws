@@ -134,11 +134,11 @@ func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfiguration = expandSfnLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TracingConfiguration = expandSfnTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	var output *sfn.CreateStateMachineOutput
@@ -211,7 +211,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", output.Status)
 
 	if output.LoggingConfiguration != nil {
-		if err := d.Set("logging_configuration", []interface{}{flattenSfnLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return fmt.Errorf("error setting logging_configuration: %w", err)
 		}
 	} else {
@@ -219,7 +219,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output.TracingConfiguration != nil {
-		if err := d.Set("tracing_configuration", []interface{}{flattenSfnTracingConfiguration(output.TracingConfiguration)}); err != nil {
+		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
 			return fmt.Errorf("error setting tracing_configuration: %w", err)
 		}
 	} else {
@@ -263,13 +263,13 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		if d.HasChange("logging_configuration") {
 			if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LoggingConfiguration = expandSfnLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
 		if d.HasChange("tracing_configuration") {
 			if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TracingConfiguration = expandSfnTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+				input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -290,9 +290,9 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
 				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
-				d.HasChange("tracing_configuration.0.enabled") && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
-				d.HasChange("logging_configuration.0.include_execution_data") && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
-				d.HasChange("logging_configuration.0.level") && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
+				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
+				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
+				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
 				return resource.RetryableError(fmt.Errorf("Step Function State Machine (%s) eventual consistency", d.Id()))
 			}
 
@@ -332,7 +332,7 @@ func resourceStateMachineDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandSfnLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingConfiguration {
+func expandLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -358,7 +358,7 @@ func expandSfnLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingCon
 	return apiObject
 }
 
-func flattenSfnLoggingConfiguration(apiObject *sfn.LoggingConfiguration) map[string]interface{} {
+func flattenLoggingConfiguration(apiObject *sfn.LoggingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -380,7 +380,7 @@ func flattenSfnLoggingConfiguration(apiObject *sfn.LoggingConfiguration) map[str
 	return tfMap
 }
 
-func expandSfnTracingConfiguration(tfMap map[string]interface{}) *sfn.TracingConfiguration {
+func expandTracingConfiguration(tfMap map[string]interface{}) *sfn.TracingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -394,7 +394,7 @@ func expandSfnTracingConfiguration(tfMap map[string]interface{}) *sfn.TracingCon
 	return apiObject
 }
 
-func flattenSfnTracingConfiguration(apiObject *sfn.TracingConfiguration) map[string]interface{} {
+func flattenTracingConfiguration(apiObject *sfn.TracingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

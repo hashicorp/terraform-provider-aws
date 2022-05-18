@@ -133,7 +133,7 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 
 // FactoriesInternal creates ProviderFactories for provider configuration testing
 //
-// This should only be used for TestAccAWSProvider_ tests which need to
+// This should only be used for TestAccProvider_ tests which need to
 // reference the provider instance itself. Other testing should use
 // ProviderFactories or other related functions.
 func FactoriesInternal(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
@@ -612,7 +612,7 @@ func PreCheckAlternateAccount(t *testing.T) {
 func PreCheckPartitionHasService(serviceId string, t *testing.T) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
 		if _, ok := partition.Services()[serviceId]; !ok {
-			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))
+			t.Skipf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId)
 		}
 	}
 }
@@ -653,24 +653,33 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 
 // PreCheckRegion checks that the test region is the specified region.
 func PreCheckRegion(t *testing.T, region string) {
-	if Region() != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, Region(), region)
+	if curr := Region(); curr != region {
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
 	}
 }
 
 // PreCheckRegionNot checks that the test region is not one of the specified regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	for _, region := range regions {
-		if Region() == region {
-			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		if curr := Region(); curr == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, curr)
 		}
 	}
 }
 
 // PreCheckPartition checks that the test partition is the specified partition.
-func PreCheckPartition(partition string, t *testing.T) {
-	if Partition() != partition {
-		t.Skipf("skipping tests; current partition (%s) does not equal %s", Partition(), partition)
+func PreCheckPartition(t *testing.T, partition string) {
+	if curr := Partition(); curr != partition {
+		t.Skipf("skipping tests; current partition (%s) does not equal %s", curr, partition)
+	}
+}
+
+// PreCheckPartitionNot checks that the test partition is not one of the specified partitions.
+func PreCheckPartitionNot(t *testing.T, partitions ...string) {
+	for _, partition := range partitions {
+		if curr := Partition(); curr == partition {
+			t.Skipf("skipping tests; current partition (%s) not supported", curr)
+		}
 	}
 }
 
@@ -1817,22 +1826,30 @@ resource "aws_security_group" "sg_for_lambda" {
 `, policyName, roleName, sgName)
 }
 
-func ConfigVpcWithSubnets(subnetCount int) string {
+func ConfigVpcWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
-  count = %[1]d
+  count = %[2]d
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, subnetCount),
+`, rName, subnetCount),
 	)
 }
 
