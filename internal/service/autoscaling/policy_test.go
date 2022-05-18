@@ -42,7 +42,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					testAccCheckScalingPolicyExists(resourceStepName, &v),
 					resource.TestCheckResourceAttr(resourceStepName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceStepName, "autoscaling_group_name", rName),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceStepName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr(resourceStepName, "metric_aggregation_type", "Minimum"),
 					resource.TestCheckResourceAttr(resourceStepName, "name", rName+"-step"),
@@ -53,7 +53,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 
 					testAccCheckScalingPolicyExists(resourceTargetTrackingName, &v),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "autoscaling_group_name", rName),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "name", rName+"-tracking"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
@@ -90,7 +90,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 
 					testAccCheckScalingPolicyExists(resourceStepName, &v),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceStepName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "20"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
@@ -98,7 +98,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					}),
 
 					testAccCheckScalingPolicyExists(resourceTargetTrackingName, &v),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "1"),

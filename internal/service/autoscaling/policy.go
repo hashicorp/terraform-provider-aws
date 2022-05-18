@@ -30,18 +30,13 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"adjustment_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"autoscaling_group_name": {
 				Type:     schema.TypeString,
@@ -71,6 +66,11 @@ func ResourcePolicy() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"policy_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -83,6 +83,17 @@ func ResourcePolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"max_capacity_breach_behavior": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      autoscaling.PredictiveScalingMaxCapacityBreachBehaviorHonorMaxCapacity,
+							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMaxCapacityBreachBehavior_Values(), false),
+						},
+						"max_capacity_buffer": {
+							Type:         nullable.TypeNullableInt,
+							Optional:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
+						},
 						"metric_specification": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -131,6 +142,25 @@ func ResourcePolicy() *schema.Resource {
 											},
 										},
 									},
+									"predefined_load_metric_specification": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"predefined_metric_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedLoadMetricType_Values(), false),
+												},
+												"resource_label": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 									"predefined_metric_pair_specification": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -168,42 +198,12 @@ func ResourcePolicy() *schema.Resource {
 											},
 										},
 									},
-									"predefined_load_metric_specification": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										MaxItems:      1,
-										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"predefined_metric_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedLoadMetricType_Values(), false),
-												},
-												"resource_label": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
 									"target_value": {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
 								},
 							},
-						},
-						"max_capacity_breach_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      autoscaling.PredictiveScalingMaxCapacityBreachBehaviorHonorMaxCapacity,
-							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMaxCapacityBreachBehavior_Values(), false),
-						},
-						"max_capacity_buffer": {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
 						},
 						"mode": {
 							Type:         schema.TypeString,
@@ -252,24 +252,6 @@ func ResourcePolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"predefined_metric_specification": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"predefined_metric_type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"resource_label": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
 						"customized_metric_specification": {
 							Type:          schema.TypeList,
 							Optional:      true,
@@ -312,14 +294,32 @@ func ResourcePolicy() *schema.Resource {
 								},
 							},
 						},
-						"target_value": {
-							Type:     schema.TypeFloat,
-							Required: true,
-						},
 						"disable_scale_in": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"predefined_metric_specification": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"predefined_metric_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"resource_label": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"target_value": {
+							Type:     schema.TypeFloat,
+							Required: true,
 						},
 					},
 				},
