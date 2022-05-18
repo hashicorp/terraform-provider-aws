@@ -47,16 +47,14 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
-
-					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
-
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
 				),
 			},
 			{
@@ -69,16 +67,14 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
-
-					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
-
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
 				),
 			},
 		},
