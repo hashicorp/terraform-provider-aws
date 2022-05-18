@@ -357,7 +357,8 @@ resource "aws_cloudwatchevidently_project" "test" {
 func testAccProjectBaseConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
