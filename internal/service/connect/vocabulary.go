@@ -24,11 +24,13 @@ func ResourceVocabulary() *schema.Resource {
 		CreateContext: resourceVocabularyCreate,
 		ReadContext:   resourceVocabularyRead,
 		UpdateContext: schema.NoopContext,
+		DeleteContext: resourceVocabularyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(connectVocabularyCreatedTimeout),
+			Delete: schema.DefaultTimeout(connectVocabularyDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -178,6 +180,31 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteVocabularyWithContext(ctx, &connect.DeleteVocabularyInput{
+		InstanceId:   aws.String(instanceID),
+		VocabularyId: aws.String(vocabularyID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Vocabulary (%s): %w", d.Id(), err))
+	}
+
+	if _, err := waitVocabularyDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), instanceID, vocabularyID); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Vocabulary (%s) deletion: %w", d.Id(), err))
 	}
 
 	return nil
