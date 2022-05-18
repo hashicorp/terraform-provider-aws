@@ -426,7 +426,7 @@ resource "aws_eip_association" "test" {
 `, rName))
 }
 
-func testAccEIPAssociationConfig_ec2Classic() string {
+func testAccEIPAssociationConfig_ec2Classic() string { // nosemgrep:ec2-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		testAccLatestAmazonLinuxPVEBSAMIConfig(),

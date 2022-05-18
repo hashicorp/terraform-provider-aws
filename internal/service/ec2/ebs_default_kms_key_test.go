@@ -41,7 +41,7 @@ func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 }
 
 func testAccCheckEBSDefaultKMSKeyDestroy(s *terraform.State) error {
-	arn, err := testAccEBSAWSManagedDefaultKey()
+	arn, err := testAccEBSManagedDefaultKey()
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		arn, err := testAccEBSAWSManagedDefaultKey()
+		arn, err := testAccEBSManagedDefaultKey()
 		if err != nil {
 			return err
 		}
@@ -93,8 +93,8 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 	}
 }
 
-// testAccEBSAWSManagedDefaultKey returns' the account's AWS-managed default CMK.
-func testAccEBSAWSManagedDefaultKey() (*arn.ARN, error) {
+// testAccEBSManagedDefaultKey returns' the account's AWS-managed default CMK.
+func testAccEBSManagedDefaultKey() (*arn.ARN, error) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	alias, err := tfkms.FindAliasByName(conn, "alias/aws/ebs")

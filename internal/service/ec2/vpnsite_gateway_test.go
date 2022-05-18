@@ -18,7 +18,7 @@ import (
 
 // add sweeper to delete known test VPN Gateways
 
-func TestAccVPNSiteGateway_basic(t *testing.T) {
+func TestAccSiteVPNGateway_basic(t *testing.T) {
 	var v1, v2 ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -68,7 +68,7 @@ func TestAccVPNSiteGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGateway_withAvailabilityZoneSetToState(t *testing.T) {
+func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	azDataSourceName := "data.aws_availability_zones.available"
@@ -97,7 +97,7 @@ func TestAccVPNSiteGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGateway_withAmazonSideASN(t *testing.T) {
+func TestAccSiteVPNGateway_withAmazonSideASN(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -125,7 +125,7 @@ func TestAccVPNSiteGateway_withAmazonSideASN(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGateway_disappears(t *testing.T) {
+func TestAccSiteVPNGateway_disappears(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -148,7 +148,7 @@ func TestAccVPNSiteGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGateway_reattach(t *testing.T) {
+func TestAccSiteVPNGateway_reattach(t *testing.T) {
 	var vpc1, vpc2 ec2.Vpc
 	var vgw1, vgw2 ec2.VpnGateway
 	vpcResourceName1 := "aws_vpc.test1"
@@ -238,7 +238,7 @@ func TestAccVPNSiteGateway_reattach(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGateway_tags(t *testing.T) {
+func TestAccSiteVPNGateway_tags(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

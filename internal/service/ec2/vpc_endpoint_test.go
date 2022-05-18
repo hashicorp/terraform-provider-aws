@@ -303,7 +303,7 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) { // nosempgrep:aws-in-func-name
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -315,7 +315,7 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, true),
+				Config: testAccVPCEndpointConfig_interfaceNonAWSService(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
@@ -344,7 +344,7 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) { // nosempgrep:aws-in-func-name
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -356,7 +356,7 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, false),
+				Config: testAccVPCEndpointConfig_interfaceNonAWSService(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
@@ -376,7 +376,7 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, true),
+				Config: testAccVPCEndpointConfig_interfaceNonAWSService(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
@@ -865,7 +865,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVpcEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string {
+func testAccVPCEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string { // nosemgrep:aws-in-func-name
 	return acctest.ConfigCompose(
 		testAccVpcEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`

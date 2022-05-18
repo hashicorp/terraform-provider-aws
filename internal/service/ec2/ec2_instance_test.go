@@ -4944,7 +4944,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_ec2Classic() string {
+func testAccInstanceConfig_ec2Classic() string { // nosempgrep:ec2-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),

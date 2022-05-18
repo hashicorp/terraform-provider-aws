@@ -91,7 +91,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 }
 
 func testAccEndpointDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfig(rName), `
+	return acctest.ConfigCompose(testAccClientVpnEndpointConfig_basic(rName), `
 data "aws_ec2_client_vpn_endpoint" "by_id" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
 }

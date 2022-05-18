@@ -21,7 +21,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for EIP association with EC2-Classic instances
-	ec2AddressAssociationClassicTimeout = 2 * time.Minute
+	addressAssociationClassicTimeout = 2 * time.Minute
 )
 
 func ResourceEIP() *schema.Resource {
@@ -542,7 +542,7 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID
 		},
 	}
 
-	err := resource.Retry(ec2AddressAssociationClassicTimeout, func() *resource.RetryError {
+	err := resource.Retry(addressAssociationClassicTimeout, func() *resource.RetryError {
 		output, err := conn.DescribeAddresses(input)
 
 		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAddressNotFound) {

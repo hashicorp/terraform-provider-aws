@@ -29,7 +29,7 @@ func init() {
 //   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
 //   What is here was dangerous and repulsive to us. This message is a warning about danger."
 //   --  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
-func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
+func TestAccClientVPNEndpoint_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
 			"basic":                        testAccClientVPNEndpoint_basic,
@@ -491,7 +491,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEc2ClientVpnEndpointConfig(rName),
+				Config: testAccClientVpnEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
@@ -538,7 +538,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEc2ClientVpnEndpointConfig(rName),
+				Config: testAccClientVpnEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
@@ -867,7 +867,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `)
 }
 
-func testAccEc2ClientVpnEndpointConfig(rName string) string {
+func testAccClientVpnEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfigACMCertificateBase("test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn

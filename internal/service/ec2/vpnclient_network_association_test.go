@@ -268,7 +268,7 @@ func testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName string) re
 
 func testAccClientVPNNetworkAssociationConfigBase(rName string) string {
 	return acctest.ConfigCompose(
-		testAccEc2ClientVpnEndpointConfig(rName),
+		testAccClientVpnEndpointConfig_basic(rName),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
