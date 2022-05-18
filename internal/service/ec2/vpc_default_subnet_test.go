@@ -187,7 +187,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 	})
 }
 
-func testAccDefaultSubnetConfig_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
+func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
