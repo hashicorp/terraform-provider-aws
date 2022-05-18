@@ -101,11 +101,10 @@ func ResourceContainerRecipe() *schema.Resource {
 				Computed: true,
 			},
 			"image_os_version_override": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validation.StringIsNotEmpty,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"instance_configuration": {
 				Type:     schema.TypeList,
