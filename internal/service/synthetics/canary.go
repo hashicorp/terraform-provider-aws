@@ -22,7 +22,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexCanary = `aws_synthetics_canary`
+const canaryMutex = `aws_synthetics_canary`
 
 func ResourceCanary() *schema.Resource {
 	return &schema.Resource{
@@ -575,8 +575,8 @@ func expandCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, erro
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		conns.GlobalMutexKV.Lock(awsMutexCanary)
-		defer conns.GlobalMutexKV.Unlock(awsMutexCanary)
+		conns.GlobalMutexKV.Lock(canaryMutex)
+		defer conns.GlobalMutexKV.Unlock(canaryMutex)
 		file, err := loadFileContent(v.(string))
 		if err != nil {
 			return nil, fmt.Errorf("unable to load %q: %w", v.(string), err)
