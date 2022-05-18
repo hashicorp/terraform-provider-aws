@@ -2275,10 +2275,10 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity_WithELB(rName),
@@ -4476,12 +4476,15 @@ func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Overri
 		fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
+
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.foo.id
+
   tags = {
     Name = %[1]q
   }
@@ -4490,12 +4493,15 @@ resource "aws_subnet" "foo" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.foo.id
+
   tags = {
     Name = %[1]q
   }
 }
+
 resource "aws_security_group" "foo" {
   vpc_id = aws_vpc.foo.id
+
   ingress {
     protocol    = "-1"
     from_port   = 0
@@ -4509,11 +4515,13 @@ resource "aws_security_group" "foo" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 resource "aws_lb_target_group" "foo" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.foo.id
 }
+
 resource "aws_elb" "bar" {
   subnets         = [aws_subnet.foo.id]
   security_groups = [aws_security_group.foo.id]
@@ -4532,6 +4540,7 @@ resource "aws_elb" "bar" {
   }
   depends_on = [aws_internet_gateway.gw]
 }
+
 locals {
   user_data = <<EOF
   #!/bin/bash
@@ -4539,6 +4548,7 @@ locals {
   nohup python -m SimpleHTTPServer 80 &
   EOF
 }
+
 data "aws_ami" "test" {
   most_recent = true
   owners      = ["amazon"]
@@ -4547,6 +4557,7 @@ data "aws_ami" "test" {
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
+
 resource "aws_launch_template" "test" {
   image_id               = data.aws_ami.test.id
   instance_type          = "t3.micro"
@@ -4554,6 +4565,7 @@ resource "aws_launch_template" "test" {
   user_data              = base64encode(local.user_data)
   vpc_security_group_ids = [aws_security_group.foo.id]
 }
+
 resource "aws_autoscaling_group" "test" {
   desired_capacity      = 2
   wait_for_elb_capacity = 2

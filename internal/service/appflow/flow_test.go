@@ -23,10 +23,10 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
@@ -67,10 +67,10 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 	description := "test description"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
@@ -97,10 +97,10 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_tags1(rSourceName, rDestinationName, rFlowName, "key1", "value1"),
@@ -144,10 +144,10 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
