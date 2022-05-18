@@ -18,8 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectHoursOfOperation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccHoursOfOperation_basic,
-		"disappears": testAccHoursOfOperation_disappears,
+		"basic":         testAccHoursOfOperation_basic,
+		"disappears":    testAccHoursOfOperation_disappears,
+		"update_config": testAccHoursOfOperation_updateConfig,
 	}
 
 	for name, tc := range testCases {
@@ -50,7 +51,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
 						"day":                  "MONDAY",
 						"end_time.#":           "1",
@@ -58,15 +59,6 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 						"end_time.0.minutes":   "8",
 						"start_time.#":         "1",
 						"start_time.0.hours":   "8",
-						"start_time.0.minutes": "0",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
-						"day":                  "TUESDAY",
-						"end_time.#":           "1",
-						"end_time.0.hours":     "21",
-						"end_time.0.minutes":   "0",
-						"start_time.#":         "1",
-						"start_time.0.hours":   "9",
 						"start_time.0.minutes": "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
@@ -89,6 +81,69 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
+						"day":                  "MONDAY",
+						"end_time.#":           "1",
+						"end_time.0.hours":     "23",
+						"end_time.0.minutes":   "8",
+						"start_time.#":         "1",
+						"start_time.0.hours":   "8",
+						"start_time.0.minutes": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
+					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "time_zone", "EST"),
+				),
+			},
+		},
+	})
+}
+
+func testAccHoursOfOperation_updateConfig(t *testing.T) {
+	var v connect.DescribeHoursOfOperationOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "example description"
+
+	resourceName := "aws_connect_hours_of_operation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
+						"day":                  "MONDAY",
+						"end_time.#":           "1",
+						"end_time.0.hours":     "23",
+						"end_time.0.minutes":   "8",
+						"start_time.#":         "1",
+						"start_time.0.hours":   "8",
+						"start_time.0.minutes": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHoursOfOperationConfig_multipleConfig(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
 						"day":                  "MONDAY",
@@ -108,14 +163,6 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 						"start_time.0.hours":   "9",
 						"start_time.0.minutes": "0",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
-					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
-					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
-					resource.TestCheckResourceAttr(resourceName, "time_zone", "EST"),
 				),
 			},
 		},
@@ -225,6 +272,37 @@ resource "aws_connect_instance" "test" {
 }
 
 func testAccHoursOfOperationConfig_basic(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccHoursOfOperationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_hours_of_operation" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+  time_zone   = "EST"
+
+  config {
+    day = "MONDAY"
+
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
+
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
+  }
+
+  tags = {
+    "Name" = "Test Hours of Operation"
+  }
+}
+`, rName2, label))
+}
+
+func testAccHoursOfOperationConfig_multipleConfig(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccHoursOfOperationBaseConfig(rName),
 		fmt.Sprintf(`
