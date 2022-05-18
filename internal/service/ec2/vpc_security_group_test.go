@@ -1997,7 +1997,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupIPv4andIpv6EgressConfig,
+				Config: testAccSecurityGroupConfig_ipv4andIPv6Egress,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
@@ -2047,11 +2047,11 @@ func testAccSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.Tes
 	}
 }
 
-// cycleIpPermForGroup returns an IpPermission struct with a configured
+// cycleIPPermForGroup returns an IpPermission struct with a configured
 // UserIdGroupPair for the groupid given. Used in
 // TestAccVPCSecurityGroup_forceRevokeRulesTrue to create a cyclic rule
 // between 2 security groups
-func cycleIpPermForGroup(groupId string) *ec2.IpPermission {
+func cycleIPPermForGroup(groupId string) *ec2.IpPermission {
 	var perm ec2.IpPermission
 	perm.FromPort = aws.Int64(0)
 	perm.ToPort = aws.Int64(0)
@@ -2078,9 +2078,9 @@ func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckF
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		// cycle from primary to secondary
-		perm1 := cycleIpPermForGroup(*secondary.GroupId)
+		perm1 := cycleIPPermForGroup(*secondary.GroupId)
 		// cycle from secondary to primary
-		perm2 := cycleIpPermForGroup(*primary.GroupId)
+		perm2 := cycleIPPermForGroup(*primary.GroupId)
 
 		req1 := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       primary.GroupId,
@@ -3972,7 +3972,7 @@ resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
 }
 `
 
-const testAccSecurityGroupIPv4andIpv6EgressConfig = `
+const testAccSecurityGroupConfig_ipv4andIPv6Egress = `
 resource "aws_vpc" "foo" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true

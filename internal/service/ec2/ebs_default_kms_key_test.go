@@ -27,7 +27,7 @@ func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 			{
 				Config: testAccEBSDefaultKMSKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsDefaultKmsKey(resourceName),
+					testAccCheckEBSDefaultKMSKey(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, "arn"),
 				),
 			},
@@ -61,7 +61,7 @@ func testAccCheckEBSDefaultKMSKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
+func testAccCheckEBSDefaultKMSKey(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

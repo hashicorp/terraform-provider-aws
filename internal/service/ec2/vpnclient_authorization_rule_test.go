@@ -284,7 +284,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(name string, v *ec2.Authorizat
 
 func testAccClientVPNAuthorizationRuleBaseConfig(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
-		testAccClientVpnEndpointConfig_basic(rName),
+		testAccClientVPNEndpointConfig_basic(rName),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {

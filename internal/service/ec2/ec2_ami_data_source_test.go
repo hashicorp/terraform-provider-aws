@@ -178,7 +178,7 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiDataSourceConfigGp3BlockDevice(rName),
+				Config: testAccAMIDataSourceConfig_gp3BlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "architecture", resourceName, "architecture"),
@@ -309,9 +309,9 @@ data "aws_ami" "name_regex_filtered_ami" {
 }
 `
 
-func testAccAmiDataSourceConfigGp3BlockDevice(rName string) string {
+func testAccAMIDataSourceConfig_gp3BlockDevice(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigGp3BlockDevice(rName),
+		testAccAMIConfig_gp3BlockDevice(rName),
 		`
 data "aws_caller_identity" "current" {}
 

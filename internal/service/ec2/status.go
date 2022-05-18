@@ -540,7 +540,7 @@ func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resourc
 	}
 }
 
-func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetAssignIPv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -556,7 +556,7 @@ func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.
 	}
 }
 
-func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableDNS64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -572,7 +572,7 @@ func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -588,7 +588,7 @@ func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id strin
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 

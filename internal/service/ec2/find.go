@@ -2235,7 +2235,7 @@ func FindVPCClassicLinkEnabled(conn *ec2.EC2, vpcID string) (bool, error) {
 	return aws.BoolValue(vpc.ClassicLinkEnabled), nil
 }
 
-func FindVPCClassicLinkDnsSupported(conn *ec2.EC2, vpcID string) (bool, error) {
+func FindVPCClassicLinkDNSSupported(conn *ec2.EC2, vpcID string) (bool, error) {
 	input := &ec2.DescribeVpcClassicLinkDnsSupportInput{
 		VpcIds: aws.StringSlice([]string{vpcID}),
 	}
@@ -2505,7 +2505,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == VpcEndpointStateDeleted {
+	if state := aws.StringValue(output.State); state == vpcEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
@@ -4490,7 +4490,7 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, service
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if vpcEndpointState := aws.StringValue(output.VpcEndpointState); vpcEndpointState == VpcEndpointStateDeleted {
+	if vpcEndpointState := aws.StringValue(output.VpcEndpointState); vpcEndpointState == vpcEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     vpcEndpointState,
 			LastRequest: input,

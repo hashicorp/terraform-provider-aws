@@ -290,7 +290,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink", v)
 	}
 
-	if v, err := FindVPCClassicLinkDnsSupported(conn, d.Id()); err != nil {
+	if v, err := FindVPCClassicLinkDNSSupported(conn, d.Id()); err != nil {
 		if tfresource.NotFound(err) {
 			d.Set("enable_classiclink_dns_support", nil)
 		} else {
@@ -387,13 +387,13 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("enable_dns_hostnames") {
-		if err := modifyVPCDnsHostnames(conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
+		if err := modifyVPCDNSHostnames(conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("enable_dns_support") {
-		if err := modifyVPCDnsSupport(conn, d.Id(), d.Get("enable_dns_support").(bool)); err != nil {
+		if err := modifyVPCDNSSupport(conn, d.Id(), d.Get("enable_dns_support").(bool)); err != nil {
 			return err
 		}
 	}
@@ -405,7 +405,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_classiclink_dns_support") {
-		if err := modifyVPCClassicLinkDnsSupport(conn, d.Id(), d.Get("enable_classiclink_dns_support").(bool)); err != nil {
+		if err := modifyVPCClassicLinkDNSSupport(conn, d.Id(), d.Get("enable_classiclink_dns_support").(bool)); err != nil {
 			return err
 		}
 	}
@@ -555,13 +555,13 @@ type vpcInfo struct {
 // Called after new VPC creation or existing default VPC adoption.
 func modifyVPCAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, vpcInfo *vpcInfo) error {
 	if new, old := d.Get("enable_dns_hostnames").(bool), vpcInfo.enableDnsHostnames; old != new {
-		if err := modifyVPCDnsHostnames(conn, d.Id(), new); err != nil {
+		if err := modifyVPCDNSHostnames(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
 
 	if new, old := d.Get("enable_dns_support").(bool), vpcInfo.enableDnsSupport; old != new {
-		if err := modifyVPCDnsSupport(conn, d.Id(), new); err != nil {
+		if err := modifyVPCDNSSupport(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
@@ -573,7 +573,7 @@ func modifyVPCAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, vpcInfo 
 	}
 
 	if new, old := d.Get("enable_classiclink_dns_support").(bool), vpcInfo.enableClassicLinkDNSSupport; old != new {
-		if err := modifyVPCClassicLinkDnsSupport(conn, d.Id(), new); err != nil {
+		if err := modifyVPCClassicLinkDNSSupport(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
@@ -603,7 +603,7 @@ func modifyVPCClassicLink(conn *ec2.EC2, vpcID string, v bool) error {
 	return nil
 }
 
-func modifyVPCClassicLinkDnsSupport(conn *ec2.EC2, vpcID string, v bool) error {
+func modifyVPCClassicLinkDNSSupport(conn *ec2.EC2, vpcID string, v bool) error {
 	if v {
 		input := &ec2.EnableVpcClassicLinkDnsSupportInput{
 			VpcId: aws.String(vpcID),
@@ -625,7 +625,7 @@ func modifyVPCClassicLinkDnsSupport(conn *ec2.EC2, vpcID string, v bool) error {
 	return nil
 }
 
-func modifyVPCDnsHostnames(conn *ec2.EC2, vpcID string, v bool) error {
+func modifyVPCDNSHostnames(conn *ec2.EC2, vpcID string, v bool) error {
 	input := &ec2.ModifyVpcAttributeInput{
 		EnableDnsHostnames: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),
@@ -644,7 +644,7 @@ func modifyVPCDnsHostnames(conn *ec2.EC2, vpcID string, v bool) error {
 	return nil
 }
 
-func modifyVPCDnsSupport(conn *ec2.EC2, vpcID string, v bool) error {
+func modifyVPCDNSSupport(conn *ec2.EC2, vpcID string, v bool) error {
 	input := &ec2.ModifyVpcAttributeInput{
 		EnableDnsSupport: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),

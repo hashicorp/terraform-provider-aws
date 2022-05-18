@@ -1295,7 +1295,7 @@ func TestAccEC2LaunchTemplate_instanceMarketOptions(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_memoryMiBAndVCpuCount(t *testing.T) {
+func TestAccEC2LaunchTemplate_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 
@@ -1780,7 +1780,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_bareMetal(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_baselineEbsBandwidthMbps(t *testing.T) {
+func TestAccEC2LaunchTemplate_instanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 
@@ -2243,7 +2243,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_localStorageTypes(t *testing.
 	})
 }
 
-func TestAccEC2LaunchTemplate_instanceRequirements_memoryGiBPerVCpu(t *testing.T) {
+func TestAccEC2LaunchTemplate_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 

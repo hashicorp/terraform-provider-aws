@@ -351,7 +351,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 		},
 	})
 }
-func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCpuCount(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	var fleet ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
@@ -904,7 +904,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
 	})
 }
 
-func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEbsBandwidthMbps(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
 	var fleet ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
@@ -1435,7 +1435,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 	})
 }
 
-func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCpu(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	var fleet ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 

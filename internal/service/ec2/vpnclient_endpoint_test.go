@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const clientVpnEndpointDefaultLimit = 5
+const clientVPNEndpointDefaultLimit = 5
 
 var testAccEc2ClientVpnEndpointSemaphore sync.Semaphore
 
 func init() {
-	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
+	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVPNEndpointDefaultLimit)
 }
 
 // This is part of an experimental feature, do not use this as a starting point for tests
@@ -491,7 +491,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClientVpnEndpointConfig_basic(rName),
+				Config: testAccClientVPNEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
@@ -538,7 +538,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClientVpnEndpointConfig_basic(rName),
+				Config: testAccClientVPNEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
@@ -867,7 +867,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `)
 }
 
-func testAccClientVpnEndpointConfig_basic(rName string) string {
+func testAccClientVPNEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfigACMCertificateBase("test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn

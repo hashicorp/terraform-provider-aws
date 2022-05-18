@@ -23,12 +23,12 @@ func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpnGatewayAttachmentDestroy,
+		CheckDestroy:      testAccCheckVPNGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnGatewayAttachmentConfig(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayAttachmentExists(resourceName, &v),
+					testAccCheckVPNGatewayAttachmentExists(resourceName, &v),
 				),
 			},
 		},
@@ -44,12 +44,12 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpnGatewayAttachmentDestroy,
+		CheckDestroy:      testAccCheckVPNGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnGatewayAttachmentConfig(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayAttachmentExists(resourceName, &v),
+					testAccCheckVPNGatewayAttachmentExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -58,7 +58,7 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) resource.TestCheckFunc {
+func testAccCheckVPNGatewayAttachmentExists(n string, v *ec2.VpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,7 +83,7 @@ func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 	}
 }
 
-func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
+func testAccCheckVPNGatewayAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -107,7 +107,7 @@ func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVpnGatewayAttachmentConfig(rName string) string {
+func testAccVPNGatewayAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

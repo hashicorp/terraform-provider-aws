@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestIpPermissionIDHash(t *testing.T) {
+func TestIPPermissionIDHash(t *testing.T) {
 	simple := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
 		FromPort:   aws.Int64(80),
@@ -728,7 +728,7 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 					testAccCheckSecurityGroupRuleExists("aws_security_group.egress", &group),
 					// lookup info on the VPC Endpoint created, to populate the expected
 					// IP Perm
-					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
+					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
 					setupSG,
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.egress_1", &group, &p, "egress"),
 				),
@@ -1129,7 +1129,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("aws_security_group.worker", &group),
 					testAccCheckSecurityGroupRuleExists("aws_security_group.nat", &nat),
-					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
+					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
 
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.rule_1", &group, &rule1, "ingress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.rule_1", "description", "CIDR Description"),
@@ -1165,7 +1165,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("aws_security_group.worker", &group),
 					testAccCheckSecurityGroupRuleExists("aws_security_group.nat", &nat),
-					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
+					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
 
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.rule_1", &group, &rule1, "egress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.rule_1", "description", "CIDR Description"),

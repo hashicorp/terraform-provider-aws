@@ -184,7 +184,7 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 				Config: testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
-					testAccCheckVpcEndpointExists(vpceResourceName, &vpce),
+					testAccCheckVPCEndpointExists(vpceResourceName, &vpce),
 					testAccCheckRouteTableWaitForVPCEndpointRoute(&routeTable, &vpce),
 				),
 			},

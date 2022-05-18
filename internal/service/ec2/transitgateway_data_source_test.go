@@ -56,7 +56,7 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 		},
 		"VpnAttachment": {
 			"Filter":                             testAccTransitGatewayVPNAttachmentDataSource_filter,
-			"TransitGatewayIdAndVpnConnectionId": testAccTransitGatewayVPNAttachmentDataSource_TransitGatewayIdAndVpnConnectionID,
+			"TransitGatewayIdAndVpnConnectionId": testAccTransitGatewayVPNAttachmentDataSourceConfig_idAndVPNConnectionID,
 		},
 	}
 

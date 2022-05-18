@@ -344,7 +344,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if disassociate {
-		if err := disassociateEip(d, meta); err != nil {
+		if err := disassociateEIP(d, meta); err != nil {
 			return err
 		}
 	}
@@ -438,7 +438,7 @@ func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// If we are attached to an instance or interface, detach first.
 	if d.Get("instance").(string) != "" || d.Get("association_id").(string) != "" {
-		if err := disassociateEip(d, meta); err != nil {
+		if err := disassociateEIP(d, meta); err != nil {
 			return err
 		}
 	}
@@ -493,7 +493,7 @@ func resourceEIPDomain(d *schema.ResourceData) string {
 	return ec2.DomainTypeStandard
 }
 
-func disassociateEip(d *schema.ResourceData, meta interface{}) error {
+func disassociateEIP(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
 	var err error

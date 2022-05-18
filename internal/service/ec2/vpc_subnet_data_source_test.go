@@ -28,7 +28,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetDataSourceConfig(rName, rInt),
@@ -173,7 +173,7 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIPv6WithDataSourceIpv6CIDRBlockDataSourceConfig(rName, rInt),
+				Config: testAccSubnetIPv6WithDataSourceIPv6CIDRBlockDataSourceConfig(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 				),
@@ -319,7 +319,7 @@ data "aws_subnet" "by_ipv6_cidr" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6WithDataSourceIpv6CIDRBlockDataSourceConfig(rName string, rInt int) string {
+func testAccSubnetIPv6WithDataSourceIPv6CIDRBlockDataSourceConfig(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

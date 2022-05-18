@@ -528,7 +528,7 @@ func testAccCheckTransitGatewayVPCAttachmentNotRecreated(i, j *ec2.TransitGatewa
 	}
 }
 
-func testAccPreCheckTransitGatewayVpcAttachment(t *testing.T) {
+func testAccPreCheckTransitGatewayVPCAttachment(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{

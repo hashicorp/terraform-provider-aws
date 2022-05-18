@@ -24,7 +24,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 			{
 				Config: testAccEBSEncryptionByDefaultConfig(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsEncryptionByDefault(resourceName, false),
+					testAccCheckEBSEncryptionByDefault(resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -36,7 +36,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 			{
 				Config: testAccEBSEncryptionByDefaultConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsEncryptionByDefault(resourceName, true),
+					testAccCheckEBSEncryptionByDefault(resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
@@ -59,7 +59,7 @@ func testAccCheckEncryptionByDefaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEbsEncryptionByDefault(n string, enabled bool) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefault(n string, enabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

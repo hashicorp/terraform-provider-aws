@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func DataSourceVPCIpamPool() *schema.Resource {
+func DataSourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCIpamPoolRead,
+		Read: dataSourceIPAMPoolRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -93,7 +93,7 @@ func DataSourceVPCIpamPool() *schema.Resource {
 	}
 }
 
-func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -188,7 +188,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	} else {
@@ -196,7 +196,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	} else {
@@ -402,7 +402,7 @@ func expandPeeringConnectionOptionsRequest(tfMap map[string]interface{}, crossRe
 	return apiObject
 }
 
-func flattenVpcPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
+func flattenVPCPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

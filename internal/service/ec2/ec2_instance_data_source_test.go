@@ -92,7 +92,7 @@ func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGp2IopsDeviceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_gp2IOPSDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -118,7 +118,7 @@ func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGp3ThroughputDeviceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_gp3ThroughputDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -171,7 +171,7 @@ func TestAccEC2InstanceDataSource_EBSBlockDevice_kmsKeyID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceEbsBlockDeviceKmsKeyIdConfig(rName),
+				Config: testAccInstanceDataSourceConfig_ebsKMSKeyID(rName),
 			},
 		},
 	})
@@ -187,7 +187,7 @@ func TestAccEC2InstanceDataSource_RootBlockDevice_kmsKeyID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceRootBlockDeviceKmsKeyIdConfig(rName),
+				Config: testAccInstanceDataSourceConfig_rootBlockDeviceKMSKeyID(rName),
 			},
 		},
 	})
@@ -272,7 +272,7 @@ func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceIpv6AddressesConfig(rName),
+				Config: testAccInstanceDataSourceConfig_ipv6Addresses(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -721,7 +721,7 @@ data "aws_instance" "test" {
 }
 
 // GP2IopsDevice
-func testAccInstanceDataSourceGp2IopsDeviceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_gp2IOPSDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -744,7 +744,7 @@ data "aws_instance" "test" {
 }
 
 // GP3ThroughputDevice
-func testAccInstanceDataSourceGp3ThroughputDeviceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_gp3ThroughputDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -821,7 +821,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceEbsBlockDeviceKmsKeyIdConfig(rName string) string {
+func testAccInstanceDataSourceConfig_ebsKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -854,7 +854,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceRootBlockDeviceKmsKeyIdConfig(rName string) string {
+func testAccInstanceDataSourceConfig_rootBlockDeviceKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -943,7 +943,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceIpv6AddressesConfig(rName string) string {
+func testAccInstanceDataSourceConfig_ipv6Addresses(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCIPv6Config(rName),

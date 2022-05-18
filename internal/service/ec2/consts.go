@@ -43,13 +43,13 @@ func SpotAllocationStrategy_Values() []string {
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
-	VpcEndpointStateAvailable         = "available"
-	VpcEndpointStateDeleted           = "deleted"
-	VpcEndpointStateDeleting          = "deleting"
-	VpcEndpointStateFailed            = "failed"
-	VpcEndpointStatePending           = "pending"
-	VpcEndpointStatePendingAcceptance = "pendingAcceptance"
-	VpcEndpointStateRejected          = "rejected"
+	vpcEndpointStateAvailable         = "available"
+	vpcEndpointStateDeleted           = "deleted"
+	vpcEndpointStateDeleting          = "deleting"
+	vpcEndpointStateFailed            = "failed"
+	vpcEndpointStatePending           = "pending"
+	vpcEndpointStatePendingAcceptance = "pendingAcceptance"
+	vpcEndpointStateRejected          = "rejected"
 )
 
 const (
@@ -92,7 +92,7 @@ const (
 	VpnTunnelOptionsDPDTimeoutActionRestart = "restart"
 )
 
-func VpnTunnelOptionsDPDTimeoutAction_Values() []string {
+func vpnTunnelOptionsDPDTimeoutAction_Values() []string {
 	return []string{
 		VpnTunnelOptionsDPDTimeoutActionClear,
 		VpnTunnelOptionsDPDTimeoutActionNone,
@@ -105,7 +105,7 @@ const (
 	VpnTunnelOptionsIKEVersion2 = "ikev2"
 )
 
-func VpnTunnelOptionsIKEVersion_Values() []string {
+func vpnTunnelOptionsIKEVersion_Values() []string {
 	return []string{
 		VpnTunnelOptionsIKEVersion1,
 		VpnTunnelOptionsIKEVersion2,
@@ -119,7 +119,7 @@ const (
 	VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
 )
 
-func VpnTunnelOptionsPhase1EncryptionAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase1EncryptionAlgorithm_Values() []string {
 	return []string{
 		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
 		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
@@ -135,7 +135,7 @@ const (
 	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512 = "SHA2-512"
 )
 
-func VpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
 	return []string{
 		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
 		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
@@ -151,7 +151,7 @@ const (
 	VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
 )
 
-func VpnTunnelOptionsPhase2EncryptionAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase2EncryptionAlgorithm_Values() []string {
 	return []string{
 		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
 		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
@@ -167,7 +167,7 @@ const (
 	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512 = "SHA2-512"
 )
 
-func VpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
 	return []string{
 		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
 		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
@@ -181,7 +181,7 @@ const (
 	VpnTunnelOptionsStartupActionStart = "start"
 )
 
-func VpnTunnelOptionsStartupAction_Values() []string {
+func vpnTunnelOptionsStartupAction_Values() []string {
 	return []string{
 		VpnTunnelOptionsStartupActionAdd,
 		VpnTunnelOptionsStartupActionStart,
@@ -193,7 +193,7 @@ const (
 	VpnConnectionTypeIpsec1_AES256 = "ipsec.1-aes256" // https://github.com/hashicorp/terraform-provider-aws/issues/23105.
 )
 
-func VpnConnectionType_Values() []string {
+func vpnConnectionType_Values() []string {
 	return []string{
 		VpnConnectionTypeIpsec1,
 		VpnConnectionTypeIpsec1_AES256,

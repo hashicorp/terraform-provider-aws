@@ -1989,7 +1989,7 @@ func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instanc
 		aws.StringValue(bd.DeviceName) == aws.StringValue(instance.RootDeviceName)
 }
 
-func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) {
+func fetchLaunchTemplateAMI(specs []interface{}, conn *ec2.EC2) (string, error) {
 	if len(specs) < 1 {
 		return "", errors.New("Cannot fetch AMI for blank launch template.")
 	}
@@ -2294,7 +2294,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			var amiID string
 			if v, ok := d.GetOk("launch_template"); ok {
 				var err error
-				amiID, err = fetchLaunchTemplateAmi(v.([]interface{}), conn)
+				amiID, err = fetchLaunchTemplateAMI(v.([]interface{}), conn)
 				if err != nil {
 					return nil, err
 				}

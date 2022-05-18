@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
+func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCIpamPreviewNextCidrCreate,
-		Read:   resourceVPCIpamPreviewNextCidrRead,
+		Create: resourceIPAMPreviewNextCIDRCreate,
+		Read:   resourceIPAMPreviewNextCIDRRead,
 		Delete: schema.Noop,
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -59,7 +59,7 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 	}
 }
 
-func resourceVPCIpamPreviewNextCidrCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPreviewNextCIDRCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	poolId := d.Get("ipam_pool_id").(string)
 
@@ -90,13 +90,13 @@ func resourceVPCIpamPreviewNextCidrCreate(d *schema.ResourceData, meta interface
 	cidr := output.IpamPoolAllocation.Cidr
 
 	d.Set("cidr", cidr)
-	d.SetId(encodeVPCIpamPreviewNextCidrID(aws.StringValue(cidr), poolId))
+	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
 
-	return resourceVPCIpamPreviewNextCidrRead(d, meta)
+	return resourceIPAMPreviewNextCIDRRead(d, meta)
 }
 
-func resourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}) error {
-	cidr, poolId, err := decodeVPCIpamPreviewNextCidrID(d.Id())
+func resourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) error {
+	cidr, poolId, err := decodeIPAMPreviewNextCIDRID(d.Id())
 
 	if err != nil {
 		return err
@@ -108,11 +108,11 @@ func resourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func encodeVPCIpamPreviewNextCidrID(cidr, poolId string) string {
+func encodeIPAMPreviewNextCIDRID(cidr, poolId string) string {
 	return fmt.Sprintf("%s_%s", cidr, poolId)
 }
 
-func decodeVPCIpamPreviewNextCidrID(id string) (string, string, error) {
+func decodeIPAMPreviewNextCIDRID(id string) (string, string, error) {
 	idParts := strings.Split(id, "_")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("expected ID in the form of uniqueValue_poolId, given: %q", id)
