@@ -1164,9 +1164,6 @@ resource "aws_dms_endpoint" "test" {
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
 
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-
   tags = {
     Name   = %[1]q
     Update = "to-update"
