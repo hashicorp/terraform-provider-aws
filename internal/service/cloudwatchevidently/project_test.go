@@ -23,7 +23,10 @@ func TestAccProject_basic(t *testing.T) {
 	resourceName := "aws_cloudwatchevidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckProjectDestroy,
@@ -82,7 +85,10 @@ func TestAccProject_updateTags(t *testing.T) {
 	resourceName := "aws_cloudwatchevidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckProjectDestroy,
@@ -171,7 +177,10 @@ func TestAccProject_updateDataDelivery(t *testing.T) {
 	resourceName := "aws_cloudwatchevidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckProjectDestroy,
