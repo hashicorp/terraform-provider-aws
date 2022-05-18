@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccTransitGatewayVPNAttachmentDataSourceConfig_idAndVPNConnectionID(t *testing.T) {
+func testAccTransitGatewayVPNAttachmentDataSource_idAndVPNConnectionID(t *testing.T) {
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
