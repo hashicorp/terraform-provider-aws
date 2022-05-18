@@ -1,6 +1,8 @@
 package elbv2
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -103,10 +105,14 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 	if lbType == elbv2.LoadBalancerTypeEnumApplication {
 		if zoneId, ok := HostedZoneIdPerRegionALBMap[region]; ok {
 			d.SetId(zoneId)
+		} else {
+			return fmt.Errorf("unsupported AWS Region: %s", region)
 		}
 	} else if lbType == elbv2.LoadBalancerTypeEnumNetwork {
 		if zoneId, ok := HostedZoneIdPerRegionNLBMap[region]; ok {
 			d.SetId(zoneId)
+		} else {
+			return fmt.Errorf("unsupported AWS Region: %s", region)
 		}
 	}
 
