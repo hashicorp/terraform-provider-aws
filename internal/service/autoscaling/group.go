@@ -1542,6 +1542,71 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func findGroup(conn *autoscaling.AutoScaling, input *autoscaling.DescribeAutoScalingGroupsInput) (*autoscaling.Group, error) {
+	output, err := findGroups(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func findGroups(conn *autoscaling.AutoScaling, input *autoscaling.DescribeAutoScalingGroupsInput) ([]*autoscaling.Group, error) {
+	var output []*autoscaling.Group
+
+	err := conn.DescribeAutoScalingGroupsPages(input, func(page *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AutoScalingGroups {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindGroupByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.Group, error) {
+	input := &autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := findGroup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.AutoScalingGroupName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func waitUntilGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
