@@ -35,9 +35,9 @@ func TestAccEventIntegration_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventIntegrationDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationConfig_basic(rName, originalDescription, sourceName),
@@ -92,9 +92,10 @@ func TestAccEventIntegration_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
-		}, ErrorCheck: acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventIntegrationDestroy,
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),
@@ -170,9 +171,10 @@ func TestAccEventIntegration_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
-		}, ErrorCheck: acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventIntegrationDestroy,
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),
