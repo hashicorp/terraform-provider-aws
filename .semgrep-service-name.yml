@@ -6,7 +6,7 @@ rules:
     message: Do not use "AWS" in func name inside AWS Provider
     paths:
       include:
-        - internal
+        - internal/service/ec2
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -20,7 +20,7 @@ rules:
     message: Do not use "AWS" in const name inside AWS Provider
     paths:
       include:
-        - internal
+        - internal/service/ec2
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -34,7 +34,7 @@ rules:
     message: Do not use "AWS" in var name inside AWS Provider
     paths:
       include:
-      - internal
+      - internal/service/ec2
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -48,7 +48,7 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https)
     paths:
       include:
-        - internal
+        - internal/service/ec2
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -62,7 +62,7 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https)
     paths:
       include:
-        - internal
+        - internal/service/ec2
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -76,7 +76,7 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https)
     paths:
       include:
-      - internal
+      - internal/service/ec2
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
