@@ -1486,59 +1486,33 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] Auto Scaling Group destroy: %v", d.Id())
-	deleteopts := autoscaling.DeleteAutoScalingGroupInput{
-		AutoScalingGroupName: aws.String(d.Id()),
-		ForceDelete:          aws.Bool(d.Get("force_delete").(bool)),
-	}
+	log.Printf("[DEBUG] Deleting Auto Scaling Group: %s", d.Id())
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return conn.DeleteAutoScalingGroup(&autoscaling.DeleteAutoScalingGroupInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				ForceDelete:          aws.Bool(d.Get("force_delete").(bool)),
+			})
+		},
+		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	// We retry the delete operation to handle InUse/InProgress errors coming
-	// from scaling operations. We should be able to sneak in a delete in between
-	// scaling operations within 5m.
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
-				return nil
-			}
-
-			if tfawserr.ErrCodeEquals(err, "ResourceInUse", "ScalingActivityInProgress") {
-				return resource.RetryableError(err)
-			}
-
-			// Didn't recognize the error, so shouldn't retry.
-			return resource.NonRetryableError(err)
-		}
-		// Successful delete
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Auto Scaling Group: %s", err)
 	}
 
-	var group *autoscaling.Group
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		group, err = getGroup(d.Id(), conn)
-
-		if group != nil {
-			return resource.RetryableError(fmt.Errorf("Auto Scaling Group still exists"))
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		group, err = getGroup(d.Id(), conn)
-		if group != nil {
-			return fmt.Errorf("Auto Scaling Group still exists")
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Auto Scaling Group: %s", err)
+		return fmt.Errorf("deleting Auto Scaling Group (%s): %w", d.Id(), err)
 	}
+
+	_, err = tfresource.RetryUntilNotFound(d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return FindGroupByName(conn, d.Id())
+		})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Auto Scaling Group (%s) delete: %w", d.Id(), err)
+	}
+
 	return nil
 }
 
