@@ -40,7 +40,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"disappears":                  testAccTransitGateway_disappears,
 			"AmazonSideASN":               testAccTransitGateway_AmazonSideASN,
 			"AutoAcceptSharedAttachments": testAccTransitGateway_AutoAcceptSharedAttachments,
-			"CidrBlocks":                  testAccTransitGatewayConfig_cidrBlocks,
+			"CidrBlocks":                  testAccTransitGateway_cidrBlocks,
 			"DefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled,
 			"DefaultRouteTableAssociation":                       testAccTransitGateway_DefaultRouteTableAssociation,
 			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
@@ -269,7 +269,7 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConfig_cidrBlocks(t *testing.T) {
+func testAccTransitGateway_cidrBlocks(t *testing.T) {
 	var v1, v2, v3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
