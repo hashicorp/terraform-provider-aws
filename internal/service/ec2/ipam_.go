@@ -87,7 +87,7 @@ func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(resource.UniqueId()),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam"),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

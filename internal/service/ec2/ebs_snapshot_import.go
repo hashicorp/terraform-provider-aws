@@ -190,7 +190,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.ImportSnapshotInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImportSnapshotTask),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImportSnapshotTask),
 	}
 
 	if clientData, ok := d.GetOk("client_data"); ok {

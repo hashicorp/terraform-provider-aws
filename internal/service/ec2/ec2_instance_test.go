@@ -106,7 +106,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -139,7 +139,7 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -165,7 +165,7 @@ func TestAccEC2Instance_tags(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -271,13 +271,13 @@ func TestAccEC2Instance_inEC2Classic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInEc2Classic(),
+				Config: testAccEC2InstanceConfig_instanceInClassic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceEc2ClassicExists(resourceName, &v),
+					testAccCheckInstanceClassicExists(resourceName, &v),
 				),
 			},
 			{
-				Config:            testAccInstanceConfigInEc2Classic(),
+				Config:            testAccEC2InstanceConfig_instanceInClassic(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1024,7 +1024,7 @@ func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2InstanceConfigDedicatedInstance(rName),
+				Config: testAccEC2InstanceConfig_instanceDedicatedInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
@@ -4489,7 +4489,7 @@ func testAccCheckInstanceExists(n string, v *ec2.Instance) resource.TestCheckFun
 	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckInstanceEc2ClassicExists(n string, v *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceClassicExists(n string, v *ec2.Instance) resource.TestCheckFunc {
 	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.ProviderEC2Classic })
 }
 
@@ -4627,11 +4627,11 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-// testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets checks that the test region has either
+// testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets checks that the test region has either
 // - The EC2-Classic platform available, or
 // - A default VPC with default subnets.
 // This check is useful to ensure that an instance can be launched without specifying a subnet.
-func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
+func testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t *testing.T) {
 	client := acctest.Provider.Meta().(*conns.AWSClient)
 
 	if !conns.HasEC2Classic(client.SupportedPlatforms) && !(hasDefaultVPC(t) && defaultSubnetCount(t) > 0) {
@@ -4942,7 +4942,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigInEc2Classic() string {
+func testAccEC2InstanceConfig_instanceInClassic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -5475,7 +5475,7 @@ resource "aws_instance" "test" {
 `, rName, val))
 }
 
-func testAccEc2InstanceConfigDedicatedInstance(rName string) string {
+func testAccEC2InstanceConfig_instanceDedicatedInstance(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		// Prevent frequent errors like

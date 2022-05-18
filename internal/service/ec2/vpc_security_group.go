@@ -256,7 +256,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
 	}
 
 	if v, ok := d.GetOk("vpc_id"); ok {

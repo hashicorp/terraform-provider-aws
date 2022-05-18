@@ -28,7 +28,7 @@ func testAccClientVPNAuthorizationRule_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "target_network_cidr", subnetResourceName, "cidr_block"),
@@ -57,7 +57,7 @@ func testAccClientVPNAuthorizationRule_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNAuthorizationRule(), resourceName),
@@ -80,7 +80,7 @@ func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNEndpoint(), "aws_ec2_client_vpn_endpoint.test"),
@@ -119,7 +119,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName, groups1),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleGroups(rName, groups1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resource1Name, &v),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
@@ -133,7 +133,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName, groups2),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleGroups(rName, groups2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resource1Name, &v),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
@@ -152,7 +152,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName, groups3),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleGroups(rName, groups3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resource2Name, &v),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
@@ -190,7 +190,7 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName, subnetCount, case1),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleSubnets(rName, subnetCount, case1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resource1Name, &v),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex1), "cidr_block"),
@@ -209,7 +209,7 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName, subnetCount, case2),
+				Config: testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleSubnets(rName, subnetCount, case2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(resource2Name, &v),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
@@ -282,7 +282,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(name string, v *ec2.Authorizat
 	}
 }
 
-func testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName string, subnetCount int) string {
+func testAccClientVPNAuthorizationRuleBaseConfig(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
 		testAccEc2ClientVpnEndpointConfig(rName),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -309,8 +309,8 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount))
 }
 
-func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName, 1), `
+func testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleBasic(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNAuthorizationRuleBaseConfig(rName, 1), `
 resource "aws_ec2_client_vpn_authorization_rule" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   target_network_cidr    = aws_subnet.test[0].cidr_block
@@ -319,7 +319,7 @@ resource "aws_ec2_client_vpn_authorization_rule" "test" {
 `)
 }
 
-func testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName string, groupNames map[string]string) string {
+func testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleGroups(rName string, groupNames map[string]string) string {
 	var b strings.Builder
 	for k, v := range groupNames {
 		fmt.Fprintf(&b, `
@@ -331,10 +331,10 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return acctest.ConfigCompose(testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName, 1), b.String())
+	return acctest.ConfigCompose(testAccClientVPNAuthorizationRuleBaseConfig(rName, 1), b.String())
 }
 
-func testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName string, subnetCount int, groupNames map[string]int) string {
+func testAccVPNclientAuthorizationRuleConfig_clientVpnAuthorizationRuleSubnets(rName string, subnetCount int, groupNames map[string]int) string {
 	var b strings.Builder
 	for k, v := range groupNames {
 		fmt.Fprintf(&b, `
@@ -346,5 +346,5 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return acctest.ConfigCompose(testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName, subnetCount), b.String())
+	return acctest.ConfigCompose(testAccClientVPNAuthorizationRuleBaseConfig(rName, subnetCount), b.String())
 }

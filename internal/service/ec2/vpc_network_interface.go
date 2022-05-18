@@ -404,7 +404,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
 	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network Interface: %s", input)

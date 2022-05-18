@@ -147,7 +147,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateSubnetInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 

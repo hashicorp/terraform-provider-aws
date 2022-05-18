@@ -587,7 +587,7 @@ func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVpnConnectionOptionsSpecification(d),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 

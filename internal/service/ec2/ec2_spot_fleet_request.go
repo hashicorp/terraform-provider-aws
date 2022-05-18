@@ -837,7 +837,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
 		Type:                             aws.String(d.Get("fleet_type").(string)),
-		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotFleetRequest),
+		TagSpecifications:                tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotFleetRequest),
 	}
 
 	if launchSpecificationOk {

@@ -150,7 +150,7 @@ func TestAccVPCRouteDataSource_destinationPrefixListID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRouteDestroy,

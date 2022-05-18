@@ -147,7 +147,7 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && conns.HasEC2Classic(supportedPlatforms) {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
-		allocOpts.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
+		allocOpts.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
 	}
 
 	if v, ok := d.GetOk("address"); ok {
@@ -406,7 +406,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if assocOpts.AllocationId == nil {
-			if err := waitForEc2AddressAssociationClassic(conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
+			if err := waitForAddressAssociationClassic(conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
 				return fmt.Errorf("error waiting for EC2 Address (%s) to associate with EC2-Classic Instance (%s): %w", aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId), err)
 			}
 		}
@@ -525,10 +525,10 @@ func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// waitForEc2AddressAssociationClassic ensures the correct Instance is associated with an Address
+// waitForAddressAssociationClassic ensures the correct Instance is associated with an Address
 //
 // This can take a few seconds to appear correctly for EC2-Classic addresses.
-func waitForEc2AddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID string) error {
+func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID string) error {
 	input := &ec2.DescribeAddressesInput{
 		Filters: []*ec2.Filter{
 			{

@@ -165,7 +165,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		VpcEndpointType:   aws.String(d.Get("vpc_endpoint_type").(string)),
 		ServiceName:       aws.String(d.Get("service_name").(string)),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "vpc-endpoint"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "vpc-endpoint"),
 	}
 
 	if v, ok := d.GetOk("policy"); ok {

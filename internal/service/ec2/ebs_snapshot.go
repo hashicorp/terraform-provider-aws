@@ -110,7 +110,7 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 
 	request := &ec2.CreateSnapshotInput{
 		VolumeId:          aws.String(d.Get("volume_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		request.Description = aws.String(v.(string))

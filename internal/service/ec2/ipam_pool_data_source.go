@@ -132,7 +132,7 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
 	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
 	d.Set("allocation_min_netmask_length", pool.AllocationMinNetmaskLength)
-	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPamAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)

@@ -131,7 +131,7 @@ func ResourceVPCIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		AddressFamily:     aws.String(d.Get("address_family").(string)),
 		ClientToken:       aws.String(resource.UniqueId()),
 		IpamScopeId:       aws.String(d.Get("ipam_scope_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam-pool"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam-pool"),
 	}
 
 	if v := d.Get("publicly_advertisable"); v != "" && d.Get("address_family") == ec2.AddressFamilyIpv6 {
@@ -207,7 +207,7 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("address_family", pool.AddressFamily)
-	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPamAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -424,7 +424,7 @@ func ipamResourceTags(tags tftags.KeyValueTags) []*ec2.RequestIpamResourceTag {
 	return result
 }
 
-func ec2TagsFromIpamAllocationTags(rts []*ec2.IpamResourceTag) []*ec2.Tag {
+func tagsFromIPamAllocationTags(rts []*ec2.IpamResourceTag) []*ec2.Tag {
 	if len(rts) == 0 {
 		return nil
 	}

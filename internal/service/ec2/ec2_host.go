@@ -92,7 +92,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Host: %s", input)

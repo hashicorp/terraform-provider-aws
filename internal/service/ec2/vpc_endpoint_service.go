@@ -136,7 +136,7 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 
 	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, "vpc-endpoint-service"),
+		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, "vpc-endpoint-service"),
 	}
 	if v, ok := d.GetOk("private_dns_name"); ok {
 		req.PrivateDnsName = aws.String(v.(string))

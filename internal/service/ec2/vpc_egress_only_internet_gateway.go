@@ -45,7 +45,7 @@ func resourceEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta interf
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateEgressOnlyInternetGatewayInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeEgressOnlyInternetGateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeEgressOnlyInternetGateway),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 

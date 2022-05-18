@@ -227,7 +227,7 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
-		TagSpecifications:    ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
 		VpnPort:              aws.Int64(int64(d.Get("vpn_port").(int))),
 	}

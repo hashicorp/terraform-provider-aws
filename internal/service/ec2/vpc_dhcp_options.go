@@ -94,7 +94,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 
 	input := &ec2.CreateDhcpOptionsInput{
 		DhcpConfigurations: dhcpConfigurations,
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
+		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
 	}
 
 	output, err := conn.CreateDhcpOptions(input)

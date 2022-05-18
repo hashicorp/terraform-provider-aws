@@ -64,7 +64,7 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnGateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnGateway),
 		Type:              aws.String(ec2.GatewayTypeIpsec1),
 	}
 

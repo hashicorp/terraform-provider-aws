@@ -105,7 +105,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
 		InsideCidrBlocks:           flex.ExpandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
 		PeerAddress:                aws.String(d.Get("peer_address").(string)),
-		TagSpecifications:          ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayConnectPeer),
+		TagSpecifications:          tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayConnectPeer),
 		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
 	}
 

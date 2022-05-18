@@ -53,7 +53,7 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateInternetGatewayInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInternetGateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInternetGateway),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)

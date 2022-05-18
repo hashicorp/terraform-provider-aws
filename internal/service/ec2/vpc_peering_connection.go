@@ -109,7 +109,7 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 

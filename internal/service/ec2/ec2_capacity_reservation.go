@@ -121,7 +121,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get("instance_type").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2ResourceTypeCapacityReservation),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {

@@ -958,7 +958,7 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(name),
 		LaunchTemplateData: expandRequestLaunchTemplateData(d),
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLaunchTemplate),
+		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

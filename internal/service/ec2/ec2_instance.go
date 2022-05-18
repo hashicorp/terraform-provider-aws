@@ -765,8 +765,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error collecting instance settings: %w", err)
 	}
 
-	tagSpecifications := ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
-	tagSpecifications = append(tagSpecifications, ec2TagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
+	tagSpecifications := tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
+	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
@@ -933,7 +933,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("hibernation", v.Configured)
 	}
 
-	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
+	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
 		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
@@ -945,7 +945,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("maintenance_options", nil)
 	}
 
-	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
@@ -2336,7 +2336,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 	}
 
 	resp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: ec2AttributeFiltersFromMultimap(map[string][]string{
+		Filters: attributeFiltersFromMultimap(map[string][]string{
 			"resource-id": volumeIds,
 		}),
 	})
@@ -2344,7 +2344,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 		return nil, fmt.Errorf("error getting tags for volumes (%s): %s", volumeIds, err)
 	}
 
-	return ec2TagsFromTagDescriptions(resp.Tags), nil
+	return tagsFromTagDescriptions(resp.Tags), nil
 }
 
 // Determine whether we're referring to security groups with
@@ -2496,8 +2496,8 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
-		EnclaveOptions:        expandEc2EnclaveOptions(d.Get("enclave_options").([]interface{})),
+		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
@@ -2509,7 +2509,7 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok {
-		opts.LaunchTemplate = expandEc2LaunchTemplateSpecification(v.([]interface{}))
+		opts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 	}
 
 	instanceType := d.Get("instance_type").(string)
@@ -2805,7 +2805,7 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
+func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2835,7 +2835,7 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 	return opts
 }
 
-func expandEc2EnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
+func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2862,7 +2862,7 @@ func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddres
 	return specs
 }
 
-func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
+func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
 	if opts == nil {
 		return nil
 	}
@@ -2877,7 +2877,7 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 	return []interface{}{m}
 }
 
-func flattenEc2EnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
+func flattenEnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 	if opts == nil {
 		return nil
 	}
@@ -3071,7 +3071,7 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 	return tfMap
 }
 
-func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
 	if len(specs) < 1 {
 		return nil
 	}

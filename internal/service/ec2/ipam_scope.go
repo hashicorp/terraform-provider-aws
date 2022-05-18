@@ -81,7 +81,7 @@ func ResourceVPCIpamScopeCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &ec2.CreateIpamScopeInput{
 		ClientToken:       aws.String(resource.UniqueId()),
 		IpamId:            aws.String(d.Get("ipam_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam-scope"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam-scope"),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
