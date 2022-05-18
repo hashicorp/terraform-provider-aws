@@ -17,6 +17,8 @@ const (
 	connectContactFlowUpdateTimeout = 5 * time.Minute
 
 	connectBotAssociationCreateTimeout = 5 * time.Minute
+
+	connectVocabularyCreatedTimeout = 5 * time.Minute
 )
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
@@ -50,6 +52,23 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId 
 	outputRaw, err := stateConf.WaitForState()
 
 	if v, ok := outputRaw.(*connect.DescribeInstanceOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{connect.VocabularyStateCreationInProgress},
+		Target:  []string{connect.VocabularyStateActive, connect.VocabularyStateCreationFailed},
+		Refresh: statusVocabulary(ctx, conn, instanceId, vocabularyId),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*connect.DescribeVocabularyOutput); ok {
 		return v, err
 	}
 
