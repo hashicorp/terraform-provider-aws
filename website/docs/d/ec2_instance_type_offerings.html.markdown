@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_instance_type_offerings"
 description: |-
@@ -12,7 +12,7 @@ Information about EC2 Instance Type Offerings.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_instance_type_offerings" "example" {
   filter {
     name   = "instance-type"
@@ -44,4 +44,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `instance_types` - Set of EC2 Instance Types.
+* `id` - AWS Region.
+* `instance_types` - List of EC2 Instance Types.
+* `locations` - List of locations.
+* `location_types` - List of location types.
+
+Note that the indexes of Instance Type Offering instance types, locations and location types correspond.

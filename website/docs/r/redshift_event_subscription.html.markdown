@@ -12,7 +12,7 @@ Provides a Redshift event subscription resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "default"
   database_name      = "default"
@@ -26,10 +26,10 @@ resource "aws_sns_topic" "default" {
 
 resource "aws_redshift_event_subscription" "default" {
   name          = "redshift-event-sub"
-  sns_topic_arn = "${aws_sns_topic.default.arn}"
+  sns_topic_arn = aws_sns_topic.default.arn
 
   source_type = "cluster"
-  source_ids  = ["${aws_redshift_cluster.default.id}"]
+  source_ids  = [aws_redshift_cluster.default.id]
 
   severity = "INFO"
 
@@ -57,19 +57,20 @@ The following arguments are supported:
 * `severity` - (Optional) The event severity to be published by the notification subscription. Valid options are `INFO` or `ERROR`.
 * `event_categories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-event-notifications.html or run `aws redshift describe-event-categories`.
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes
+## Attributes Reference
 
-The following additional atttributes are provided:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift event notification subscription
 * `id` - The name of the Redshift event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the Redshift event notification subscription
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Redshift Event Subscriptions can be imported using the `name`, e.g.
+Redshift Event Subscriptions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_event_subscription.default redshift-event-sub

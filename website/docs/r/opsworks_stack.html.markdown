@@ -12,12 +12,12 @@ Provides an OpsWorks stack resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_opsworks_stack" "main" {
   name                         = "awesome-stack"
   region                       = "us-west-1"
-  service_role_arn             = "${aws_iam_role.opsworks.arn}"
-  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks.arn}"
+  service_role_arn             = aws_iam_role.opsworks.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks.arn
 
   tags = {
     Name = "foobar-terraform-stack"
@@ -60,7 +60,7 @@ The following arguments are supported:
 * `hostname_theme` - (Optional) Keyword representing the naming scheme that will be used for instance hostnames
   within this stack.
 * `manage_berkshelf` - (Optional) Boolean value controlling whether Opsworks will run Berkshelf for this stack.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `use_custom_cookbooks` - (Optional) Boolean value controlling whether the custom cookbook settings are
   enabled.
 * `use_opsworks_security_groups` - (Optional) Boolean value controlling whether the standard OpsWorks
@@ -82,10 +82,11 @@ The `custom_cookbooks_source` block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the stack.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-OpsWorks stacks can be imported using the `id`, e.g.
+OpsWorks stacks can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000
