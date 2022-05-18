@@ -198,6 +198,78 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_tags(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfigTags1(rName, "key1", "value1", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
+						"key":                 "key1",
+						"value":               "value1",
+						"propagate_at_launch": "true",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccGroupConfigTags2(rName, "key1", "value1updated", true, "key2", "value2", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tag.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
+						"key":                 "key1",
+						"value":               "value1updated",
+						"propagate_at_launch": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
+						"key":                 "key2",
+						"value":               "value2",
+						"propagate_at_launch": "false",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupConfigTags1(rName, "key2", "value2", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
+						"key":                 "key2",
+						"value":               "value2",
+						"propagate_at_launch": "true",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_simple(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -327,71 +399,6 @@ func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "termination_policies.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_tags(t *testing.T) {
-	var group autoscaling.Group
-
-	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupSimpleConfig(randName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckTags(&group.Tags, "FromTags1", map[string]interface{}{
-						"value":               "value1",
-						"propagate_at_launch": true,
-					}),
-					testAccCheckTags(&group.Tags, "FromTags2", map[string]interface{}{
-						"value":               "value2",
-						"propagate_at_launch": true,
-					}),
-					testAccCheckTags(&group.Tags, "FromTags3", map[string]interface{}{
-						"value":               "value3",
-						"propagate_at_launch": true,
-					}),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupUpdateConfig(randName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckTagNotExists(&group.Tags, "Foo"),
-					testAccCheckTags(&group.Tags, "FromTags1Changed", map[string]interface{}{
-						"value":               "value1changed",
-						"propagate_at_launch": true,
-					}),
-					testAccCheckTags(&group.Tags, "FromTags2", map[string]interface{}{
-						"value":               "value2changed",
-						"propagate_at_launch": true,
-					}),
-					testAccCheckTags(&group.Tags, "FromTags3", map[string]interface{}{
-						"value":               "value3",
-						"propagate_at_launch": true,
-					}),
 				),
 			},
 		},
@@ -4313,6 +4320,48 @@ resource "aws_autoscaling_group" "test" {
   launch_configuration = aws_launch_configuration.test.name
 }
 `, namePrefix))
+}
+
+func testAccGroupConfigTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  tag {
+    key                 = %[2]q
+    value               = %[3]q
+    propagate_at_launch = %[4]t
+  }
+}
+`, rName, tagKey1, tagValue1, tagPropagateAtLaunch1))
+}
+
+func testAccGroupConfigTags2(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool, tagKey2, tagValue2 string, tagPropagateAtLaunch2 bool) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  tag {
+    key                 = %[2]q
+    value               = %[3]q
+    propagate_at_launch = %[4]t
+  }
+
+  tag {
+    key                 = %[5]q
+    value               = %[6]q
+    propagate_at_launch = %[7]t
+  }
+}
+`, rName, tagKey1, tagValue1, tagPropagateAtLaunch1, tagKey2, tagValue2, tagPropagateAtLaunch2))
 }
 
 func testAccGroupSimpleConfig(rName string) string {
