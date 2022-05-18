@@ -1998,9 +1998,9 @@ func ImageBuilderECRImageFromEnv(t *testing.T, platform string) string {
 
 	if ecrImage == "" {
 		t.Skip(
-			fmt.Sprintf("Environment variable IMAGE_BUILDER_ECR_IMAGE_%s is not set. " +
-				"For AWS EC2 Image Builder tests using an ECR Image" +
-				"as the Parent Image the ECR Image must be accessible for" +
+			fmt.Sprintf("Environment variable IMAGE_BUILDER_ECR_IMAGE_%s is not set. "+
+				"For AWS EC2 Image Builder tests using an ECR Image"+
+				"as the Parent Image the ECR Image must be accessible for"+
 				"testing.", strings.ToUpper(platform)))
 	}
 
