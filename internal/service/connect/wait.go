@@ -13,9 +13,6 @@ const (
 	instanceCreatedTimeout = 5 * time.Minute
 	instanceDeletedTimeout = 5 * time.Minute
 
-	contactFlowCreateTimeout = 5 * time.Minute
-	contactFlowUpdateTimeout = 5 * time.Minute
-
 	botAssociationCreateTimeout = 5 * time.Minute
 )
 
