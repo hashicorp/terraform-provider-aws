@@ -21,6 +21,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_autoscaling_group: Wait for correct number of ELBs when `wait_for_elb_capacity` is configured ([#20806](https://github.com/hashicorp/terraform-provider-aws/issues/20806))
+* resource/aws_elasticache_replication_group: Fix perpetual diff on `auto_minor_version_upgrade` ([#24688](https://github.com/hashicorp/terraform-provider-aws/issues/24688))
 
 ## 4.14.0 (May 13, 2022)
 
