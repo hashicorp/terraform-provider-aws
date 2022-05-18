@@ -688,7 +688,7 @@ func flattenBlockDeviceMappingsForAMIEBSBlockDevice(apiObjects []*ec2.BlockDevic
 	return tfList
 }
 
-func expandBlockDeviceMappingForamIEphemeralBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
 	if tfMap == nil {
 		return nil
 	}
@@ -720,7 +720,7 @@ func expandBlockDeviceMappingsForAMIEphemeralBlockDevice(tfList []interface{}) [
 			continue
 		}
 
-		apiObject := expandBlockDeviceMappingForamIEphemeralBlockDevice(tfMap)
+		apiObject := expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -732,7 +732,7 @@ func expandBlockDeviceMappingsForAMIEphemeralBlockDevice(tfList []interface{}) [
 	return apiObjects
 }
 
-func flattenBlockDeviceMappingForamIEphemeralBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
+func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -766,7 +766,7 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.Bloc
 			continue
 		}
 
-		tfList = append(tfList, flattenBlockDeviceMappingForamIEphemeralBlockDevice(apiObject))
+		tfList = append(tfList, flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject))
 	}
 
 	return tfList
