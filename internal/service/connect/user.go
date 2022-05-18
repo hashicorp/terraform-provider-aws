@@ -66,11 +66,13 @@ func ResourceUser() *schema.Resource {
 			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"password": {
