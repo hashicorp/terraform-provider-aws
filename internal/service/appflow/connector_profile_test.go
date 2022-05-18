@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
@@ -126,7 +127,7 @@ func testAccCheckConnectorProfileDestroy(s *terraform.State) error {
 
 		_, err := tfappflow.FindConnectorProfileByArn(context.Background(), conn, rs.Primary.ID)
 
-		if _, ok := err.(*resource.NotFoundError); ok {
+		if tfresource.NotFound(err) {
 			continue
 		}
 

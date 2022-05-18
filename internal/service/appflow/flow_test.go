@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppFlowFlow_basic(t *testing.T) {
@@ -482,9 +483,10 @@ func testAccCheckFlowDestroy(s *terraform.State) error {
 
 		_, err := tfappflow.FindFlowByArn(context.Background(), conn, rs.Primary.ID)
 
-		if _, ok := err.(*resource.NotFoundError); ok {
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
