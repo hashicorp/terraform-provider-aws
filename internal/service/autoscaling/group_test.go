@@ -1154,251 +1154,6 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-
-		output, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_group" {
-			continue
-		}
-
-		_, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Auto Scaling Group %s still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckGroupAttributes(group *autoscaling.Group, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *group.AutoScalingGroupName != name {
-			return fmt.Errorf("Bad Auto Scaling Group name, expected (%s), got (%s)", name, *group.AutoScalingGroupName)
-		}
-
-		if *group.MaxSize != 5 {
-			return fmt.Errorf("Bad max_size: %d", *group.MaxSize)
-		}
-
-		if *group.MinSize != 2 {
-			return fmt.Errorf("Bad max_size: %d", *group.MinSize)
-		}
-
-		if *group.HealthCheckType != "ELB" {
-			return fmt.Errorf("Bad health_check_type,\nexpected: %s\ngot: %s", "ELB", *group.HealthCheckType)
-		}
-
-		if *group.HealthCheckGracePeriod != 300 {
-			return fmt.Errorf("Bad health_check_grace_period: %d", *group.HealthCheckGracePeriod)
-		}
-
-		if *group.DesiredCapacity != 4 {
-			return fmt.Errorf("Bad desired_capacity: %d", *group.DesiredCapacity)
-		}
-
-		if *group.LaunchConfigurationName == "" {
-			return fmt.Errorf("Bad launch configuration name: %s", *group.LaunchConfigurationName)
-		}
-
-		t := &autoscaling.TagDescription{
-			Key:               aws.String("FromTags1"),
-			Value:             aws.String("value1"),
-			PropagateAtLaunch: aws.Bool(true),
-			ResourceType:      aws.String("auto-scaling-group"),
-			ResourceId:        group.AutoScalingGroupName,
-		}
-
-		if !reflect.DeepEqual(group.Tags[0], t) {
-			return fmt.Errorf(
-				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				group.Tags[0],
-				t)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckGroupAttributesLoadBalancer(group *autoscaling.Group) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if len(group.LoadBalancerNames) != 1 {
-			return fmt.Errorf("Bad load_balancers: %v", group.LoadBalancerNames)
-		}
-
-		return nil
-	}
-}
-
-func testLaunchConfigurationName(n string, lc *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if *lc.LaunchConfigurationName != rs.Primary.Attributes["launch_configuration"] {
-			return fmt.Errorf("Launch configuration names do not match")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckGroupHealthyCapacity(
-	g *autoscaling.Group, exp int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		healthy := 0
-		for _, i := range g.Instances {
-			if i.HealthStatus == nil {
-				continue
-			}
-			if strings.EqualFold(*i.HealthStatus, "Healthy") {
-				healthy++
-			}
-		}
-		if healthy < exp {
-			return fmt.Errorf("Expected at least %d healthy, got %d.", exp, healthy)
-		}
-		return nil
-	}
-}
-
-func testAccCheckGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// Grab Subnet Ids
-		var subnets []string
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_subnet" {
-				continue
-			}
-			subnets = append(subnets, rs.Primary.Attributes["id"])
-		}
-
-		if group.VPCZoneIdentifier == nil {
-			return fmt.Errorf("Bad VPC Zone Identifier\nexpected: %s\ngot nil", subnets)
-		}
-
-		zones := strings.Split(*group.VPCZoneIdentifier, ",")
-
-		remaining := len(zones)
-		for _, z := range zones {
-			for _, s := range subnets {
-				if z == s {
-					remaining--
-				}
-			}
-		}
-
-		if remaining != 0 {
-			return fmt.Errorf("Bad VPC Zone Identifier match\nexpected: %s\ngot:%s", zones, subnets)
-		}
-
-		return nil
-	}
-}
-
-// testAccCheckTags can be used to check the tags on a resource.
-func testAccCheckTags(
-	ts *[]*autoscaling.TagDescription, key string, expected map[string]interface{}) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := TagDescriptionsToMap(ts)
-		v, ok := m[key]
-		if !ok {
-			return fmt.Errorf("Missing tag: %s", key)
-		}
-
-		if v["value"] != expected["value"].(string) ||
-			v["propagate_at_launch"] != expected["propagate_at_launch"].(bool) {
-			return fmt.Errorf("%s: bad value: %s", key, v)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := TagDescriptionsToMap(ts)
-		if _, ok := m[key]; ok {
-			return fmt.Errorf("Tag exists when it should not: %s", key)
-		}
-
-		return nil
-	}
-}
-
-// TagDescriptionsToMap turns the list of tags into a map.
-func TagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
-	tags := make(map[string]map[string]interface{})
-	for _, t := range *ts {
-		tag := map[string]interface{}{
-			"key":                 aws.StringValue(t.Key),
-			"value":               aws.StringValue(t.Value),
-			"propagate_at_launch": aws.BoolValue(t.PropagateAtLaunch),
-		}
-		tags[aws.StringValue(t.Key)] = tag
-	}
-
-	return tags
-}
-
-// testAccCheckALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
-// sure that all instances in it are healthy.
-func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
-
-		resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
-			TargetGroupArn: res.TargetGroupArn,
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, target := range resp.TargetHealthDescriptions {
-			if target.TargetHealth == nil || target.TargetHealth.State == nil || *target.TargetHealth.State != "healthy" {
-				return errors.New("Not all instances in target group are healthy yet, but should be")
-			}
-		}
-
-		return nil
-	}
-}
-
 func TestAccAutoScalingGroup_classicVPCZoneIdentifier(t *testing.T) {
 	var group autoscaling.Group
 
@@ -4263,6 +4018,248 @@ func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Auto Scaling Group ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+
+		output, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckGroupDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_autoscaling_group" {
+			continue
+		}
+
+		_, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Auto Scaling Group %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckGroupAttributes(group *autoscaling.Group, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *group.AutoScalingGroupName != name {
+			return fmt.Errorf("Bad Auto Scaling Group name, expected (%s), got (%s)", name, *group.AutoScalingGroupName)
+		}
+
+		if *group.MaxSize != 5 {
+			return fmt.Errorf("Bad max_size: %d", *group.MaxSize)
+		}
+
+		if *group.MinSize != 2 {
+			return fmt.Errorf("Bad max_size: %d", *group.MinSize)
+		}
+
+		if *group.HealthCheckType != "ELB" {
+			return fmt.Errorf("Bad health_check_type,\nexpected: %s\ngot: %s", "ELB", *group.HealthCheckType)
+		}
+
+		if *group.HealthCheckGracePeriod != 300 {
+			return fmt.Errorf("Bad health_check_grace_period: %d", *group.HealthCheckGracePeriod)
+		}
+
+		if *group.DesiredCapacity != 4 {
+			return fmt.Errorf("Bad desired_capacity: %d", *group.DesiredCapacity)
+		}
+
+		if *group.LaunchConfigurationName == "" {
+			return fmt.Errorf("Bad launch configuration name: %s", *group.LaunchConfigurationName)
+		}
+
+		t := &autoscaling.TagDescription{
+			Key:               aws.String("FromTags1"),
+			Value:             aws.String("value1"),
+			PropagateAtLaunch: aws.Bool(true),
+			ResourceType:      aws.String("auto-scaling-group"),
+			ResourceId:        group.AutoScalingGroupName,
+		}
+
+		if !reflect.DeepEqual(group.Tags[0], t) {
+			return fmt.Errorf(
+				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+				group.Tags[0],
+				t)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckGroupAttributesLoadBalancer(group *autoscaling.Group) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len(group.LoadBalancerNames) != 1 {
+			return fmt.Errorf("Bad load_balancers: %v", group.LoadBalancerNames)
+		}
+
+		return nil
+	}
+}
+
+func testLaunchConfigurationName(n string, lc *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if *lc.LaunchConfigurationName != rs.Primary.Attributes["launch_configuration"] {
+			return fmt.Errorf("Launch configuration names do not match")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckGroupHealthyCapacity(g *autoscaling.Group, exp int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		healthy := 0
+		for _, i := range g.Instances {
+			if i.HealthStatus == nil {
+				continue
+			}
+			if strings.EqualFold(*i.HealthStatus, "Healthy") {
+				healthy++
+			}
+		}
+		if healthy < exp {
+			return fmt.Errorf("Expected at least %d healthy, got %d.", exp, healthy)
+		}
+		return nil
+	}
+}
+
+func testAccCheckGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// Grab Subnet Ids
+		var subnets []string
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_subnet" {
+				continue
+			}
+			subnets = append(subnets, rs.Primary.Attributes["id"])
+		}
+
+		if group.VPCZoneIdentifier == nil {
+			return fmt.Errorf("Bad VPC Zone Identifier\nexpected: %s\ngot nil", subnets)
+		}
+
+		zones := strings.Split(*group.VPCZoneIdentifier, ",")
+
+		remaining := len(zones)
+		for _, z := range zones {
+			for _, s := range subnets {
+				if z == s {
+					remaining--
+				}
+			}
+		}
+
+		if remaining != 0 {
+			return fmt.Errorf("Bad VPC Zone Identifier match\nexpected: %s\ngot:%s", zones, subnets)
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckTags can be used to check the tags on a resource.
+func testAccCheckTags(ts *[]*autoscaling.TagDescription, key string, expected map[string]interface{}) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		m := tagDescriptionsToMap(ts)
+		v, ok := m[key]
+		if !ok {
+			return fmt.Errorf("Missing tag: %s", key)
+		}
+
+		if v["value"] != expected["value"].(string) ||
+			v["propagate_at_launch"] != expected["propagate_at_launch"].(bool) {
+			return fmt.Errorf("%s: bad value: %s", key, v)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		m := tagDescriptionsToMap(ts)
+		if _, ok := m[key]; ok {
+			return fmt.Errorf("Tag exists when it should not: %s", key)
+		}
+
+		return nil
+	}
+}
+
+func tagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
+	tags := make(map[string]map[string]interface{})
+	for _, t := range *ts {
+		tag := map[string]interface{}{
+			"key":                 aws.StringValue(t.Key),
+			"value":               aws.StringValue(t.Value),
+			"propagate_at_launch": aws.BoolValue(t.PropagateAtLaunch),
+		}
+		tags[aws.StringValue(t.Key)] = tag
+	}
+
+	return tags
+}
+
+// testAccCheckALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
+// sure that all instances in it are healthy.
+func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+
+		resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
+			TargetGroupArn: res.TargetGroupArn,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		for _, target := range resp.TargetHealthDescriptions {
+			if target.TargetHealth == nil || target.TargetHealth.State == nil || *target.TargetHealth.State != "healthy" {
+				return errors.New("Not all instances in target group are healthy yet, but should be")
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccGroupNameGeneratedConfig() string {
