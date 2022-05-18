@@ -54,7 +54,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: ipv4IPAMByoipIPv6DefaultNetmask(p, m, s),
+				Config: ipv4IPAMBYOIPIPv6DefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
@@ -204,7 +204,7 @@ resource "aws_vpc" "test" {
 	`, cidr, msg, signature)
 }
 
-func ipv4IPAMByoipIPv6DefaultNetmask(cidr, msg, signature string) string {
+func ipv4IPAMBYOIPIPv6DefaultNetmask(cidr, msg, signature string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
