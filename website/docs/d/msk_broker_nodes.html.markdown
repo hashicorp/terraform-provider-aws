@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Streaming for Kafka (MSK)"
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_broker_nodes"
 description: |-
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* [`node_info_list`](#Nodes) - List of MSK Broker Nodes, sorted by broker ID in ascending order.
+* [`node_info_list`](#nodes) - List of MSK Broker Nodes, sorted by broker ID in ascending order.
 
 ### Nodes
 

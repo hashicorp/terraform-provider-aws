@@ -58,7 +58,7 @@ func FindTaskByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeTaskO
 	return output, nil
 }
 
-func FindLocationHdfsByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
+func FindLocationHDFSByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
 	input := &datasync.DescribeLocationHdfsInput{
 		LocationArn: aws.String(arn),
 	}
@@ -89,6 +89,31 @@ func FindFsxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.
 	}
 
 	output, err := conn.DescribeLocationFsxLustre(input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindFsxOpenZfsLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
+	input := &datasync.DescribeLocationFsxOpenZfsInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationFsxOpenZfs(input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return nil, &resource.NotFoundError{

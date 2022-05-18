@@ -1,6 +1,7 @@
 package cloudtrail
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -12,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceCloudTrail() *schema.Resource {
@@ -288,7 +289,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -367,10 +368,14 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if trail == nil {
-		log.Printf("[WARN] CloudTrail (%s) not found", d.Id())
+	if !d.IsNewResource() && trail == nil {
+		names.LogNotFoundRemoveState(names.CloudTrail, names.ErrActionReading, ResCloudTrail, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && trail == nil {
+		return names.Error(names.CloudTrail, names.ErrActionReading, ResCloudTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)
@@ -496,7 +501,7 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.UpdateTrail(&input)
 			if err != nil {

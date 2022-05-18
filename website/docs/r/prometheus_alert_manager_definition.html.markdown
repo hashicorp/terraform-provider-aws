@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Managed Service for Prometheus (AMP)"
+subcategory: "AMP (Managed Prometheus)"
 layout: "aws"
 page_title: "AWS: aws_prometheus_alert_manager_definition"
 description: |-

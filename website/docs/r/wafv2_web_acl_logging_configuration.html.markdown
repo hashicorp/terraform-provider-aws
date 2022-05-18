@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl_logging_configuration"
 description: |-
@@ -129,7 +129,7 @@ The `redacted_fields` block supports the following arguments:
 * `method` - (Optional) Redact the HTTP method. Must be specified as an empty configuration block `{}`. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Redact the query string. Must be specified as an empty configuration block `{}`. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Redact a single header. See [Single Header](#single-header) below for details.
-* `single_query_argument` - (Optional, **DEPRECATED**) Redact a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `single_query_argument` - (Optional, **DEPRECATED**) Redact a single query argument. See [Single Query Argument](#single-query-argument-deprecated) below for details.
 * `uri_path` - (Optional) Redact the request URI path. Must be specified as an empty configuration block `{}`. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Single Header

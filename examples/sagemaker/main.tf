@@ -28,7 +28,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 resource "aws_iam_policy" "foo" {
   name        = "terraform-sagemaker-example"
-  description = "Allow Sagemaker to create model"
+  description = "Allow SageMaker to create model"
   policy      = data.aws_iam_policy_document.foo.json
 }
 

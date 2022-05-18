@@ -235,7 +235,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 
 	// getting the routing profile queues uses a separate API: ListRoutingProfileQueues
-	queueConfigs, err := getConnectRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
+	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", routingProfileID, err))
@@ -468,7 +468,7 @@ func expandRoutingProfileQueueReferences(queueConfigs []interface{}) []*connect.
 	return queueReferencesExpanded
 }
 
-func getConnectRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string) ([]interface{}, error) {
+func getRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string) ([]interface{}, error) {
 	queueConfigsList := []interface{}{}
 
 	input := &connect.ListRoutingProfileQueuesInput{

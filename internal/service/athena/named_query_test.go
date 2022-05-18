@@ -18,13 +18,13 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNamedQueryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaNamedQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(resourceName),
 				),
@@ -42,13 +42,13 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNamedQueryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaNamedWorkGroupQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedWorkGroupQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(resourceName),
 				),
@@ -105,7 +105,7 @@ func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAthenaNamedQueryConfig(rInt int, rName string) string {
+func testAccNamedQueryConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-athena-db-%s-%d"
@@ -126,7 +126,7 @@ resource "aws_athena_named_query" "test" {
 `, rName, rInt, rName, rName)
 }
 
-func testAccAthenaNamedWorkGroupQueryConfig(rInt int, rName string) string {
+func testAccNamedWorkGroupQueryConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-athena-db-%s-%d"

@@ -24,10 +24,10 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerVPCCreateConfig(rName),
@@ -67,10 +67,10 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerTags1Config(rName, "key1", "value1"),
@@ -112,10 +112,10 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerNoVPCCreateConfig(rName),
@@ -186,13 +186,13 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatch(rName, true),
+				Config: testAccCustomLayerConfig_cloudWatch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -209,7 +209,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatch(rName, false),
+				Config: testAccCustomLayerConfig_cloudWatch(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -221,7 +221,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatchFull(rName),
+				Config: testAccCustomLayerConfig_cloudWatchFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -250,10 +250,10 @@ func TestAccOpsWorksCustomLayer_disappears(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerNoVPCCreateConfig(rName),
@@ -568,7 +568,7 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccOpsworksCustomLayerConfigCloudWatch(name string, enabled bool) string {
+func testAccCustomLayerConfig_cloudWatch(name string, enabled bool) string {
 	return acctest.ConfigCompose(
 		testAccStackNoVPCCreateConfig(name),
 		testAccCustomLayerSecurityGroups(name),
@@ -598,7 +598,7 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name, enabled))
 }
 
-func testAccOpsworksCustomLayerConfigCloudWatchFull(name string) string {
+func testAccCustomLayerConfig_cloudWatchFull(name string) string {
 	return acctest.ConfigCompose(
 		testAccStackNoVPCCreateConfig(name),
 		testAccCustomLayerSecurityGroups(name),

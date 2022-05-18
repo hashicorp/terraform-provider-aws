@@ -22,7 +22,7 @@ rules:
         - "internal/service/**/*_test.go"
         - "internal/service/**/sweep.go"
         - "internal/acctest/acctest.go"
-        - "internal/conns/conns.go"
+        - "internal/conns/**/*.go"
     patterns:
       - pattern: |
           import ("$X")
@@ -46,21 +46,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/ec2
-        - internal/service/elasticbeanstalk
-        - internal/service/elasticsearch
-        - internal/service/elb
-        - internal/service/emr
-        - internal/service/gamelift
-        - internal/service/iam
-        - internal/service/lambda
-        - internal/service/opsworks
-        - internal/service/rds
-        - internal/service/redshift
-        - internal/service/route53
-        - internal/service/s3
-        - internal/service/servicediscovery
-        - internal/service/ssm
+        - "internal/service/**/*_test.go"
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
@@ -73,16 +59,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/**/*_test.go
-        - internal/service/dax
-        - internal/service/docdb
-        - internal/service/ec2
-        - internal/service/ecs
-        - internal/service/elasticache
-        - internal/service/elasticbeanstalk
-        - internal/service/elb
-        - internal/service/rds
-        - internal/service/redshift
+        - "internal/service/**/*_test.go"
     patterns:
       - pattern-either:
         - pattern: '$LHS == *$RHS'
@@ -299,7 +276,7 @@ rules:
         - internal/service
       exclude:
         - internal/service/**/*_data_source.go
-        - internal/service/[b-ce-g]*
+        - internal/service/[be-g]*
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
         - internal/service/i*
@@ -560,6 +537,7 @@ rules:
         - internal/
       exclude:
         - providerlint/vendor/
+        - internal/generate/
     patterns:
       - pattern-either:
         - pattern: |
@@ -590,6 +568,7 @@ rules:
         - internal/service/storagegateway/stored_iscsi_volume_test.go
         - internal/service/transfer/access_test.go
         - internal/service/transfer/server_test.go
+        - "internal/service/**/*_test.go"
     patterns:
       - patterns:
         - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
@@ -621,6 +600,8 @@ rules:
     paths:
       include:
         - internal/
+      exclude:
+        - internal/service/route53domains/registered_domain_test.go
     patterns:
       - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
       - pattern-not-regex: 'no-reply@hashicorp\.com'
@@ -719,3 +700,61 @@ rules:
     patterns:
       - pattern: tfawserr.ErrMessageContains(err, ..., "")
     severity: ERROR
+
+  - id: avoid-dependency-for-one-constant
+    languages: [go]
+    message: Use constant in the same package rather than importing iam for a constant
+    paths:
+      include:
+        - internal/
+      exclude:
+        - internal/service/iam
+    patterns:
+      - pattern: tfiam.PropagationTimeout
+    severity: ERROR
+
+  - id: use-acctest-provider-factories
+    languages: [go]
+    message: Use acctest.ProviderFactories, not acctest.Providers
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    pattern-regex: Providers:\s+(acctest\.)?Providers,
+    severity: WARNING
+
+  - id: prefer-aws-go-sdk-pointer-conversion-int-conversion-int64-pointer
+    fix: $VALUE
+    languages: [go]
+    message: Prefer AWS Go SDK pointer conversion functions for dereferencing when converting int64 to int
+    paths:
+      include:
+        - internal/
+    pattern: int(*$VALUE)
+    severity: WARNING
+
+  - id: aws-go-sdk-error-code-helper
+    languages: [go]
+    message: 'Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)'
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+        - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
+        - pattern: |
+            if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
+              if $AWSERR.Code() == $CODE { $BODY }
+            }
+    severity: WARNING
+
+  - id: fmt-Errorf-awserr-Error-Code
+    languages: [go]
+    message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+        - pattern: fmt.Errorf(..., $ERR.Code(), ...)
+        - pattern: fmt.Errorf(..., $ERR.Message(), ...)
+    severity: WARNING

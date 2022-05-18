@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -13,14 +14,15 @@ import (
 func TestAccEC2EBSVolumeDataSource_basic(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 	dataSourceName := "data.aws_ebs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEBSVolumeDataSourceConfig,
+				Config: testAccCheckEBSVolumeDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSVolumeIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -38,14 +40,15 @@ func TestAccEC2EBSVolumeDataSource_basic(t *testing.T) {
 func TestAccEC2EBSVolumeDataSource_multipleFilters(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 	dataSourceName := "data.aws_ebs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEBSVolumeWithMultipleFiltersDataSourceConfig,
+				Config: testAccCheckEBSVolumeWithMultipleFiltersDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSVolumeIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
@@ -71,14 +74,17 @@ func testAccCheckEBSVolumeIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccCheckEBSVolumeDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+func testAccCheckEBSVolumeDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
   size              = 40
 
   tags = {
-    Name = "External Volume"
+    Name = %[1]q
   }
 }
 
@@ -87,7 +93,7 @@ data "aws_ebs_volume" "test" {
 
   filter {
     name   = "tag:Name"
-    values = ["External Volume"]
+    values = [%[1]q]
   }
 
   filter {
@@ -95,16 +101,20 @@ data "aws_ebs_volume" "test" {
     values = [aws_ebs_volume.test.type]
   }
 }
-`
+`, rName))
+}
 
-var testAccCheckEBSVolumeWithMultipleFiltersDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+func testAccCheckEBSVolumeWithMultipleFiltersDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
   size              = 10
 
   tags = {
-    Name = "External Volume 1"
+    Name = %[1]q
   }
 }
 
@@ -113,7 +123,7 @@ data "aws_ebs_volume" "test" {
 
   filter {
     name   = "tag:Name"
-    values = ["External Volume 1"]
+    values = [%[1]q]
   }
 
   filter {
@@ -126,4 +136,5 @@ data "aws_ebs_volume" "test" {
     values = [aws_ebs_volume.test.type]
   }
 }
-`
+`, rName))
+}

@@ -22,13 +22,13 @@ func TestAccAppRunnerVpcConnector_basic(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunnerVpcConnector(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcConnectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerVpcConnector_basic(rName),
+				Config: testAccVPCConnectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcConnectorExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`vpcconnector/%s/1/.+`, rName))),
@@ -52,13 +52,13 @@ func TestAccAppRunnerVpcConnector_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunnerVpcConnector(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcConnectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerVpcConnector_basic(rName),
+				Config: testAccVPCConnectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcConnectorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceVpcConnector(), resourceName),
@@ -74,13 +74,13 @@ func TestAccAppRunnerVpcConnector_tags(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunnerVpcConnector(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcConnectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVpcConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerVpcConnectorConfigTags1(rName, "key1", "value1"),
+				Config: testAccVPCConnectorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcConnectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -157,7 +157,7 @@ func testAccCheckVpcConnectorExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAppRunnerVpcConnector_basic(rName string) string {
+func testAccVPCConnectorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -193,7 +193,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 `, rName)
 }
 
-func testAccAppRunnerVpcConnectorConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
+func testAccVPCConnectorConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -233,7 +233,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccPreCheckAppRunnerVpcConnector(t *testing.T) {
+func testAccPreCheckVPCConnector(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 	ctx := context.Background()
 

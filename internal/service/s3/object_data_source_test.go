@@ -29,7 +29,7 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -60,9 +60,9 @@ func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	accessPointResourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_basicViaAccessPoint(rName),
@@ -90,7 +90,7 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +124,7 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -160,7 +160,7 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -197,7 +197,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -248,7 +248,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +283,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -374,7 +374,7 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -416,7 +416,7 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 acctest.Providers,
+		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{

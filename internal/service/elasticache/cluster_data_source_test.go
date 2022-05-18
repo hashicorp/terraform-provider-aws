@@ -11,14 +11,18 @@ import (
 )
 
 func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
 	dataSourceName := "data.aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterWithDataSourceConfig(rName),
@@ -30,6 +34,37 @@ func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "num_cache_nodes", resourceName, "num_cache_nodes"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_type", "slow-log"),
 				),
 			},
 		},

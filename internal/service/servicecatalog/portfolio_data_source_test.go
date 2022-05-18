@@ -15,10 +15,10 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPortfolioBasicDataSourceConfig(rName),

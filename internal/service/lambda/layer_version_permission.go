@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -130,7 +129,7 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading Lambda Layer Version Permission (%s): %w", d.Id(), err)
 	}
 
-	policyDoc := &iam.IAMPolicyDoc{}
+	policyDoc := &IAMPolicyDoc{}
 
 	if err := json.Unmarshal([]byte(aws.StringValue(layerVersionPolicyOutput.Policy)), policyDoc); err != nil {
 		return err

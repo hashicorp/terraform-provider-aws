@@ -24,10 +24,10 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 	var opsdb opsworks.RdsDbInstance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRDSDBDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRDSDBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRDSDBInstance(rName, "foo", "barbarbarbar"),

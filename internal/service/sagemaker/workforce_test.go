@@ -21,10 +21,10 @@ func testAccWorkforce_cognitoConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workforce.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkforceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkforceCognitoConfig(rName),
@@ -58,10 +58,10 @@ func testAccWorkforce_oidcConfig(t *testing.T) {
 	endpoint2 := "https://test.example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkforceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkforceOIDCConfig(rName, endpoint1),
@@ -120,10 +120,10 @@ func testAccWorkforce_sourceIPConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workforce.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkforceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkforceSourceIP1Config(rName, "1.1.1.1/32"),
@@ -167,10 +167,10 @@ func testAccWorkforce_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_workforce.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkforceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkforceCognitoConfig(rName),

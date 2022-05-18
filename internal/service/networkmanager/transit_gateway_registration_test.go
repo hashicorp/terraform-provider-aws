@@ -19,10 +19,10 @@ import (
 
 func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                     testAccNetworkManagerTransitGatewayRegistration_basic,
-		"disappears":                testAccNetworkManagerTransitGatewayRegistration_disappears,
-		"disappears_TransitGateway": testAccNetworkManagerTransitGatewayRegistration_disappears_TransitGateway,
-		"crossRegion":               testAccNetworkManagerTransitGatewayRegistration_crossRegion,
+		"basic":                     testAccTransitGatewayRegistration_basic,
+		"disappears":                testAccTransitGatewayRegistration_disappears,
+		"disappears_TransitGateway": testAccTransitGatewayRegistration_Disappears_transitGateway,
+		"crossRegion":               testAccTransitGatewayRegistration_crossRegion,
 	}
 
 	for name, tc := range testCases {
@@ -33,15 +33,15 @@ func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
 	}
 }
 
-func testAccNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
+func testAccTransitGatewayRegistration_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig(rName),
@@ -58,15 +58,15 @@ func testAccNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerTransitGatewayRegistration_disappears(t *testing.T) {
+func testAccTransitGatewayRegistration_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig(rName),
@@ -80,16 +80,16 @@ func testAccNetworkManagerTransitGatewayRegistration_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerTransitGatewayRegistration_disappears_TransitGateway(t *testing.T) {
+func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig(rName),
@@ -103,7 +103,7 @@ func testAccNetworkManagerTransitGatewayRegistration_disappears_TransitGateway(t
 	})
 }
 
-func testAccNetworkManagerTransitGatewayRegistration_crossRegion(t *testing.T) {
+func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var providers []*schema.Provider

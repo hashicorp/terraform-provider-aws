@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSizeConstraintSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig(sizeConstraintSet),
@@ -62,10 +62,10 @@ func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSizeConstraintSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig(sizeConstraintSet),
@@ -98,10 +98,10 @@ func TestAccWAFSizeConstraintSet_disappears(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSizeConstraintSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig(sizeConstraintSet),
@@ -121,10 +121,10 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSizeConstraintSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig(setName),
@@ -177,10 +177,10 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSizeConstraintSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_noConstraints(setName),
@@ -287,11 +287,8 @@ func testAccCheckSizeConstraintSetDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Return nil if the SizeConstraintSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == waf.ErrCodeNonexistentItemException {
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			continue
 		}
 
 		return err

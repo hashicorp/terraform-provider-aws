@@ -306,7 +306,7 @@ func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &appmesh.CreateGatewayRouteInput{
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		Spec:               expandAppmeshGatewayRouteSpec(d.Get("spec").([]interface{})),
+		Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
 		Tags:               Tags(tags.IgnoreAWS()),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
@@ -391,7 +391,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
 	d.Set("name", gatewayRoute.GatewayRouteName)
 	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppmeshGatewayRouteSpec(gatewayRoute.Spec))
+	err = d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %w", err)
 	}
@@ -424,7 +424,7 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 		input := &appmesh.UpdateGatewayRouteInput{
 			GatewayRouteName:   aws.String(d.Get("name").(string)),
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
-			Spec:               expandAppmeshGatewayRouteSpec(d.Get("spec").([]interface{})),
+			Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
 			VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 		}
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -499,7 +499,7 @@ func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandAppmeshGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
+func expandGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
 	if len(vSpec) == 0 || vSpec[0] == nil {
 		return nil
 	}
@@ -509,21 +509,21 @@ func expandAppmeshGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpe
 	mSpec := vSpec[0].(map[string]interface{})
 
 	if vGrpcRoute, ok := mSpec["grpc_route"].([]interface{}); ok {
-		spec.GrpcRoute = expandAppmeshGrpcGatewayRoute(vGrpcRoute)
+		spec.GrpcRoute = expandGRPCGatewayRoute(vGrpcRoute)
 	}
 
 	if vHttp2Route, ok := mSpec["http2_route"].([]interface{}); ok {
-		spec.Http2Route = expandAppmeshHttpGatewayRoute(vHttp2Route)
+		spec.Http2Route = expandHTTPGatewayRoute(vHttp2Route)
 	}
 
 	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok {
-		spec.HttpRoute = expandAppmeshHttpGatewayRoute(vHttpRoute)
+		spec.HttpRoute = expandHTTPGatewayRoute(vHttpRoute)
 	}
 
 	return spec
 }
 
-func expandAppmeshGatewayRouteTarget(vRouteTarget []interface{}) *appmesh.GatewayRouteTarget {
+func expandGatewayRouteTarget(vRouteTarget []interface{}) *appmesh.GatewayRouteTarget {
 	if len(vRouteTarget) == 0 || vRouteTarget[0] == nil {
 		return nil
 	}
@@ -547,7 +547,7 @@ func expandAppmeshGatewayRouteTarget(vRouteTarget []interface{}) *appmesh.Gatewa
 	return routeTarget
 }
 
-func expandAppmeshGrpcGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute {
+func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute {
 	if len(vGrpcRoute) == 0 || vGrpcRoute[0] == nil {
 		return nil
 	}
@@ -562,7 +562,7 @@ func expandAppmeshGrpcGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewa
 		mRouteAction := vRouteAction[0].(map[string]interface{})
 
 		if vRouteTarget, ok := mRouteAction["target"].([]interface{}); ok {
-			routeAction.Target = expandAppmeshGatewayRouteTarget(vRouteTarget)
+			routeAction.Target = expandGatewayRouteTarget(vRouteTarget)
 		}
 
 		route.Action = routeAction
@@ -583,7 +583,7 @@ func expandAppmeshGrpcGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewa
 	return route
 }
 
-func expandAppmeshHttpGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewayRoute {
+func expandHTTPGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewayRoute {
 	if len(vHttpRoute) == 0 || vHttpRoute[0] == nil {
 		return nil
 	}
@@ -598,7 +598,7 @@ func expandAppmeshHttpGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewa
 		mRouteAction := vRouteAction[0].(map[string]interface{})
 
 		if vRouteTarget, ok := mRouteAction["target"].([]interface{}); ok {
-			routeAction.Target = expandAppmeshGatewayRouteTarget(vRouteTarget)
+			routeAction.Target = expandGatewayRouteTarget(vRouteTarget)
 		}
 
 		route.Action = routeAction
@@ -619,21 +619,21 @@ func expandAppmeshHttpGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewa
 	return route
 }
 
-func flattenAppmeshGatewayRouteSpec(spec *appmesh.GatewayRouteSpec) []interface{} {
+func flattenGatewayRouteSpec(spec *appmesh.GatewayRouteSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenAppmeshGrpcGatewayRoute(spec.GrpcRoute),
-		"http2_route": flattenAppmeshHttpGatewayRoute(spec.Http2Route),
-		"http_route":  flattenAppmeshHttpGatewayRoute(spec.HttpRoute),
+		"grpc_route":  flattenGRPCGatewayRoute(spec.GrpcRoute),
+		"http2_route": flattenHTTPGatewayRoute(spec.Http2Route),
+		"http_route":  flattenHTTPGatewayRoute(spec.HttpRoute),
 	}
 
 	return []interface{}{mSpec}
 }
 
-func flattenAppmeshGatewayRouteTarget(routeTarget *appmesh.GatewayRouteTarget) []interface{} {
+func flattenGatewayRouteTarget(routeTarget *appmesh.GatewayRouteTarget) []interface{} {
 	if routeTarget == nil {
 		return []interface{}{}
 	}
@@ -651,7 +651,7 @@ func flattenAppmeshGatewayRouteTarget(routeTarget *appmesh.GatewayRouteTarget) [
 	return []interface{}{mRouteTarget}
 }
 
-func flattenAppmeshGrpcGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} {
+func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} {
 	if grpcRoute == nil {
 		return []interface{}{}
 	}
@@ -660,7 +660,7 @@ func flattenAppmeshGrpcGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []inter
 
 	if routeAction := grpcRoute.Action; routeAction != nil {
 		mRouteAction := map[string]interface{}{
-			"target": flattenAppmeshGatewayRouteTarget(routeAction.Target),
+			"target": flattenGatewayRouteTarget(routeAction.Target),
 		}
 
 		mGrpcRoute["action"] = []interface{}{mRouteAction}
@@ -677,7 +677,7 @@ func flattenAppmeshGrpcGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []inter
 	return []interface{}{mGrpcRoute}
 }
 
-func flattenAppmeshHttpGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []interface{} {
+func flattenHTTPGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []interface{} {
 	if httpRoute == nil {
 		return []interface{}{}
 	}
@@ -686,7 +686,7 @@ func flattenAppmeshHttpGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []inter
 
 	if routeAction := httpRoute.Action; routeAction != nil {
 		mRouteAction := map[string]interface{}{
-			"target": flattenAppmeshGatewayRouteTarget(routeAction.Target),
+			"target": flattenGatewayRouteTarget(routeAction.Target),
 		}
 
 		mHttpRoute["action"] = []interface{}{mRouteAction}

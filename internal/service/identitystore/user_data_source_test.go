@@ -21,9 +21,9 @@ func TestAccIdentityStoreUserDataSource_userName(t *testing.T) {
 			testAccPreCheckSSOAdminInstances(t)
 			testAccPreCheckUserName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		ErrorCheck:        acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDisplayNameDataSourceConfig(name),
@@ -48,9 +48,9 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 			testAccPreCheckUserName(t)
 			testAccPreCheckUserID(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		ErrorCheck:        acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserUserIDDataSourceConfig(name, userID),
@@ -65,10 +65,10 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 
 func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserNonExistentDataSourceConfig,

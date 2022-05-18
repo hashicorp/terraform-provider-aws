@@ -14,22 +14,22 @@ func TestAccOutpostsOutpostInstanceTypesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost_instance_types.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostInstanceTypesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName),
+					testAccCheckOutpostInstanceTypesAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckOutpostInstanceTypesAttributes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {

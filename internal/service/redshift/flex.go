@@ -36,10 +36,10 @@ func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
 	cfg := make(map[string]interface{})
 	cfg["enable"] = aws.BoolValue(ls.LoggingEnabled)
 	if ls.BucketName != nil {
-		cfg["bucket_name"] = *ls.BucketName
+		cfg["bucket_name"] = aws.StringValue(ls.BucketName)
 	}
 	if ls.S3KeyPrefix != nil {
-		cfg["s3_key_prefix"] = *ls.S3KeyPrefix
+		cfg["s3_key_prefix"] = aws.StringValue(ls.S3KeyPrefix)
 	}
 	return []interface{}{cfg}
 }
@@ -63,13 +63,13 @@ func flattenSnapshotCopy(scs *redshift.ClusterSnapshotCopyStatus) []interface{} 
 
 	cfg := make(map[string]interface{})
 	if scs.DestinationRegion != nil {
-		cfg["destination_region"] = *scs.DestinationRegion
+		cfg["destination_region"] = aws.StringValue(scs.DestinationRegion)
 	}
 	if scs.RetentionPeriod != nil {
-		cfg["retention_period"] = *scs.RetentionPeriod
+		cfg["retention_period"] = aws.Int64Value(scs.RetentionPeriod)
 	}
 	if scs.SnapshotCopyGrantName != nil {
-		cfg["grant_name"] = *scs.SnapshotCopyGrantName
+		cfg["grant_name"] = aws.StringValue(scs.SnapshotCopyGrantName)
 	}
 
 	return []interface{}{cfg}

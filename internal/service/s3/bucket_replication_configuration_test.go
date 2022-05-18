@@ -3,6 +3,7 @@ package s3_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -14,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
@@ -1073,6 +1074,88 @@ func TestAccS3BucketReplicationConfiguration_withoutPrefix(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	bucketResourceName := "aws_s3_bucket.source"
+	region := acctest.Region()
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withReplicationV2_PrefixAndTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "replication_configuration.0.rules.*", map[string]string{
+						"filter.#":        "1",
+						"filter.0.prefix": "foo",
+						"filter.0.tags.%": "2",
+					}),
+				),
+			},
+			{
+				Config: testAccBucketReplicationConfiguration_Migrate_NoChangeConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	bucketResourceName := "aws_s3_bucket.source"
+	region := acctest.Region()
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withReplicationV2_PrefixAndTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "replication_configuration.0.rules.*", map[string]string{
+						"filter.#":        "1",
+						"filter.0.prefix": "foo",
+						"filter.0.tags.%": "2",
+					}),
+				),
+			},
+			{
+				Config: testAccBucketReplicationConfiguration_Migrate_WithChangeConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", "bar"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketReplicationConfigurationDestroy(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).S3Conn
 
@@ -1082,9 +1165,9 @@ func testAccCheckBucketReplicationConfigurationDestroy(s *terraform.State, provi
 		}
 		input := &s3.GetBucketReplicationInput{Bucket: aws.String(rs.Primary.ID)}
 
-		output, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.GetBucketReplication(input)
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
 			continue
@@ -2184,4 +2267,138 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     }
   }
 }`)
+}
+
+func testAccBucketReplicationConfigurationMigrationBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "role" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket = "%[1]s-source"
+}
+
+resource "aws_s3_bucket_acl" "source" {
+  bucket = aws_s3_bucket.source.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket" "destination" {
+  provider = "awsalternate"
+  bucket   = "%[1]s-destination"
+}
+
+resource "aws_s3_bucket_versioning" "destination" {
+  provider = "awsalternate"
+  bucket   = aws_s3_bucket.destination.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+`, rName)
+}
+
+func testAccBucketReplicationConfiguration_Migrate_NoChangeConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccBucketReplicationConfigurationMigrationBase(rName), `
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.role.arn
+
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    priority = 41
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+
+    filter {
+      and {
+        prefix = "foo"
+
+        tags = {
+          AnotherTag  = "OK"
+          ReplicateMe = "Yes"
+        }
+      }
+    }
+  }
+}`,
+	)
+}
+
+func testAccBucketReplicationConfiguration_Migrate_WithChangeConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccBucketReplicationConfigurationMigrationBase(rName), `
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.role.arn
+
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    priority = 41
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+
+    filter {
+      prefix = "bar"
+    }
+  }
+}`,
+	)
 }

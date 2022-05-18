@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,15 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	ecsClusterTimeoutDelete = 10 * time.Minute
-	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -393,7 +386,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
@@ -436,7 +429,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryClusterCreate(conn *ecs.ECS, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
 	var output *ecs.CreateClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateCluster(input)
 

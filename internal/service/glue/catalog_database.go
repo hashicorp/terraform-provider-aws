@@ -136,11 +136,11 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("target_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		dbInput.TargetDatabase = expandGlueDatabaseTargetDatabase(v.([]interface{})[0].(map[string]interface{}))
+		dbInput.TargetDatabase = expandDatabaseTargetDatabase(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
-		dbInput.CreateTableDefaultPermissions = expandGlueDatabasePrincipalPermissions(v.([]interface{}))
+		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]interface{}))
 	}
 
 	input := &glue.CreateDatabaseInput{
@@ -188,7 +188,7 @@ func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
-		dbInput.CreateTableDefaultPermissions = expandGlueDatabasePrincipalPermissions(v.([]interface{}))
+		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]interface{}))
 	}
 
 	dbUpdateInput.DatabaseInput = dbInput
@@ -241,14 +241,14 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("parameters", aws.StringValueMap(database.Parameters))
 
 	if database.TargetDatabase != nil {
-		if err := d.Set("target_database", []interface{}{flattenGlueDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
+		if err := d.Set("target_database", []interface{}{flattenDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
 			return fmt.Errorf("error setting target_database: %w", err)
 		}
 	} else {
 		d.Set("target_database", nil)
 	}
 
-	if err := d.Set("create_table_default_permission", flattenGlueDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
+	if err := d.Set("create_table_default_permission", flattenDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
 		return fmt.Errorf("error setting create_table_default_permission: %w", err)
 	}
 
@@ -286,7 +286,7 @@ func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string
 	return
 }
 
-func expandGlueDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseIdentifier {
+func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseIdentifier {
 	if tfMap == nil {
 		return nil
 	}
@@ -304,7 +304,7 @@ func expandGlueDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.Databa
 	return apiObject
 }
 
-func flattenGlueDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[string]interface{} {
+func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -322,7 +322,7 @@ func flattenGlueDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[s
 	return tfMap
 }
 
-func expandGlueDatabasePrincipalPermissions(tfList []interface{}) []*glue.PrincipalPermissions {
+func expandDatabasePrincipalPermissions(tfList []interface{}) []*glue.PrincipalPermissions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -336,7 +336,7 @@ func expandGlueDatabasePrincipalPermissions(tfList []interface{}) []*glue.Princi
 			continue
 		}
 
-		apiObject := expandGlueDatabasePrincipalPermission(tfMap)
+		apiObject := expandDatabasePrincipalPermission(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -348,7 +348,7 @@ func expandGlueDatabasePrincipalPermissions(tfList []interface{}) []*glue.Princi
 	return apiObjects
 }
 
-func expandGlueDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.PrincipalPermissions {
+func expandDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.PrincipalPermissions {
 	if tfMap == nil {
 		return nil
 	}
@@ -360,13 +360,13 @@ func expandGlueDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.P
 	}
 
 	if v, ok := tfMap["principal"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Principal = expandGlueDatabasePrincipal(v[0].(map[string]interface{}))
+		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandGlueDatabasePrincipal(tfMap map[string]interface{}) *glue.DataLakePrincipal {
+func expandDatabasePrincipal(tfMap map[string]interface{}) *glue.DataLakePrincipal {
 	if tfMap == nil {
 		return nil
 	}
@@ -380,7 +380,7 @@ func expandGlueDatabasePrincipal(tfMap map[string]interface{}) *glue.DataLakePri
 	return apiObject
 }
 
-func flattenGlueDatabasePrincipalPermissions(apiObjects []*glue.PrincipalPermissions) []interface{} {
+func flattenDatabasePrincipalPermissions(apiObjects []*glue.PrincipalPermissions) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -392,13 +392,13 @@ func flattenGlueDatabasePrincipalPermissions(apiObjects []*glue.PrincipalPermiss
 			continue
 		}
 
-		tfList = append(tfList, flattenGlueDatabasePrincipalPermission(apiObject))
+		tfList = append(tfList, flattenDatabasePrincipalPermission(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenGlueDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) map[string]interface{} {
+func flattenDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -410,13 +410,13 @@ func flattenGlueDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions
 	}
 
 	if v := apiObject.Principal; v != nil {
-		tfMap["principal"] = []interface{}{flattenGlueDatabasePrincipal(v)}
+		tfMap["principal"] = []interface{}{flattenDatabasePrincipal(v)}
 	}
 
 	return tfMap
 }
 
-func flattenGlueDatabasePrincipal(apiObject *glue.DataLakePrincipal) map[string]interface{} {
+func flattenDatabasePrincipal(apiObject *glue.DataLakePrincipal) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

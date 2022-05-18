@@ -21,15 +21,15 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSBackupPolicyExists(resourceName, &v),
+					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
@@ -50,15 +50,15 @@ func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSBackupPolicyExists(resourceName, &v),
+					testAccCheckBackupPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,15 +73,15 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupPolicyConfig(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSBackupPolicyExists(resourceName, &v),
+					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
@@ -94,7 +94,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 			{
 				Config: testAccBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSBackupPolicyExists(resourceName, &v),
+					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
@@ -102,7 +102,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 			{
 				Config: testAccBackupPolicyConfig(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSBackupPolicyExists(resourceName, &v),
+					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
@@ -111,7 +111,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resource.TestCheckFunc {
+func testAccCheckBackupPolicyExists(name string, v *efs.BackupPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -136,7 +136,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 	}
 }
 
-func testAccCheckEfsBackupPolicyDestroy(s *terraform.State) error {
+func testAccCheckBackupPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 	for _, rs := range s.RootModule().Resources {

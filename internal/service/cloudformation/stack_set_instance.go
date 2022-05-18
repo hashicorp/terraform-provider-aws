@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -45,6 +44,12 @@ func ResourceStackSetInstance() *schema.Resource {
 				ValidateFunc:  verify.ValidAccountID,
 				ConflictsWith: []string{"deployment_targets"},
 			},
+			"call_as": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cloudformation.CallAsSelf,
+				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+			},
 			"deployment_targets": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -63,6 +68,53 @@ func ResourceStackSetInstance() *schema.Resource {
 					},
 				},
 				ConflictsWith: []string{"account_id"},
+			},
+			"operation_preferences": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"failure_tolerance_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(0),
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+						},
+						"failure_tolerance_percentage": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(0, 100),
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+						},
+						"max_concurrent_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(1),
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+						},
+						"max_concurrent_percentage": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(1, 100),
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+						},
+						"region_concurrency_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudformation.RegionConcurrencyType_Values(), false),
+						},
+						"region_order": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+							},
+						},
+					},
+				},
 			},
 			"organizational_unit_id": {
 				Type:     schema.TypeString,
@@ -94,12 +146,6 @@ func ResourceStackSetInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"call_as": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
-				Default:      cloudformation.CallAsSelf,
-			},
 		},
 	}
 }
@@ -129,7 +175,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		dt := expandCloudFormationDeploymentTargets(v.([]interface{}))
+		dt := expandDeploymentTargets(v.([]interface{}))
 		// temporarily set the accountId to the DeploymentTarget IDs
 		// to later inform the Read CRUD operation if the true accountID needs to be determined
 		accountID = strings.Join(aws.StringValueSlice(dt.OrganizationalUnitIds), "/")
@@ -142,9 +188,13 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
 	_, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(resource.UniqueId())
 
@@ -243,7 +293,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("account_id", stackInstance.Account)
 	d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
-	if err := d.Set("parameter_overrides", flattenAllCloudFormationParameters(stackInstance.ParameterOverrides)); err != nil {
+	if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
 		return fmt.Errorf("error setting parameters: %w", err)
 	}
 
@@ -257,7 +307,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
-	if d.HasChanges("deployment_targets", "parameter_overrides") {
+	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
 		stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 
 		if err != nil {
@@ -280,11 +330,15 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
 			input.Accounts = nil
-			input.DeploymentTargets = expandCloudFormationDeploymentTargets(v.([]interface{}))
+			input.DeploymentTargets = expandDeploymentTargets(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
 			input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)
@@ -351,7 +405,7 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func expandCloudFormationDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets {
+func expandDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

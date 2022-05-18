@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,6 +26,7 @@ func ResourceSecret() *schema.Resource {
 		Read:   resourceSecretRead,
 		Update: resourceSecretUpdate,
 		Delete: resourceSecretDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -155,23 +155,11 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	var secretName string
-	if v, ok := d.GetOk("name"); ok {
-		secretName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		secretName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		secretName = resource.UniqueId()
-	}
-
+	secretName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
 		Description:                 aws.String(d.Get("description").(string)),
-		Name:                        aws.String(secretName),
 		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Name:                        aws.String(secretName),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -179,7 +167,11 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
-		input.AddReplicaRegions = expandSecretsManagerSecretReplicas(v.(*schema.Set).List())
+		input.AddReplicaRegions = expandSecretReplicas(v.(*schema.Set).List())
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Secrets Manager Secret: %s", input)
@@ -221,7 +213,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -243,7 +235,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 		input := &secretsmanager.RotateSecretInput{
 			RotationLambdaARN: aws.String(v.(string)),
-			RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
+			RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:          aws.String(d.Id()),
 		}
 
@@ -275,13 +267,9 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &secretsmanager.DescribeSecretInput{
-		SecretId: aws.String(d.Id()),
-	}
-
-	outputRaw, err := tfresource.RetryWhenNotFound(PropagationTimeout, func() (interface{}, error) {
-		return conn.DescribeSecret(input)
-	})
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindSecretByID(conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Secrets Manager Secret (%s) not found, removing from state", d.Id())
@@ -290,35 +278,27 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Secrets Manager Secret (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Secrets Manager Secret (%s): %w", d.Id(), err)
 	}
 
 	output := outputRaw.(*secretsmanager.DescribeSecretOutput)
-
-	if output == nil {
-		return fmt.Errorf("error reading Secrets Manager Secret (%s): empty response", d.Id())
-	}
 
 	d.Set("arn", output.ARN)
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 
-	if err := d.Set("replica", flattenSecretsManagerSecretReplicas(output.ReplicationStatus)); err != nil {
+	if err := d.Set("replica", flattenSecretReplicas(output.ReplicationStatus)); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
-	pIn := &secretsmanager.GetResourcePolicyInput{
+	if output, err := conn.GetResourcePolicy(&secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Reading Secrets Manager Secret policy: %s", pIn)
-	pOut, err := conn.GetResourcePolicy(pIn)
-	if err != nil {
-		return fmt.Errorf("error reading Secrets Manager Secret policy: %w", err)
-	}
-
-	if pOut.ResourcePolicy != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pOut.ResourcePolicy))
+	}); err != nil {
+		return fmt.Errorf("reading Secrets Manager Secret (%s) policy: %w", d.Id(), err)
+	} else if v := output.ResourcePolicy; v != nil {
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(v))
 
 		if err != nil {
 			return err
@@ -333,7 +313,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-		if err := d.Set("rotation_rules", flattenSecretsManagerRotationRules(output.RotationRules)); err != nil {
+		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 			return fmt.Errorf("error setting rotation_rules: %w", err)
 		}
 	} else {
@@ -345,11 +325,11 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -364,16 +344,16 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		err := removeSecretsManagerSecretReplicas(conn, d.Id(), os.Difference(ns).List())
+		err := removeSecretReplicas(conn, d.Id(), os.Difference(ns).List())
 
 		if err != nil {
-			return fmt.Errorf("error deleting Secrets Manager Secret replica: %w", err)
+			return fmt.Errorf("deleting Secrets Manager Secret (%s) replica: %w", d.Id(), err)
 		}
 
-		err = addSecretsManagerSecretReplicas(conn, d.Id(), d.Get("force_overwrite_replica_secret").(bool), ns.Difference(os).List())
+		err = addSecretReplicas(conn, d.Id(), d.Get("force_overwrite_replica_secret").(bool), ns.Difference(os).List())
 
 		if err != nil {
-			return fmt.Errorf("error adding Secrets Manager Secret replica: %w", err)
+			return fmt.Errorf("adding Secrets Manager Secret (%s) replica: %w", d.Id(), err)
 		}
 	}
 
@@ -389,49 +369,43 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[DEBUG] Updating Secrets Manager Secret: %s", input)
 		_, err := conn.UpdateSecret(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating Secrets Manager Secret: %w", err)
+			return fmt.Errorf("updating Secrets Manager Secret (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("policy") {
 		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
+
 			if err != nil {
 				return fmt.Errorf("policy contains an invalid JSON: %w", err)
 			}
+
 			input := &secretsmanager.PutResourcePolicyInput{
 				ResourcePolicy: aws.String(policy),
 				SecretId:       aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-			err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-				_, err := conn.PutResourcePolicy(input)
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
-					"This resource policy contains an unsupported principal") {
-					return resource.RetryableError(err)
-				}
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err = conn.PutResourcePolicy(input)
-			}
+			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
+			_, err = tfresource.RetryWhenAWSErrMessageContains(PropagationTimeout,
+				func() (interface{}, error) {
+					return conn.PutResourcePolicy(input)
+				},
+				secretsmanager.ErrCodeMalformedPolicyDocumentException, "This resource policy contains an unsupported principal")
+
 			if err != nil {
-				return fmt.Errorf("error setting Secrets Manager Secret %q policy: %w", d.Id(), err)
+				return fmt.Errorf("setting Secrets Manager Secret (%s) policy: %w", d.Id(), err)
 			}
 		} else {
-			input := &secretsmanager.DeleteResourcePolicyInput{
+			log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %s", d.Id())
+			_, err := conn.DeleteResourcePolicy(&secretsmanager.DeleteResourcePolicyInput{
 				SecretId: aws.String(d.Id()),
-			}
+			})
 
-			log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %#v", input)
-			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
-				return fmt.Errorf("error removing Secrets Manager Secret %q policy: %w", d.Id(), err)
+				return fmt.Errorf("removing Secrets Manager Secret (%s) policy: %w", d.Id(), err)
 			}
 		}
 	}
@@ -440,7 +414,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 			input := &secretsmanager.RotateSecretInput{
 				RotationLambdaARN: aws.String(v.(string)),
-				RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
+				RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
 				SecretId:          aws.String(d.Id()),
 			}
 
@@ -477,6 +451,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
@@ -489,10 +464,10 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
-		err := removeSecretsManagerSecretReplicas(conn, d.Id(), v.(*schema.Set).List())
+		err := removeSecretReplicas(conn, d.Id(), v.(*schema.Set).List())
 
 		if err != nil {
-			return fmt.Errorf("error deleting Secrets Manager Secret replica: %w", err)
+			return fmt.Errorf("deleting Secrets Manager Secret (%s) replica: %w", d.Id(), err)
 		}
 	}
 
@@ -507,19 +482,29 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 		input.RecoveryWindowInDays = aws.Int64(int64(recoveryWindowInDays))
 	}
 
-	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", input)
+	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", d.Id())
 	_, err := conn.DeleteSecret(input)
+
+	if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
+		return fmt.Errorf("deleting Secrets Manager Secret (%s): %w", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindSecretByID(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Secrets Manager Secret (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
+func removeSecretReplicas(conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -557,7 +542,7 @@ func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id 
 	return nil
 }
 
-func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
+func addSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -565,7 +550,7 @@ func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id str
 	input := &secretsmanager.ReplicateSecretToRegionsInput{
 		SecretId:                    aws.String(id),
 		ForceOverwriteReplicaSecret: aws.Bool(forceOverwrite),
-		AddReplicaRegions:           expandSecretsManagerSecretReplicas(tfList),
+		AddReplicaRegions:           expandSecretReplicas(tfList),
 	}
 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %s", input)
@@ -579,7 +564,7 @@ func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id str
 	return nil
 }
 
-func expandSecretsManagerSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {
+func expandSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {
 	if tfMap == nil {
 		return nil
 	}
@@ -597,7 +582,7 @@ func expandSecretsManagerSecretReplica(tfMap map[string]interface{}) *secretsman
 	return apiObject
 }
 
-func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionType {
+func expandSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionType {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -611,7 +596,7 @@ func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.
 			continue
 		}
 
-		apiObject := expandSecretsManagerSecretReplica(tfMap)
+		apiObject := expandSecretReplica(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -623,7 +608,7 @@ func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.
 	return apiObjects
 }
 
-func flattenSecretsManagerSecretReplica(apiObject *secretsmanager.ReplicationStatusType) map[string]interface{} {
+func flattenSecretReplica(apiObject *secretsmanager.ReplicationStatusType) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -653,7 +638,7 @@ func flattenSecretsManagerSecretReplica(apiObject *secretsmanager.ReplicationSta
 	return tfMap
 }
 
-func flattenSecretsManagerSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) []interface{} {
+func flattenSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -665,7 +650,7 @@ func flattenSecretsManagerSecretReplicas(apiObjects []*secretsmanager.Replicatio
 			continue
 		}
 
-		tfList = append(tfList, flattenSecretsManagerSecretReplica(apiObject))
+		tfList = append(tfList, flattenSecretReplica(apiObject))
 	}
 
 	return tfList
@@ -685,4 +670,43 @@ func secretReplicaHash(v interface{}) int {
 	}
 
 	return create.StringHashcode(buf.String())
+}
+
+func findSecret(conn *secretsmanager.SecretsManager, input *secretsmanager.DescribeSecretInput) (*secretsmanager.DescribeSecretOutput, error) {
+	output, err := conn.DescribeSecret(input)
+
+	if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindSecretByID(conn *secretsmanager.SecretsManager, id string) (*secretsmanager.DescribeSecretOutput, error) {
+	input := &secretsmanager.DescribeSecretInput{
+		SecretId: aws.String(id),
+	}
+
+	output, err := findSecret(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.DeletedDate != nil {
+		return nil, &resource.NotFoundError{LastRequest: input}
+	}
+
+	return output, nil
 }

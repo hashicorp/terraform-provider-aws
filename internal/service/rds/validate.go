@@ -144,13 +144,7 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 }
 
 func validEngine() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		"aurora",
-		"aurora-mysql",
-		"aurora-postgresql",
-		"postgres",
-		"mysql",
-	}, false)
+	return validation.StringInSlice(Engine_Values(), false)
 }
 
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {

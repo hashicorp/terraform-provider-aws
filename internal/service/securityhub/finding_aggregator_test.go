@@ -18,10 +18,10 @@ func testAccFindingAggregator_basic(t *testing.T) {
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFindingAggregatorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFindingAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingAggregatorAllRegionsConfig(),
@@ -60,10 +60,10 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFindingAggregatorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFindingAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingAggregatorAllRegionsConfig(),

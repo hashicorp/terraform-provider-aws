@@ -20,10 +20,10 @@ func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorStreamingConfig(name),
@@ -48,10 +48,10 @@ func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorStreamingConfig(name),
@@ -70,10 +70,10 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorStreamingConfig(name),

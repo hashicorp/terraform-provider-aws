@@ -17,9 +17,9 @@ func TestAccSignerSigningProfileDataSource_basic(t *testing.T) {
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck: acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileBasicDataSourceConfig(profileName),

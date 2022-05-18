@@ -24,10 +24,10 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineBasicConfig(rName),
@@ -52,10 +52,10 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineKMSKeyConfig(rName),
@@ -80,10 +80,10 @@ func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationsConfig(rName),
@@ -150,10 +150,10 @@ func TestAccElasticTranscoderPipeline_withContent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineWithContentConfig(rName),
@@ -183,10 +183,10 @@ func TestAccElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineWithPermsConfig(rName),
@@ -209,10 +209,10 @@ func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineBasicConfig(rName),
@@ -253,7 +253,7 @@ func testAccCheckPipelineExists(n string, res *elastictranscoder.Pipeline) resou
 	}
 }
 
-func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
+func testAccCheckPipelineDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 	for _, rs := range s.RootModule().Resources {

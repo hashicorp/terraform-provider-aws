@@ -23,10 +23,10 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
@@ -55,10 +55,10 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLaunchTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
@@ -79,10 +79,10 @@ func TestAccBatchJobQueue_ComputeEnvironments_externalOrderUpdate(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
@@ -106,10 +106,10 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigPriority(rName, 1),
@@ -142,10 +142,10 @@ func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
 	schedulingPolicyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				// last variable selects the scheduling policy's arn. In this case, the first scheduling policy's arn.
@@ -178,10 +178,10 @@ func TestAccBatchJobQueue_state(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateDisabled),
@@ -212,10 +212,10 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigTags1(rName, "key1", "value1"),

@@ -149,11 +149,11 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-		input.RetentionProperties = expandTimestreamWriteRetentionProperties(v.([]interface{}))
+		input.RetentionProperties = expandRetentionProperties(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("magnetic_store_write_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-		input.MagneticStoreWriteProperties = expandTimestreamWriteMagneticStoreWriteProperties(v.([]interface{}))
+		input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -209,11 +209,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("arn", arn)
 	d.Set("database_name", table.DatabaseName)
 
-	if err := d.Set("retention_properties", flattenTimestreamWriteRetentionProperties(table.RetentionProperties)); err != nil {
+	if err := d.Set("retention_properties", flattenRetentionProperties(table.RetentionProperties)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting retention_properties: %w", err))
 	}
 
-	if err := d.Set("magnetic_store_write_properties", flattenTimestreamWriteMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
+	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting magnetic_store_write_properties: %w", err))
 	}
 
@@ -255,11 +255,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("retention_properties") {
-			input.RetentionProperties = expandTimestreamWriteRetentionProperties(d.Get("retention_properties").([]interface{}))
+			input.RetentionProperties = expandRetentionProperties(d.Get("retention_properties").([]interface{}))
 		}
 
 		if d.HasChange("magnetic_store_write_properties") {
-			input.MagneticStoreWriteProperties = expandTimestreamWriteMagneticStoreWriteProperties(d.Get("magnetic_store_write_properties").([]interface{}))
+			input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(d.Get("magnetic_store_write_properties").([]interface{}))
 		}
 
 		_, err = conn.UpdateTableWithContext(ctx, input)
@@ -307,7 +307,7 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func expandTimestreamWriteRetentionProperties(l []interface{}) *timestreamwrite.RetentionProperties {
+func expandRetentionProperties(l []interface{}) *timestreamwrite.RetentionProperties {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -331,7 +331,7 @@ func expandTimestreamWriteRetentionProperties(l []interface{}) *timestreamwrite.
 	return rp
 }
 
-func flattenTimestreamWriteRetentionProperties(rp *timestreamwrite.RetentionProperties) []interface{} {
+func flattenRetentionProperties(rp *timestreamwrite.RetentionProperties) []interface{} {
 	if rp == nil {
 		return []interface{}{}
 	}
@@ -344,7 +344,7 @@ func flattenTimestreamWriteRetentionProperties(rp *timestreamwrite.RetentionProp
 	return []interface{}{m}
 }
 
-func expandTimestreamWriteMagneticStoreWriteProperties(l []interface{}) *timestreamwrite.MagneticStoreWriteProperties {
+func expandMagneticStoreWriteProperties(l []interface{}) *timestreamwrite.MagneticStoreWriteProperties {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -360,26 +360,26 @@ func expandTimestreamWriteMagneticStoreWriteProperties(l []interface{}) *timestr
 	}
 
 	if v, ok := tfMap["magnetic_store_rejected_data_location"].([]interface{}); ok && len(v) > 0 {
-		rp.MagneticStoreRejectedDataLocation = expandTimestreamWriteMagneticStoreRejectedDataLocation(v)
+		rp.MagneticStoreRejectedDataLocation = expandMagneticStoreRejectedDataLocation(v)
 	}
 
 	return rp
 }
 
-func flattenTimestreamWriteMagneticStoreWriteProperties(rp *timestreamwrite.MagneticStoreWriteProperties) []interface{} {
+func flattenMagneticStoreWriteProperties(rp *timestreamwrite.MagneticStoreWriteProperties) []interface{} {
 	if rp == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enable_magnetic_store_writes":          aws.BoolValue(rp.EnableMagneticStoreWrites),
-		"magnetic_store_rejected_data_location": flattenTimestreamWriteMagneticStoreRejectedDataLocation(rp.MagneticStoreRejectedDataLocation),
+		"magnetic_store_rejected_data_location": flattenMagneticStoreRejectedDataLocation(rp.MagneticStoreRejectedDataLocation),
 	}
 
 	return []interface{}{m}
 }
 
-func expandTimestreamWriteMagneticStoreRejectedDataLocation(l []interface{}) *timestreamwrite.MagneticStoreRejectedDataLocation {
+func expandMagneticStoreRejectedDataLocation(l []interface{}) *timestreamwrite.MagneticStoreRejectedDataLocation {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -393,25 +393,25 @@ func expandTimestreamWriteMagneticStoreRejectedDataLocation(l []interface{}) *ti
 	rp := &timestreamwrite.MagneticStoreRejectedDataLocation{}
 
 	if v, ok := tfMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
-		rp.S3Configuration = expandTimestreamWriteS3Configuration(v)
+		rp.S3Configuration = expandS3Configuration(v)
 	}
 
 	return rp
 }
 
-func flattenTimestreamWriteMagneticStoreRejectedDataLocation(rp *timestreamwrite.MagneticStoreRejectedDataLocation) []interface{} {
+func flattenMagneticStoreRejectedDataLocation(rp *timestreamwrite.MagneticStoreRejectedDataLocation) []interface{} {
 	if rp == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"s3_configuration": flattenTimestreamWriteS3Configuration(rp.S3Configuration),
+		"s3_configuration": flattenS3Configuration(rp.S3Configuration),
 	}
 
 	return []interface{}{m}
 }
 
-func expandTimestreamWriteS3Configuration(l []interface{}) *timestreamwrite.S3Configuration {
+func expandS3Configuration(l []interface{}) *timestreamwrite.S3Configuration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -443,7 +443,7 @@ func expandTimestreamWriteS3Configuration(l []interface{}) *timestreamwrite.S3Co
 	return rp
 }
 
-func flattenTimestreamWriteS3Configuration(rp *timestreamwrite.S3Configuration) []interface{} {
+func flattenS3Configuration(rp *timestreamwrite.S3Configuration) []interface{} {
 	if rp == nil {
 		return []interface{}{}
 	}
