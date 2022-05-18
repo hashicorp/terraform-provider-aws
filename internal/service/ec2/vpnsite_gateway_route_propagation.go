@@ -42,7 +42,7 @@ func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta inter
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
-	err := routeTableEnableVgwRoutePropagation(conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
+	err := routeTableEnableVGWRoutePropagation(conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	err = routeTableDisableVgwRoutePropagation(conn, routeTableID, gatewayID)
+	err = routeTableDisableVGWRoutePropagation(conn, routeTableID, gatewayID)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil

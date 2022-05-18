@@ -587,7 +587,7 @@ func TestAccVPCRouteTable_vgwRoutePropagation(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableVgwRoutePropagationConfig(rName, vgwResourceName1),
+				Config: testAccRouteTableConfig_vgwRoutePropagation(rName, vgwResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
@@ -601,7 +601,7 @@ func TestAccVPCRouteTable_vgwRoutePropagation(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteTableVgwRoutePropagationConfig(rName, vgwResourceName2),
+				Config: testAccRouteTableConfig_vgwRoutePropagation(rName, vgwResourceName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
@@ -1445,7 +1445,7 @@ resource "aws_route_table" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteTableVgwRoutePropagationConfig(rName, vgwResourceName string) string {
+func testAccRouteTableConfig_vgwRoutePropagation(rName, vgwResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

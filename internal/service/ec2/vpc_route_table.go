@@ -193,7 +193,7 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(string)
 
-			if err := routeTableEnableVgwRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -282,7 +282,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range del {
 			v := v.(string)
 
-			if err := routeTableDisableVgwRoutePropagation(conn, d.Id(), v); err != nil {
+			if err := routeTableDisableVGWRoutePropagation(conn, d.Id(), v); err != nil {
 				return err
 			}
 		}
@@ -290,7 +290,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range add {
 			v := v.(string)
 
-			if err := routeTableEnableVgwRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -624,9 +624,9 @@ func routeTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	return nil
 }
 
-// routeTableDisableVgwRoutePropagation attempts to disable VGW route propagation.
+// routeTableDisableVGWRoutePropagation attempts to disable VGW route propagation.
 // Any error is returned.
-func routeTableDisableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string) error {
+func routeTableDisableVGWRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string) error {
 	input := &ec2.DisableVgwRoutePropagationInput{
 		GatewayId:    aws.String(gatewayID),
 		RouteTableId: aws.String(routeTableID),
@@ -642,10 +642,10 @@ func routeTableDisableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID
 	return nil
 }
 
-// routeTableEnableVgwRoutePropagation attempts to enable VGW route propagation.
+// routeTableEnableVGWRoutePropagation attempts to enable VGW route propagation.
 // The specified eventual consistency timeout is respected.
 // Any error is returned.
-func routeTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
+func routeTableEnableVGWRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
 	input := &ec2.EnableVgwRoutePropagationInput{
 		GatewayId:    aws.String(gatewayID),
 		RouteTableId: aws.String(routeTableID),

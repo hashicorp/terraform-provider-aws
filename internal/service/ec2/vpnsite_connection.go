@@ -673,7 +673,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting routes: %w", err)
 	}
 
-	if err := d.Set("vgw_telemetry", flattenVgwTelemetries(vpnConnection.VgwTelemetry)); err != nil {
+	if err := d.Set("vgw_telemetry", flattenVGWTelemetries(vpnConnection.VgwTelemetry)); err != nil {
 		return fmt.Errorf("error setting vgw_telemetry: %w", err)
 	}
 
@@ -1306,7 +1306,7 @@ func flattenVPNStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
 	return tfList
 }
 
-func flattenVgwTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
+func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1340,7 +1340,7 @@ func flattenVgwTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	return tfMap
 }
 
-func flattenVgwTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
+func flattenVGWTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1352,7 +1352,7 @@ func flattenVgwTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenVgwTelemetry(apiObject))
+		tfList = append(tfList, flattenVGWTelemetry(apiObject))
 	}
 
 	return tfList
