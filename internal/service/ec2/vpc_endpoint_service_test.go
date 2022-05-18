@@ -131,7 +131,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointServiceConfig_GatewayLoadBalancerARNs(rName, 1),
+				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "1"),
@@ -143,7 +143,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCEndpointServiceConfig_GatewayLoadBalancerARNs(rName, 2),
+				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "2"),
@@ -374,7 +374,7 @@ data "aws_caller_identity" "current" {}
 `, rName1, rName2)
 }
 
-func testAccVPCEndpointServiceConfig_GatewayLoadBalancerARNs(rName string, count int) string {
+func testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
