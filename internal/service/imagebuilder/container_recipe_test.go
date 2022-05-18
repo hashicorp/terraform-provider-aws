@@ -598,6 +598,34 @@ func TestAccImageBuilderContainerRecipe_platform_override_linux_wrong_parent_ima
 	})
 }
 
+func TestAccImageBuilderContainerRecipe_platform_override_linux_without_override(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformLinux)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        testAccErrorCheckSkipContainerRecipe(t),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContainerRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipePlatformOverrideLinuxWithoutPlatformOverrideConfig(rName, ecrImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parent_image", ecrImage),
+					resource.TestCheckNoResourceAttr(resourceName, "platform_override"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -702,6 +730,7 @@ func TestAccImageBuilderContainerRecipe_workingDirectory(t *testing.T) {
 func testAccErrorCheckSkipContainerRecipe(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"You cannot specify a platform override when using an Image Builder Image as your parent.",
+		"You must specify a platform override when using ECR Public Repositories as your parent image.",
 	)
 }
 
@@ -1549,6 +1578,35 @@ EOF
   }
 
   platform_override = "Linux"
+}
+`, rName, ecrImage))
+}
+
+func testAccContainerRecipePlatformOverrideLinuxWithoutPlatformOverrideConfig(rName, ecrImage string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = %[2]q
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
 }
 `, rName, ecrImage))
 }
