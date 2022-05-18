@@ -17,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceAccount() *schema.Resource {
@@ -39,6 +40,11 @@ func ResourceAccount() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"create_govcloud": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"email": {
 				ForceNew: true,
 				Type:     schema.TypeString,
@@ -47,6 +53,10 @@ func ResourceAccount() *schema.Resource {
 					validation.StringLenBetween(6, 64),
 					validation.StringMatch(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
 				),
+			},
+			"govcloud_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"iam_user_access_to_billing": {
 				ForceNew:     true,
@@ -97,41 +107,36 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the account
-	name := d.Get("name").(string)
-	input := &organizations.CreateAccountInput{
-		AccountName: aws.String(name),
-		Email:       aws.String(d.Get("email").(string)),
-	}
+	var iamUserAccessToBilling *string
 
 	if v, ok := d.GetOk("iam_user_access_to_billing"); ok {
-		input.IamUserAccessToBilling = aws.String(v.(string))
+		iamUserAccessToBilling = aws.String(v.(string))
 	}
+
+	var roleName *string
 
 	if v, ok := d.GetOk("role_name"); ok {
-		input.RoleName = aws.String(v.(string))
+		roleName = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
-		func() (interface{}, error) {
-			return conn.CreateAccount(input)
-		},
-		organizations.ErrCodeFinalizingOrganizationException,
+	s, err := createAccount(
+		conn,
+		d.Get("name").(string),
+		d.Get("email").(string),
+		iamUserAccessToBilling,
+		roleName,
+		Tags(tags.IgnoreAWS()),
+		d.Get("create_govcloud").(bool),
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating AWS Organizations Account (%s): %w", name, err)
+		return fmt.Errorf("error creating AWS Organizations Account (%s): %w", d.Get("name").(string), err)
 	}
 
-	output, err := waitAccountCreated(conn, aws.StringValue(outputRaw.(*organizations.CreateAccountOutput).CreateAccountStatus.Id))
+	output, err := waitAccountCreated(conn, aws.StringValue(s.Id))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for AWS Organizations Account (%s) create: %w", name, err)
+		return fmt.Errorf("error waiting for AWS Organizations Account (%s) create: %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.AccountId))
@@ -190,6 +195,14 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", account.Name)
 	d.Set("parent_id", parentAccountID)
 	d.Set("status", account.Status)
+
+	s, err := findCreateAccountStatusByID(conn, d.Id())
+
+	if err != nil {
+		return names.Error(names.Organizations, "finding", "Create Account Status", d.Id(), err)
+	}
+
+	d.Set("govcloud_id", s.GovCloudAccountId)
 
 	tags, err := ListTags(conn, d.Id())
 
@@ -272,6 +285,72 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func createAccount(conn *organizations.Organizations, name, email string, iamUserAccessToBilling, roleName *string, tags []*organizations.Tag, govCloud bool) (*organizations.CreateAccountStatus, error) {
+	if govCloud {
+		input := &organizations.CreateGovCloudAccountInput{
+			AccountName: aws.String(name),
+			Email:       aws.String(email),
+		}
+
+		if iamUserAccessToBilling != nil {
+			input.IamUserAccessToBilling = iamUserAccessToBilling
+		}
+
+		if roleName != nil {
+			input.RoleName = roleName
+		}
+
+		if len(tags) > 0 {
+			input.Tags = tags
+		}
+
+		log.Printf("[DEBUG] Creating AWS Organizations Account with GovCloud Account: %s", input)
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
+			func() (interface{}, error) {
+				return conn.CreateGovCloudAccount(input)
+			},
+			organizations.ErrCodeFinalizingOrganizationException,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return outputRaw.(*organizations.CreateGovCloudAccountOutput).CreateAccountStatus, nil
+	}
+
+	input := &organizations.CreateAccountInput{
+		AccountName: aws.String(name),
+		Email:       aws.String(email),
+	}
+
+	if iamUserAccessToBilling != nil {
+		input.IamUserAccessToBilling = iamUserAccessToBilling
+	}
+
+	if roleName != nil {
+		input.RoleName = roleName
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags
+	}
+
+	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
+		func() (interface{}, error) {
+			return conn.CreateAccount(input)
+		},
+		organizations.ErrCodeFinalizingOrganizationException,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*organizations.CreateAccountOutput).CreateAccountStatus, nil
 }
 
 func findParentAccountID(conn *organizations.Organizations, id string) (string, error) {
