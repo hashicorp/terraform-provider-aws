@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	elasticacheDefaultRedisPort     = "6379"
-	elasticacheDefaultMemcachedPort = "11211"
+	defaultRedisPort     = "6379"
+	defaultMemcachedPort = "11211"
 )
 
 const (
@@ -208,7 +208,7 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == elasticacheDefaultRedisPort || old == elasticacheDefaultMemcachedPort) {
+					if !d.IsNewResource() && new == "0" && (old == defaultRedisPort || old == defaultMemcachedPort) {
 						return true
 					}
 					return false
