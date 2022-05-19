@@ -18,8 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectVocabulary_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccVocabulary_basic,
-		"disappears": testAccVocabulary_disappears,
+		"basic":       testAccVocabulary_basic,
+		"disappears":  testAccVocabulary_disappears,
+		"update_tags": testAccVocabulary_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -94,6 +95,58 @@ func testAccVocabulary_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccVocabulary_updateTags(t *testing.T) {
+	var v connect.DescribeVocabularyOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	content := "Phrase\tIPA\tSoundsLike\tDisplayAs\nLos-Angeles\t\t\tLos Angeles\nF.B.I.\tɛ f b i aɪ\t\tFBI\nEtienne\t\teh-tee-en\t"
+	languageCode := "en-US"
+
+	resourceName := "aws_connect_vocabulary.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVocabularyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVocabularyBasicConfig(rName, rName2, content, languageCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVocabularyTagsConfig(rName, rName2, content, languageCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccVocabularyTagsUpdatedConfig(rName, rName2, content, languageCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
 			},
 		},
 	})
@@ -194,6 +247,43 @@ resource "aws_connect_vocabulary" "test" {
 
   tags = {
     "Key1" = "Value1"
+  }
+}
+`, rName2, content, languageCode))
+}
+
+func testAccVocabularyTagsConfig(rName, rName2, content, languageCode string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_vocabulary" "test" {
+  instance_id   = aws_connect_instance.test.id
+  name          = %[1]q
+  content       = %[2]q
+  language_code = %[3]q
+
+  tags = {
+    "Key1" = "Value1"
+    "Key2" = "Value2a"
+  }
+}
+`, rName2, content, languageCode))
+}
+
+func testAccVocabularyTagsUpdatedConfig(rName, rName2, content, languageCode string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_vocabulary" "test" {
+  instance_id   = aws_connect_instance.test.id
+  name          = %[1]q
+  content       = %[2]q
+  language_code = %[3]q
+
+  tags = {
+    "Key1" = "Value1"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName2, content, languageCode))
