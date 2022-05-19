@@ -31,7 +31,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
+			"aqua_configuration_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -200,6 +203,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(cluster)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
+	if rsc.AquaConfiguration != nil {
+		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
+	}
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
