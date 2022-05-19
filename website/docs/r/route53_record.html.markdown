@@ -183,7 +183,7 @@ If the record also contains a delegated set identifier, it can be appended:
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS_dev
 ```
 
-If the record is a bare domain the record name can be ommited:
+If the record is a bare domain the record name can be omitted:
 
 ```
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR__NS

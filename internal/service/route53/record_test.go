@@ -304,7 +304,7 @@ func TestAccRoute53Record_basic_bareDomain(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfig_bareDomain,
+				Config: testAccRecordConfig_bareDomain,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record1),
 				),
@@ -1334,7 +1334,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfig_bareDomain = `
+const testAccRecordConfig_bareDomain = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
