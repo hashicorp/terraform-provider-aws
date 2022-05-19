@@ -7,6 +7,8 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -27,6 +29,8 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -47,6 +51,8 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -67,6 +73,8 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -87,6 +95,8 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -107,6 +117,8 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -125,6 +137,8 @@ rules:
     languages: [go]
     paths:
       include:
+        - internal/service/timestreamwrite
+        - internal/service/transfer
         - internal/service/waf
         - internal/service/wafregional
         - internal/service/wafv2
@@ -230,6 +244,122 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccEC2Outposts"
             - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: timestreamwrite-in-func-name
+    languages:
+      - go
+    message: Do not use "TimestreamWrite" in func name inside timestreamwrite package
+    paths:
+      include:
+        - internal/service/timestreamwrite
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamWrite"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: timestreamwrite-in-test-name
+    languages:
+      - go
+    message: Include "TimestreamWrite" in test name
+    paths:
+      include:
+        - internal/service/timestreamwrite/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccTimestreamWrite"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: timestreamwrite-in-const-name
+    languages:
+      - go
+    message: Do not use "TimestreamWrite" in const name inside timestreamwrite package
+    paths:
+      include:
+        - internal/service/timestreamwrite
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamWrite"
+    severity: WARNING
+  - id: timestreamwrite-in-var-name
+    languages:
+      - go
+    message: Do not use "TimestreamWrite" in var name inside timestreamwrite package
+    paths:
+      include:
+      - internal/service/timestreamwrite
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamWrite"
+    severity: WARNING
+  - id: transfer-in-func-name
+    languages:
+      - go
+    message: Do not use "Transfer" in func name inside transfer package
+    paths:
+      include:
+        - internal/service/transfer
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Transfer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: transfer-in-test-name
+    languages:
+      - go
+    message: Include "Transfer" in test name
+    paths:
+      include:
+        - internal/service/transfer/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccTransfer"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: transfer-in-const-name
+    languages:
+      - go
+    message: Do not use "Transfer" in const name inside transfer package
+    paths:
+      include:
+        - internal/service/transfer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Transfer"
+    severity: WARNING
+  - id: transfer-in-var-name
+    languages:
+      - go
+    message: Do not use "Transfer" in var name inside transfer package
+    paths:
+      include:
+      - internal/service/transfer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Transfer"
     severity: WARNING
   - id: transitgateway-in-test-name
     languages:
