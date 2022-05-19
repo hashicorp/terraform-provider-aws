@@ -497,13 +497,12 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
-			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupWithTargetGroupConfig(),
+				Config: testAccGroupWithTargetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -515,7 +514,6 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
-			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -3618,6 +3616,13 @@ resource "aws_security_group" "test" {
   }
 }
 
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+}
+
 resource "aws_elb" "test" {
   name            = %[1]q
   subnets         = aws_subnet.test[*].id
@@ -3675,103 +3680,22 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithTargetGroupConfig() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-with-lb"
-  }
-}
+func testAccGroupWithTargetGroupConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier = aws_subnet.test[*].id
+  max_size             = 2
+  min_size             = 2
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_subnet" "foo" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.foo.id
-  tags = {
-    Name = "tf-acc-autoscaling-group-with-target-group"
-  }
-}
-
-resource "aws_security_group" "foo" {
-  vpc_id = aws_vpc.foo.id
-
-  ingress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_lb_target_group" "foo" {
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.foo.id
-}
-
-resource "aws_elb" "bar" {
-  subnets         = [aws_subnet.foo.id]
-  security_groups = [aws_security_group.foo.id]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    target              = "HTTP:80/"
-    interval            = 5
-    timeout             = 2
-  }
-
-  depends_on = [aws_internet_gateway.gw]
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type   = "t2.micro"
-  security_groups = [aws_security_group.foo.id]
-
-  # Need the instance to listen on port 80 at boot
-  user_data = <<EOF
-#!/bin/bash
-echo "Terraform aws_autoscaling_group Testing" > index.html
-nohup python -m SimpleHTTPServer 80 &
-EOF
-}
-
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier       = [aws_subnet.foo.id]
-  max_size                  = 2
-  min_size                  = 2
   health_check_grace_period = 300
   health_check_type         = "ELB"
   wait_for_elb_capacity     = 2
   force_delete              = true
-
-  launch_configuration = aws_launch_configuration.foobar.name
-  target_group_arns    = [aws_lb_target_group.foo.arn]
+  target_group_arns         = [aws_lb_target_group.test.arn]
 }
-`)
+`, rName))
 }
 
 func testAccGroupConfig_withPlacementGroup(name string) string {
