@@ -654,24 +654,24 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   statistics_configurations {
-	  additional_statistics = [
-	    "p1", "tm99"
+    additional_statistics = [
+      "p1", "tm99"
     ]
 
     include_metrics {
-        metric_name = "CPUUtilization"
-        namespace = "AWS/EC2"
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
     }
   }
 
   statistics_configurations {
-	  additional_statistics = [
+    additional_statistics = [
 	  %[2]q
     ]
 
     include_metrics {
-        metric_name = "CPUUtilization"
-        namespace = "AWS/EC2"
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
     }
   }
 }

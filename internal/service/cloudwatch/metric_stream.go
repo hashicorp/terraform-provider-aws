@@ -381,12 +381,12 @@ func expandMetricStreamStatisticsConfigurations(s *schema.Set) []*cloudwatch.Met
 		mConfiguration := configurationRaw.(map[string]interface{})
 
 		if v, ok := mConfiguration["additional_statistics"].(*schema.Set); ok && v.Len() > 0 {
-			log.Printf("[DEBUG] additional_statistics: %#v", v)
+			log.Printf("[DEBUG] CloudWatch Metric Stream StatisticsConfigurations additional_statistics: %#v", v)
 			configuration.AdditionalStatistics = flex.ExpandStringSet(v)
 		}
 
 		if v, ok := mConfiguration["include_metrics"].(*schema.Set); ok && v.Len() > 0 {
-			log.Printf("[DEBUG] include_metrics: %#v", v)
+			log.Printf("[DEBUG] CloudWatch Metric Stream StatisticsConfigurations include_metrics: %#v", v)
 			configuration.IncludeMetrics = expandMetricStreamStatisticsConfigurationsIncludeMetrics(v)
 		}
 
@@ -429,30 +429,32 @@ func expandMetricStreamStatisticsConfigurationsIncludeMetrics(metrics *schema.Se
 }
 
 func flattenMetricStreamStatisticsConfigurations(configurations []*cloudwatch.MetricStreamStatisticsConfiguration) []map[string]interface{} {
-	flatConfigurations := make([]map[string]interface{}, 0)
+	flatConfigurations := make([]map[string]interface{}, len(configurations))
 
-	for _, configuration := range configurations {
+	for i, configuration := range configurations {
 		flatConfiguration := map[string]interface{}{
 			"additional_statistics": flex.FlattenStringSet(configuration.AdditionalStatistics),
 			"include_metrics":       flattenMetricStreamStatisticsConfigurationsIncludeMetrics(configuration.IncludeMetrics),
 		}
 
-		flatConfigurations = append(flatConfigurations, flatConfiguration)
+		// flatConfigurations = append(flatConfigurations, flatConfiguration)
+		flatConfigurations[i] = flatConfiguration
 	}
 
 	return flatConfigurations
 }
 
 func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(metrics []*cloudwatch.MetricStreamStatisticsMetric) []map[string]interface{} {
-	flatMetrics := make([]map[string]interface{}, 0)
+	flatMetrics := make([]map[string]interface{}, len(metrics))
 
-	for _, metric := range metrics {
+	for i, metric := range metrics {
 		flatMetric := map[string]interface{}{
 			"metric_name": aws.StringValue(metric.MetricName),
 			"namespace":   aws.StringValue(metric.Namespace),
 		}
 
-		flatMetrics = append(flatMetrics, flatMetric)
+		// flatMetrics = append(flatMetrics, flatMetric)
+		flatMetrics[i] = flatMetric
 	}
 
 	return flatMetrics
