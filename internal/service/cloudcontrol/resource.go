@@ -276,7 +276,13 @@ func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.R
 		return nil
 	}
 
-	cfResourceSchema, err := cfschema.NewResourceJsonSchemaDocument(cfschema.Sanitize(newSchema))
+	newSchema, err := cfschema.Sanitize(newSchema)
+
+	if err != nil {
+		return fmt.Errorf("error sanitizing CloudFormation Resource Schema JSON: %w", err)
+	}
+
+	cfResourceSchema, err := cfschema.NewResourceJsonSchemaDocument(newSchema)
 
 	if err != nil {
 		return fmt.Errorf("error parsing CloudFormation Resource Schema JSON: %w", err)

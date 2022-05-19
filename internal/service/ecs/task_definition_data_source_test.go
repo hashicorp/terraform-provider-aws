@@ -16,13 +16,14 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckTaskDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ecs_task_definition.mongo", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "family", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
 					resource.TestMatchResourceAttr(resourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),

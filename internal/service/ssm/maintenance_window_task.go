@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,21 +29,37 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"window_task_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"window_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
+			"cutoff_behavior": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.MaintenanceWindowTaskCutoffBehavior_Values(), false),
+			},
+
 			"max_concurrency": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
 
 			"max_errors": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
 
@@ -656,11 +673,21 @@ func resourceMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] Registering SSM Maintenance Window Task")
 
 	params := &ssm.RegisterTaskWithMaintenanceWindowInput{
-		WindowId:       aws.String(d.Get("window_id").(string)),
-		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
-		MaxErrors:      aws.String(d.Get("max_errors").(string)),
-		TaskType:       aws.String(d.Get("task_type").(string)),
-		TaskArn:        aws.String(d.Get("task_arn").(string)),
+		WindowId: aws.String(d.Get("window_id").(string)),
+		TaskType: aws.String(d.Get("task_type").(string)),
+		TaskArn:  aws.String(d.Get("task_arn").(string)),
+	}
+
+	if v, ok := d.GetOk("max_errors"); ok {
+		params.MaxErrors = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_concurrency"); ok {
+		params.MaxConcurrency = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cutoff_behavior"); ok {
+		params.CutoffBehavior = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
@@ -706,7 +733,7 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 		WindowTaskId: aws.String(d.Id()),
 	}
 	resp, err := conn.GetMaintenanceWindowTask(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -715,7 +742,9 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error getting Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
 	}
 
+	windowTaskID := aws.StringValue(resp.WindowTaskId)
 	d.Set("window_id", resp.WindowId)
+	d.Set("window_task_id", windowTaskID)
 	d.Set("max_concurrency", resp.MaxConcurrency)
 	d.Set("max_errors", resp.MaxErrors)
 	d.Set("task_type", resp.TaskType)
@@ -724,6 +753,7 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 	d.Set("priority", resp.Priority)
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
+	d.Set("cutoff_behavior", resp.CutoffBehavior)
 
 	if resp.TaskInvocationParameters != nil {
 		if err := d.Set("task_invocation_parameters", flattenTaskInvocationParameters(resp.TaskInvocationParameters)); err != nil {
@@ -735,6 +765,15 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ssm",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("windowtask/%s", windowTaskID),
+	}.String()
+	d.Set("arn", arn)
+
 	return nil
 }
 
@@ -743,18 +782,34 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.UpdateMaintenanceWindowTaskInput{
-		Priority:       aws.Int64(int64(d.Get("priority").(int))),
-		WindowId:       aws.String(windowID),
-		WindowTaskId:   aws.String(d.Id()),
-		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
-		MaxErrors:      aws.String(d.Get("max_errors").(string)),
-		TaskArn:        aws.String(d.Get("task_arn").(string)),
-		Targets:        expandTargets(d.Get("targets").([]interface{})),
-		Replace:        aws.Bool(true),
+		Priority:     aws.Int64(int64(d.Get("priority").(int))),
+		WindowId:     aws.String(windowID),
+		WindowTaskId: aws.String(d.Id()),
+		TaskArn:      aws.String(d.Get("task_arn").(string)),
+		Replace:      aws.Bool(true),
 	}
 
 	if v, ok := d.GetOk("service_role_arn"); ok {
 		params.ServiceRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_errors"); ok {
+		params.MaxErrors = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_concurrency"); ok {
+		params.MaxConcurrency = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("targets"); ok {
+		params.Targets = expandTargets(v.([]interface{}))
+	} else {
+		params.MaxConcurrency = nil
+		params.MaxErrors = nil
+	}
+
+	if v, ok := d.GetOk("cutoff_behavior"); ok {
+		params.CutoffBehavior = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -770,7 +825,7 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := conn.UpdateMaintenanceWindowTask(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -794,7 +849,7 @@ func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := conn.DeregisterTaskFromMaintenanceWindow(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		return nil
 	}
 	if err != nil {

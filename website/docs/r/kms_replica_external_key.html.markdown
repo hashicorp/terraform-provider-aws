@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_replica_external kms_key"
 description: |-
@@ -35,8 +35,6 @@ resource "aws_kms_external_key" "primary" {
 }
 
 resource "aws_kms_replica_external_key" "replica" {
-  provider = aws.primary
-
   description             = "Multi-Region replica key"
   deletion_window_in_days = 7
   primary_key_arn         = aws_kms_external.primary.arn

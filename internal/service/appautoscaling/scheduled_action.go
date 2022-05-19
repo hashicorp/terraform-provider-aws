@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -201,7 +201,7 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	scheduledAction, err := FindScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
-	if tfresource.NotFound(err) {
+	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

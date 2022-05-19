@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,10 +20,10 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeSigningBasicConfig(),
@@ -50,10 +50,10 @@ func TestAccLambdaCodeSigningConfig_updatePolicy(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeSigningBasicConfig(),
@@ -86,10 +86,10 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeSigningBasicConfig(),

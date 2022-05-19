@@ -94,7 +94,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("ip_set_descriptor", flattenWafIpSetDescriptorWR(resp.IPSet.IPSetDescriptors))
+	d.Set("ip_set_descriptor", flattenIPSetDescriptorWR(resp.IPSet.IPSetDescriptors))
 	d.Set("name", resp.IPSet.Name)
 
 	arn := arn.ARN{
@@ -109,7 +109,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenWafIpSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
+func flattenIPSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 	descriptors := make([]interface{}, len(in))
 
 	for i, descriptor := range in {

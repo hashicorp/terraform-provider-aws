@@ -50,3 +50,29 @@ func TestValidPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestValidShareIdentifier(t *testing.T) {
+	validShareIdentifiers := []string{
+		"sample*",
+		"sample1",
+		strings.Repeat("W", 255),       // <= 255,
+		strings.Repeat("W", 254) + "*", // optional asterisk
+	}
+	for _, v := range validShareIdentifiers {
+		_, errors := validShareIdentifier(v, "share_identifier")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid share identifier: %q", v, errors)
+		}
+	}
+
+	invalidShareIdentifiers := []string{
+		"s@mple",
+		strings.Repeat("W", 256), // > 255
+	}
+	for _, v := range invalidShareIdentifiers {
+		_, errors := validShareIdentifier(v, "share_identifier")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid share identifier: %q", v, errors)
+		}
+	}
+}

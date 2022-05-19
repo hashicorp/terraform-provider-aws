@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,9 +27,9 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
@@ -60,9 +60,9 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentBasicUserConfig(userName, rName),
@@ -93,9 +93,9 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),

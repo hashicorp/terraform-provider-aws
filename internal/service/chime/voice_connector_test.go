@@ -21,10 +21,10 @@ func TestAccChimeVoiceConnector_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorConfig(vcName),
@@ -51,10 +51,10 @@ func TestAccChimeVoiceConnector_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorConfig(vcName),
@@ -75,10 +75,10 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorConfig(vcName),

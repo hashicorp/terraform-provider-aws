@@ -23,11 +23,11 @@ func testAccApp_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppNameConfig(rName),
@@ -70,11 +70,11 @@ func testAccApp_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppNameConfig(rName),
@@ -93,11 +93,11 @@ func testAccApp_Tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppTags1Config(rName, "key1", "value1"),
@@ -140,11 +140,11 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 
 	credentials := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppAutoBranchCreationNoAutoBranchCreationConfig(rName),
@@ -236,11 +236,11 @@ func testAccApp_BasicAuthCredentials(t *testing.T) {
 	credentials1 := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
 	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBasicAuthCredentialsConfig(rName, credentials1),
@@ -281,11 +281,11 @@ func testAccApp_BuildSpec(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBuildSpecConfig(rName, "version: 0.1"),
@@ -323,11 +323,11 @@ func testAccApp_CustomRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppCustomRulesConfig(rName),
@@ -373,11 +373,11 @@ func testAccApp_Description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppDescriptionConfig(rName, "description 1"),
@@ -416,11 +416,11 @@ func testAccApp_EnvironmentVariables(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppEnvironmentVariablesConfig(rName),
@@ -462,11 +462,11 @@ func testAccApp_IAMServiceRole(t *testing.T) {
 	iamRole1ResourceName := "aws_iam_role.test1"
 	iamRole2ResourceName := "aws_iam_role.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppIAMServiceRoleARNConfig(rName),
@@ -505,11 +505,11 @@ func testAccApp_Name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppNameConfig(rName1),
@@ -551,11 +551,11 @@ func testAccApp_Repository(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRepositoryConfig(rName, repository, accessToken),

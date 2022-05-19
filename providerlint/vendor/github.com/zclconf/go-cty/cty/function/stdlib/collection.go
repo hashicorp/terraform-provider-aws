@@ -538,7 +538,7 @@ func flattener(flattenList cty.Value) ([]cty.Value, []cty.ValueMarks, bool) {
 
 		// Any dynamic types could result in more collections that need to be
 		// flattened, so the type cannot be known.
-		if val.Type().Equals(cty.DynamicPseudoType) {
+		if val == cty.DynamicVal {
 			isKnown = false
 		}
 

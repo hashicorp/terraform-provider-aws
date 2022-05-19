@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,10 +20,10 @@ func TestAccSFNActivity_basic(t *testing.T) {
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityBasicConfig(name),
@@ -47,10 +47,10 @@ func TestAccSFNActivity_tags(t *testing.T) {
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckActivityDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckActivityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityBasicTags1Config(name, "key1", "value1"),
@@ -123,11 +123,11 @@ func testAccCheckActivityDestroy(s *terraform.State) error {
 				ActivityArn: aws.String(rs.Primary.ID),
 			})
 
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ActivityDoesNotExist" {
-					return nil
-				}
+			if tfawserr.ErrCodeEquals(err, sfn.ErrCodeActivityDoesNotExist) {
+				return nil
+			}
 
+			if err != nil {
 				return resource.NonRetryableError(err)
 			}
 

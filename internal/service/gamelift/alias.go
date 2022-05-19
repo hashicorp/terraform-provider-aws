@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -79,7 +79,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	rs := expandGameliftRoutingStrategy(d.Get("routing_strategy").([]interface{}))
+	rs := expandRoutingStrategy(d.Get("routing_strategy").([]interface{}))
 	input := gamelift.CreateAliasInput{
 		Name:            aws.String(d.Get("name").(string)),
 		RoutingStrategy: rs,
@@ -88,7 +88,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-	log.Printf("[INFO] Creating Gamelift Alias: %s", input)
+	log.Printf("[INFO] Creating GameLift Alias: %s", input)
 	out, err := conn.CreateAlias(&input)
 	if err != nil {
 		return err
@@ -104,14 +104,14 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[INFO] Describing Gamelift Alias: %s", d.Id())
+	log.Printf("[INFO] Describing GameLift Alias: %s", d.Id())
 	out, err := conn.DescribeAlias(&gamelift.DescribeAliasInput{
 		AliasId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			d.SetId("")
-			log.Printf("[WARN] Gamelift Alias (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] GameLift Alias (%s) not found, removing from state", d.Id())
 			return nil
 		}
 		return err
@@ -122,7 +122,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("description", a.Description)
 	d.Set("name", a.Name)
-	d.Set("routing_strategy", flattenGameliftRoutingStrategy(a.RoutingStrategy))
+	d.Set("routing_strategy", flattenRoutingStrategy(a.RoutingStrategy))
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
@@ -146,12 +146,12 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Updating Gamelift Alias: %s", d.Id())
+	log.Printf("[INFO] Updating GameLift Alias: %s", d.Id())
 	_, err := conn.UpdateAlias(&gamelift.UpdateAliasInput{
 		AliasId:         aws.String(d.Id()),
 		Name:            aws.String(d.Get("name").(string)),
 		Description:     aws.String(d.Get("description").(string)),
-		RoutingStrategy: expandGameliftRoutingStrategy(d.Get("routing_strategy").([]interface{})),
+		RoutingStrategy: expandRoutingStrategy(d.Get("routing_strategy").([]interface{})),
 	})
 	if err != nil {
 		return err
@@ -172,14 +172,14 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Deleting Gamelift Alias: %s", d.Id())
+	log.Printf("[INFO] Deleting GameLift Alias: %s", d.Id())
 	_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
 		AliasId: aws.String(d.Id()),
 	})
 	return err
 }
 
-func expandGameliftRoutingStrategy(cfg []interface{}) *gamelift.RoutingStrategy {
+func expandRoutingStrategy(cfg []interface{}) *gamelift.RoutingStrategy {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -200,19 +200,19 @@ func expandGameliftRoutingStrategy(cfg []interface{}) *gamelift.RoutingStrategy 
 	return &out
 }
 
-func flattenGameliftRoutingStrategy(rs *gamelift.RoutingStrategy) []interface{} {
+func flattenRoutingStrategy(rs *gamelift.RoutingStrategy) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.FleetId != nil {
-		m["fleet_id"] = *rs.FleetId
+		m["fleet_id"] = aws.StringValue(rs.FleetId)
 	}
 	if rs.Message != nil {
-		m["message"] = *rs.Message
+		m["message"] = aws.StringValue(rs.Message)
 	}
-	m["type"] = *rs.Type
+	m["type"] = aws.StringValue(rs.Type)
 
 	return []interface{}{m}
 }

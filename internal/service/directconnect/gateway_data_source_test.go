@@ -17,9 +17,9 @@ func TestAccDirectConnectGatewayDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGatewayDataSourceConfig_NonExistent,

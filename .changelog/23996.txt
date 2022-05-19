@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_cluster: Add `auto_minor_version_upgrade` argument
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Allow disabling `auto_minor_version_upgrade`
+```

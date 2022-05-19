@@ -1,6 +1,6 @@
 package elb
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"fmt"
 	"log"
@@ -14,7 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -254,6 +255,17 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "defensive",
+				ValidateFunc: validation.StringInSlice([]string{
+					"monitor",
+					"defensive",
+					"strictest",
+				}, false),
+			},
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -313,16 +325,14 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.CreateLoadBalancer(elbOpts)
 
+		if tfawserr.ErrCodeEquals(err, elb.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %w", err))
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// Check for IAM SSL Cert error, eventual consistancy issue
-				if awsErr.Code() == elb.ErrCodeCertificateNotFoundException {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 	if tfresource.TimedOut(err) {
@@ -395,7 +405,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	var scheme bool
 	if lb.Scheme != nil {
-		scheme = *lb.Scheme == "internal"
+		scheme = aws.StringValue(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
 	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
@@ -405,8 +415,8 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
-		if lb.SourceSecurityGroup.OwnerAlias != nil && *lb.SourceSecurityGroup.OwnerAlias != "" {
-			group = aws.String(*lb.SourceSecurityGroup.OwnerAlias + "/" + *lb.SourceSecurityGroup.GroupName)
+		if v := aws.StringValue(lb.SourceSecurityGroup.OwnerAlias); v != "" {
+			group = aws.String(v + "/" + aws.StringValue(lb.SourceSecurityGroup.GroupName))
 		}
 		d.Set("source_security_group", group)
 
@@ -452,6 +462,13 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 		}
 	}
 
+	for _, attr := range lbAttrs.AdditionalAttributes {
+		switch aws.StringValue(attr.Key) {
+		case "elb.http.desyncmitigationmode":
+			d.Set("desync_mitigation_mode", attr.Value)
+		}
+	}
+
 	tags, err := ListTags(elbconn, d.Id())
 
 	if err != nil {
@@ -471,7 +488,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	// There's only one health check, so save that to state as we
 	// currently can
-	if *lb.HealthCheck.Target != "" {
+	if aws.StringValue(lb.HealthCheck.Target) != "" {
 		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
@@ -521,7 +538,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.CreateLoadBalancerListeners(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, elb.ErrCodeDuplicateListenerException, "") {
+					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
 						return resource.RetryableError(err)
 					}
@@ -579,10 +596,16 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	if d.HasChanges("cross_zone_load_balancing", "idle_timeout", "access_logs") {
+	if d.HasChanges("cross_zone_load_balancing", "idle_timeout", "access_logs", "desync_mitigation_mode") {
 		attrs := elb.ModifyLoadBalancerAttributesInput{
 			LoadBalancerName: aws.String(d.Get("name").(string)),
 			LoadBalancerAttributes: &elb.LoadBalancerAttributes{
+				AdditionalAttributes: []*elb.AdditionalAttribute{
+					{
+						Key:   aws.String("elb.http.desyncmitigationmode"),
+						Value: aws.String(d.Get("desync_mitigation_mode").(string)),
+					},
+				},
 				CrossZoneLoadBalancing: &elb.CrossZoneLoadBalancing{
 					Enabled: aws.Bool(d.Get("cross_zone_load_balancing").(bool)),
 				},
@@ -942,113 +965,39 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
-	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.instance-owner-id"),
-				Values: []*string{aws.String("amazon-elb")},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("ELB " + name)},
-			},
-		},
-	})
+	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn, "amazon-elb", "ELB "+name)
+
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Found %d ENIs to cleanup for ELB %q",
-		len(out.NetworkInterfaces), name)
+	var errs *multierror.Error
 
-	if len(out.NetworkInterfaces) == 0 {
-		// Nothing to cleanup
-		return nil
-	}
-
-	err = detachNetworkInterfaces(conn, out.NetworkInterfaces)
-	if err != nil {
-		return err
-	}
-
-	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
-	return err
-}
-
-func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		if ni.Attachment == nil {
-			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+	for _, networkInterface := range networkInterfaces {
+		if networkInterface.Attachment == nil {
 			continue
 		}
-		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
-			AttachmentId: ni.Attachment.AttachmentId,
-			Force:        aws.Bool(true),
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
 
-		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"true"},
-			Target:  []string{"false"},
-			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
-			Timeout: 10 * time.Minute,
-		}
+		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
+		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
 
-		if _, err := stateConf.WaitForState(); err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				continue
-			}
-			return fmt.Errorf(
-				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
-		}
-	}
-	return nil
-}
-
-func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: ni.NetworkInterfaceId,
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
-	}
-	return nil
-}
-
-func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+		err = tfec2.DetachNetworkInterface(conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
-			return nil, "", err
+			errs = multierror.Append(errs, err)
+
+			continue
 		}
 
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
+		err = tfec2.DeleteNetworkInterface(conn, networkInterfaceID)
+
+		if err != nil {
+			errs = multierror.Append(errs, err)
+
+			continue
+		}
 	}
+
+	return errs.ErrorOrNil()
 }

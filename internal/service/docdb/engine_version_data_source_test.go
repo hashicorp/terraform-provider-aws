@@ -18,10 +18,10 @@ func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
 	version := "3.6.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionBasicDataSourceConfig(engine, version),
@@ -44,10 +44,10 @@ func TestAccDocDBEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionPreferredDataSourceConfig(),
@@ -63,10 +63,10 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),

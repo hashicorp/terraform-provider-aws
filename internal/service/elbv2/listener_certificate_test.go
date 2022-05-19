@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -25,10 +25,10 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
@@ -57,10 +57,10 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbListenerCertificateConfigCertificateArnUnderscores(rName, key, certificate),
@@ -91,10 +91,10 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 	resourceName := "aws_lb_listener_certificate.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbListenerCertificateConfigMultiple(rName, keys, certificates),
@@ -158,10 +158,10 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
@@ -190,7 +190,7 @@ func testAccCheckListenerCertificateDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeListenerCertificates(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 				return nil
 			}
 			return err

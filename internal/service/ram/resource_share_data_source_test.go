@@ -17,9 +17,9 @@ func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_ram_resource_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccResourceShareDataSourceConfig_NonExistent,
@@ -43,9 +43,9 @@ func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
 	datasourceName := "data.aws_ram_resource_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareDataSourceConfig_Tags(rName),

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -26,10 +26,10 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	usersAndGroupsConfig := testAccUserGroupMembershipUsersAndGroupsConfig(userName1, userName2, groupName1, groupName2, groupName3)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccUserGroupMembershipDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccUserGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			// simplest test
 			{
@@ -129,7 +129,7 @@ func testAccUserGroupMembershipDestroy(s *terraform.State) error {
 				return !lastPage
 			})
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 					continue
 				}
 				return err

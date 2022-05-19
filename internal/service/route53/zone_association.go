@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -209,7 +209,7 @@ func resourceZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id stri
 			Id: aws.String(changeId),
 		}
 		result, state, err := resourceGoWait(conn, changeRequest)
-		if tfawserr.ErrMessageContains(err, "AccessDenied", "") {
+		if tfawserr.ErrCodeEquals(err, "AccessDenied") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil
 		}

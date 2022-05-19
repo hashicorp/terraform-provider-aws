@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,10 +21,10 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssessmentBasic(rName),
@@ -53,10 +53,10 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssessmentBasic(rName),
@@ -76,10 +76,10 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssessmentTags1(rName, "key1", "value1"),
@@ -136,12 +136,12 @@ func testAccCheckTemplateDestroy(s *terraform.State) error {
 			},
 		})
 
+		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
+			continue
+		}
+
 		if err != nil {
-			if inspectorerr, ok := err.(awserr.Error); ok && inspectorerr.Code() == "InvalidInputException" {
-				return nil
-			} else {
-				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
-			}
+			return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
 		}
 
 		if len(resp.AssessmentTemplates) > 0 {

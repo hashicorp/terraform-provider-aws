@@ -23,13 +23,13 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfig(rName),
+				Config: testAccBudgetConfigDeprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -66,10 +66,10 @@ func TestAccBudgetsBudget_Name_generated(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetNameGeneratedConfig(),
@@ -108,10 +108,10 @@ func TestAccBudgetsBudget_namePrefix(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetNamePrefixConfig("tf-acc-test-prefix-"),
@@ -145,13 +145,13 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfig(rName),
+				Config: testAccBudgetConfigDeprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
@@ -178,10 +178,10 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 	endDate2 := tfbudgets.TimePeriodTimestampToString(&ts4)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetCostTypesConfig(rName, startDate1, endDate1),
@@ -274,10 +274,10 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 	emailAddress3 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBudgetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetNotificationsConfig(rName, emailAddress1, emailAddress2),
@@ -405,7 +405,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBudgetConfig(rName string) string {
+func testAccBudgetConfigDeprecated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q

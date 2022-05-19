@@ -18,11 +18,19 @@ data "aws_cloudfront_log_delivery_canonical_user_id" "example" {}
 
 resource "aws_s3_bucket" "example" {
   bucket = "example"
+}
 
-  grant {
-    id          = data.aws_cloudfront_log_delivery_canonical_user_id.example.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL"]
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_cloudfront_log_delivery_canonical_user_id.example.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
   }
 }
 ```

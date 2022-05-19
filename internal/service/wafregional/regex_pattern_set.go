@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceRegexPatternSet() *schema.Resource {
@@ -71,7 +72,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Regex Pattern Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -95,8 +96,8 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("regex_pattern_strings") {
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
-		err := updateWafRegionalRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, newPatterns, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		err := updateRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, newPatterns, conn, region)
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -116,8 +117,8 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {
 		noPatterns := []interface{}{}
-		err := updateWafRegionalRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, noPatterns, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		err := updateRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, noPatterns, conn, region)
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 		if err != nil {
@@ -141,13 +142,13 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func updateWafRegionalRegexPatternSetPatternStringsWR(id string, oldPatterns, newPatterns []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRegexPatternSetPatternStringsWR(id string, oldPatterns, newPatterns []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(id),
-			Updates:           diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns),
+			Updates:           tfwaf.DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
 		}
 
 		return conn.UpdateRegexPatternSet(req)

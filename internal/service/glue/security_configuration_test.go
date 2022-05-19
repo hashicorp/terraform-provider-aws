@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,10 +21,10 @@ func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_glue_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_Basic(rName),
@@ -60,10 +60,10 @@ func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMo
 	resourceName := "aws_glue_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_CloudWatchEncryption_CloudWatchEncryptionMode_SSEKMS(rName),
@@ -92,10 +92,10 @@ func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncrypti
 	resourceName := "aws_glue_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_JobBookmarksEncryption_JobBookmarksEncryptionMode_CSEKMS(rName),
@@ -124,10 +124,10 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *tes
 	resourceName := "aws_glue_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_S3Encryption_S3EncryptionMode_SSEKMS(rName),
@@ -155,10 +155,10 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *test
 	resourceName := "aws_glue_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_S3Encryption_S3EncryptionMode_SSES3(rName),
@@ -224,7 +224,7 @@ func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			continue
 		}
 

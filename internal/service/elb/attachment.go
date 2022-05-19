@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,7 +52,7 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
 		}
 
@@ -105,7 +105,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	// only set the instance Id that this resource manages
 	found := false
 	for _, i := range resp.LoadBalancerDescriptions[0].Instances {
-		if expected == *i.InstanceId {
+		if expected == aws.StringValue(i.InstanceId) {
 			d.Set("instance", expected)
 			found = true
 		}

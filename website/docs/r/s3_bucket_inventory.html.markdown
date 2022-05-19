@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_inventory"
 description: |-
@@ -42,7 +42,7 @@ resource "aws_s3_bucket_inventory" "test" {
 }
 ```
 
-### Add inventory configuration with S3 bucket object prefix
+### Add inventory configuration with S3 object prefix
 
 ```terraform
 resource "aws_s3_bucket" "test" {

@@ -8,7 +8,7 @@ jobs:
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - run: cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build

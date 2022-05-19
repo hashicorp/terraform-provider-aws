@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccGlueRegistry_basic(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryBasicConfig(rName),
@@ -53,10 +53,10 @@ func TestAccGlueRegistry_description(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryDescriptionConfig(rName, "First Description"),
@@ -87,10 +87,10 @@ func TestAccGlueRegistry_tags(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryTags1Config(rName, "key1", "value1"),
@@ -133,10 +133,10 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryBasicConfig(rName),
@@ -156,7 +156,7 @@ func testAccPreCheckRegistry(t *testing.T) {
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Registrys return InternalFailure
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -204,7 +204,7 @@ func testAccCheckRegistryDestroy(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		output, err := tfglue.FindRegistryByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 

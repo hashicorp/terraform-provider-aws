@@ -110,11 +110,11 @@ func flattenIdentityPoolRoleMappingsAttachment(rms map[string]*cognitoidentity.R
 		}
 
 		if v.Type != nil {
-			m["type"] = *v.Type
+			m["type"] = aws.StringValue(v.Type)
 		}
 
 		if v.AmbiguousRoleResolution != nil {
-			m["ambiguous_role_resolution"] = *v.AmbiguousRoleResolution
+			m["ambiguous_role_resolution"] = aws.StringValue(v.AmbiguousRoleResolution)
 		}
 
 		if v.RulesConfiguration != nil && v.RulesConfiguration.Rules != nil {
@@ -128,23 +128,15 @@ func flattenIdentityPoolRoleMappingsAttachment(rms map[string]*cognitoidentity.R
 	return roleMappings
 }
 
-func flattenIdentityPoolRoles(config map[string]*string) map[string]string {
-	m := map[string]string{}
-	for k, v := range config {
-		m[k] = *v
-	}
-	return m
-}
-
 func flattenIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.MappingRule) []interface{} {
 	rules := make([]interface{}, 0)
 
 	for _, rule := range d {
 		r := make(map[string]interface{})
-		r["claim"] = *rule.Claim
-		r["match_type"] = *rule.MatchType
-		r["role_arn"] = *rule.RoleARN
-		r["value"] = *rule.Value
+		r["claim"] = aws.StringValue(rule.Claim)
+		r["match_type"] = aws.StringValue(rule.MatchType)
+		r["role_arn"] = aws.StringValue(rule.RoleARN)
+		r["value"] = aws.StringValue(rule.Value)
 
 		rules = append(rules, r)
 	}
@@ -163,27 +155,19 @@ func flattenIdentityProviders(ips []*cognitoidentity.Provider) []map[string]inte
 		}
 
 		if v.ClientId != nil {
-			ip["client_id"] = *v.ClientId
+			ip["client_id"] = aws.StringValue(v.ClientId)
 		}
 
 		if v.ProviderName != nil {
-			ip["provider_name"] = *v.ProviderName
+			ip["provider_name"] = aws.StringValue(v.ProviderName)
 		}
 
 		if v.ServerSideTokenCheck != nil {
-			ip["server_side_token_check"] = *v.ServerSideTokenCheck
+			ip["server_side_token_check"] = aws.BoolValue(v.ServerSideTokenCheck)
 		}
 
 		values = append(values, ip)
 	}
 
 	return values
-}
-
-func flattenSupportedLoginProviders(config map[string]*string) map[string]string {
-	m := map[string]string{}
-	for k, v := range config {
-		m[k] = *v
-	}
-	return m
 }

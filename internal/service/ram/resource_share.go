@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -97,7 +97,7 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetResourceShares(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -150,7 +150,7 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Println("[DEBUG] Update RAM resource share request:", request)
 		_, err := conn.UpdateResourceShare(request)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+			if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 				log.Printf("[WARN] No RAM resource share by ARN (%s) found", d.Id())
 				d.SetId("")
 				return nil
@@ -180,7 +180,7 @@ func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error
 	log.Println("[DEBUG] Delete RAM resource share request:", deleteResourceShareInput)
 	_, err := conn.DeleteResourceShare(deleteResourceShareInput)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)

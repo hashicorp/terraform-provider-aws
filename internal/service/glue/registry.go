@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,7 +83,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := FindRegistryByID(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -161,7 +161,7 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteRegistry(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue Registry (%s): %w", d.Id(), err)
@@ -169,7 +169,7 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = waitRegistryDeleted(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Registry (%s) to be deleted: %w", d.Id(), err)

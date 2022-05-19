@@ -21,10 +21,10 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig(rName),
@@ -49,10 +49,10 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig(rName),
@@ -85,10 +85,10 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetEBSBasicConfig(rName),
@@ -113,10 +113,10 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetFullConfig(rName),
@@ -143,10 +143,10 @@ func TestAccEMRInstanceFleet_disappears(t *testing.T) {
 	emrClusterResourceName := "aws_emr_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig(rName),

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,7 +15,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -24,10 +24,10 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
 	cssUpdated := ".label-customizable {font-weight: 100;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
@@ -67,17 +67,17 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) { // nosemgrep: acceptance-test-naming-parent-disappears
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
@@ -100,10 +100,10 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 	updatedFilename := "testdata/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_AllClients_Image(rName, filename),
@@ -143,7 +143,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSSAndImageFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -153,10 +153,10 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *test
 	updatedFilename := "testdata/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_AllClients_CSSAndImage(rName, css, filename),
@@ -210,7 +210,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *test
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_CSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
@@ -220,10 +220,10 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
 	cssUpdated := ".label-customizable {font-weight: 100;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, css),
@@ -263,17 +263,17 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) { // nosemgrep: acceptance-test-naming-parent-disappears
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, css),
@@ -297,10 +297,10 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 	updatedFilename := "testdata/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_Client_Image(rName, filename),
@@ -352,10 +352,10 @@ func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 	clientCSS := ".label-customizable {font-weight: 100;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test UI Customization settings shared by ALL and a specific client
@@ -424,10 +424,10 @@ func TestAccCognitoIDPUserPoolUICustomization_UpdateClientToAll_cSS(t *testing.T
 	cssUpdated := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, css),
@@ -463,10 +463,10 @@ func TestAccCognitoIDPUserPoolUICustomization_UpdateAllToClient_cSS(t *testing.T
 	cssUpdated := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),

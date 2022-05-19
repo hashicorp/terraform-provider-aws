@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix issue where group was not recreated if `initial_lifecycle_hook` changed
+```

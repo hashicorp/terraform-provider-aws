@@ -22,12 +22,12 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 
 	// Run a resource test to setup our KMS key
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSKmsSecretsDataSourceKey,
+				Config: testAccSecretsDataSourceConfig_key,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					testAccSecretsEncryptDataSource(&key, plaintext, &encryptedPayload),
@@ -67,9 +67,9 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 		dataSourceName := "data.aws_kms_secrets.test"
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:   func() { acctest.PreCheck(t) },
-			ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-			Providers:  acctest.Providers,
+			PreCheck:          func() { acctest.PreCheck(t) },
+			ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+			ProviderFactories: acctest.ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccCheckSecretsSecretDataSource(*encryptedPayload),
@@ -85,7 +85,7 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 	}
 }
 
-const testAccCheckAWSKmsSecretsDataSourceKey = `
+const testAccSecretsDataSourceConfig_key = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = "Testing the Terraform AWS KMS Secrets data_source"
@@ -93,7 +93,7 @@ resource "aws_kms_key" "test" {
 `
 
 func testAccCheckSecretsSecretDataSource(payload string) string {
-	return testAccCheckAWSKmsSecretsDataSourceKey + fmt.Sprintf(`
+	return testAccSecretsDataSourceConfig_key + fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
     name    = "secret1"

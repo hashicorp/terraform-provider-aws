@@ -23,10 +23,10 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 	sourceLocation := testAccBitbucketSourceLocationFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_Bitbucket(rName, sourceLocation),
@@ -55,10 +55,10 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_GitHub(rName),
@@ -87,10 +87,10 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_GitHubEnterprise(rName, "dev"),
@@ -136,10 +136,10 @@ func TestAccCodeBuildWebhook_buildType(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_BuildType(rName, "BUILD"),
@@ -178,10 +178,10 @@ func TestAccCodeBuildWebhook_branchFilter(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_BranchFilter(rName, "master"),
@@ -213,10 +213,10 @@ func TestAccCodeBuildWebhook_filterGroup(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebhookDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_FilterGroup(rName),
