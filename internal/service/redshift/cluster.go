@@ -788,9 +788,13 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				ClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err = verify.RetryOnAWSCode(redshift.ErrCodeInvalidClusterStateFault, func() (interface{}, error) {
-				return conn.RebootCluster(rebootInput)
-			})
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(
+				clusterInvalidClusterStateFaultTimeout,
+				func() (interface{}, error) {
+					return conn.RebootCluster(rebootInput)
+				},
+				redshift.ErrCodeInvalidClusterStateFault,
+			)
 
 			if err != nil {
 				return fmt.Errorf("error rebooting Redshift Cluster (%s): %w", d.Id(), err)
