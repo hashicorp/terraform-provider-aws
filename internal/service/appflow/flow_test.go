@@ -371,7 +371,7 @@ func testAccConfigFlow_TaskProperties(rSourceName string, rDestinationName strin
 		testAccConfigFlowBase(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name        = %[3]q
+  name = %[3]q
 
   source_flow_config {
     connector_type = "S3"
@@ -403,10 +403,10 @@ resource "aws_appflow_flow" "test" {
     destination_field = "testField"
     task_type         = "Map"
 
-	task_properties = {
-	  SOURCE_DATA_TYPE = "CSV"
-	  DESTINATION_DATA_TYPE = "CSV"
-	}
+    task_properties = {
+      SOURCE_DATA_TYPE      = "CSV"
+      DESTINATION_DATA_TYPE = "CSV"
+    }
 
     connector_operator {
       s3 = "NO_OP"
