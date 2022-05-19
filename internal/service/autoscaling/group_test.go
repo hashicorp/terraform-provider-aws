@@ -520,8 +520,9 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 
 func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
-	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -529,25 +530,13 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withPlacementGroup(randName),
+				Config: testAccGroupWithPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "placement_group", randName),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "placement_group", "aws_placement_group.test", "name"),
 				),
 			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -3361,7 +3350,7 @@ func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestChec
 	}
 }
 
-func testAccGroupLaunchConfigurationBaseConfig(rName string) string {
+func testAccGroupLaunchConfigurationBaseConfig(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -3369,13 +3358,13 @@ func testAccGroupLaunchConfigurationBaseConfig(rName string) string {
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
+  instance_type = %[2]q
 }
-`, rName))
+`, rName, instanceType))
 }
 
 func testAccGroupConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3387,7 +3376,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupNameGeneratedConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3398,7 +3387,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupNamePrefixConfig(rName, namePrefix string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3410,7 +3399,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupConfigTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3428,7 +3417,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupConfigTags2(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool, tagKey2, tagValue2 string, tagPropagateAtLaunch2 bool) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3452,7 +3441,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupConfigDeprecatedTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3470,7 +3459,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupSimpleConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   name                 = %[1]q
@@ -3481,12 +3470,18 @@ resource "aws_autoscaling_group" "test" {
   force_delete         = true
   termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
   launch_configuration = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
 
 func testAccGroupSimpleUpdatedConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_launch_configuration" "test2" {
   name          = "%[1]s-2"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -3506,12 +3501,18 @@ resource "aws_autoscaling_group" "test" {
   protect_from_scale_in     = true
 
   launch_configuration = aws_launch_configuration.test2.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
 
 func testAccGroupTerminationPoliciesExplicitDefaultConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3524,7 +3525,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupTerminationPoliciesUpdatedConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
@@ -3676,6 +3677,12 @@ resource "aws_autoscaling_group" "test" {
   wait_for_elb_capacity     = 2
   force_delete              = true
   load_balancers            = [aws_elb.test.name]
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
@@ -3694,13 +3701,48 @@ resource "aws_autoscaling_group" "test" {
   wait_for_elb_capacity     = 2
   force_delete              = true
   target_group_arns         = [aws_lb_target_group.test.arn]
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
 
-func testAccGroupConfig_withPlacementGroup(name string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
+func testAccGroupWithPlacementGroupConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "c3.large"), fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones        = [data.aws_availability_zones.available.names[0]]
+  name                      = %[1]q
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
+  placement_group           = aws_placement_group.test.name
+  launch_configuration      = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccMetricsCollectionConfig_updatingMetricsCollected() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -3713,35 +3755,28 @@ data "aws_ami" "test_ami" {
 
 resource "aws_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
-  instance_type = "c3.large"
-}
-
-resource "aws_placement_group" "test" {
-  name     = "%s"
-  strategy = "cluster"
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
-  name                      = "%s"
   max_size                  = 1
-  min_size                  = 1
+  min_size                  = 0
   health_check_grace_period = 300
-  health_check_type         = "ELB"
-  desired_capacity          = 1
+  health_check_type         = "EC2"
+  desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
-  placement_group           = aws_placement_group.test.name
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
+  launch_configuration      = aws_launch_configuration.foobar.name
+  enabled_metrics = ["GroupTotalInstances",
+    "GroupPendingInstances",
+    "GroupTerminatingInstances",
+    "GroupDesiredCapacity",
+    "GroupMaxSize"
+  ]
+  metrics_granularity = "1Minute"
 }
-`, name, name)
+`)
 }
 
 func testAccGroupConfig_withServiceLinkedRoleARN() string {
@@ -3876,45 +3911,6 @@ resource "aws_autoscaling_group" "bar" {
     "GroupTotalCapacity",
     "GroupTerminatingCapacity",
     "GroupStandbyInstances"
-  ]
-  metrics_granularity = "1Minute"
-}
-`)
-}
-
-func testAccMetricsCollectionConfig_updatingMetricsCollected() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones        = [data.aws_availability_zones.available.names[0]]
-  max_size                  = 1
-  min_size                  = 0
-  health_check_grace_period = 300
-  health_check_type         = "EC2"
-  desired_capacity          = 0
-  force_delete              = true
-  termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-  enabled_metrics = ["GroupTotalInstances",
-    "GroupPendingInstances",
-    "GroupTerminatingInstances",
-    "GroupDesiredCapacity",
-    "GroupMaxSize"
   ]
   metrics_granularity = "1Minute"
 }
