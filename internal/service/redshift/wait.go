@@ -93,7 +93,7 @@ func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*r
 
 func waitClusterRebooted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{clusterStatusRebooting},
+		Pending:    []string{clusterStatusRebooting, clusterStatusModifying},
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
