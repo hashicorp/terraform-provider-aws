@@ -1172,7 +1172,7 @@ resource "aws_redshift_cluster" "test" {
   logging {
     enable               = true
     log_destination_type = "cloudwatch"
-	log_exports          = ["connectionlog"]
+    log_exports          = ["connectionlog"]
   }
 
   skip_final_snapshot = true
