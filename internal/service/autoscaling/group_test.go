@@ -506,6 +506,8 @@ func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 
 func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -514,14 +516,21 @@ func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithLoadBalancerConfig(),
+				Config: testAccGroupWithLoadBalancerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckGroupAttributesLoadBalancer(&group),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "load_balancers.*", "aws_elb.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_elb_capacity", "2"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -539,7 +548,8 @@ func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 
 func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.bar"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -548,7 +558,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithLoadBalancerConfig(),
+				Config: testAccGroupWithLoadBalancerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
@@ -590,7 +600,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccGroupWithLoadBalancerConfig(),
+				Config: testAccGroupWithLoadBalancerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
@@ -4195,16 +4205,6 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckGroupAttributesLoadBalancer(group *autoscaling.Group) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if len(group.LoadBalancerNames) != 1 {
-			return fmt.Errorf("Bad load_balancers: %v", group.LoadBalancerNames)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckGroupHealthyCapacity(g *autoscaling.Group, exp int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		healthy := 0
@@ -4466,33 +4466,22 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithLoadBalancerConfig() string {
+func testAccGroupELBBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
+		acctest.ConfigVpcWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
   tags = {
-    Name = "terraform-testacc-autoscaling-group-with-lb"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_subnet" "foo" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.foo.id
-  tags = {
-    Name = "tf-acc-autoscaling-group-with-load-balancer"
-  }
-}
-
-resource "aws_security_group" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "-1"
@@ -4507,11 +4496,16 @@ resource "aws_security_group" "foo" {
     to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_elb" "bar" {
-  subnets         = [aws_subnet.foo.id]
-  security_groups = [aws_security_group.foo.id]
+resource "aws_elb" "test" {
+  name            = %[1]q
+  subnets         = aws_subnet.test[*].id
+  security_groups = [aws_security_group.test.id]
 
   listener {
     instance_port     = 80
@@ -4528,35 +4522,41 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.test]
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_launch_configuration" "test" {
+  name            = %[1]q
   image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "t2.micro"
-  security_groups = [aws_security_group.foo.id]
+  security_groups = [aws_security_group.test.id]
 
   # Need the instance to listen on port 80 at boot
   user_data = <<EOF
 #!/bin/bash
-echo "Terraform aws_autoscaling_group Testing" > index.html
+echo "Terraform aws_autoscaling_group testing" > index.html
 nohup python -m SimpleHTTPServer 80 &
 EOF
 }
+`, rName))
+}
 
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier       = [aws_subnet.foo.id]
-  max_size                  = 2
-  min_size                  = 2
+func testAccGroupWithLoadBalancerConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier = aws_subnet.test[*].id
+  max_size             = 2
+  min_size             = 2
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
   health_check_grace_period = 300
   health_check_type         = "ELB"
   wait_for_elb_capacity     = 2
   force_delete              = true
-
-  launch_configuration = aws_launch_configuration.foobar.name
-  load_balancers       = [aws_elb.bar.name]
+  load_balancers            = [aws_elb.test.name]
 }
-`)
+`, rName))
 }
 
 func testAccGroupWithTargetGroupConfig() string {
