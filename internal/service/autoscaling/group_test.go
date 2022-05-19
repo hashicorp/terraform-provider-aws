@@ -1113,39 +1113,6 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_classicVPCZoneIdentifier(t *testing.T) {
-	var group autoscaling.Group
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_classicVPCZoneIdentifier(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.test", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.test", "vpc_zone_identifier.#", "0"),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-		},
-	})
-}
-
 func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
 	var group autoscaling.Group
 
@@ -4330,34 +4297,6 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration      = aws_launch_configuration.foobar.name
 }
 `, rInt)
-}
-
-func testAccGroupConfig_classicVPCZoneIdentifier() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-resource "aws_autoscaling_group" "test" {
-  min_size = 0
-  max_size = 0
-
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  launch_configuration = aws_launch_configuration.test.name
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t1.micro"
-}
-`)
 }
 
 func testAccGroupConfig_withLaunchTemplate() string {
