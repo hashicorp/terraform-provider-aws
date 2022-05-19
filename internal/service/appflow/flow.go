@@ -1113,12 +1113,11 @@ func ResourceFlow() *schema.Resource {
 							},
 						},
 						"task_properties": {
-							Type:         schema.TypeMap,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(appflow.OperatorPropertiesKeys_Values(), false),
+							Type:     schema.TypeMap,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+								ValidateFunc: validation.StringLenBetween(0, 2048),
 							},
 						},
 						"task_type": {
