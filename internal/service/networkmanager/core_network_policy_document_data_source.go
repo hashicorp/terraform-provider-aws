@@ -160,12 +160,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										ValidateFunc: verify.ValidRegionName,
 									},
 									"asn": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.IntBetween(64512, 65534),
-											validation.IntBetween(4200000000, 4294967294),
-										),
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(64512, 65534),
 									},
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
