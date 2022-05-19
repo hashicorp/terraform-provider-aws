@@ -147,7 +147,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateSubnetInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -304,38 +304,38 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_dns64") {
-		if err := modifySubnetEnableDns64(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+		if err := modifySubnetEnableDNS64(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("enable_resource_name_dns_aaaa_record_on_launch") {
-		if err := modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
+		if err := modifySubnetEnableResourceNameDNSAAAARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("enable_resource_name_dns_a_record_on_launch") {
-		if err := modifySubnetEnableResourceNameDnsARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
+		if err := modifySubnetEnableResourceNameDNSARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("map_public_ip_on_launch") {
-		if err := modifySubnetMapPublicIpOnLaunch(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
+		if err := modifySubnetMapPublicIPOnLaunch(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("private_dns_hostname_type_on_launch") {
-		if err := modifySubnetPrivateDnsHostnameTypeOnLaunch(conn, d.Id(), d.Get("private_dns_hostname_type_on_launch").(string)); err != nil {
+		if err := modifySubnetPrivateDNSHostnameTypeOnLaunch(conn, d.Id(), d.Get("private_dns_hostname_type_on_launch").(string)); err != nil {
 			return err
 		}
 	}
 
 	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
-		if err := modifySubnetAssignIpv6AddressOnCreation(conn, d.Id(), false); err != nil {
+		if err := modifySubnetAssignIPv6AddressOnCreation(conn, d.Id(), false); err != nil {
 			return err
 		}
 	}
@@ -348,7 +348,7 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// If we're enabling IPv6 assignment for new ENIs, do that after modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && d.Get("assign_ipv6_address_on_creation").(bool) {
-		if err := modifySubnetAssignIpv6AddressOnCreation(conn, d.Id(), true); err != nil {
+		if err := modifySubnetAssignIPv6AddressOnCreation(conn, d.Id(), true); err != nil {
 			return err
 		}
 	}
@@ -369,9 +369,9 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteSubnet(&ec2.DeleteSubnetInput{
 			SubnetId: aws.String(d.Id()),
 		})
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 		return nil
 	}
 
@@ -387,14 +387,14 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subnet *ec2.Subnet, computedIPv6CidrBlock bool) error {
 	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
 	if new, old := d.Get("assign_ipv6_address_on_creation").(bool), aws.BoolValue(subnet.AssignIpv6AddressOnCreation); old != new && !new {
-		if err := modifySubnetAssignIpv6AddressOnCreation(conn, d.Id(), false); err != nil {
+		if err := modifySubnetAssignIPv6AddressOnCreation(conn, d.Id(), false); err != nil {
 			return err
 		}
 	}
 
 	// If we're disabling DNS64, do that before modifying the IPv6 CIDR block.
 	if new, old := d.Get("enable_dns64").(bool), aws.BoolValue(subnet.EnableDns64); old != new && !new {
-		if err := modifySubnetEnableDns64(conn, d.Id(), false); err != nil {
+		if err := modifySubnetEnableDNS64(conn, d.Id(), false); err != nil {
 			return err
 		}
 	}
@@ -420,7 +420,7 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 
 	// If we're enabling IPv6 assignment for new ENIs, do that after modifying the IPv6 CIDR block.
 	if new, old := d.Get("assign_ipv6_address_on_creation").(bool), aws.BoolValue(subnet.AssignIpv6AddressOnCreation); old != new && new {
-		if err := modifySubnetAssignIpv6AddressOnCreation(conn, d.Id(), true); err != nil {
+		if err := modifySubnetAssignIPv6AddressOnCreation(conn, d.Id(), true); err != nil {
 			return err
 		}
 	}
@@ -434,34 +434,34 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 
 	// If we're enabling DNS64, do that after modifying the IPv6 CIDR block.
 	if new, old := d.Get("enable_dns64").(bool), aws.BoolValue(subnet.EnableDns64); old != new && new {
-		if err := modifySubnetEnableDns64(conn, d.Id(), true); err != nil {
+		if err := modifySubnetEnableDNS64(conn, d.Id(), true); err != nil {
 			return err
 		}
 	}
 
 	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
 		if new, old := d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool), aws.BoolValue(subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord); old != new {
-			if err := modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn, d.Id(), new); err != nil {
+			if err := modifySubnetEnableResourceNameDNSAAAARecordOnLaunch(conn, d.Id(), new); err != nil {
 				return err
 			}
 		}
 
 		if new, old := d.Get("enable_resource_name_dns_a_record_on_launch").(bool), aws.BoolValue(subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord); old != new {
-			if err := modifySubnetEnableResourceNameDnsARecordOnLaunch(conn, d.Id(), new); err != nil {
+			if err := modifySubnetEnableResourceNameDNSARecordOnLaunch(conn, d.Id(), new); err != nil {
 				return err
 			}
 		}
 
 		// private_dns_hostname_type_on_launch is Computed, so only modify if the new value is set.
 		if new, old := d.Get("private_dns_hostname_type_on_launch").(string), aws.StringValue(subnet.PrivateDnsNameOptionsOnLaunch.HostnameType); old != new && new != "" {
-			if err := modifySubnetPrivateDnsHostnameTypeOnLaunch(conn, d.Id(), new); err != nil {
+			if err := modifySubnetPrivateDNSHostnameTypeOnLaunch(conn, d.Id(), new); err != nil {
 				return err
 			}
 		}
 	}
 
 	if new, old := d.Get("map_public_ip_on_launch").(bool), aws.BoolValue(subnet.MapPublicIpOnLaunch); old != new {
-		if err := modifySubnetMapPublicIpOnLaunch(conn, d.Id(), new); err != nil {
+		if err := modifySubnetMapPublicIPOnLaunch(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
@@ -469,7 +469,7 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 	return nil
 }
 
-func modifySubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, subnetID string, v bool) error {
+func modifySubnetAssignIPv6AddressOnCreation(conn *ec2.EC2, subnetID string, v bool) error {
 	input := &ec2.ModifySubnetAttributeInput{
 		AssignIpv6AddressOnCreation: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),
@@ -481,14 +481,14 @@ func modifySubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, subnetID string, v b
 		return fmt.Errorf("error setting EC2 Subnet (%s) AssignIpv6AddressOnCreation: %w", subnetID, err)
 	}
 
-	if _, err := WaitSubnetAssignIpv6AddressOnCreationUpdated(conn, subnetID, v); err != nil {
+	if _, err := waitSubnetAssignIPv6AddressOnCreationUpdated(conn, subnetID, v); err != nil {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) AssignIpv6AddressOnCreation update: %w", subnetID, err)
 	}
 
 	return nil
 }
 
-func modifySubnetEnableDns64(conn *ec2.EC2, subnetID string, v bool) error {
+func modifySubnetEnableDNS64(conn *ec2.EC2, subnetID string, v bool) error {
 	input := &ec2.ModifySubnetAttributeInput{
 		EnableDns64: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),
@@ -500,14 +500,14 @@ func modifySubnetEnableDns64(conn *ec2.EC2, subnetID string, v bool) error {
 		return fmt.Errorf("error modifying EC2 Subnet (%s) EnableDns64: %w", subnetID, err)
 	}
 
-	if _, err := WaitSubnetEnableDns64Updated(conn, subnetID, v); err != nil {
+	if _, err := waitSubnetEnableDNS64Updated(conn, subnetID, v); err != nil {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", subnetID, err)
 	}
 
 	return nil
 }
 
-func modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+func modifySubnetEnableResourceNameDNSAAAARecordOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
 	input := &ec2.ModifySubnetAttributeInput{
 		EnableResourceNameDnsAAAARecordOnLaunch: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),
@@ -519,14 +519,14 @@ func modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, subnetID
 		return fmt.Errorf("error modifying EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", subnetID, err)
 	}
 
-	if _, err := WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
+	if _, err := waitSubnetEnableResourceNameDNSAAAARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch update: %w", subnetID, err)
 	}
 
 	return nil
 }
 
-func modifySubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+func modifySubnetEnableResourceNameDNSARecordOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
 	input := &ec2.ModifySubnetAttributeInput{
 		EnableResourceNameDnsARecordOnLaunch: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),
@@ -538,7 +538,7 @@ func modifySubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, subnetID st
 		return fmt.Errorf("error modifying EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", subnetID, err)
 	}
 
-	if _, err := WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
+	if _, err := waitSubnetEnableResourceNameDNSARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch update: %w", subnetID, err)
 	}
 
@@ -593,7 +593,7 @@ func modifySubnetIPv6CIDRBlockAssociation(conn *ec2.EC2, subnetID, associationID
 	return nil
 }
 
-func modifySubnetMapPublicIpOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+func modifySubnetMapPublicIPOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
 	input := &ec2.ModifySubnetAttributeInput{
 		MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(v),
@@ -635,7 +635,7 @@ func modifySubnetOutpostRackAttributes(conn *ec2.EC2, subnetID string, customerO
 	return nil
 }
 
-func modifySubnetPrivateDnsHostnameTypeOnLaunch(conn *ec2.EC2, subnetID string, v string) error {
+func modifySubnetPrivateDNSHostnameTypeOnLaunch(conn *ec2.EC2, subnetID string, v string) error {
 	input := &ec2.ModifySubnetAttributeInput{
 		PrivateDnsHostnameTypeOnLaunch: aws.String(v),
 		SubnetId:                       aws.String(subnetID),

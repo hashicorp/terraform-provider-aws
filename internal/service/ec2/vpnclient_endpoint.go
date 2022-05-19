@@ -227,13 +227,13 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
-		TagSpecifications:    ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
 		VpnPort:              aws.Int64(int64(d.Get("vpn_port").(int))),
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok && len(v.([]interface{})) > 0 {
-		input.AuthenticationOptions = expandClientVpnAuthenticationRequests(v.([]interface{}))
+		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -309,7 +309,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	if err := d.Set("authentication_options", flattenClientVpnAuthentications(ep.AuthenticationOptions)); err != nil {
+	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)
@@ -470,7 +470,7 @@ func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) e
 		ClientVpnEndpointId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
 		return nil
 	}
 
@@ -485,7 +485,7 @@ func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandClientVpnAuthenticationRequest(tfMap map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {
+func expandClientVPNAuthenticationRequest(tfMap map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -528,7 +528,7 @@ func expandClientVpnAuthenticationRequest(tfMap map[string]interface{}) *ec2.Cli
 	return apiObject
 }
 
-func expandClientVpnAuthenticationRequests(tfList []interface{}) []*ec2.ClientVpnAuthenticationRequest {
+func expandClientVPNAuthenticationRequests(tfList []interface{}) []*ec2.ClientVpnAuthenticationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -542,7 +542,7 @@ func expandClientVpnAuthenticationRequests(tfList []interface{}) []*ec2.ClientVp
 			continue
 		}
 
-		apiObject := expandClientVpnAuthenticationRequest(tfMap)
+		apiObject := expandClientVPNAuthenticationRequest(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -554,7 +554,7 @@ func expandClientVpnAuthenticationRequests(tfList []interface{}) []*ec2.ClientVp
 	return apiObjects
 }
 
-func flattenClientVpnAuthentication(apiObject *ec2.ClientVpnAuthentication) map[string]interface{} {
+func flattenClientVPNAuthentication(apiObject *ec2.ClientVpnAuthentication) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -586,7 +586,7 @@ func flattenClientVpnAuthentication(apiObject *ec2.ClientVpnAuthentication) map[
 	return tfMap
 }
 
-func flattenClientVpnAuthentications(apiObjects []*ec2.ClientVpnAuthentication) []interface{} {
+func flattenClientVPNAuthentications(apiObjects []*ec2.ClientVpnAuthentication) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -598,7 +598,7 @@ func flattenClientVpnAuthentications(apiObjects []*ec2.ClientVpnAuthentication) 
 			continue
 		}
 
-		tfList = append(tfList, flattenClientVpnAuthentication(apiObject))
+		tfList = append(tfList, flattenClientVPNAuthentication(apiObject))
 	}
 
 	return tfList

@@ -21,7 +21,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for EIP association with EC2-Classic instances
-	ec2AddressAssociationClassicTimeout = 2 * time.Minute
+	addressAssociationClassicTimeout = 2 * time.Minute
 )
 
 func ResourceEIP() *schema.Resource {
@@ -147,7 +147,7 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && conns.HasEC2Classic(supportedPlatforms) {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
-		allocOpts.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
+		allocOpts.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
 	}
 
 	if v, ok := d.GetOk("address"); ok {
@@ -344,7 +344,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if disassociate {
-		if err := disassociateEip(d, meta); err != nil {
+		if err := disassociateEIP(d, meta); err != nil {
 			return err
 		}
 	}
@@ -387,7 +387,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAllocationIDNotFound) {
+				if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -406,7 +406,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if assocOpts.AllocationId == nil {
-			if err := waitForEc2AddressAssociationClassic(conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
+			if err := waitForAddressAssociationClassic(conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
 				return fmt.Errorf("error waiting for EC2 Address (%s) to associate with EC2-Classic Instance (%s): %w", aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId), err)
 			}
 		}
@@ -438,7 +438,7 @@ func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// If we are attached to an instance or interface, detach first.
 	if d.Get("instance").(string) != "" || d.Get("association_id").(string) != "" {
-		if err := disassociateEip(d, meta); err != nil {
+		if err := disassociateEIP(d, meta); err != nil {
 			return err
 		}
 	}
@@ -493,7 +493,7 @@ func resourceEIPDomain(d *schema.ResourceData) string {
 	return ec2.DomainTypeStandard
 }
 
-func disassociateEip(d *schema.ResourceData, meta interface{}) error {
+func disassociateEIP(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
 	var err error
@@ -518,17 +518,17 @@ func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 	// is the case, then it was already disassociated somehow,
 	// and that is okay. The most commmon reason for this is that
 	// the instance or ENI it was attached it was destroyed.
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		err = nil
 	}
 
 	return err
 }
 
-// waitForEc2AddressAssociationClassic ensures the correct Instance is associated with an Address
+// waitForAddressAssociationClassic ensures the correct Instance is associated with an Address
 //
 // This can take a few seconds to appear correctly for EC2-Classic addresses.
-func waitForEc2AddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID string) error {
+func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID string) error {
 	input := &ec2.DescribeAddressesInput{
 		Filters: []*ec2.Filter{
 			{
@@ -542,10 +542,10 @@ func waitForEc2AddressAssociationClassic(conn *ec2.EC2, publicIP string, instanc
 		},
 	}
 
-	err := resource.Retry(ec2AddressAssociationClassicTimeout, func() *resource.RetryError {
+	err := resource.Retry(addressAssociationClassicTimeout, func() *resource.RetryError {
 		output, err := conn.DescribeAddresses(input)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAddressNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound) {
 			return resource.RetryableError(err)
 		}
 

@@ -570,7 +570,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.CreateFleetInput{
 		ExcessCapacityTerminationPolicy:  aws.String(d.Get("excess_capacity_termination_policy").(string)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
+		TagSpecifications:                tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		Type:                             aws.String(fleetType),
 	}
@@ -745,7 +745,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		err = DeleteFleetsError(output.UnsuccessfulFleetDeletions)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFleetIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidFleetIdNotFound) {
 		return nil
 	}
 

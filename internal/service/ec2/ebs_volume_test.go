@@ -15,21 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// testAccErrorCheckSkipEBSVolume skips EBS volume tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipEBSVolume(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"specified zone does not support multi-attach-enabled volumes",
-		"Unsupported volume type",
-	)
-}
-
 func TestAccEC2EBSVolume_basic(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -64,7 +56,7 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +79,7 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +115,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -159,7 +151,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +187,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -231,7 +223,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -268,7 +260,7 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -297,7 +289,7 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -321,7 +313,7 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -336,7 +328,7 @@ func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
 func TestAccEC2EBSVolume_invalidThroughputForType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -354,7 +346,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -399,7 +391,7 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -428,7 +420,7 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -453,7 +445,7 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 func TestAccEC2EBSVolume_multiAttach_gp2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -473,7 +465,7 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -500,7 +492,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -538,7 +530,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -594,7 +586,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -650,7 +642,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -707,7 +699,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -746,7 +738,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{

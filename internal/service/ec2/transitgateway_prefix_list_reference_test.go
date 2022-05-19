@@ -24,7 +24,7 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -58,7 +58,7 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -85,7 +85,7 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -113,7 +113,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,

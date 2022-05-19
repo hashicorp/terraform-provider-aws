@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPNSiteConnectionRoute_basic(t *testing.T) {
+func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
@@ -35,7 +35,7 @@ func TestAccVPNSiteConnectionRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteConnectionRoute_disappears(t *testing.T) {
+func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"

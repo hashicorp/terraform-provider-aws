@@ -62,7 +62,7 @@ func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecurityGroupsConfig_empty(rName),
+				Config: testAccSecurityGroupsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
@@ -136,7 +136,7 @@ data "aws_security_groups" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsSecurityGroupsConfig_empty(rName string) string {
+func testAccSecurityGroupsDataSourceConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 data "aws_security_groups" "test" {
   tags = {

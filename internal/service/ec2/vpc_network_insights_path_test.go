@@ -26,7 +26,7 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPathConfig(rName, "tcp"),
+				Config: testAccNetworkInsightsPathConfig_basic(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-insights-path/.+$`)),
@@ -59,7 +59,7 @@ func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPathConfig(rName, "udp"),
+				Config: testAccNetworkInsightsPathConfig_basic(rName, "udp"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkInsightsPath(), resourceName),
@@ -81,7 +81,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPathConfigTags1(rName, "key1", "value1"),
+				Config: testAccNetworkInsightsPathConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -94,7 +94,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPathConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNetworkInsightsPathConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -103,7 +103,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEC2NetworkInsightsPathConfigTags1(rName, "key2", "value2"),
+				Config: testAccNetworkInsightsPathConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -125,7 +125,7 @@ func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPathSourceIPConfig(rName, "1.1.1.1"),
+				Config: testAccNetworkInsightsPathConfig_sourceIP(rName, "1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "1.1.1.1"),
@@ -137,7 +137,7 @@ func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPathSourceIPConfig(rName, "8.8.8.8"),
+				Config: testAccNetworkInsightsPathConfig_sourceIP(rName, "8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "8.8.8.8"),
@@ -158,7 +158,7 @@ func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPathDestinationIPConfig(rName, "1.1.1.1"),
+				Config: testAccNetworkInsightsPathConfig_destinationIP(rName, "1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "1.1.1.1"),
@@ -170,7 +170,7 @@ func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPathDestinationIPConfig(rName, "8.8.8.8"),
+				Config: testAccNetworkInsightsPathConfig_destinationIP(rName, "8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "8.8.8.8"),
@@ -191,7 +191,7 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPathDestinationPortConfig(rName, 80),
+				Config: testAccNetworkInsightsPathConfig_destinationPort(rName, 80),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "80"),
@@ -203,7 +203,7 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPathDestinationPortConfig(rName, 443),
+				Config: testAccNetworkInsightsPathConfig_destinationPort(rName, 443),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "443"),
@@ -260,7 +260,7 @@ func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccEC2NetworkInsightsPathConfig(rName, protocol string) string {
+func testAccNetworkInsightsPathConfig_basic(rName, protocol string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -303,7 +303,7 @@ resource "aws_ec2_network_insights_path" "test" {
 `, rName, protocol)
 }
 
-func testAccEC2NetworkInsightsPathConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccNetworkInsightsPathConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -350,7 +350,7 @@ resource "aws_ec2_network_insights_path" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccEC2NetworkInsightsPathConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccNetworkInsightsPathConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -398,7 +398,7 @@ resource "aws_ec2_network_insights_path" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccEC2NetworkInsightsPathSourceIPConfig(rName, sourceIP string) string {
+func testAccNetworkInsightsPathConfig_sourceIP(rName, sourceIP string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -446,7 +446,7 @@ resource "aws_ec2_network_insights_path" "test" {
 `, rName, sourceIP)
 }
 
-func testAccEC2NetworkInsightsPathDestinationIPConfig(rName, destinationIP string) string {
+func testAccNetworkInsightsPathConfig_destinationIP(rName, destinationIP string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -494,7 +494,7 @@ resource "aws_ec2_network_insights_path" "test" {
 `, rName, destinationIP)
 }
 
-func testAccEC2NetworkInsightsPathDestinationPortConfig(rName string, destinationPort int) string {
+func testAccNetworkInsightsPathConfig_destinationPort(rName string, destinationPort int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

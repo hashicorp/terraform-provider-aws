@@ -72,7 +72,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckEIPAssociationDestroy,
@@ -184,7 +184,7 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccPreCheckEC2VPCOnly(t *testing.T) {
+func testAccPreCheckVPCOnly(t *testing.T) {
 	client := acctest.Provider.Meta().(*conns.AWSClient)
 	platforms := client.SupportedPlatforms
 	region := client.Region
@@ -426,7 +426,7 @@ resource "aws_eip_association" "test" {
 `, rName))
 }
 
-func testAccEIPAssociationConfig_ec2Classic() string {
+func testAccEIPAssociationConfig_ec2Classic() string { // nosemgrep:ec2-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		testAccLatestAmazonLinuxPVEBSAMIConfig(),

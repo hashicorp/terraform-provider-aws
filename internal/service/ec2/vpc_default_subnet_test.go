@@ -187,7 +187,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 	})
 }
 
-func testAccDefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T) {
+func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -203,7 +203,7 @@ func testAccDefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultSubnetDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultSubnetPrivateDnsNameOptionsOnLaunchConfig(rName),
+				Config: testAccDefaultSubnetConfig_privateDNSNameOptionsOnLaunch(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -500,7 +500,7 @@ resource "aws_default_subnet" "test" {
 `)
 }
 
-func testAccDefaultSubnetPrivateDnsNameOptionsOnLaunchConfig(rName string) string {
+func testAccDefaultSubnetConfig_privateDNSNameOptionsOnLaunch(rName string) string {
 	return acctest.ConfigCompose(testAccDefaultSubnetConfigBaseExisting, fmt.Sprintf(`
 resource "aws_default_subnet" "test" {
   availability_zone = data.aws_subnet.test.availability_zone
