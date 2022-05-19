@@ -437,7 +437,6 @@ func flattenMetricStreamStatisticsConfigurations(configurations []*cloudwatch.Me
 			"include_metrics":       flattenMetricStreamStatisticsConfigurationsIncludeMetrics(configuration.IncludeMetrics),
 		}
 
-		// flatConfigurations = append(flatConfigurations, flatConfiguration)
 		flatConfigurations[i] = flatConfiguration
 	}
 
@@ -453,7 +452,6 @@ func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(metrics []*cloudw
 			"namespace":   aws.StringValue(metric.Namespace),
 		}
 
-		// flatMetrics = append(flatMetrics, flatMetric)
 		flatMetrics[i] = flatMetric
 	}
 
