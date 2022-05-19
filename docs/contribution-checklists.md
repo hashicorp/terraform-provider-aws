@@ -23,47 +23,6 @@ each type of contribution.
 - [New Resource](#new-resource)
     - [New Tag Resource](#new-tag-resource)
 
-## Documentation Update
-
-The [Terraform AWS Provider's website source](../../website) is in this repository
-along with the code and tests. Below are some common items that will get
-flagged during documentation reviews:
-
-- [ ] __Reasoning for Change__: Documentation updates should include an explanation for why the update is needed.
-- [ ] __Prefer AWS Documentation__: Documentation about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
-- [ ] __Large Example Configurations__: Example Terraform configuration that includes multiple resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained to call `terraform apply` without special configuration.
-- [ ] __Terraform Configuration Language Features__: Individual resource documentation pages and examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
-
-## Enhancement/Bugfix to a Resource
-
-Working on existing resources is a great way to get started as a Terraform
-contributor because you can work within existing code and tests to get a feel
-for what to do.
-
-In addition to the below checklist, please see the [Common Review
-Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing
-guidelines.
-
-- [ ] __Acceptance test coverage of new behavior__: Existing resources each
-   have a set of [acceptance tests][acctests] covering their functionality.
-   These tests should exercise all the behavior of the resource. Whether you are
-   adding something or fixing a bug, the idea is to have an acceptance test that
-   fails if your code were to be removed. Sometimes it is sufficient to
-   "enhance" an existing test by adding an assertion or tweaking the config
-   that is used, but it's often better to add a new test. You can copy/paste an
-   existing test and follow the conventions you see there, modifying the test
-   to exercise the behavior of your code.
-- [ ] __Documentation updates__: If your code makes any changes that need to
-   be documented, you should include those doc updates in the same PR. This
-   includes things like new resource attributes or changes in default values.
-- [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`.
-   The PR reviewers can help out on this front, and may provide comments with
-   suggestions on how to improve the code.
-- [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
-   This is to avoid conflicts as version updates tend to be fast-
-   moving targets. We will plan to merge the PR with this change first.
-
 ## Adding Resource Import Support
 
 Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
