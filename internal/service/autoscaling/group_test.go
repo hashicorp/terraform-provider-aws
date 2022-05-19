@@ -472,6 +472,8 @@ func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 
 func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -480,39 +482,22 @@ func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithAZConfig(),
+				Config: testAccGroupWithAZConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupWithVPCIdentConfig(),
+				Config: testAccGroupWithVPCZoneIdentifierConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckGroupAttributesVPCZoneIdentifier(&group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "1"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_zone_identifier.*", "aws_subnet.test.0", "id"),
 				),
 			},
 		},
@@ -4238,40 +4223,6 @@ func testAccCheckGroupHealthyCapacity(g *autoscaling.Group, exp int) resource.Te
 	}
 }
 
-func testAccCheckGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// Grab Subnet Ids
-		var subnets []string
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_subnet" {
-				continue
-			}
-			subnets = append(subnets, rs.Primary.Attributes["id"])
-		}
-
-		if group.VPCZoneIdentifier == nil {
-			return fmt.Errorf("Bad VPC Zone Identifier\nexpected: %s\ngot nil", subnets)
-		}
-
-		zones := strings.Split(*group.VPCZoneIdentifier, ",")
-
-		remaining := len(zones)
-		for _, z := range zones {
-			for _, s := range subnets {
-				if z == s {
-					remaining--
-				}
-			}
-		}
-
-		if remaining != 0 {
-			return fmt.Errorf("Bad VPC Zone Identifier match\nexpected: %s\ngot:%s", zones, subnets)
-		}
-
-		return nil
-	}
-}
-
 // testAccCheckALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
 // sure that all instances in it are healthy.
 func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
@@ -4471,6 +4422,50 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupWithAZConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigVpcWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  depends_on = [aws_subnet.test[0]]
+}
+`, rName))
+}
+
+func testAccGroupWithVPCZoneIdentifierConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigVpcWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier = aws_subnet.test[*].id
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+}
+`, rName))
+}
+
 func testAccGroupWithLoadBalancerConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -4659,98 +4654,6 @@ resource "aws_autoscaling_group" "bar" {
 
   launch_configuration = aws_launch_configuration.foobar.name
   target_group_arns    = [aws_lb_target_group.foo.arn]
-}
-`)
-}
-
-func testAccGroupWithAZConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-resource "aws_vpc" "default" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-with-az"
-  }
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-autoscaling-group-with-az"
-  }
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones = [
-    data.aws_availability_zones.available.names[0]
-  ]
-  desired_capacity     = 0
-  max_size             = 0
-  min_size             = 0
-  launch_configuration = aws_launch_configuration.foobar.name
-}
-`)
-}
-
-func testAccGroupWithVPCIdentConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-resource "aws_vpc" "default" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-with-vpc-id"
-  }
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-autoscaling-group-with-vpc-id"
-  }
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier = [
-    aws_subnet.main.id,
-  ]
-  desired_capacity     = 0
-  max_size             = 0
-  min_size             = 0
-  launch_configuration = aws_launch_configuration.foobar.name
 }
 `)
 }
