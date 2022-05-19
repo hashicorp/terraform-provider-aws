@@ -543,7 +543,8 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 
 func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 	var group autoscaling.Group
-	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -552,11 +553,44 @@ func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupSimpleConfig(randName),
+				Config: testAccGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupWithEnabledMetricsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_metrics.*", "GroupTotalInstances"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_metrics.*", "GroupPendingInstances"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_metrics.*", "GroupTerminatingInstances"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_metrics.*", "GroupDesiredCapacity"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_metrics.*", "GroupMaxSize"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsCollectionConfig_allMetricsCollected(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckNoResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
 				),
 			},
 			{
@@ -573,7 +607,7 @@ func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccMetricsCollectionConfig_updatingMetricsCollected(),
+				Config: testAccGroupWithEnabledMetricsConfig(""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
@@ -629,48 +663,6 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "suspended_processes.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
-	var group autoscaling.Group
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMetricsCollectionConfig_allMetricsCollected(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccMetricsCollectionConfig_updatingMetricsCollected(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "5"),
 				),
 			},
 		},
@@ -3740,7 +3732,27 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccMetricsCollectionConfig_updatingMetricsCollected() string {
+func testAccGroupWithEnabledMetricsConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  enabled_metrics = [
+    "GroupTotalInstances",
+    "GroupPendingInstances",
+    "GroupTerminatingInstances",
+    "GroupDesiredCapacity",
+    "GroupMaxSize"
+  ]
+}
+`, rName))
+}
+
+func testAccMetricsCollectionConfig_allMetricsCollected() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		`
 data "aws_ami" "test_ami" {
@@ -3772,7 +3784,15 @@ resource "aws_autoscaling_group" "bar" {
     "GroupPendingInstances",
     "GroupTerminatingInstances",
     "GroupDesiredCapacity",
-    "GroupMaxSize"
+    "GroupInServiceInstances",
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupPendingCapacity",
+    "GroupInServiceCapacity",
+    "GroupStandbyCapacity",
+    "GroupTotalCapacity",
+    "GroupTerminatingCapacity",
+    "GroupStandbyInstances"
   ]
   metrics_granularity = "1Minute"
 }
@@ -3866,53 +3886,6 @@ resource "aws_autoscaling_group" "bar" {
   min_size              = 0
   launch_configuration  = aws_launch_configuration.foobar.name
   max_instance_lifetime = "604800"
-}
-`)
-}
-
-func testAccMetricsCollectionConfig_allMetricsCollected() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones        = [data.aws_availability_zones.available.names[0]]
-  max_size                  = 1
-  min_size                  = 0
-  health_check_grace_period = 300
-  health_check_type         = "EC2"
-  desired_capacity          = 0
-  force_delete              = true
-  termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-  enabled_metrics = ["GroupTotalInstances",
-    "GroupPendingInstances",
-    "GroupTerminatingInstances",
-    "GroupDesiredCapacity",
-    "GroupInServiceInstances",
-    "GroupMinSize",
-    "GroupMaxSize",
-    "GroupPendingCapacity",
-    "GroupInServiceCapacity",
-    "GroupStandbyCapacity",
-    "GroupTotalCapacity",
-    "GroupTerminatingCapacity",
-    "GroupStandbyInstances"
-  ]
-  metrics_granularity = "1Minute"
 }
 `)
 }
