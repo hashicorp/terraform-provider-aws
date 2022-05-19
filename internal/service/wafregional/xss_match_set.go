@@ -88,7 +88,7 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.XssMatchSet.XssMatchSetId))
 
 	if v, ok := d.Get("xss_match_tuple").(*schema.Set); ok && v.Len() > 0 {
-		err := updateXssMatchSetResourceWR(d.Id(), nil, v.List(), conn, region)
+		err := updateXSSMatchSetResourceWR(d.Id(), nil, v.List(), conn, region)
 		if err != nil {
 			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %w", err)
 		}
@@ -133,7 +133,7 @@ func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("xss_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateXssMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
+		err := updateXSSMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
 		if err != nil {
 			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %w", err)
 		}
@@ -150,7 +150,7 @@ func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 		oldTuples := v.(*schema.Set).List()
 		if len(oldTuples) > 0 {
 			noTuples := []interface{}{}
-			err := updateXssMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
+			err := updateXSSMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
 			if err != nil {
 				return fmt.Errorf("Error updating regional WAF XSS Match Set: %w", err)
 			}
@@ -173,7 +173,7 @@ func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateXssMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateXSSMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateXssMatchSetInput{

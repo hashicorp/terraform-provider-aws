@@ -139,7 +139,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 	})
 }
 
-func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KmsConfig(t *testing.T) {
+func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KMSConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_timestreamwrite_table.test"
@@ -151,7 +151,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KmsConfig(t *tes
 		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableMagneticStoreWritePropertiesS3KmsConfig(rName),
+				Config: testAccTableMagneticStoreWritePropertiesS3KMSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
@@ -433,7 +433,7 @@ resource "aws_timestreamwrite_table" "test" {
 `, rName, prefix))
 }
 
-func testAccTableMagneticStoreWritePropertiesS3KmsConfig(rName string) string {
+func testAccTableMagneticStoreWritePropertiesS3KMSConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTableBaseConfig(rName),
 		fmt.Sprintf(`
