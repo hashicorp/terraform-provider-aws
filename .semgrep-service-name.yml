@@ -7,6 +7,12 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -21,6 +27,12 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -34,7 +46,13 @@ rules:
     message: Do not use "AWS" in var name inside AWS Provider
     paths:
       include:
-      - internal/service/ec2
+        - internal/service/ec2
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -49,6 +67,12 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -63,6 +87,12 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -76,13 +106,42 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https)
     paths:
       include:
-      - internal/service/ec2
+        - internal/service/ec2
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
           - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|Workgroup|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync|Graphql|Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim|Ecmp|Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn|Asg|Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms|Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+    severity: WARNING
+  - id: config-funcs-correct-form
+    message: "Config funcs should follow form testAcc<Resource>Config_<testDetail>"
+    languages: [go]
+    paths:
+      include:
+        - internal/service/waf
+        - internal/service/wafregional
+        - internal/service/wafv2
+        - internal/service/worklink
+        - internal/service/workspaces
+        - internal/service/xray
+    patterns:
+      - pattern-inside: "[]resource.TestStep{ ... }"
+      - pattern: "{..., $KEY:$VALUE, ...}"
+      - metavariable-pattern:
+          metavariable: "$KEY"
+          patterns:
+            - pattern: "Config"
+      - metavariable-pattern:
+          metavariable: "$VALUE"
+          patterns:
+            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config_.*"
     severity: WARNING
   - id: ec2-in-func-name
     languages:
@@ -172,21 +231,6 @@ rules:
             - pattern-not-regex: "^TestAccEC2Outposts"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
-  - id: ipam-in-test-name
-    languages:
-      - go
-    message: Include "IPAM" in test name
-    paths:
-      include:
-        - internal/service/ec2/ipam_*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIPAM"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
   - id: transitgateway-in-test-name
     languages:
       - go
@@ -247,6 +291,180 @@ rules:
             - pattern-not-regex: "^TestAccSiteVPN"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: waf-in-func-name
+    languages:
+      - go
+    message: Do not use "WAF" in func name inside waf package
+    paths:
+      include:
+        - internal/service/waf
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAF"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: waf-in-test-name
+    languages:
+      - go
+    message: Include "WAF" in test name
+    paths:
+      include:
+        - internal/service/waf/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWAF"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: waf-in-const-name
+    languages:
+      - go
+    message: Do not use "WAF" in const name inside waf package
+    paths:
+      include:
+        - internal/service/waf
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAF"
+    severity: WARNING
+  - id: waf-in-var-name
+    languages:
+      - go
+    message: Do not use "WAF" in var name inside waf package
+    paths:
+      include:
+      - internal/service/waf
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAF"
+    severity: WARNING
+  - id: wafregional-in-func-name
+    languages:
+      - go
+    message: Do not use "WAFRegional" in func name inside wafregional package
+    paths:
+      include:
+        - internal/service/wafregional
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAFRegional"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: wafregional-in-test-name
+    languages:
+      - go
+    message: Include "WAFRegional" in test name
+    paths:
+      include:
+        - internal/service/wafregional/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWAFRegional"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: wafregional-in-const-name
+    languages:
+      - go
+    message: Do not use "WAFRegional" in const name inside wafregional package
+    paths:
+      include:
+        - internal/service/wafregional
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAFRegional"
+    severity: WARNING
+  - id: wafregional-in-var-name
+    languages:
+      - go
+    message: Do not use "WAFRegional" in var name inside wafregional package
+    paths:
+      include:
+      - internal/service/wafregional
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAFRegional"
+    severity: WARNING
+  - id: wafv2-in-func-name
+    languages:
+      - go
+    message: Do not use "WAFV2" in func name inside wafv2 package
+    paths:
+      include:
+        - internal/service/wafv2
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAFV2"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: wafv2-in-test-name
+    languages:
+      - go
+    message: Include "WAFV2" in test name
+    paths:
+      include:
+        - internal/service/wafv2/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWAFV2"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: wafv2-in-const-name
+    languages:
+      - go
+    message: Do not use "WAFV2" in const name inside wafv2 package
+    paths:
+      include:
+        - internal/service/wafv2
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAFV2"
+    severity: WARNING
+  - id: wafv2-in-var-name
+    languages:
+      - go
+    message: Do not use "WAFV2" in var name inside wafv2 package
+    paths:
+      include:
+      - internal/service/wafv2
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WAFV2"
+    severity: WARNING
   - id: wavelength-in-test-name
     languages:
       - go
@@ -261,4 +479,178 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccWavelength"
             - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: worklink-in-func-name
+    languages:
+      - go
+    message: Do not use "WorkLink" in func name inside worklink package
+    paths:
+      include:
+        - internal/service/worklink
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkLink"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: worklink-in-test-name
+    languages:
+      - go
+    message: Include "WorkLink" in test name
+    paths:
+      include:
+        - internal/service/worklink/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWorkLink"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: worklink-in-const-name
+    languages:
+      - go
+    message: Do not use "WorkLink" in const name inside worklink package
+    paths:
+      include:
+        - internal/service/worklink
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkLink"
+    severity: WARNING
+  - id: worklink-in-var-name
+    languages:
+      - go
+    message: Do not use "WorkLink" in var name inside worklink package
+    paths:
+      include:
+      - internal/service/worklink
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkLink"
+    severity: WARNING
+  - id: workspaces-in-func-name
+    languages:
+      - go
+    message: Do not use "WorkSpaces" in func name inside workspaces package
+    paths:
+      include:
+        - internal/service/workspaces
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkSpaces"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: workspaces-in-test-name
+    languages:
+      - go
+    message: Include "WorkSpaces" in test name
+    paths:
+      include:
+        - internal/service/workspaces/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWorkSpaces"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: workspaces-in-const-name
+    languages:
+      - go
+    message: Do not use "WorkSpaces" in const name inside workspaces package
+    paths:
+      include:
+        - internal/service/workspaces
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkSpaces"
+    severity: WARNING
+  - id: workspaces-in-var-name
+    languages:
+      - go
+    message: Do not use "WorkSpaces" in var name inside workspaces package
+    paths:
+      include:
+      - internal/service/workspaces
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkSpaces"
+    severity: WARNING
+  - id: xray-in-func-name
+    languages:
+      - go
+    message: Do not use "XRay" in func name inside xray package
+    paths:
+      include:
+        - internal/service/xray
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)XRay"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: xray-in-test-name
+    languages:
+      - go
+    message: Include "XRay" in test name
+    paths:
+      include:
+        - internal/service/xray/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccXRay"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: xray-in-const-name
+    languages:
+      - go
+    message: Do not use "XRay" in const name inside xray package
+    paths:
+      include:
+        - internal/service/xray
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)XRay"
+    severity: WARNING
+  - id: xray-in-var-name
+    languages:
+      - go
+    message: Do not use "XRay" in var name inside xray package
+    paths:
+      include:
+      - internal/service/xray
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)XRay"
     severity: WARNING
