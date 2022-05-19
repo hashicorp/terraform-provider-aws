@@ -1,9 +1,9 @@
 ## Add a New Region
 
-New regions can typically be used immediately with the provider, with two caveats:
+New regions can typically be used immediately with the provider, with two important caveats:
 
-- Regions often need to be explicitly enabled via the AWS console. See [ap-east-1](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to do that.
-- Until the provider is aware of the new region, automatic region validation will fail. In order to use the region before validation support is added to the provider you will need to disable region validation:
+- Regions often need to be explicitly enabled via the AWS console. See [ap-east-1](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to enable a new region for use.
+- Until the provider is aware of the new region, automatic region validation will fail. In order to use the region before validation support is added to the provider you will need to disable region validation by doing the following:
 
 ```
 provider "aws" {
@@ -16,177 +16,41 @@ provider "aws" {
 
 ### Enabling Region Validation
 
-Support for region validation needs to be added in two places, the provider itself and the S3 backend which is currently part of Terraform. In both cases, simply updating the AWS Go SDK dependency to a version which supports that region will be enough to enable region validation. These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. 
+Support for region validation requires that the provider has an updated AWS Go SDK dependency that includes the new region. These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. This also needs to be done in the core Terraform binary itself to enable it for the S3 backend. The provider currently takes a dependency on both v1 AND v2 of the AWS Go SDK, as we start to base new (and migrate) resources on v2. Many of the authentication and provider level configuration interactions are also located in the aws-go-sdk-base library. As all of these things take direct dependencies and as a result there ends up being quite a few places these dependency updates need to be made.
 
-Some datasources will need to be manually updated to include 
+#### Update aws-go-sdk-base
 
-Typically our process for new regions is as follows:
+[aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
 
-- Create new (if not existing) Terraform AWS Provider issue: Support Automatic Region Validation for `XX-XXXXX-#` (Location)
-- Create new (if not existing) Terraform S3 Backend issue: backend/s3: Support Automatic Region Validation for `XX-XXXXX-#` (Location)
-- [Enable the new region in an AWS testing account](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable) and verify AWS Go SDK update works with the new region with `export AWS_DEFAULT_REGION=XX-XXXXX-#` with the new region and run the `TestAccDataSourceAwsRegion_` acceptance testing or by building the provider and testing a configuration like the following:
+- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)]
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)]
 
-```hcl
-provider "aws" {
-  region = "me-south-1"
-}
+#### Update Terraform AWS Provider
 
-data "aws_region" "current" {}
+[provider](https://github.com/hashicorp/terraform-provider-aws)
 
-output "region" {
-  value = data.aws_region.current.name
-}
-```
+- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)] 
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)]
+- Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base) 
 
-- Merge AWS Go SDK update in Terraform AWS Provider and close issue with the following information:
+#### Update Terraform Core (S3 Backend)
 
-``````markdown
-Support for automatic validation of this new region has been merged and will release with version <x.y.z> of the Terraform AWS Provider, later this week.
+[core](https://github.com/hashicorp/terraform)
 
----
-
-Please note that this new region requires [a manual process to enable](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). Once enabled in the console, it takes a few minutes for everything to work properly.
-
-If the region is not enabled properly, or the enablement process is still in progress, you can receive errors like these:
-
-```console
-$ terraform apply
-
-Error: error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid.
-    status code: 403, request id: 142f947b-b2c3-11e9-9959-c11ab17bcc63
-
-  on main.tf line 1, in provider "aws":
-   1: provider "aws" {
-```
-
----
-
-To use this new region before support has been added to Terraform AWS Provider version in use, you must disable the provider's automatic region validation via:
-
-```hcl
-provider "aws" {
-  # ... potentially other configuration ...
-
-  region                 = "me-south-1"
-  skip_region_validation = true
-}
-```
-``````
-
-- Update the Terraform AWS Provider `CHANGELOG` with the following:
-
-```markdown
-NOTES:
-
-* provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g., `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g., `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
-
-ENHANCEMENTS:
-
-* provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
-```
-
-- Follow the [Contributing Guide](./contribution-checklists.md#new-region) to submit updates for various data sources to support the new region
-- Submit the dependency update to the Terraform S3 Backend by running the following:
+- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)] 
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)] 
+- Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base) 
 
 ```shell
 go get github.com/aws/aws-sdk-go@v#.#.#
 go mod tidy
 ```
 
-- Create a S3 Bucket in the new region and verify AWS Go SDK update works with new region by building the Terraform S3 Backend and testing a configuration like the following:
+See the [Changelog Process](changelog-process.md) document for example changlog format.
 
-```hcl
-terraform {
-  backend "s3" {
-    bucket = "XXX"
-    key    = "test"
-    region = "me-south-1"
-  }
-}
+### Update Region Specific values in static Datasources
 
-output "test" {
-  value = timestamp()
-}
-```
-
-- After approval, merge AWS Go SDK update in Terraform S3 Backend and close issue with the following information:
-
-``````markdown
-Support for automatic validation of this new region has been merged and will release with the next version of the Terraform.
-
-This was verified on a build of Terraform with the update:
-
-```hcl
-terraform {
-  backend "s3" {
-    bucket = "XXX"
-    key    = "test"
-    region = "me-south-1"
-  }
-}
-
-output "test" {
-  value = timestamp()
-}
-```
-
-Outputs:
-
-```console
-$ terraform init
-...
-Terraform has been successfully initialized!
-```
-
----
-
-Please note that this new region requires [a manual process to enable](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). Once enabled in the console, it takes a few minutes for everything to work properly.
-
-If the region is not enabled properly, or the enablement process is still in progress, you can receive errors like these:
-
-```console
-$ terraform init
-
-Initializing the backend...
-
-Error: error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid.
-```
-
----
-
-To use this new region before this update is released, you must disable the Terraform S3 Backend's automatic region validation via:
-
-```hcl
-terraform {
-  # ... potentially other configuration ...
-
-  backend "s3" {
-    # ... other configuration ...
-
-    region                 = "me-south-1"
-    skip_region_validation = true
-  }
-}
-```
-``````
-
-- Update the Terraform S3 Backend `CHANGELOG` with the following:
-
-```markdown
-NOTES:
-
-* backend/s3: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform S3 Backend will return errors during credential validation (e.g., `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`). [GH-####]
-
-ENHANCEMENTS:
-
-* backend/s3: Support automatic region validation for `XX-XXXXX-#` [GH-####]
-```
-
-While region validation is automatically added with SDK updates, new regions
-are generally limited in which services they support. Below are some
-manually sourced values from documentation. Amazon employees can code search
-previous region values to find new region values in internal packages like
-RIPStaticConfig if they are not documented yet.
+Some datasources include static values specific to regions that are not availalble via a standard AWS API call. These will need to be manually updated. AWS employees can code search previous region values to find new region values in internal packages like RIPStaticConfig if they are not documented yet.
 
 - Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go)
 - Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)

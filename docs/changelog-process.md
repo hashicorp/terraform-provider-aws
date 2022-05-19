@@ -102,6 +102,19 @@ resource/aws_lambda_alias: Resource import no longer converts Lambda Function na
 ```
 ``````
 
+
+##### Region Validation Support
+
+``````markdown
+```release-note:note
+provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g., `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g., `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
+```
+
+```release-note:enhancement
+* provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
+```
+``````
+
 #### Changes that may have a CHANGELOG entry
 
 Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
