@@ -49,7 +49,6 @@ const (
 	vpcEndpointStateFailed            = "failed"
 	vpcEndpointStatePending           = "pending"
 	vpcEndpointStatePendingAcceptance = "pendingAcceptance"
-	vpcEndpointStateRejected          = "rejected"
 )
 
 const (

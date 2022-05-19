@@ -52,7 +52,6 @@ const (
 	errCodeInvalidParameterException                      = "InvalidParameterException"
 	errCodeInvalidParameterValue                          = "InvalidParameterValue"
 	errCodeInvalidPermissionDuplicate                     = "InvalidPermission.Duplicate"
-	errCodeInvalidPermissionMalformed                     = "InvalidPermission.Malformed"
 	errCodeInvalidPermissionNotFound                      = "InvalidPermission.NotFound"
 	errCodeInvalidPlacementGroupUnknown                   = "InvalidPlacementGroup.Unknown"
 	errCodeInvalidPoolIDNotFound                          = "InvalidPoolID.NotFound"

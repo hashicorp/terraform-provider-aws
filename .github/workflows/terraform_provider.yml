@@ -346,7 +346,7 @@ jobs:
       uses: returntocorp/semgrep-action@v1
 
   naming_semgrep:
-    name: Scan
+    name: Semgrep Naming Scan
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep

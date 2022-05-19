@@ -69,7 +69,6 @@ const (
 	IPAMScopeDeleteTimeout = 3 * time.Minute
 	ipamScopeDeleteDelay   = 5 * time.Second
 
-	ipamScopeStatusAvailable   = "Available"
 	invalidIPAMScopeIDNotFound = "InvalidIpamScopeId.NotFound"
 )
 

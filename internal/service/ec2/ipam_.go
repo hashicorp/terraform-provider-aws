@@ -71,7 +71,6 @@ func ResourceIPAM() *schema.Resource {
 }
 
 const (
-	ipamStatusAvailable   = "Available"
 	invalidIPAMIDNotFound = "InvalidIpamId.NotFound"
 	ipamCreateTimeout     = 3 * time.Minute
 	ipamCreateDelay       = 5 * time.Second
