@@ -427,6 +427,10 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 }
 
 func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -434,61 +438,32 @@ func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_terminationPoliciesEmpty(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.#", "0"),
+				Config: testAccGroupConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupConfig_terminationPoliciesUpdate(),
+				Config: testAccGroupTerminationPoliciesUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.0", "OldestInstance"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "OldestInstance"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupConfig_terminationPoliciesExplicitDefault(),
+				Config: testAccGroupTerminationPoliciesExplicitDefaultConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.0", "Default"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "Default"),
 				),
 			},
 			{
-				Config: testAccGroupConfig_terminationPoliciesEmpty(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.#", "0"),
+				Config: testAccGroupConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "0"),
 				),
 			},
 		},
@@ -4470,93 +4445,30 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_terminationPoliciesEmpty() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  max_size           = 0
-  min_size           = 0
-  desired_capacity   = 0
-
-  launch_configuration = aws_launch_configuration.foobar.name
-}
-`)
-}
-
-func testAccGroupConfig_terminationPoliciesExplicitDefault() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
+func testAccGroupTerminationPoliciesExplicitDefaultConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
   min_size             = 0
-  desired_capacity     = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
   termination_policies = ["Default"]
-
-  launch_configuration = aws_launch_configuration.foobar.name
 }
-`)
+`, rName))
 }
 
-func testAccGroupConfig_terminationPoliciesUpdate() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
+func testAccGroupTerminationPoliciesUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
   min_size             = 0
-  desired_capacity     = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
   termination_policies = ["OldestInstance"]
-
-  launch_configuration = aws_launch_configuration.foobar.name
 }
-`)
+`, rName))
 }
 
 func testAccGroupWithLoadBalancerConfig() string {
