@@ -26,6 +26,7 @@ func TestAccConnectUser_serial(t *testing.T) {
 		"update_phone_config":         testAccUser_updatePhoneConfig,
 		"update_routing_profile_id":   testAccUser_updateRoutingProfileId,
 		"update_security_profile_ids": testAccUser_updateSecurityProfileIds,
+		"update_tags":                 testAccUser_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -333,6 +334,59 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccUser_updateTags(t *testing.T) {
+	var v connect.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	resourceName := "aws_connect_user.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccUserTagsConfig(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccUserTagsUpdatedConfig(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
 				),
 			},
 		},
@@ -711,4 +765,69 @@ resource "aws_connect_user" "test" {
   }
 }
 `, rName5, selectSecurityProfileIds))
+}
+
+func testAccUserTagsConfig(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_connect_user" "test" {
+  instance_id        = aws_connect_instance.test.id
+  name               = %[1]q
+  password           = "Password123"
+  routing_profile_id = data.aws_connect_routing_profile.test.routing_profile_id
+
+  security_profile_ids = [
+    data.aws_connect_security_profile.agent.security_profile_id
+  ]
+
+  identity_info {
+    first_name = "example"
+    last_name  = "example2"
+  }
+
+  phone_config {
+    after_contact_work_time_limit = 0
+    phone_type                    = "SOFT_PHONE"
+  }
+
+  tags = {
+    "Key1" = "Value1",
+    "Key2" = "Value2a",
+  }
+}
+`, rName5))
+}
+
+func testAccUserTagsUpdatedConfig(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_connect_user" "test" {
+  instance_id        = aws_connect_instance.test.id
+  name               = %[1]q
+  password           = "Password123"
+  routing_profile_id = data.aws_connect_routing_profile.test.routing_profile_id
+
+  security_profile_ids = [
+    data.aws_connect_security_profile.agent.security_profile_id
+  ]
+
+  identity_info {
+    first_name = "example"
+    last_name  = "example2"
+  }
+
+  phone_config {
+    after_contact_work_time_limit = 0
+    phone_type                    = "SOFT_PHONE"
+  }
+
+  tags = {
+    "Key1" = "Value1",
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
+  }
+}
+`, rName5))
 }
