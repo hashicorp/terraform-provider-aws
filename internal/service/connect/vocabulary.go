@@ -108,15 +108,15 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Connect Security Profile %s", input)
+	log.Printf("[DEBUG] Creating Connect Vocabulary %s", input)
 	output, err := conn.CreateVocabularyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): %w", vocabularyName, err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Vocabulary (%s): %w", vocabularyName, err))
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): empty output", vocabularyName))
+		return diag.FromErr(fmt.Errorf("error creating Connect Vocabulary (%s): empty output", vocabularyName))
 	}
 
 	vocabularyID := aws.StringValue(output.VocabularyId)
@@ -148,17 +148,17 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Connect Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error getting Connect Vocabulary (%s): %w", d.Id(), err))
 	}
 
 	if resp == nil || resp.Vocabulary == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): empty response", d.Id()))
+		return diag.FromErr(fmt.Errorf("error getting Connect Vocabulary (%s): empty response", d.Id()))
 	}
 
 	vocabulary := resp.Vocabulary
