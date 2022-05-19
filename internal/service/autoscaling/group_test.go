@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -689,6 +688,8 @@ func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 
 func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -697,34 +698,50 @@ func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withMaxInstanceLifetime(),
+				Config: testAccGroupWithMaxInstanceLifetimeConfig(rName, 864000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "max_instance_lifetime", "864000"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "864000"),
 				),
 			},
+			testAccGroupImportStep(resourceName),
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupConfig_withMaxInstanceLifetime_update(),
+				Config: testAccGroupWithMaxInstanceLifetimeConfig(rName, 604800),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "max_instance_lifetime", "604800"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "604800"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupWithInitialLifecycleHookConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 2),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "initial_lifecycle_hook.*", map[string]string{
+						"default_result":       "CONTINUE",
+						"heartbeat_timeout":    "30",
+						"lifecycle_transition": "autoscaling:EC2_INSTANCE_LAUNCHING",
+						"name":                 "launching",
+					}),
+				),
+			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -844,47 +861,6 @@ func TestAccAutoScalingGroup_targetGroupARNs(t *testing.T) {
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "11"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
-	var group autoscaling.Group
-
-	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupWithHookConfig(randName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckGroupHealthyCapacity(&group, 2),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs("aws_autoscaling_group.bar", "initial_lifecycle_hook.*", map[string]string{
-						"default_result": "CONTINUE",
-						"name":           "launching",
-					}),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
 			},
 		},
 	})
@@ -3223,7 +3199,7 @@ func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					testAccCheckGroupHealthyCapacity(&group, 2),
+					testAccCheckGroupHealthyInstanceCount(&group, 2),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "true"),
 				),
 			},
@@ -3284,20 +3260,20 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckGroupHealthyCapacity(g *autoscaling.Group, exp int) resource.TestCheckFunc {
+func testAccCheckGroupHealthyInstanceCount(v *autoscaling.Group, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		healthy := 0
-		for _, i := range g.Instances {
-			if i.HealthStatus == nil {
-				continue
-			}
-			if strings.EqualFold(*i.HealthStatus, "Healthy") {
-				healthy++
+		count := 0
+
+		for _, v := range v.Instances {
+			if aws.StringValue(v.HealthStatus) == tfautoscaling.InstanceHealthStatusHealthy {
+				count++
 			}
 		}
-		if healthy < exp {
-			return fmt.Errorf("Expected at least %d healthy, got %d.", exp, healthy)
+
+		if count < expected {
+			return fmt.Errorf("Expected at least %d healthy instances, got %d", expected, count)
 		}
+
 		return nil
 	}
 }
@@ -3831,62 +3807,47 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_withMaxInstanceLifetime() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
+func testAccGroupWithMaxInstanceLifetimeConfig(rName string, maxInstanceLifetime int) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
 
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  max_instance_lifetime = %[2]d
+}
+`, rName, maxInstanceLifetime))
+}
+
+func testAccGroupWithInitialLifecycleHookConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+  launch_configuration = aws_launch_configuration.test.name
+
+  initial_lifecycle_hook {
+    name                 = "launching"
+    default_result       = "CONTINUE"
+    heartbeat_timeout    = 30 # minimum value
+    lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
   }
 }
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones    = [data.aws_availability_zones.available.names[0]]
-  desired_capacity      = 0
-  max_size              = 0
-  min_size              = 0
-  launch_configuration  = aws_launch_configuration.foobar.name
-  max_instance_lifetime = "864000"
-}
-`)
-}
-
-func testAccGroupConfig_withMaxInstanceLifetime_update() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones    = [data.aws_availability_zones.available.names[0]]
-  desired_capacity      = 0
-  max_size              = 0
-  min_size              = 0
-  launch_configuration  = aws_launch_configuration.foobar.name
-  max_instance_lifetime = "604800"
-}
-`)
+`, rName))
 }
 
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
@@ -4230,46 +4191,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, tgCount)
-}
-
-func testAccGroupWithHookConfig(name string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  name                 = "%s"
-  max_size             = 5
-  min_size             = 2
-  health_check_type    = "ELB"
-  desired_capacity     = 4
-  force_delete         = true
-  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  initial_lifecycle_hook {
-    name                 = "launching"
-    default_result       = "CONTINUE"
-    heartbeat_timeout    = 30 # minimum value
-    lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
-  }
-}
-`, name)
 }
 
 func testAccGroupConfig_ALB_TargetGroup_ELBCapacity(rInt int) string {

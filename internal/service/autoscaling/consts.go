@@ -11,6 +11,11 @@ const (
 )
 
 const (
+	InstanceHealthStatusHealthy   = "Healthy"
+	InstanceHealthStatusUnhealthy = "Unhealthy"
+)
+
+const (
 	PolicyTypePredictiveScaling     = "PredictiveScaling"
 	PolicyTypeSimpleScaling         = "SimpleScaling"
 	PolicyTypeStepScaling           = "StepScaling"
