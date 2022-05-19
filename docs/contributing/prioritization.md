@@ -43,14 +43,14 @@ As with customer escalations, a request from a partner does not necessarily mean
 
 ### Internal
 
-### SDK/Core Updates
+#### SDK/Core Updates
 
 We endeavor to keep in step with all minor SDK releases, so these are automatically pulled in by our GitHub automation. Major releases normally include breaking changes and usually require us to bump the provider itself to a major version. We plan to make one major version change a year and try to avoid any more than that.
 
-### Technical Debt
+#### Technical Debt
 
 We always include capacity for technical debt work in every iteration, but engineers are free to include minor tech debt work on their own recognizance. For larger items, these are discussed and prioritized in an internal meeting aimed at reviewing technical debt.
 
-### Adverse User Experience or Security Vulnerabilities
+#### Adverse User Experience or Security Vulnerabilities
 
 Issues with the provider that provide a poor user experience (bugs, crashes), or involve a threat to security are always prioritized for inclusion. The severity of these will determine how soon they are included for release.
