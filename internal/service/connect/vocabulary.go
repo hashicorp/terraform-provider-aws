@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceVocabularyCreate,
 		ReadContext:   resourceVocabularyRead,
-		UpdateContext: schema.NoopContext,
+		UpdateContext: resourceVocabularyUpdate,
 		DeleteContext: resourceVocabularyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -32,6 +33,7 @@ func ResourceVocabulary() *schema.Resource {
 			Create: schema.DefaultTimeout(connectVocabularyCreatedTimeout),
 			Delete: schema.DefaultTimeout(connectVocabularyDeletedTimeout),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -183,6 +185,19 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceVocabularyRead(ctx, d, meta)
 }
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
