@@ -241,7 +241,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		createOpts.VpcConfig = expandVpcConfigRequest(v.([]interface{}))
+		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("enable_network_isolation"); ok {
@@ -265,7 +265,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceModelRead(d, meta)
 }
 
-func expandVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
+func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
@@ -311,7 +311,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting container: %w", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVpcConfigResponse(model.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
@@ -338,7 +338,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
+func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
 	if vpcConfig == nil {
 		return []map[string]interface{}{}
 	}
