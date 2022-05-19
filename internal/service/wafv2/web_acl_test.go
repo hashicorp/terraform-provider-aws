@@ -28,7 +28,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_Basic(webACLName),
+				Config: testAccWebACLConfig_basic(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -70,7 +70,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_BasicRule(webACLName),
+				Config: testAccWebACLConfig_basicRule(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -117,7 +117,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 			},
 			{
 				// Test step to verify additional rule block with first rule block unchanged
-				Config: testAccWebACLConfig_UpdateRuleNamePriorityMetric(webACLName, ruleName1, ruleName2, 10, 5),
+				Config: testAccWebACLConfig_updateRuleNamePriorityMetric(webACLName, ruleName1, ruleName2, 10, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -201,7 +201,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_UpdateRuleNamePriorityMetric(webACLName, ruleName1, ruleName2, 5, 10),
+				Config: testAccWebACLConfig_updateRuleNamePriorityMetric(webACLName, ruleName1, ruleName2, 5, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -262,7 +262,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_UpdateRuleNamePriorityMetric(webACLName, ruleName1, ruleName2, 10, 5),
+				Config: testAccWebACLConfig_updateRuleNamePriorityMetric(webACLName, ruleName1, ruleName2, 10, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -323,7 +323,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_UpdateRuleNamePriorityMetric(webACLName, ruleName1, "updated", 10, 5),
+				Config: testAccWebACLConfig_updateRuleNamePriorityMetric(webACLName, ruleName1, "updated", 10, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -406,7 +406,7 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_Basic(webACLName),
+				Config: testAccWebACLConfig_basic(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -424,7 +424,7 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_Basic(ruleGroupNewName),
+				Config: testAccWebACLConfig_basic(ruleGroupNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -457,7 +457,7 @@ func TestAccWAFV2WebACL_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_Minimal(webACLName),
+				Config: testAccWebACLConfig_minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACL(), resourceName),
@@ -480,7 +480,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_ManagedRuleGroupStatement(webACLName),
+				Config: testAccWebACLConfig_managedRuleGroupStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -502,7 +502,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_ManagedRuleGroupStatement_update(webACLName),
+				Config: testAccWebACLConfig_managedRuleGroupStatementUpdate(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -530,7 +530,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_ManagedRuleGroupStatementWithVersionVersion_10(webACLName),
+				Config: testAccWebACLConfig_managedRuleGroupStatementVersionVersion10(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -574,7 +574,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_ManagedRuleGroupStatementWithVersionVersion_10(webACLName),
+				Config: testAccWebACLConfig_managedRuleGroupStatementVersionVersion10(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -597,7 +597,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_ManagedRuleGroupStatement(webACLName),
+				Config: testAccWebACLConfig_managedRuleGroupStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -640,7 +640,7 @@ func TestAccWAFV2WebACL_minimal(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_Minimal(webACLName),
+				Config: testAccWebACLConfig_minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -673,7 +673,7 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_RateBasedStatement(webACLName),
+				Config: testAccWebACLConfig_rateBasedStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -695,7 +695,7 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_RateBasedStatement_update(webACLName),
+				Config: testAccWebACLConfig_rateBasedStatementUpdate(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -744,7 +744,7 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_GeoMatchStatement(webACLName, countryCode),
+				Config: testAccWebACLConfig_geoMatchStatement(webACLName, countryCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -778,7 +778,7 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_GeoMatchStatement(webACLName, countryCodes),
+				Config: testAccWebACLConfig_geoMatchStatement(webACLName, countryCodes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -834,7 +834,7 @@ func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_GeoMatchStatement_forwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
+				Config: testAccWebACLConfig_geoMatchStatementForwardedIP(webACLName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -856,7 +856,7 @@ func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_GeoMatchStatement_forwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
+				Config: testAccWebACLConfig_geoMatchStatementForwardedIP(webACLName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -899,7 +899,7 @@ func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_LabelMatchStatement(webACLName, "LABEL", "Hashicorp:Test:Label1"),
+				Config: testAccWebACLConfig_labelMatchStatement(webACLName, "LABEL", "Hashicorp:Test:Label1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -914,7 +914,7 @@ func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_LabelMatchStatement(webACLName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
+				Config: testAccWebACLConfig_labelMatchStatement(webACLName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -950,7 +950,7 @@ func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_RuleLabels(webACLName),
+				Config: testAccWebACLConfig_ruleLabels(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -964,7 +964,7 @@ func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_NoRuleLabels(webACLName),
+				Config: testAccWebACLConfig_noRuleLabels(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -997,7 +997,7 @@ func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_IPSetReference(webACLName),
+				Config: testAccWebACLConfig_ipsetReference(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1043,7 +1043,7 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_IPSetReference_forwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For", "FIRST"),
+				Config: testAccWebACLConfig_ipsetReferenceForwardedIP(webACLName, "MATCH", "X-Forwarded-For", "FIRST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1065,7 +1065,7 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_IPSetReference_forwardedIPConfig(webACLName, "NO_MATCH", "X-Forwarded-For", "LAST"),
+				Config: testAccWebACLConfig_ipsetReferenceForwardedIP(webACLName, "NO_MATCH", "X-Forwarded-For", "LAST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1087,7 +1087,7 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_IPSetReference_forwardedIPConfig(webACLName, "MATCH", "Updated", "ANY"),
+				Config: testAccWebACLConfig_ipsetReferenceForwardedIP(webACLName, "MATCH", "Updated", "ANY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1109,7 +1109,7 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_IPSetReference(webACLName),
+				Config: testAccWebACLConfig_ipsetReference(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1147,7 +1147,7 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_RateBasedStatement_forwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
+				Config: testAccWebACLConfig_rateBasedStatementForwardedIP(webACLName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1171,7 +1171,7 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_RateBasedStatement_forwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
+				Config: testAccWebACLConfig_rateBasedStatementForwardedIP(webACLName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1216,7 +1216,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_RuleGroupReferenceStatement(webACLName),
+				Config: testAccWebACLConfig_ruleGroupReferenceStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1237,7 +1237,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_RuleGroupReferenceStatement_update(webACLName),
+				Config: testAccWebACLConfig_ruleGroupReferenceStatementUpdate(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1281,7 +1281,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_CustomRequestHandling_allow(webACLName, "x-hdr1", "x-hdr2"),
+				Config: testAccWebACLConfig_customRequestHandlingAllow(webACLName, "x-hdr1", "x-hdr2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1312,7 +1312,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_CustomRequestHandling_count(webACLName, "x-hdr1", "x-hdr2"),
+				Config: testAccWebACLConfig_customRequestHandlingCount(webACLName, "x-hdr1", "x-hdr2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1364,7 +1364,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_CustomResponse(webACLName, 401, 403, "x-hdr1"),
+				Config: testAccWebACLConfig_customResponse(webACLName, 401, 403, "x-hdr1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1396,7 +1396,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_CustomResponse(webACLName, 404, 429, "x-hdr2"),
+				Config: testAccWebACLConfig_customResponse(webACLName, 404, 429, "x-hdr2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1428,7 +1428,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_CustomResponseBody(webACLName, 404, 429),
+				Config: testAccWebACLConfig_customResponseBody(webACLName, 404, 429),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1483,7 +1483,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_OneTag(webACLName, "Tag1", "Value1"),
+				Config: testAccWebACLConfig_oneTag(webACLName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1498,7 +1498,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccWebACLConfig_TwoTags(webACLName, "Tag1", "Value1Updated", "Tag2", "Value2"),
+				Config: testAccWebACLConfig_twoTags(webACLName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1508,7 +1508,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_OneTag(webACLName, "Tag2", "Value2"),
+				Config: testAccWebACLConfig_oneTag(webACLName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1676,7 +1676,7 @@ func testAccCheckWebACLExists(n string, v *wafv2.WebACL) resource.TestCheckFunc 
 	}
 }
 
-func testAccWebACLConfig_Basic(name string) string {
+func testAccWebACLConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -1696,7 +1696,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_BasicRule(name string) string {
+func testAccWebACLConfig_basicRule(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -1752,7 +1752,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_UpdateRuleNamePriorityMetric(name, ruleName1, ruleName2 string, priority1, priority2 int) string {
+func testAccWebACLConfig_updateRuleNamePriorityMetric(name, ruleName1, ruleName2 string, priority1, priority2 int) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -1829,7 +1829,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, ruleName1, priority1, ruleName2, priority2)
 }
 
-func testAccWebACLConfig_GeoMatchStatement(name, countryCodes string) string {
+func testAccWebACLConfig_geoMatchStatement(name, countryCodes string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -1875,7 +1875,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, countryCodes)
 }
 
-func testAccWebACLConfig_LabelMatchStatement(name, labelScope string, labelKey string) string {
+func testAccWebACLConfig_labelMatchStatement(name, labelScope string, labelKey string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -1915,7 +1915,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, labelScope, labelKey)
 }
 
-func testAccWebACLConfig_RuleLabels(name string) string {
+func testAccWebACLConfig_ruleLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -1956,7 +1956,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_NoRuleLabels(name string) string {
+func testAccWebACLConfig_noRuleLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -1991,7 +1991,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_CustomRequestHandling_count(name, firstHeader string, secondHeader string) string {
+func testAccWebACLConfig_customRequestHandlingCount(name, firstHeader string, secondHeader string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2044,7 +2044,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, firstHeader, secondHeader)
 }
 
-func testAccWebACLConfig_CustomRequestHandling_allow(name, firstHeader string, secondHeader string) string {
+func testAccWebACLConfig_customRequestHandlingAllow(name, firstHeader string, secondHeader string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2097,7 +2097,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, firstHeader, secondHeader)
 }
 
-func testAccWebACLConfig_CustomResponse(name string, defaultStatusCode int, countryBlockStatusCode int, countryHeaderName string) string {
+func testAccWebACLConfig_customResponse(name string, defaultStatusCode int, countryBlockStatusCode int, countryHeaderName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2151,7 +2151,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, defaultStatusCode, countryBlockStatusCode, countryHeaderName)
 }
 
-func testAccWebACLConfig_CustomResponseBody(name string, defaultStatusCode int, countryBlockStatusCode int) string {
+func testAccWebACLConfig_customResponseBody(name string, defaultStatusCode int, countryBlockStatusCode int) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -2200,7 +2200,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, defaultStatusCode, countryBlockStatusCode)
 }
 
-func testAccWebACLConfig_GeoMatchStatement_forwardedIPConfig(name, fallbackBehavior, headerName string) string {
+func testAccWebACLConfig_geoMatchStatementForwardedIP(name, fallbackBehavior, headerName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2255,7 +2255,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, fallbackBehavior, headerName)
 }
 
-func testAccWebACLConfig_IPSetReference(name string) string {
+func testAccWebACLConfig_ipsetReference(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "ip-set-%[1]s"
@@ -2303,7 +2303,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_IPSetReference_forwardedIPConfig(name, fallbackBehavior, headerName, position string) string {
+func testAccWebACLConfig_ipsetReferenceForwardedIP(name, fallbackBehavior, headerName, position string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "ip-set-%[1]s"
@@ -2356,7 +2356,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, fallbackBehavior, headerName, position)
 }
 
-func testAccWebACLConfig_ManagedRuleGroupStatement(name string) string {
+func testAccWebACLConfig_managedRuleGroupStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2403,7 +2403,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_ManagedRuleGroupStatement_update(name string) string {
+func testAccWebACLConfig_managedRuleGroupStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2464,7 +2464,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_ManagedRuleGroupStatementWithVersionVersion_10(name string) string {
+func testAccWebACLConfig_managedRuleGroupStatementVersionVersion10(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2512,7 +2512,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_RateBasedStatement(name string) string {
+func testAccWebACLConfig_rateBasedStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2558,7 +2558,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_RateBasedStatement_forwardedIPConfig(name, fallbackBehavior, headerName string) string {
+func testAccWebACLConfig_rateBasedStatementForwardedIP(name, fallbackBehavior, headerName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2609,7 +2609,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, fallbackBehavior, headerName)
 }
 
-func testAccWebACLConfig_RateBasedStatement_update(name string) string {
+func testAccWebACLConfig_rateBasedStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2662,7 +2662,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_RuleGroupReferenceStatement(name string) string {
+func testAccWebACLConfig_ruleGroupReferenceStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
@@ -2719,7 +2719,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_RuleGroupReferenceStatement_update(name string) string {
+func testAccWebACLConfig_ruleGroupReferenceStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
@@ -2847,7 +2847,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_Minimal(name string) string {
+func testAccWebACLConfig_minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = %[1]q
@@ -2866,7 +2866,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLConfig_OneTag(name, tagKey, tagValue string) string {
+func testAccWebACLConfig_oneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -2890,7 +2890,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, tagKey, tagValue)
 }
 
-func testAccWebACLConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccWebACLConfig_twoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q

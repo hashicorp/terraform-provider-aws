@@ -122,7 +122,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSamplingRuleTags1Config(rName, "key1", "value1"),
+				Config: testAccSamplingRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,7 +135,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSamplingRuleTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSamplingRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -144,7 +144,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSamplingRuleTags1Config(rName, "key2", "value2"),
+				Config: testAccSamplingRuleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -280,7 +280,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, ruleName, priority, reservoirSize)
 }
 
-func testAccSamplingRuleTags1Config(ruleName, tagKey1, tagValue1 string) string {
+func testAccSamplingRuleConfig_tags1(ruleName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q
@@ -306,7 +306,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, ruleName, tagKey1, tagValue1)
 }
 
-func testAccSamplingRuleTags2Config(ruleName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSamplingRuleConfig_tags2(ruleName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q
