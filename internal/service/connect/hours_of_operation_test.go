@@ -18,8 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectHoursOfOperation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccHoursOfOperation_basic,
-		"disappears": testAccHoursOfOperation_disappears,
+		"basic":       testAccHoursOfOperation_basic,
+		"disappears":  testAccHoursOfOperation_disappears,
+		"update_tags": testAccHoursOfOperation_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -79,6 +80,56 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccHoursOfOperation_updateTags(t *testing.T) {
+	var v connect.DescribeHoursOfOperationOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "tags"
+
+	resourceName := "aws_connect_hours_of_operation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHoursOfOperationBasicConfig(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHoursOfOperationTagsConfig(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccHoursOfOperationTagsUpdatedConfig(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
 				),
 			},
 		},
@@ -227,6 +278,71 @@ resource "aws_connect_hours_of_operation" "test" {
 
   tags = {
     "Name" = "Test Hours of Operation"
+  }
+}
+`, rName2, label))
+}
+
+func testAccHoursOfOperationTagsConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccHoursOfOperationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_hours_of_operation" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+  time_zone   = "EST"
+
+  config {
+    day = "MONDAY"
+
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
+
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
+  }
+
+  tags = {
+    "Name" = "Test Hours of Operation"
+    "Key2" = "Value2a"
+  }
+}
+`, rName2, label))
+}
+
+func testAccHoursOfOperationTagsUpdatedConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccHoursOfOperationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_hours_of_operation" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+  time_zone   = "EST"
+
+  config {
+    day = "MONDAY"
+
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
+
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
+  }
+
+  tags = {
+    "Name" = "Test Hours of Operation"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName2, label))

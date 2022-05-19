@@ -21,6 +21,7 @@ func TestAccConnectSecurityProfile_serial(t *testing.T) {
 		"basic":              testAccSecurityProfile_basic,
 		"disappears":         testAccSecurityProfile_disappears,
 		"update_permissions": testAccSecurityProfile_updatePermissions,
+		"update_tags":        testAccSecurityProfile_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -124,6 +125,56 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "TestPermissionsUpdate"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccSecurityProfile_updateTags(t *testing.T) {
+	var v connect.DescribeSecurityProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "tags"
+
+	resourceName := "aws_connect_security_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityProfileBasicConfig(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSecurityProfileTagsConfig(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccSecurityProfileTagsUpdatedConfig(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
 				),
 			},
 		},
@@ -264,6 +315,41 @@ resource "aws_connect_security_profile" "test" {
 
   tags = {
     "Name" = "Test Security Profile"
+  }
+}
+`, rName2, label))
+}
+
+func testAccSecurityProfileTagsConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccSecurityProfileBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_security_profile" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Name" = "Test Security Profile"
+    "Key2" = "Value2a"
+  }
+}
+`, rName2, label))
+}
+
+func testAccSecurityProfileTagsUpdatedConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccSecurityProfileBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_security_profile" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Name" = "Test Security Profile"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName2, label))

@@ -25,6 +25,7 @@ func TestAccConnectQueue_serial(t *testing.T) {
 		"update_outbound_caller_config": testAccQueue_updateOutboundCallerConfig,
 		"update_status":                 testAccQueue_updateStatus,
 		"update_quick_connect_ids":      testAccQueue_updateQuickConnectIds,
+		"update_tags":                   testAccQueue_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -450,6 +451,56 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 	})
 }
 
+func testAccQueue_updateTags(t *testing.T) {
+	var v connect.DescribeQueueOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "tags"
+
+	resourceName := "aws_connect_queue.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueBasicConfig(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccQueueTagsConfig(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccQueueTagsUpdatedConfig(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckQueueExists(resourceName string, function *connect.DescribeQueueOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -740,4 +791,41 @@ resource "aws_connect_queue" "test" {
   }
 }
 `, rName4, label))
+}
+
+func testAccQueueTagsConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccQueueBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_queue" "test" {
+  instance_id           = aws_connect_instance.test.id
+  name                  = %[1]q
+  description           = %[2]q
+  hours_of_operation_id = data.aws_connect_hours_of_operation.test.hours_of_operation_id
+
+  tags = {
+    "Name" = "Test Queue",
+    "Key2" = "Value2a"
+  }
+}
+`, rName2, label))
+}
+
+func testAccQueueTagsUpdatedConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccQueueBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_queue" "test" {
+  instance_id           = aws_connect_instance.test.id
+  name                  = %[1]q
+  description           = %[2]q
+  hours_of_operation_id = data.aws_connect_hours_of_operation.test.hours_of_operation_id
+
+  tags = {
+    "Name" = "Test Queue",
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
+  }
+}
+`, rName2, label))
 }

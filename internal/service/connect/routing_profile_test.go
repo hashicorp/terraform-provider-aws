@@ -23,6 +23,7 @@ func TestAccConnectRoutingProfile_serial(t *testing.T) {
 		"update_concurrency":            testAccRoutingProfile_updateConcurrency,
 		"update_default_outbound_queue": testAccRoutingProfile_updateDefaultOutboundQueue,
 		"update_queues":                 testAccRoutingProfile_updateQueues,
+		"update_tags":                   testAccRoutingProfile_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -344,6 +345,57 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 	})
 }
 
+func testAccRoutingProfile_updateTags(t *testing.T) {
+	var v connect.DescribeRoutingProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "tags"
+
+	resourceName := "aws_connect_routing_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRoutingProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Routing Profile"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoutingProfileTagsConfig(rName, rName2, rName3, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoutingProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Routing Profile"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccRoutingProfileTagsUpdatedConfig(rName, rName2, rName3, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoutingProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Routing Profile"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRoutingProfileExists(resourceName string, function *connect.DescribeRoutingProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -586,4 +638,51 @@ resource "aws_connect_routing_profile" "test" {
   }
 }
 `, rName3, rName4, label))
+}
+
+func testAccRoutingProfileTagsConfig(rName, rName2, rName3, label string) string {
+	return acctest.ConfigCompose(
+		testAccRoutingProfileBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_connect_routing_profile" "test" {
+  instance_id               = aws_connect_instance.test.id
+  name                      = %[1]q
+  default_outbound_queue_id = aws_connect_queue.default_outbound_queue.queue_id
+  description               = %[2]q
+
+  media_concurrencies {
+    channel     = "VOICE"
+    concurrency = 1
+  }
+
+  tags = {
+    "Name" = "Test Routing Profile",
+    "Key2" = "Value2a"
+  }
+}
+`, rName3, label))
+}
+
+func testAccRoutingProfileTagsUpdatedConfig(rName, rName2, rName3, label string) string {
+	return acctest.ConfigCompose(
+		testAccRoutingProfileBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_connect_routing_profile" "test" {
+  instance_id               = aws_connect_instance.test.id
+  name                      = %[1]q
+  default_outbound_queue_id = aws_connect_queue.default_outbound_queue.queue_id
+  description               = %[2]q
+
+  media_concurrencies {
+    channel     = "VOICE"
+    concurrency = 1
+  }
+
+  tags = {
+    "Name" = "Test Routing Profile",
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
+  }
+}
+`, rName3, label))
 }
