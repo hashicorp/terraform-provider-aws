@@ -261,7 +261,7 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 						"grantee.0.type": s3.TypeGroup,
 						"permission":     s3.BucketLogsPermissionFullControl,
 					}),
-					testAccCheckBucketLoggingTargetGrantGranteeUri(resourceName),
+					testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName),
 				),
 			},
 			{
@@ -279,7 +279,7 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 						"grantee.0.type": s3.TypeGroup,
 						"permission":     s3.BucketLogsPermissionRead,
 					}),
-					testAccCheckBucketLoggingTargetGrantGranteeUri(resourceName),
+					testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName),
 				),
 			},
 			{
@@ -441,7 +441,7 @@ func testAccCheckBucketLoggingExists(resourceName string) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckBucketLoggingTargetGrantGranteeUri(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		uri := fmt.Sprintf("http://acs.%s/groups/s3/LogDelivery", acctest.PartitionDNSSuffix())
 		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{

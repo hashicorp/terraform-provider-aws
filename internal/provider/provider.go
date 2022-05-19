@@ -1810,7 +1810,7 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                      s3.ResourceBucket(),
 			"aws_s3_bucket_accelerate_configuration":             s3.ResourceBucketAccelerateConfiguration(),
-			"aws_s3_bucket_acl":                                  s3.ResourceBucketAcl(),
+			"aws_s3_bucket_acl":                                  s3.ResourceBucketACL(),
 			"aws_s3_bucket_analytics_configuration":              s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_cors_configuration":                   s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration":    s3.ResourceBucketIntelligentTieringConfiguration(),

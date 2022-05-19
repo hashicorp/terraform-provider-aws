@@ -166,7 +166,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_UpdateSS
 	})
 }
 
-func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithMasterKeyArn(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithMasterKeyARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
 
@@ -177,7 +177,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_ApplySSEByDefault_KMSWithM
 		CheckDestroy:      testAccCheckBucketServerSideEncryptionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_KMSWithMasterKeyArn(rName),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_kmsMasterKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketServerSideEncryptionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -481,7 +481,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_KMSWithMasterKeyArn(rName string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_kmsMasterKeyARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"

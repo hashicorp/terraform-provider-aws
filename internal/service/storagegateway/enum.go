@@ -38,7 +38,7 @@ func defaultStorageClass_Values() []string {
 
 const (
 	gatewayTypeCached     = "CACHED"
-	gatewayTypeFileFSXSMB = "FILE_FSX_SMB"
+	gatewayTypeFileFSxSMB = "FILE_FSX_SMB"
 	gatewayTypeFileS3     = "FILE_S3"
 	gatewayTypeStored     = "STORED"
 	gatewayTypeVTL        = "VTL"
@@ -48,7 +48,7 @@ const (
 func gatewayType_Values() []string {
 	return []string{
 		gatewayTypeCached,
-		gatewayTypeFileFSXSMB,
+		gatewayTypeFileFSxSMB,
 		gatewayTypeFileS3,
 		gatewayTypeStored,
 		gatewayTypeVTL,
