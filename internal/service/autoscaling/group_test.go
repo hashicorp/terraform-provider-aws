@@ -625,7 +625,8 @@ func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 
 func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 	var group autoscaling.Group
-	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -634,40 +635,29 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupSimpleConfig(randName),
+				Config: testAccGroupSimpleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "suspended_processes.#", "0"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupWithSuspendedProcessesConfig(randName),
+				Config: testAccGroupWithSuspendedProcessesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "suspended_processes.#", "2"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "suspended_processes.*", "AlarmNotification"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "suspended_processes.*", "ScheduledActions"),
 				),
 			},
+			testAccGroupImportStep(resourceName),
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupWithSuspendedProcessesUpdatedConfig(randName),
+				Config: testAccGroupWithSuspendedProcessesUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "suspended_processes.#", "2"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "suspended_processes.*", "AZRebalance"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "suspended_processes.*", "ScheduledActions"),
 				),
 			},
 		},
@@ -3786,6 +3776,54 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupWithSuspendedProcessesConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+  launch_configuration = aws_launch_configuration.test.name
+
+  suspended_processes = ["AlarmNotification", "ScheduledActions"]
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupWithSuspendedProcessesUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+  launch_configuration = aws_launch_configuration.test.name
+
+  suspended_processes = ["AZRebalance", "ScheduledActions"]
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
 func testAccGroupConfig_withServiceLinkedRoleARN() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		`
@@ -4397,98 +4435,6 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration      = aws_launch_configuration.foobar.name
 }
 `, rInt)
-}
-
-func testAccGroupWithSuspendedProcessesConfig(name string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_placement_group" "test" {
-  name     = "asg_pg_%s"
-  strategy = "cluster"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  name                 = "%s"
-  max_size             = 5
-  min_size             = 2
-  health_check_type    = "ELB"
-  desired_capacity     = 4
-  force_delete         = true
-  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  suspended_processes = ["AlarmNotification", "ScheduledActions"]
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-`, name, name)
-}
-
-func testAccGroupWithSuspendedProcessesUpdatedConfig(name string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_placement_group" "test" {
-  name     = "asg_pg_%s"
-  strategy = "cluster"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  name                 = "%s"
-  max_size             = 5
-  min_size             = 2
-  health_check_type    = "ELB"
-  desired_capacity     = 4
-  force_delete         = true
-  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  suspended_processes = ["AZRebalance", "ScheduledActions"]
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-`, name, name)
 }
 
 func testAccGroupConfig_classicVPCZoneIdentifier() string {
