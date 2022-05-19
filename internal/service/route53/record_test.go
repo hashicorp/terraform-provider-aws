@@ -301,12 +301,12 @@ func TestAccRoute53Record_basic_bareDomain(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		CheckDestroy: testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_bareDomain,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53RecordExists(resourceName, &record1),
+					testAccCheckRecordExists(resourceName, &record1),
 				),
 			},
 			{
