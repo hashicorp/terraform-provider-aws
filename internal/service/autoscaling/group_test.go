@@ -666,6 +666,8 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 
 func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -674,26 +676,13 @@ func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withServiceLinkedRoleARN(),
+				Config: testAccGroupWithServiceLinkedRoleARNConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "service_linked_role_arn"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "service_linked_role_arn", "data.aws_iam_role.test", "arn"),
 				),
 			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -3824,37 +3813,22 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_withServiceLinkedRoleARN() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_iam_role" "autoscaling_service_linked_role" {
+func testAccGroupWithServiceLinkedRoleARNConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+data "aws_iam_role" "test" {
   name = "AWSServiceRoleForAutoScaling"
 }
 
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
 
-resource "aws_autoscaling_group" "bar" {
-  availability_zones      = [data.aws_availability_zones.available.names[0]]
-  desired_capacity        = 0
-  max_size                = 0
-  min_size                = 0
-  launch_configuration    = aws_launch_configuration.foobar.name
-  service_linked_role_arn = data.aws_iam_role.autoscaling_service_linked_role.arn
+  service_linked_role_arn = data.aws_iam_role.test.arn
 }
-`)
+`, rName))
 }
 
 func testAccGroupConfig_withMaxInstanceLifetime() string {
