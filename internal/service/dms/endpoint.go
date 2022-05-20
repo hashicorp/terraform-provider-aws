@@ -660,6 +660,8 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
 	case engineNameAurora:
 		fallthrough
+	case engineNameMariadb:
+		fallthrough
 	case engineNameMySQL:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			request.MySQLSettings = &dms.MySQLSettings{
@@ -931,6 +933,8 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case engineNameAurora:
 		fallthrough
+	case engineNameMariadb:
+		fallthrough
 	case engineNameMySQL:
 		if d.HasChanges(
 			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
@@ -1170,6 +1174,8 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
 		}
 	case engineNameAurora:
+		fallthrough
+	case engineNameMariadb:
 		fallthrough
 	case engineNameMySQL:
 		if endpoint.MySQLSettings != nil {
