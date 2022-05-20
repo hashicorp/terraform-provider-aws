@@ -226,6 +226,12 @@ func testAccAccount_govCloud(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "govcloud_id"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"create_govcloud", "govcloud_id"},
+			},
 		},
 	})
 }
