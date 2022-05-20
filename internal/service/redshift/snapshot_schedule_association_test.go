@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
@@ -95,25 +95,18 @@ func testAccCheckSnapshotScheduleAssociationDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseID(rs.Primary.ID)
+
+		_, _, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
 
-		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
-			ScheduleIdentifier: aws.String(scheduleIdentifier),
-			ClusterIdentifier:  aws.String(clusterIdentifier),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && len(resp.SnapshotSchedules) > 0 {
-			return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association still exist", clusterIdentifier, scheduleIdentifier)
-		}
-
-		return err
+		return fmt.Errorf("Redshift Schedule Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -130,26 +123,15 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
 		}
 
-		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
-			ScheduleIdentifier: aws.String(scheduleIdentifier),
-			ClusterIdentifier:  aws.String(clusterIdentifier),
-		})
+
+		scheduleIdentifier, assoicatedCluster, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.SnapshotSchedules) != 0 {
-			return nil
-		}
-
-		return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association not found", clusterIdentifier, scheduleIdentifier)
+		return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association not found", assoicatedCluster, scheduleIdentifier)
 	}
 }
 
