@@ -88,8 +88,9 @@ Next we will create a [core network](https://docs.aws.amazon.com/vpc/latest/clou
 resource "awscc_networkmanager_core_network" "main" {
   description       = "My Core Network"
   global_network_id = awscc_networkmanager_global_network.main.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.main.json
-  tags              = local.terraform_tag
+  # Compose jsonencode and jsondecode to produce a normalized JSON string.
+  policy_document = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.main.json))
+  tags            = local.terraform_tag
 }
 
 data "aws_networkmanager_core_network_policy_document" "main" {
@@ -104,7 +105,7 @@ data "aws_networkmanager_core_network_policy_document" "main" {
 
   segments {
     name                          = "shared"
-    description                   = "Segment for shared services"
+    description                   = "SegmentForSharedServices"
     require_attachment_acceptance = true
   }
 
