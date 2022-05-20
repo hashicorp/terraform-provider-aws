@@ -125,13 +125,13 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
-		scheduleIdentifier, assoicatedCluster, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
+		_, _, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association not found", assoicatedCluster, scheduleIdentifier)
+		return nil
 	}
 }
 
