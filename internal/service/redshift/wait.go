@@ -115,7 +115,7 @@ func WaitScheduleAssociationActive(conn *redshift.Redshift, id string) (*redshif
 	return nil, err
 }
 
-func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
+func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
 		Target:     []string{},
