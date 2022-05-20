@@ -1956,7 +1956,7 @@ resource "aws_dms_endpoint" "test" {
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
 func testAccEndpointConfig_SqlServer(rName string) string {
@@ -2054,6 +2054,7 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
+
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
@@ -2066,12 +2067,12 @@ resource "aws_dms_endpoint" "test" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
 func testAccEndpointConfig_docDB(rName string) string {
