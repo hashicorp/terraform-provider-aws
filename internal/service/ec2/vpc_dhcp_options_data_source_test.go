@@ -84,7 +84,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 				// test case with resources in the state and an erroneous config, and
 				// thus the automatic destroy step will fail. This ensures we end with
 				// both an empty state and a valid config.
-				Config: `/* this config intentionally left blank */`,
+				Config: `/* this config intentionally left blank */`, // nosemgrep:config-funcs-correct-form
 			},
 		},
 	})

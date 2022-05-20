@@ -120,7 +120,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeBasicConfig(rName),
+				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
@@ -156,7 +156,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeBasicConfig(rName),
+				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
@@ -825,20 +825,6 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 }
 `)
-
-func testAccEBSVolumeBasicConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  type              = "gp2"
-  size              = 1
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
 
 func testAccEBSVolumeConfig_attached(rName string) string {
 	return acctest.ConfigCompose(
