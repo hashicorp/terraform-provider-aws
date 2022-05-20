@@ -15,8 +15,8 @@ import (
 )
 
 func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
-	rName := sdkacctest.RandString(8)
-	resourceName := "aws_redshift_snapshot_schedule_association.default"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_snapshot_schedule_association.test"
 	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.default"
 	clusterResourceName := "aws_redshift_cluster.test"
 
@@ -38,6 +38,51 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRedshiftSnapshotScheduleAssociation_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_snapshot_schedule_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotScheduleAssociationExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRedshiftSnapshotScheduleAssociation_disappears_cluster(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_redshift_snapshot_schedule_association.test"
+	clusterResourceName := "aws_redshift_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotScheduleAssociationExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -110,7 +155,7 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 
 func testAccSnapshotScheduleAssociationConfig(rName, definition string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig(rName, definition), `
-resource "aws_redshift_snapshot_schedule_association" "default" {
+resource "aws_redshift_snapshot_schedule_association" "test" {
   schedule_identifier = aws_redshift_snapshot_schedule.default.id
   cluster_identifier  = aws_redshift_cluster.test.id
 }
