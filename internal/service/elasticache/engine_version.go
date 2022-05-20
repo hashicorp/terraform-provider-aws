@@ -89,10 +89,28 @@ func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *sche
 	return engineVersionForceNewOnDowngrade(diff)
 }
 
+type getChangeDiffer interface {
+	GetChange(key string) (interface{}, interface{})
+}
+
+func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
+	o, n := diff.GetChange("engine_version")
+	oVersion, err := normalizeEngineVersion(o.(string))
+	if err != nil {
+		return false, fmt.Errorf("error parsing old engine_version: %w", err)
+	}
+	nVersion, err := normalizeEngineVersion(n.(string))
+	if err != nil {
+		return false, fmt.Errorf("error parsing new engine_version: %w", err)
+	}
+
+	return nVersion.LessThan(oVersion), nil
+}
+
 type forceNewDiffer interface {
 	Id() string
-	HasChange(key string) bool
 	GetChange(key string) (interface{}, interface{})
+	HasChange(key string) bool
 	ForceNew(key string) error
 }
 
@@ -101,17 +119,9 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 		return nil
 	}
 
-	o, n := diff.GetChange("engine_version")
-	oVersion, err := normalizeEngineVersion(o.(string))
-	if err != nil {
-		return fmt.Errorf("error parsing old engine_version: %w", err)
-	}
-	nVersion, err := normalizeEngineVersion(n.(string))
-	if err != nil {
-		return fmt.Errorf("error parsing new engine_version: %w", err)
-	}
-
-	if nVersion.GreaterThan(oVersion) || nVersion.Equal(oVersion) {
+	if downgrade, err := engineVersionIsDowngrade(diff); err != nil {
+		return err
+	} else if !downgrade {
 		return nil
 	}
 

@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	gversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -128,6 +130,10 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade,
+		),
 	}
 }
 
@@ -144,6 +150,23 @@ func descriptionStateFunc(v interface{}) string {
 		return EmptyDescription
 	}
 	return s
+}
+
+func customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	if diff.Id() == "" || !diff.HasChange("engine_version") {
+		return nil
+	}
+
+	if downgrade, err := engineVersionIsDowngrade(diff); err != nil {
+		return err
+	} else if !downgrade {
+		return nil
+	}
+
+	return fmt.Errorf(`Downgrading Elasticache Global Replication Group (%s) engine version requires replacement
+of the Global Replication Group and all Replication Group members. The AWS provider cannot handle this internally.
+
+Please use the "-replace" option on the terraform plan and apply commands (see https://www.terraform.io/cli/commands/plan#replace-address).`, diff.Id())
 }
 
 func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {

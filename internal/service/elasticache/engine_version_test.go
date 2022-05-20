@@ -227,26 +227,132 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 	}
 }
 
-type differ struct {
+type mockGetChangeDiffer struct {
+	old, new string
+}
+
+func (d *mockGetChangeDiffer) GetChange(key string) (interface{}, interface{}) {
+	return d.old, d.new
+}
+
+func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
+	testcases := map[string]struct {
+		old, new string
+		expected bool
+	}{
+		"no change": {
+			old:      "1.2.3",
+			new:      "1.2.3",
+			expected: false,
+		},
+
+		"upgrade minor versions": {
+			old:      "1.2.3",
+			new:      "1.3.5",
+			expected: false,
+		},
+
+		"upgrade major versions": {
+			old:      "1.2.3",
+			new:      "2.4.6",
+			expected: false,
+		},
+
+		// "upgrade major 6.x": {
+		// 	old:            "5.0.6",
+		// 	new:            "6.x",
+		// 	expectForceNew: false,
+		// },
+
+		// "upgrade major 6.digit": {
+		// 	old:            "5.0.6",
+		// 	new:            "6.0",
+		// 	expectForceNew: false,
+		// },
+
+		"downgrade minor versions": {
+			old:      "1.3.5",
+			new:      "1.2.3",
+			expected: true,
+		},
+
+		"downgrade major versions": {
+			old:      "2.4.6",
+			new:      "1.2.3",
+			expected: true,
+		},
+
+		"downgrade from major 6.x": {
+			old:      "6.x",
+			new:      "5.0.6",
+			expected: true,
+		},
+
+		"downgrade major 6.digit": {
+			old:      "6.2",
+			new:      "6.0",
+			expected: true,
+		},
+
+		"switch major 6.digit to 6.x": {
+			old:      "6.2",
+			new:      "6.x",
+			expected: false,
+		},
+
+		"downgrade from major 7.x to 6.x": {
+			old:      "7.x",
+			new:      "6.x",
+			expected: true,
+		},
+
+		"downgrade from major 7.digit to 6.x": {
+			old:      "7.2",
+			new:      "6.x",
+			expected: true,
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			diff := &mockGetChangeDiffer{
+				old: testcase.old,
+				new: testcase.new,
+			}
+
+			actual, err := engineVersionIsDowngrade(diff)
+
+			if err != nil {
+				t.Fatalf("no error expected, got %s", err)
+			}
+
+			if testcase.expected != actual {
+				t.Errorf("expected %t, got %t", testcase.expected, actual)
+			}
+		})
+	}
+}
+
+type mockForceNewDiffer struct {
 	id        string
 	old, new  string
 	hasChange bool // force HasChange() to return true
 	forceNew  bool
 }
 
-func (d *differ) Id() string {
+func (d *mockForceNewDiffer) Id() string {
 	return d.id
 }
 
-func (d *differ) HasChange(key string) bool {
+func (d *mockForceNewDiffer) HasChange(key string) bool {
 	return d.hasChange || d.old != d.new
 }
 
-func (d *differ) GetChange(key string) (interface{}, interface{}) {
+func (d *mockForceNewDiffer) GetChange(key string) (interface{}, interface{}) {
 	return d.old, d.new
 }
 
-func (d *differ) ForceNew(key string) error {
+func (d *mockForceNewDiffer) ForceNew(key string) error {
 	d.forceNew = true
 
 	return nil
@@ -346,7 +452,7 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 
 	for name, testcase := range testcases {
 		t.Run(name, func(t *testing.T) {
-			diff := &differ{}
+			diff := &mockForceNewDiffer{}
 			if !testcase.isNew {
 				diff.id = "some id"
 				diff.old = testcase.old

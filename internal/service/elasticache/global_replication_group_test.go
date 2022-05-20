@@ -404,6 +404,52 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 	})
 }
 
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDowngrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup elasticache.GlobalReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGlobalReplicationGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_EngineVersion_Inherit(rName, primaryReplicationGroupId, "6.2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config:      testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
+				ExpectError: regexp.MustCompile(`Downgrading Elasticache Global Replication Group \(.*\) engine version requires replacement`),
+			},
+			// This step fails with: Error running pre-apply refresh
+			// {
+			// 	Config: testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
+			// 	Taint: []string{
+			// 		resourceName,
+			// 		primaryReplicationGroupResourceName,
+			// 	},
+			// 	Check: resource.ComposeAggregateTestCheckFunc(
+			// 		testAccCheckGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
+			// 		resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
+			// 		resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+			// 	),
+			// },
+		},
+	})
+}
+
 func testAccCheckGlobalReplicationGroupExists(resourceName string, v *elasticache.GlobalReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
