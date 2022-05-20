@@ -68,7 +68,6 @@ func TestAccRedshiftEventSubscription_withPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "cluster"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -137,7 +136,6 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "cluster"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -158,7 +156,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftEventSubscription_tagsUpdate(t *testing.T) {
+func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 	var v redshift.EventSubscription
 	resourceName := "aws_redshift_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
