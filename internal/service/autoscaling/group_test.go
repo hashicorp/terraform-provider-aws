@@ -840,6 +840,163 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupInstanceRefreshBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupInstanceRefreshMinHealthyPercentageConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupInstanceRefreshSkipMatchingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupInstanceRefreshFullConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", "25"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.1", "20"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.2", "25"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.3", "50"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.4", "100"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", "10"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupInstanceRefreshDisabledConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	launchConfigurationName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_InstanceRefresh_Start("one"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
+					testAccCheckInstanceRefreshCount(&group, 0),
+				),
+			},
+			{
+				Config: testAccGroupConfig_InstanceRefresh_Start("two"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
+					testAccCheckInstanceRefreshCount(&group, 1),
+					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+				),
+			},
+			{
+				Config: testAccGroupConfig_InstanceRefresh_Start("three"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
+					testAccCheckInstanceRefreshCount(&group, 2),
+					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshStatus(&group, 1, autoscaling.InstanceRefreshStatusCancelled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupInstanceRefreshBasicConfig(""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_InstanceRefresh_Triggers(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tags"),
+					testAccCheckInstanceRefreshCount(&group, 1),
+					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
@@ -992,166 +1149,6 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 					"wait_for_capacity_timeout",
 					"wait_for_elb_capacity",
 				},
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Basic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"wait_for_capacity_timeout",
-					"instance_refresh",
-				},
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_MinHealthyPercentage(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_SkipMatching(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "true"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Full(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", "10"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "50"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", "25"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.0", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.1", "20"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.2", "25"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.3", "50"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.4", "100"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Disabled(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckNoResourceAttr(resourceName, "instance_refresh.#"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-	launchConfigurationName := "aws_launch_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Start("one"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
-					testAccCheckInstanceRefreshCount(&group, 0),
-				),
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Start("two"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
-					testAccCheckInstanceRefreshCount(&group, 1),
-					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
-				),
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Start("three"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
-					testAccCheckInstanceRefreshCount(&group, 2),
-					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
-					testAccCheckInstanceRefreshStatus(&group, 1, autoscaling.InstanceRefreshStatusCancelled),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Basic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_InstanceRefresh_Triggers(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tags"),
-					testAccCheckInstanceRefreshCount(&group, 1),
-					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
-				),
 			},
 		},
 	})
@@ -3836,6 +3833,195 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupInstanceRefreshBasicConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+  }
+}
+`, rName))
+}
+
+func testAccGroupInstanceRefreshMinHealthyPercentageConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+
+    preferences {
+      min_healthy_percentage = 0
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGroupInstanceRefreshSkipMatchingConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+
+    preferences {
+      min_healthy_percentage = 0
+      skip_matching          = true
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGroupInstanceRefreshFullConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+
+    preferences {
+      instance_warmup        = 10
+      min_healthy_percentage = 50
+      checkpoint_delay       = 25
+      checkpoint_percentages = [1, 20, 25, 50, 100]
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGroupInstanceRefreshDisabledConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+}
+`, rName))
+}
+
+func testAccGroupConfig_InstanceRefresh_Start(launchConfigurationName string) string {
+	return fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+  }
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  name_prefix   = %[1]q
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.nano"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+`, launchConfigurationName)
+}
+
+func testAccGroupConfig_InstanceRefresh_Triggers() string {
+	return `
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+    triggers = ["tags"]
+  }
+
+  tag {
+    key                 = "Key"
+    value               = "Value"
+    propagate_at_launch = true
+  }
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.nano"
+}
+`
+}
+
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -5023,307 +5209,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName)
-}
-
-func testAccGroupConfig_InstanceRefresh_Basic() string {
-	return `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  instance_refresh {
-    strategy = "Rolling"
-  }
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
-}
-
-func testAccGroupConfig_InstanceRefresh_MinHealthyPercentage() string {
-	return `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  instance_refresh {
-    strategy = "Rolling"
-    preferences {
-      min_healthy_percentage = 0
-    }
-  }
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
-}
-
-func testAccGroupConfig_InstanceRefresh_SkipMatching() string {
-	return `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  instance_refresh {
-    strategy = "Rolling"
-    preferences {
-      min_healthy_percentage = 0
-      skip_matching          = true
-    }
-  }
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
-}
-
-func testAccGroupConfig_InstanceRefresh_Full() string {
-	return `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  instance_refresh {
-    strategy = "Rolling"
-    preferences {
-      instance_warmup        = 10
-      min_healthy_percentage = 50
-      checkpoint_delay       = 25
-      checkpoint_percentages = [1, 20, 25, 50, 100]
-    }
-  }
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
-}
-
-func testAccGroupConfig_InstanceRefresh_Disabled() string {
-	return `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
-}
-
-func testAccGroupConfig_InstanceRefresh_Start(launchConfigurationName string) string {
-	return fmt.Sprintf(`
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  instance_refresh {
-    strategy = "Rolling"
-  }
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-`, launchConfigurationName)
-}
-
-func testAccGroupConfig_InstanceRefresh_Triggers() string {
-	return `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  instance_refresh {
-    strategy = "Rolling"
-    triggers = ["tags"]
-  }
-
-  tag {
-    key                 = "Key"
-    value               = "Value"
-    propagate_at_launch = true
-  }
-}
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
 }
 
 func testAccGroupConfig_WarmPool_Base() string {
