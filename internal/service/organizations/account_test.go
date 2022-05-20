@@ -15,6 +15,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func testAccAccountImportStep(n string) resource.TestStep {
+	return resource.TestStep{
+		ResourceName:      n,
+		ImportState:       true,
+		ImportStateVerify: true,
+		ImportStateVerifyIgnore: []string{
+			"close_on_deletion",
+			"create_govcloud",
+			"govcloud_id",
+		},
+	}
+}
+
 func testAccAccount_basic(t *testing.T) {
 	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
 	orgsEmailDomain := os.Getenv(key)
@@ -48,12 +61,7 @@ func testAccAccount_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"close_on_deletion"},
-			},
+			testAccAccountImportStep(resourceName),
 		},
 	})
 }
@@ -92,12 +100,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"close_on_deletion"},
-			},
+			testAccAccountImportStep(resourceName),
 		},
 	})
 }
@@ -130,12 +133,7 @@ func testAccAccount_ParentID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "parent_id", parentIdResourceName1, "id"),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"close_on_deletion"},
-			},
+			testAccAccountImportStep(resourceName),
 			{
 				Config: testAccAccountParentId2Config(name, email),
 				Check: resource.ComposeTestCheckFunc(
@@ -174,12 +172,7 @@ func testAccAccount_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"close_on_deletion"},
-			},
+			testAccAccountImportStep(resourceName),
 			{
 				Config: testAccAccountTags2Config(name, email, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
@@ -227,12 +220,7 @@ func testAccAccount_govCloud(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "govcloud_id"),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_govcloud", "govcloud_id"},
-			},
+			testAccAccountImportStep(resourceName),
 		},
 	})
 }
