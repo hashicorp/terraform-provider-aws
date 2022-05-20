@@ -66,7 +66,7 @@ func resourceHsmClientCertificateCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating Redshift Hsm Client Certificate (%s): %s", certIdentifier, err)
 	}
 
-	d.SetId(*out.HsmClientCertificate.HsmClientCertificateIdentifier)
+	d.SetId(aws.StringValue(out.HsmClientCertificate.HsmClientCertificateIdentifier))
 
 	return resourceHsmClientCertificateRead(d, meta)
 }
