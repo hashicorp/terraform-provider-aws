@@ -14,7 +14,7 @@ Creates a Redshift authentication profile
 
 ```terraform
 resource "aws_redshift_authentication_profile" "example" {
-  authentication_profile_name    = "example"
+  authentication_profile_name = "example"
   authentication_profile_content = jsonencode(
     {
       AllowDBUserOverride = "1"

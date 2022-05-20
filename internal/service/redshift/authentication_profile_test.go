@@ -120,7 +120,7 @@ func testAccCheckAuthenticationProfileExists(name string) resource.TestCheckFunc
 func testAccAuthenticationProfileBasic(rName, id string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_authentication_profile" "test" {
-  authentication_profile_name    = %[1]q
+  authentication_profile_name = %[1]q
   authentication_profile_content = jsonencode(
     {
       AllowDBUserOverride = "1"
