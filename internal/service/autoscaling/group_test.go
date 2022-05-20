@@ -840,28 +840,6 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_LaunchTemplate_iamInstanceProfile(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-				),
-			},
-			testAccGroupImportStep(resourceName),
-		},
-	})
-}
-
 func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
@@ -3856,53 +3834,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName))
-}
-
-func testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %q
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name = %q
-  role = aws_iam_role.test.name
-}
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t2.micro"
-  name          = %q
-
-  iam_instance_profile {
-    name = aws_iam_instance_profile.test.id
-  }
-}
-
-resource "aws_autoscaling_group" "test" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
-  name               = %q
-
-  launch_template {
-    id = aws_launch_template.test.id
-  }
-}
-`, rName, rName, rName, rName)
 }
 
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
