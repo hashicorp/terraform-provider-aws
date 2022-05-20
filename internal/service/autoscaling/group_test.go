@@ -746,6 +746,131 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupLaunchTemplateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", "aws_launch_template.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", "aws_launch_template.test", "default_version"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupLaunchTemplateConfig(""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.name"),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccGroupConfig_withLaunchTemplate_toLaunchConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_configuration"),
+					resource.TestCheckNoResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template"),
+				),
+			},
+
+			{
+				Config: testAccGroupConfig_withLaunchTemplate_toLaunchTemplateName(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_configuration", ""),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.name", "foobar2"),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.id"),
+				),
+			},
+
+			{
+				Config: testAccGroupConfig_withLaunchTemplate_toLaunchTemplateVersion(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "$Latest"),
+				),
+			},
+
+			{
+				Config: testAccGroupLaunchTemplateConfig(""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.name"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_LaunchTemplate_iamInstanceProfile(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
@@ -1109,139 +1234,6 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "warm_pool.#"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
-	var group autoscaling.Group
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_withLaunchTemplate(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "launch_template.0.id"),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
-	var group autoscaling.Group
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_withLaunchTemplate(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "launch_template.0.name"),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupConfig_withLaunchTemplate_toLaunchConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "launch_configuration"),
-					resource.TestCheckNoResourceAttr(
-						"aws_autoscaling_group.bar", "launch_template"),
-				),
-			},
-
-			{
-				Config: testAccGroupConfig_withLaunchTemplate_toLaunchTemplateName(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "launch_configuration", ""),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "launch_template.0.name", "foobar2"),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "launch_template.0.id"),
-				),
-			},
-
-			{
-				Config: testAccGroupConfig_withLaunchTemplate_toLaunchTemplateVersion(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "launch_template.0.version", "$Latest"),
-				),
-			},
-
-			{
-				Config: testAccGroupConfig_withLaunchTemplate(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "launch_template.0.name"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "launch_template.0.version", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_LaunchTemplate_iamInstanceProfile(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-				),
-			},
-			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -3282,6 +3274,19 @@ resource "aws_launch_configuration" "test" {
 `, rName, instanceType))
 }
 
+func testAccGroupLaunchTemplateBaseConfig(rName, instanceType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = %[2]q
+}
+`, rName, instanceType))
+}
+
 func testAccGroupConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
@@ -3817,6 +3822,188 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupLaunchTemplateConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
+  }
+}
+`, rName))
+}
+
+func testAccGroupConfig_withLaunchTemplate_toLaunchConfig() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		`
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  desired_capacity     = 0
+  max_size             = 0
+  min_size             = 0
+  launch_configuration = aws_launch_configuration.test.name
+}
+`)
+}
+
+func testAccGroupConfig_withLaunchTemplate_toLaunchTemplateName() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		`
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_template" "foobar2" {
+  name          = "foobar2"
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  launch_template {
+    name = "foobar2"
+  }
+}
+`)
+}
+
+func testAccGroupConfig_withLaunchTemplate_toLaunchTemplateVersion() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		`
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_template" "foobar2" {
+  name          = "foobar2"
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  launch_template {
+    id      = aws_launch_template.foobar.id
+    version = "$Latest"
+  }
+}
+`)
+}
+
+func testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName string) string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = %q
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t2.micro"
+  name          = %q
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.test.id
+  }
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
+
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+}
+`, rName, rName, rName, rName)
+}
+
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -4297,204 +4484,6 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration      = aws_launch_configuration.foobar.name
 }
 `, rInt)
-}
-
-func testAccGroupConfig_withLaunchTemplate() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
-  launch_template {
-    id      = aws_launch_template.foobar.id
-    version = aws_launch_template.foobar.default_version
-  }
-}
-`)
-}
-
-func testAccGroupConfig_withLaunchTemplate_toLaunchConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  desired_capacity     = 0
-  max_size             = 0
-  min_size             = 0
-  launch_configuration = aws_launch_configuration.test.name
-}
-`)
-}
-
-func testAccGroupConfig_withLaunchTemplate_toLaunchTemplateName() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_launch_template" "foobar2" {
-  name          = "foobar2"
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
-  launch_template {
-    name = "foobar2"
-  }
-}
-`)
-}
-
-func testAccGroupConfig_withLaunchTemplate_toLaunchTemplateVersion() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_launch_template" "foobar2" {
-  name          = "foobar2"
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
-  launch_template {
-    id      = aws_launch_template.foobar.id
-    version = "$Latest"
-  }
-}
-`)
-}
-
-func testAccGroupConfig_LaunchTemplate_IAMInstanceProfile(rName string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %q
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name = %q
-  role = aws_iam_role.test.name
-}
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t2.micro"
-  name          = %q
-
-  iam_instance_profile {
-    name = aws_iam_instance_profile.test.id
-  }
-}
-
-resource "aws_autoscaling_group" "test" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
-  name               = %q
-
-  launch_template {
-    id = aws_launch_template.test.id
-  }
-}
-`, rName, rName, rName, rName)
 }
 
 func testAccGroupConfig_LoadBalancers(rName string, elbCount int) string {
