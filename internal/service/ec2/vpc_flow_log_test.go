@@ -30,7 +30,7 @@ func TestAccVPCFlowLog_vpcID(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_VPCID(rName),
+				Config: testAccVPCFlowLogConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
@@ -49,7 +49,7 @@ func TestAccVPCFlowLog_vpcID(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
+				Config:             testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
 				ExpectNonEmptyPlan: false,
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccVPCFlowLog_logFormat(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogFormat(rName),
+				Config: testAccVPCFlowLogConfig_format(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "log_format", logFormat),
@@ -81,7 +81,7 @@ func TestAccVPCFlowLog_logFormat(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
+				Config:             testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
 				ExpectNonEmptyPlan: false,
 			},
 		},
@@ -103,7 +103,7 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_SubnetID(rName),
+				Config: testAccVPCFlowLogConfig_subnetID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
@@ -137,7 +137,7 @@ func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					// We automatically trim :* from ARNs if present
@@ -168,7 +168,7 @@ func TestAccVPCFlowLog_LogDestinationType_s3(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_S3(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
@@ -195,7 +195,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3_invalid(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
+				Config:      testAccVPCFlowLogConfig_destinationTypeS3Invalid(rName),
 				ExpectError: regexp.MustCompile(`(Access Denied for LogDestination|does not exist)`),
 			},
 		},
@@ -215,7 +215,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeS3DOPlainText(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
@@ -246,7 +246,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeS3DOPlainTextHiveCompatiblePerHour(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
@@ -279,7 +279,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeS3DOParquet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
@@ -310,7 +310,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeS3DOParquetHiveCompatible(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
@@ -342,7 +342,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *te
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(rName),
+				Config: testAccVPCFlowLogConfig_destinationTypeS3DOParquetHiveCompatiblePerHour(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
@@ -374,7 +374,7 @@ func TestAccVPCFlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_MaxAggregationInterval(rName),
+				Config: testAccVPCFlowLogConfig_maxAggregationInterval(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
@@ -401,7 +401,7 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfigTags1(rName, "key1", "value1"),
+				Config: testAccVPCFlowLogConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -414,7 +414,7 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFlowLogConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCFlowLogConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -423,7 +423,7 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFlowLogConfigTags1(rName, "key2", "value2"),
+				Config: testAccVPCFlowLogConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -446,7 +446,7 @@ func TestAccVPCFlowLog_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowLogConfig_VPCID(rName),
+				Config: testAccVPCFlowLogConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFlowLog(), resourceName),
@@ -518,7 +518,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -559,7 +559,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -575,7 +575,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3Invalid(rName string) string {
 	return testAccFlowLogConfigBase(rName) + `
 data "aws_partition" "current" {}
 
@@ -588,7 +588,7 @@ resource "aws_flow_log" "test" {
 `
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3DOPlainText(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -607,7 +607,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3DOPlainTextHiveCompatiblePerHour(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -628,7 +628,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3DOParquet(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -647,7 +647,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3DOParquetHiveCompatible(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -667,7 +667,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(rName string) string {
+func testAccVPCFlowLogConfig_destinationTypeS3DOParquetHiveCompatiblePerHour(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -688,7 +688,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_SubnetID(rName string) string {
+func testAccVPCFlowLogConfig_subnetID(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_subnet" "test" {
   cidr_block = "10.0.1.0/24"
@@ -737,7 +737,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_VPCID(rName string) string {
+func testAccVPCFlowLogConfig_id(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -777,7 +777,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfig_LogFormat(rName string) string {
+func testAccVPCFlowLogConfig_format(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -823,7 +823,7 @@ resource "aws_flow_log" "test" {
 `, rName)
 }
 
-func testAccFlowLogConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccVPCFlowLogConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -867,7 +867,7 @@ resource "aws_flow_log" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccFlowLogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCFlowLogConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -912,7 +912,7 @@ resource "aws_flow_log" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccFlowLogConfig_MaxAggregationInterval(rName string) string {
+func testAccVPCFlowLogConfig_maxAggregationInterval(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 

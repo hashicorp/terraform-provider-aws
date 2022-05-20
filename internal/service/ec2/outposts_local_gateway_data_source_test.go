@@ -18,7 +18,7 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayIDDataSourceConfig(),
+				Config: testAccOutpostsLocalGatewayDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-`)),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexp.MustCompile(`outpost/op-.+`)),
@@ -30,7 +30,7 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLocalGatewayIDDataSourceConfig() string {
+func testAccOutpostsLocalGatewayDataSourceConfig_id() string {
 	return `
 data "aws_ec2_local_gateways" "test" {}
 

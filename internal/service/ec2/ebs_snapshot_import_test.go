@@ -29,7 +29,7 @@ func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_basic(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -54,7 +54,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportTags1Config(rName, t, "key1", "value1"),
+				Config: testAccEBSSnapshotImportConfig_tags1(rName, t, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -64,7 +64,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEBSSnapshotImportTags2Config(rName, t, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSSnapshotImportConfig_tags2(rName, t, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -75,7 +75,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEBSSnapshotImportTags1Config(rName, t, "key2", "value2"),
+				Config: testAccEBSSnapshotImportConfig_tags1(rName, t, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -100,7 +100,7 @@ func TestAccEC2EBSSnapshotImport_storageTier(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportStorageTierConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_storageTier(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
@@ -122,7 +122,7 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_basic(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -149,7 +149,7 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_basic(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -237,7 +237,7 @@ data "aws_iam_policy_document" "vmimport-trust" {
 `, testAccEBSSnapshotDisk(t))
 }
 
-func testAccEBSSnapshotImportBasicConfig(rName string, t *testing.T) string {
+func testAccEBSSnapshotImportConfig_basic(rName string, t *testing.T) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
@@ -259,7 +259,7 @@ resource "aws_ebs_snapshot_import" "test" {
 `, rName))
 }
 
-func testAccEBSSnapshotImportStorageTierConfig(rName string, t *testing.T) string {
+func testAccEBSSnapshotImportConfig_storageTier(rName string, t *testing.T) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
@@ -282,7 +282,7 @@ resource "aws_ebs_snapshot_import" "test" {
 `, rName))
 }
 
-func testAccEBSSnapshotImportTags1Config(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
+func testAccEBSSnapshotImportConfig_tags1(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
@@ -308,7 +308,7 @@ resource "aws_ebs_snapshot_import" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccEBSSnapshotImportTags2Config(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccEBSSnapshotImportConfig_tags2(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {

@@ -19,7 +19,7 @@ func testAccTransitGatewayVPCAttachmentsDataSource_Filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentsDataSourceConfig(rName),
+				Config: testAccTransitGatewayVPCAttachmentsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_vpc_attachments.by_attachment_id", "ids.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_vpc_attachments.by_gateway_id", "ids.#", "2"),
@@ -29,7 +29,7 @@ func testAccTransitGatewayVPCAttachmentsDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentsDataSourceConfig(rName string) string {
+func testAccTransitGatewayVPCAttachmentsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
