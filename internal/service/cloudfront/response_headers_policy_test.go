@@ -210,6 +210,62 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 	})
 }
 
+func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_response_headers_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
+						"header":   "X-Header1",
+						"override": "true",
+						"value":    "value1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "90"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
@@ -415,6 +471,40 @@ resource "aws_cloudfront_response_headers_policy" "test" {
       protection = true
       report_uri = "https://example.com/"
     }
+  }
+}
+`, rName)
+}
+
+func testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name = %[1]q
+
+  custom_headers_config {
+    items {
+      header   = "X-Header1"
+      override = true
+      value    = "value1"
+    }
+  }
+
+  server_timing_headers_config {
+    enabled 	  = true
+    sampling_rate = 10
+  }
+}
+`, rName)
+}
+
+func testAccResponseHeadersPolicyServerTimingHeadersConfigUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name = %[1]q
+
+  server_timing_headers_config {
+    enabled 	  = false
+    sampling_rate = 90
   }
 }
 `, rName)
