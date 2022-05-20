@@ -65,3 +65,31 @@ func FindScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.
 
 	return output.ScheduledActions[0], nil
 }
+
+func FindHsmClientCertificateByID(conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
+	input := redshift.DescribeHsmClientCertificatesInput{
+		HsmClientCertificateIdentifier: aws.String(id),
+	}
+
+	out, err := conn.DescribeHsmClientCertificates(&input)
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmClientCertificateNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.HsmClientCertificates) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(out.HsmClientCertificates); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return out.HsmClientCertificates[0], nil
+}
