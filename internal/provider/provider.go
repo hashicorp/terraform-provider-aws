@@ -1760,6 +1760,7 @@ func Provider() *schema.Provider {
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
 
+			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),

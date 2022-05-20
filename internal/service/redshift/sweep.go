@@ -30,6 +30,11 @@ func init() {
 		F:    sweepClusters,
 	})
 
+	resource.AddTestSweepers("aws_redshift_authentication_profile", &resource.Sweeper{
+		Name: "aws_redshift_authentication_profile",
+		F:    sweepAuthenticationProfiles,
+	})
+
 	resource.AddTestSweepers("aws_redshift_event_subscription", &resource.Sweeper{
 		Name: "aws_redshift_event_subscription",
 		F:    sweepEventSubscriptions,
@@ -330,6 +335,49 @@ func sweepSubnetGroups(region string) error {
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepAuthenticationProfiles(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).RedshiftConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &redshift.DescribeAuthenticationProfilesInput{}
+	output, err := conn.DescribeAuthenticationProfiles(input)
+
+	if len(output.AuthenticationProfiles) == 0 {
+		log.Print("[DEBUG] No Redshift Authentication Profiles to sweep")
+	}
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Authentication Profiles: %w", err))
+		// in case work can be done, don't jump out yet
+	}
+
+	for _, c := range output.AuthenticationProfiles {
+		r := ResourceAuthenticationProfile()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(c.AuthenticationProfileName))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Authentication Profiles for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Authentication Profile sweep for %s: %s", region, err)
 		return nil
 	}
 

@@ -65,3 +65,31 @@ func FindScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.
 
 	return output.ScheduledActions[0], nil
 }
+
+func FindAuthenticationProfileByID(conn *redshift.Redshift, id string) (*redshift.AuthenticationProfile, error) {
+	input := redshift.DescribeAuthenticationProfilesInput{
+		AuthenticationProfileName: aws.String(id),
+	}
+
+	out, err := conn.DescribeAuthenticationProfiles(&input)
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeAuthenticationProfileNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.AuthenticationProfiles) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(out.AuthenticationProfiles); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return out.AuthenticationProfiles[0], nil
+}
