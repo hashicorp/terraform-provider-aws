@@ -716,19 +716,18 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_SqlServer(t *testing.T) {
-
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-sqlserver"
+func TestAccDMSEndpoint_SqlServer_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointSqlServerConfig(randId),
+				Config: testAccEndpointConfig_SqlServer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -744,18 +743,18 @@ func TestAccDMSEndpoint_SqlServer(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_SqlServer_secretId(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-sqlserver"
+func TestAccDMSEndpoint_SqlServer_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointSqlServerConfigSecretId(randId),
+				Config: testAccEndpointConfig_SqlServerSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -771,24 +770,24 @@ func TestAccDMSEndpoint_SqlServer_secretId(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_SqlServer_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-sqlserver"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointSqlServerConfig(randId),
+				Config: testAccEndpointConfig_SqlServer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointSqlServerConfigUpdate(randId),
+				Config: testAccEndpointConfig_SqlServerUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -805,6 +804,28 @@ func TestAccDMSEndpoint_SqlServer_update(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/23143
+func TestAccDMSEndpoint_SqlServer_kmsKey(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sqlserverKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
 			},
 		},
 	})
@@ -1938,10 +1959,10 @@ resource "aws_dms_endpoint" "test" {
 `, randId)
 }
 
-func dmsEndpointSqlServerConfig(randId string) string {
+func testAccEndpointConfig_SqlServer(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "sqlserver"
   server_name                 = "tftest"
@@ -1953,18 +1974,18 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointSqlServerConfigUpdate(randId string) string {
+func testAccEndpointConfig_SqlServerUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "sqlserver"
   server_name                 = "tftest-new-server_name"
@@ -1976,15 +1997,15 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = "key=value;"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointSqlServerConfigSecretId(randId string) string {
+func testAccEndpointConfig_SqlServerSecretID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -2033,8 +2054,8 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                     = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "sqlserver"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
@@ -2045,12 +2066,12 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = %[1]q
+    Name   = "tf-test-dms-endpoint-%[1]s"
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, rName)
+`, randId)
 }
 
 func testAccEndpointConfig_docDB(rName string) string {
@@ -2160,6 +2181,33 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 27018
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+  kms_key_arn                 = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_sqlserverKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sqlserver"
   server_name                 = "tftest"
   port                        = 27018
   username                    = "tftest"
