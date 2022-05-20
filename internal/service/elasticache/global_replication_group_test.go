@@ -341,6 +341,28 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 	})
 }
 
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorDowngrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalReplicationGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
+				ExpectError: regexp.MustCompile(`cannot downgrade version when creating, is 6.2.[[:digit:]]+, want 6.0.[[:digit:]]+`),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgrade(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

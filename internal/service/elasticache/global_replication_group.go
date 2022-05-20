@@ -187,6 +187,8 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
 			}
+		} else if requestedVersion.LessThan(engineVersion) {
+			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: cannot downgrade version when creating, is %s, want %s", d.Id(), engineVersion.String(), requestedVersion.String())
 		}
 	}
 
