@@ -128,11 +128,11 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		request.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("severity"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("severity"); ok {
 		request.Severity = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("source_type"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("source_type"); ok {
 		request.SourceType = aws.String(v.(string))
 	}
 
