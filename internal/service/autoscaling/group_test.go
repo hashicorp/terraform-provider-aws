@@ -924,8 +924,9 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 
 func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
-	launchConfigurationName := "aws_launch_configuration.test"
+	launchConfigurationResourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -934,27 +935,27 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_InstanceRefresh_Start("one"),
+				Config: testAccGroupInstanceRefreshStartConfig(rName, acctest.ResourcePrefix+"-1-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
 					testAccCheckInstanceRefreshCount(&group, 0),
 				),
 			},
 			{
-				Config: testAccGroupConfig_InstanceRefresh_Start("two"),
+				Config: testAccGroupInstanceRefreshStartConfig(rName, acctest.ResourcePrefix+"-2-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
 					testAccCheckInstanceRefreshCount(&group, 1),
 					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
 				),
 			},
 			{
-				Config: testAccGroupConfig_InstanceRefresh_Start("three"),
+				Config: testAccGroupInstanceRefreshStartConfig(rName, acctest.ResourcePrefix+"-3-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
 					testAccCheckInstanceRefreshCount(&group, 2),
 					testAccCheckInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
 					testAccCheckInstanceRefreshStatus(&group, 1, autoscaling.InstanceRefreshStatusCancelled),
@@ -3203,6 +3204,82 @@ func testAccCheckGroupHealthyInstanceCount(v *autoscaling.Group, expected int) r
 	}
 }
 
+func testAccCheckInstanceRefreshCount(v *autoscaling.Group, expected int) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+
+		output, err := tfautoscaling.FindInstanceRefreshes(conn, &autoscaling.DescribeInstanceRefreshesInput{
+			AutoScalingGroupName: v.AutoScalingGroupName,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if got := len(output); got != expected {
+			return fmt.Errorf("Expected %d Instance Refreshes, got %d", expected, got)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceRefreshStatus(v *autoscaling.Group, index int, expected ...string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+
+		output, err := tfautoscaling.FindInstanceRefreshes(conn, &autoscaling.DescribeInstanceRefreshesInput{
+			AutoScalingGroupName: v.AutoScalingGroupName,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if got := len(output); got < index {
+			return fmt.Errorf("Expected at least %d Instance Refreshes, got %d", index+1, got)
+		}
+
+		status := aws.StringValue(output[index].Status)
+
+		for _, v := range expected {
+			if status == v {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("Expected Instance Refresh at index %d to be in %q, got %q", index, expected, status)
+	}
+}
+
+func testAccCheckLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return errors.New("No Target Group ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+
+		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+
+		if err != nil {
+			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
+		}
+
+		if targetGroup == nil {
+			return fmt.Errorf("Target Group (%s) not found", rs.Primary.ID)
+		}
+
+		*res = *targetGroup
+		return nil
+	}
+}
+
 // testAccCheckALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
 // sure that all instances in it are healthy.
 func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
@@ -3930,10 +4007,14 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_InstanceRefresh_Start(launchConfigurationName string) string {
-	return fmt.Sprintf(`
+func testAccGroupInstanceRefreshStartConfig(rName, launchConfigurationNamePrefix string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
@@ -3944,35 +4025,16 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
-  image_id      = data.aws_ami.test.id
+  name_prefix   = %[2]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.nano"
 
   lifecycle {
     create_before_destroy = true
   }
 }
-`, launchConfigurationName)
+`, rName, launchConfigurationNamePrefix))
 }
 
 func testAccGroupConfig_InstanceRefresh_Triggers() string {
@@ -5336,51 +5398,6 @@ resource "aws_launch_configuration" "test" {
 `
 }
 
-func testAccCheckInstanceRefreshCount(group *autoscaling.Group, expected int) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-
-		input := autoscaling.DescribeInstanceRefreshesInput{
-			AutoScalingGroupName: group.AutoScalingGroupName,
-		}
-		resp, err := conn.DescribeInstanceRefreshes(&input)
-		if err != nil {
-			return fmt.Errorf("error describing Auto Scaling Group (%s) Instance Refreshes: %w", aws.StringValue(group.AutoScalingGroupName), err)
-		}
-
-		if len(resp.InstanceRefreshes) != expected {
-			return fmt.Errorf("expected %d Instance Refreshes, got %d", expected, len(resp.InstanceRefreshes))
-		}
-		return nil
-	}
-}
-
-func testAccCheckInstanceRefreshStatus(group *autoscaling.Group, offset int, expected ...string) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-
-		input := autoscaling.DescribeInstanceRefreshesInput{
-			AutoScalingGroupName: group.AutoScalingGroupName,
-		}
-		resp, err := conn.DescribeInstanceRefreshes(&input)
-		if err != nil {
-			return fmt.Errorf("error describing Auto Scaling Group (%s) Instance Refreshes: %w", aws.StringValue(group.AutoScalingGroupName), err)
-		}
-
-		if len(resp.InstanceRefreshes) < offset {
-			return fmt.Errorf("expected at least %d Instance Refreshes, got %d", offset+1, len(resp.InstanceRefreshes))
-		}
-
-		actual := aws.StringValue(resp.InstanceRefreshes[offset].Status)
-		for _, s := range expected {
-			if actual == s {
-				return nil
-			}
-		}
-		return fmt.Errorf("expected Instance Refresh at index %d to be in %q, got %q", offset, expected, actual)
-	}
-}
-
 func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 	const asgName = "test-asg"
 	testCases := []struct {
@@ -5782,33 +5799,5 @@ func TestFlattenWarmPoolConfiguration(t *testing.T) {
 				t.Errorf("got %s, expected %s", got, testCase.expected)
 			}
 		})
-	}
-}
-
-func testAccCheckLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return errors.New("No Target Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
-
-		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
-		}
-
-		if targetGroup == nil {
-			return fmt.Errorf("Target Group (%s) not found", rs.Primary.ID)
-		}
-
-		*res = *targetGroup
-		return nil
 	}
 }
