@@ -1,12 +1,12 @@
 ---
 subcategory: "Redshift"
 layout: "aws"
-page_title: "AWS: aws_redshift_snapshot_copy_grant"
+page_title: "AWS: aws_redshift_authentication_profile"
 description: |-
   Creates a Redshift authentication profile
 ---
 
-# Resource: aws_redshift_snapshot_copy_grant
+# Resource: aws_redshift_authentication_profile
 
 Creates a Redshift authentication profile
 
