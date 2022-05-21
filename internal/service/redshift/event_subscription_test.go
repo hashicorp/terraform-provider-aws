@@ -221,11 +221,13 @@ func testAccCheckEventSubscriptionExists(n string, v *redshift.EventSubscription
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
-		_, err := tfredshift.FindEventSubscriptionByName(conn, rs.Primary.ID)
+		out, err := tfredshift.FindEventSubscriptionByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
+
+		*v = *out
 
 		return nil
 	}
