@@ -139,6 +139,70 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 	})
 }
 
+func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
+	var v cloudsearch.DomainStatus
+	resourceName := "aws_cloudsearch_domain.test"
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainSourceFieldsConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccDomainExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test",
+						"type":          "int",
+						"default_value": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test_2",
+						"type":          "int",
+						"default_value": "4",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test_source",
+						"type":          "int",
+						"source_fields": "int_test,int_test_2",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainSourceFieldsUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccDomainExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test",
+						"type":          "int",
+						"default_value": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test_2",
+						"type":          "int",
+						"default_value": "4",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test_source",
+						"type":          "int",
+						"source_fields": "*",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudSearchDomain_update(t *testing.T) {
 	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
@@ -341,6 +405,60 @@ resource "aws_cloudsearch_domain" "test" {
   index_field {
     name = "latlon_test"
     type = "latlon"
+  }
+}
+`, rName)
+}
+
+func testAccDomainSourceFieldsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudsearch_domain" "test" {
+  name = %[1]q
+
+  index_field {
+    name          = "int_test"
+    type          = "int"
+    default_value = "2"
+  }
+
+  index_field {
+    name          = "int_test_2"
+    type          = "int"
+    default_value = "4"
+  }
+
+  index_field {
+    name   = "int_test_source"
+    type   = "int"
+
+	source_fields = "int_test,int_test_2"
+  }
+}
+`, rName)
+}
+
+func testAccDomainSourceFieldsUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudsearch_domain" "test" {
+  name = %[1]q
+
+  index_field {
+    name          = "int_test"
+    type          = "int"
+    default_value = "2"
+  }
+
+  index_field {
+    name          = "int_test_2"
+    type          = "int"
+    default_value = "4"
+  }
+
+  index_field {
+    name   = "int_test_source"
+    type   = "int"
+
+	source_fields = "*"
   }
 }
 `, rName)
