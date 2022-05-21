@@ -2,8 +2,6 @@ package cloudfront
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -253,14 +251,12 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 			},
 			"server_timing_headers_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sampling_rate": {
-							Type:         schema.TypeFloat,
-							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.0, 100.0),
+							Type:     schema.TypeFloat,
+							Computed: true,
 						},
 					}},
 			},
