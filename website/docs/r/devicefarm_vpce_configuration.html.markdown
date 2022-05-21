@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DeviceFarm Instance Profiles can be imported by their arn:
+DeviceFarm VPCE Configurations can be imported by their arn:
 
 ```
 $ terraform import aws_devicefarm_vpce_configuration.example arn:aws:devicefarm:us-west-2:123456789012:vpceconfiguration:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
