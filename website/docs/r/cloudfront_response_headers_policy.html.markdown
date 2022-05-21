@@ -79,7 +79,6 @@ resource "aws_cloudfront_response_headers_policy" "example" {
   }
 
   server_timing_headers_config {
-    enabled       = true
     sampling_rate = 50
   }
 }
@@ -156,8 +155,7 @@ The following arguments are supported:
 
 ### Server Timing Headers Config
 
-* `enabled` - (Required) A Boolean that determines whether CloudFront adds the Server-Timing header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
-* `sampling_rate` - (Optional) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to. Valid range: Minimum value of 0.0. Maximum value of 100.0.
+* `sampling_rate` - (Required) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to. Valid range: Minimum value of 0.0. Maximum value of 100.0.
 
 ## Attributes Reference
 
