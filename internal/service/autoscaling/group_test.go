@@ -1080,9 +1080,9 @@ func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 
 func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var tg elbv2.TargetGroup
-
-	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1091,26 +1091,14 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_ALB_TargetGroup_ELBCapacity(rInt),
+				Config: testAccGroupTargetGroupELBCapacityConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
 					testAccCheckALBTargetGroupHealthy(&tg),
 				),
 			},
-			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -3174,7 +3162,7 @@ func testAccCheckInstanceRefreshStatus(v *autoscaling.Group, index int, expected
 	}
 }
 
-func testAccCheckLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
+func testAccCheckLBTargetGroupExists(n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -3182,42 +3170,43 @@ func testAccCheckLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Target Group ID is set")
+			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
-		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
 		}
 
-		if targetGroup == nil {
-			return fmt.Errorf("Target Group (%s) not found", rs.Primary.ID)
+		if output == nil {
+			return fmt.Errorf("ELBv2 Target Group (%s) not found", rs.Primary.ID)
 		}
 
-		*res = *targetGroup
+		*v = *output
+
 		return nil
 	}
 }
 
 // testAccCheckALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
 // sure that all instances in it are healthy.
-func testAccCheckALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
+func testAccCheckALBTargetGroupHealthy(v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
-		resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
-			TargetGroupArn: res.TargetGroupArn,
+		output, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
+			TargetGroupArn: v.TargetGroupArn,
 		})
 
 		if err != nil {
 			return err
 		}
 
-		for _, target := range resp.TargetHealthDescriptions {
-			if target.TargetHealth == nil || target.TargetHealth.State == nil || *target.TargetHealth.State != "healthy" {
+		for _, v := range output.TargetHealthDescriptions {
+			if v.TargetHealth == nil || aws.StringValue(v.TargetHealth.State) != elbv2.TargetHealthStateEnumHealthy {
 				return errors.New("Not all instances in target group are healthy yet, but should be")
 			}
 		}
@@ -4110,385 +4099,47 @@ resource "aws_autoscaling_group" "test" {
 `, rName, targetGroupCount))
 }
 
-func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
+func testAccGroupTargetGroupELBCapacityConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigVpcWithSubnets(rName, 2),
 		fmt.Sprintf(`
-resource "aws_vpc" "default" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-alb-target-group"
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.default.id
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alt" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+resource "aws_lb" "test" {
+  name    = %[1]q
+  subnets = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
   }
 }
 
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id          = data.aws_ami.test_ami.id
-  instance_type     = "t2.micro"
-  enable_monitoring = false
-}
-
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier = [
-    aws_subnet.main.id,
-    aws_subnet.alt.id,
-  ]
-
-  max_size                  = 2
-  min_size                  = 0
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  desired_capacity          = 0
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-}
-
-resource "aws_security_group" "tf_test_self" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = aws_vpc.default.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccGroupConfig_ALB_TargetGroup_post(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
-resource "aws_vpc" "default" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.default.id
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "alt" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id          = data.aws_ami.test_ami.id
-  instance_type     = "t2.micro"
-  enable_monitoring = false
-}
-
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier = [
-    aws_subnet.main.id,
-    aws_subnet.alt.id,
-  ]
-
-  target_group_arns = [aws_lb_target_group.test.arn]
-
-  max_size                  = 2
-  min_size                  = 0
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  desired_capacity          = 0
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-}
-
-resource "aws_security_group" "tf_test_self" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = aws_vpc.default.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccGroupConfig_ALB_TargetGroup_post_duo(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
-resource "aws_vpc" "default" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.default.id
-}
-
-resource "aws_lb_target_group" "test_more" {
-  name     = format("%%s-%%s", substr(%[1]q, 0, 28), "2")
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.default.id
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "alt" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id          = data.aws_ami.test_ami.id
-  instance_type     = "t2.micro"
-  enable_monitoring = false
-}
-
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier = [
-    aws_subnet.main.id,
-    aws_subnet.alt.id,
-  ]
-
-  target_group_arns = [
-    aws_lb_target_group.test.arn,
-    aws_lb_target_group.test_more.arn,
-  ]
-
-  max_size                  = 2
-  min_size                  = 0
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  desired_capacity          = 0
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-}
-
-resource "aws_security_group" "tf_test_self" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = aws_vpc.default.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccGroupConfig_TargetGroupARNs(rName string, tgCount int) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.micro"
-  name          = %[1]q
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  count = %[2]d
-
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-}
-
-resource "aws_autoscaling_group" "test" {
-  force_delete        = true
-  max_size            = 0
-  min_size            = 0
-  target_group_arns   = length(aws_lb_target_group.test) > 0 ? aws_lb_target_group.test[*].arn : []
-  vpc_zone_identifier = [aws_subnet.test.id]
-
-  launch_template {
-    id = aws_launch_template.test.id
-  }
-}
-`, rName, tgCount)
-}
-
-func testAccGroupConfig_ALB_TargetGroup_ELBCapacity(rInt int) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-resource "aws_vpc" "default" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = "true"
-  enable_dns_support   = "true"
-
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-alb-target-group-elb-capacity"
-  }
-}
-
-resource "aws_lb" "test_lb" {
-  subnets = [aws_subnet.main.id, aws_subnet.alt.id]
-
-  tags = {
-    Name = "testAccGroupConfig_ALB_TargetGroup_ELBCapacity"
-  }
-}
-
-resource "aws_lb_listener" "test_listener" {
-  load_balancer_arn = aws_lb.test_lb.arn
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
   port              = "80"
 
   default_action {
     target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "tf-alb-test-%d"
+  name     = %[1]q
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.default.id
+  vpc_id   = aws_vpc.test.id
 
   health_check {
     path              = "/"
@@ -4499,86 +4150,54 @@ resource "aws_lb_target_group" "test" {
   }
 
   tags = {
-    Name = "testAccGroupConfig_ALB_TargetGroup_ELBCapacity"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-main"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alt" {
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+resource "aws_route_table_association" "test" {
+  count = length(aws_subnet.test[*])
 
-  tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-alt"
-  }
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
 }
 
-resource "aws_internet_gateway" "internet_gateway" {
-  vpc_id = aws_vpc.default.id
-}
-
-resource "aws_route_table" "route_table" {
-  vpc_id = aws_vpc.default.id
-}
-
-resource "aws_route_table_association" "route_table_association_main" {
-  subnet_id      = aws_subnet.main.id
-  route_table_id = aws_route_table.route_table.id
-}
-
-resource "aws_route_table_association" "route_table_association_alt" {
-  subnet_id      = aws_subnet.alt.id
-  route_table_id = aws_route_table.route_table.id
-}
-
-resource "aws_route" "public_default_route" {
-  route_table_id         = aws_route_table.route_table.id
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.internet_gateway.id
+  gateway_id             = aws_internet_gateway.test.id
 }
 
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
+resource "aws_launch_configuration" "test" {
+  name            = %[1]q
+  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type   = "t2.micro"
 
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id                    = data.aws_ami.test_ami.id
-  instance_type               = "t2.micro"
   associate_public_ip_address = "true"
 
-  user_data = <<EOS
+  # Need the instance to listen on port 80 at boot
+  user_data = <<EOF
 #!/bin/bash
 yum -y install httpd
 echo "hello world" > /var/www/html/index.html
 chkconfig httpd on
 service httpd start
-EOS
+EOF
 }
 
-resource "aws_autoscaling_group" "bar" {
-  vpc_zone_identifier = [
-    aws_subnet.main.id,
-    aws_subnet.alt.id,
-  ]
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier = aws_subnet.test[*].id
 
   target_group_arns = [aws_lb_target_group.test.arn]
 
+  name                      = %[1]q
   max_size                  = 2
   min_size                  = 2
   health_check_grace_period = 300
@@ -4587,9 +4206,15 @@ resource "aws_autoscaling_group" "bar" {
   wait_for_elb_capacity     = 2
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
-`, rInt)
+`, rName))
 }
 
 func testAccGroupConfig_MixedInstancesPolicy_Base(rName string) string {
