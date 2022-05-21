@@ -52,37 +52,13 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "severity", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "cluster-snapshot"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "monitoring"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
+					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccRedshiftEventSubscription_withPrefix(t *testing.T) {
-	var v redshift.EventSubscription
-	resourceName := "aws_redshift_event_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEventSubscriptionConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
