@@ -191,7 +191,7 @@ resource "aws_redshift_usage_limit" "test" {
 
   tags = {
     %[1]q = %[2]q
-  }  
+  }
 }
 `, tagKey1, tagValue1))
 }
@@ -207,7 +207,7 @@ resource "aws_redshift_usage_limit" "test" {
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q	
-  }  
+  }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
