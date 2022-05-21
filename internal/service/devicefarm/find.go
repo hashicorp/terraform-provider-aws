@@ -157,3 +157,28 @@ func FindTestGridProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicef
 
 	return output.TestGridProject, nil
 }
+
+func FindVPCEConfigurationByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.VPCEConfiguration, error) {
+
+	input := &devicefarm.GetVPCEConfigurationInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetVPCEConfiguration(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VpceConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VpceConfiguration, nil
+}
