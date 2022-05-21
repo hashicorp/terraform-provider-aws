@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -250,6 +251,23 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
+			"server_timing_headers_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"sampling_rate": {
+							Type:         schema.TypeFloat,
+							Required:     true,
+							ValidateFunc: validation.FloatBetween(0.0000, 100.0000),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -322,6 +340,13 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		}
 	} else {
 		d.Set("security_headers_config", nil)
+	}
+	if apiObject.ServerTimingHeadersConfig != nil {
+		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting server_timing_headers_config: %w", err)
+		}
+	} else {
+		d.Set("server_timing_headers_config", nil)
 	}
 
 	return nil

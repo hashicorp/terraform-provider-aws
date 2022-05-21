@@ -34,6 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cors_config` - A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
 * `custom_headers_config` - Object that contains an attribute `items` that contains a list of Custom Headers See [Custom Header](#custom-header) for more information.
 * `security_headers_config` - A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
+* `server_timing_headers_config` - (Optional) A configuration for enabling the `Server-Timing` header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
 ### Cors Config
 
@@ -58,6 +59,11 @@ In addition to all arguments above, the following attributes are exported:
 * `referrer_policy` - A setting that determines whether CloudFront includes the Referrer-Policy HTTP response header and the header’s value. See [Referrer Policy](#referrer-policy) for more information.
 * `strict_transport_security` - Settings that determine whether CloudFront includes the Strict-Transport-Security HTTP response header and the header’s value. See [Strict Transport Security](#strict-transport-security) for more information.
 * `xss_protection` - Settings that determine whether CloudFront includes the X-XSS-Protection HTTP response header and the header’s value. See [XSS Protection](#xss-protection) for more information.
+
+### Server Timing Headers Config
+
+* `enabled` - (Required) A Boolean that determines whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `sampling_rate` - (Required) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the `Server-Timing` header to. When you set the sampling rate to 100, CloudFront adds the `Server-Timing` header to the HTTP response for every request that matches the cache behavior that this response headers policy is attached to. When you set it to 50, CloudFront adds the header to 50% of the responses for requests that match the cache behavior. You can set the sampling rate to any number 0–100 with up to four decimal places.
 
 ### Content Security Policy
 
