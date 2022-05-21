@@ -70,7 +70,6 @@ func ResourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"source_type": {
 				Type:     schema.TypeString,
@@ -91,6 +90,7 @@ func ResourceEventSubscription() *schema.Resource {
 			"severity": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "INFO",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ERROR",
 					"INFO",
