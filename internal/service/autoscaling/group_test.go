@@ -967,6 +967,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 
 func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -976,18 +977,23 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupInstanceRefreshBasicConfig(""),
+				Config: testAccGroupInstanceRefreshBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupConfig_InstanceRefresh_Triggers(),
+				Config: testAccGroupInstanceRefreshTriggersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tags"),
 					testAccCheckInstanceRefreshCount(&group, 1),
@@ -3923,6 +3929,12 @@ resource "aws_autoscaling_group" "test" {
   instance_refresh {
     strategy = "Rolling"
   }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
@@ -3943,6 +3955,12 @@ resource "aws_autoscaling_group" "test" {
     preferences {
       min_healthy_percentage = 0
     }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
   }
 }
 `, rName))
@@ -3965,6 +3983,12 @@ resource "aws_autoscaling_group" "test" {
       min_healthy_percentage = 0
       skip_matching          = true
     }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
   }
 }
 `, rName))
@@ -3990,6 +4014,12 @@ resource "aws_autoscaling_group" "test" {
       checkpoint_percentages = [1, 20, 25, 50, 100]
     }
   }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
@@ -4003,6 +4033,12 @@ resource "aws_autoscaling_group" "test" {
   min_size             = 1
   desired_capacity     = 1
   launch_configuration = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 `, rName))
 }
@@ -4023,6 +4059,12 @@ resource "aws_autoscaling_group" "test" {
   instance_refresh {
     strategy = "Rolling"
   }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_launch_configuration" "test" {
@@ -4037,10 +4079,11 @@ resource "aws_launch_configuration" "test" {
 `, rName, launchConfigurationNamePrefix))
 }
 
-func testAccGroupConfig_InstanceRefresh_Triggers() string {
-	return `
+func testAccGroupInstanceRefreshTriggersConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
@@ -4052,36 +4095,18 @@ resource "aws_autoscaling_group" "test" {
   }
 
   tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+
+  tag {
     key                 = "Key"
     value               = "Value"
     propagate_at_launch = true
   }
 }
-
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
+`, rName))
 }
 
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
