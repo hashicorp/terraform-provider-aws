@@ -1004,6 +1004,44 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
+func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupLoadBalancersConfig(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "11"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupLoadBalancersConfig(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupLoadBalancersConfig(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "11"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
@@ -1205,44 +1243,6 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckNoResourceAttr(resourceName, "warm_pool.#"),
-				),
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
-func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_LoadBalancers(rName, 11),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "11"),
-				),
-			},
-			testAccGroupImportStep(resourceName),
-			{
-				Config: testAccGroupConfig_LoadBalancers(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_LoadBalancers(rName, 11),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "11"),
 				),
 			},
 		},
@@ -4109,6 +4109,57 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupLoadBalancersConfig(rName string, elbCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigVpcWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_elb" "test" {
+  count = %[2]d
+
+  # "name" cannot be longer than 32 characters.
+  name    = format("%%s-%%s", substr(%[1]q, 0, 28), count.index)
+  subnets = aws_subnet.test[*].id
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_autoscaling_group" "test" {
+  name                = %[1]q
+  force_delete        = true
+  max_size            = 0
+  min_size            = 0
+  load_balancers      = length(aws_elb.test) > 0 ? aws_elb.test[*].name : []
+  vpc_zone_identifier = aws_subnet.test[*].id
+
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+}
+`, rName, elbCount))
+}
+
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -4589,75 +4640,6 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration      = aws_launch_configuration.foobar.name
 }
 `, rInt)
-}
-
-func testAccGroupConfig_LoadBalancers(rName string, elbCount int) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.micro"
-  name          = %[1]q
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_elb" "test" {
-  count      = %[2]d
-  depends_on = [aws_internet_gateway.test]
-
-  subnets = [aws_subnet.test.id]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-}
-
-resource "aws_autoscaling_group" "test" {
-  force_delete        = true
-  max_size            = 0
-  min_size            = 0
-  load_balancers      = length(aws_elb.test) > 0 ? aws_elb.test[*].name : []
-  vpc_zone_identifier = [aws_subnet.test.id]
-
-  launch_template {
-    id = aws_launch_template.test.id
-  }
-}
-`, rName, elbCount)
 }
 
 func testAccGroupConfig_MixedInstancesPolicy_Base(rName string) string {
