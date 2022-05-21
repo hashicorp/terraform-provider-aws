@@ -2,8 +2,6 @@ package cloudfront
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -12,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"log"
 )
 
 func ResourceResponseHeadersPolicy() *schema.Resource {
@@ -277,16 +276,13 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"sampling_rate": {
 							Type:         schema.TypeFloat,
-							Required:     false,
+							Required:     true,
 							ValidateFunc: validation.FloatBetween(0.0, 100.0),
 						},
-					}},
+					},
+				},
 			},
 		},
 	}
@@ -1102,12 +1098,11 @@ func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]inter
 
 	apiObject := &cloudfront.ResponseHeadersPolicyServerTimingHeadersConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.Enabled = aws.Bool(v)
-	}
-
 	if v, ok := tfMap["sampling_rate"].(float64); ok && v != 0 {
+		apiObject.Enabled = aws.Bool(true)
 		apiObject.SamplingRate = aws.Float64(v)
+	} else {
+		apiObject.Enabled = aws.Bool(false)
 	}
 
 	return apiObject
@@ -1119,10 +1114,6 @@ func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *cloudfront
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
-	}
 
 	if v := apiObject.SamplingRate; v != nil {
 		tfMap["sampling_rate"] = aws.Float64Value(v)

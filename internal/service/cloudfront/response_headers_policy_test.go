@@ -50,6 +50,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 			{
@@ -84,6 +85,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 		},
@@ -121,6 +123,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 			{
@@ -173,6 +176,7 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.preload", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 			{
@@ -204,6 +208,7 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.protection", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.report_uri", "https://example.com/"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 		},
@@ -221,7 +226,7 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName),
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -237,7 +242,6 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "10"),
 				),
 			},
@@ -248,17 +252,22 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigUpdatedConfig(rName),
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
+						"header":   "X-Header1",
+						"override": "true",
+						"value":    "value1",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "90"),
 				),
 			},
@@ -476,7 +485,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName string) string {
+func testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName string, rRate float64) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
@@ -490,22 +499,8 @@ resource "aws_cloudfront_response_headers_policy" "test" {
   }
 
   server_timing_headers_config {
-    enabled 	  = true
-    sampling_rate = 10
+    sampling_rate = %[2]f
   }
 }
-`, rName)
-}
-
-func testAccResponseHeadersPolicyServerTimingHeadersConfigUpdatedConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudfront_response_headers_policy" "test" {
-  name = %[1]q
-
-  server_timing_headers_config {
-    enabled 	  = false
-    sampling_rate = 90
-  }
-}
-`, rName)
+`, rName, rRate)
 }

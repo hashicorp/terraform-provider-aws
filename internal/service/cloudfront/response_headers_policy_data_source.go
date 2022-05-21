@@ -257,13 +257,9 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"sampling_rate": {
 							Type:         schema.TypeFloat,
-							Required:     false,
+							Required:     true,
 							ValidateFunc: validation.FloatBetween(0.0, 100.0),
 						},
 					}},
