@@ -2,6 +2,7 @@ package redshift_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -29,8 +30,15 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`eventsubscription:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "severity", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
