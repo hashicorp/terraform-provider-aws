@@ -1106,7 +1106,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -1114,36 +1114,31 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_WarmPool_Empty(),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGroupWarmPoolEmptyConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "Stopped"),
 				),
 			},
+			testAccGroupImportStep(resourceName),
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"warm_pool",
-					"force_delete",
-					"wait_for_capacity_timeout",
-				},
-			},
-			{
-				Config: testAccGroupConfig_WarmPool_Full(),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGroupWarmPoolFullConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "Stopped"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "0"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.0.reuse_on_scale_in", "true"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "Stopped"),
 				),
 			},
 			{
-				Config: testAccGroupConfig_WarmPool_Remove(),
+				Config: testAccGroupWarmPoolNoneConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckNoResourceAttr(resourceName, "warm_pool.#"),
@@ -4217,6 +4212,74 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupWarmPoolEmptyConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 5
+  min_size             = 1
+  desired_capacity     = 1
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  warm_pool {}
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupWarmPoolFullConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 5
+  min_size             = 1
+  desired_capacity     = 1
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  warm_pool {
+    pool_state                  = "Stopped"
+    min_size                    = 0
+    max_group_prepared_capacity = 2
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupWarmPoolNoneConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 5
+  min_size             = 1
+  desired_capacity     = 1
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
 func testAccGroupConfig_MixedInstancesPolicy_Base(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
 		fmt.Sprintf(`
@@ -4853,81 +4916,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName)
-}
-
-func testAccGroupConfig_WarmPool_Base() string {
-	return `
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.nano"
-}
-`
-}
-
-func testAccGroupConfig_WarmPool_Empty() string {
-	return testAccGroupConfig_WarmPool_Base() + `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 5
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  warm_pool {}
-}
-`
-}
-
-func testAccGroupConfig_WarmPool_Full() string {
-	return testAccGroupConfig_WarmPool_Base() + `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 5
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-
-  warm_pool {
-    pool_state                  = "Stopped"
-    min_size                    = 0
-    max_group_prepared_capacity = 2
-    instance_reuse_policy {
-      reuse_on_scale_in = true
-    }
-  }
-}
-`
-}
-
-func testAccGroupConfig_WarmPool_Remove() string {
-	return testAccGroupConfig_WarmPool_Base() + `
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.current.names[0]]
-  max_size             = 5
-  min_size             = 1
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
-}
-`
 }
 
 func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(name string) string {
