@@ -1060,56 +1060,18 @@ func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupTargetGroupConfig(rName, 2),
+				Config: testAccGroupTargetGroupConfig(rName, 12),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "12"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupTargetGroupConfig(rName, 2),
+				Config: testAccGroupTargetGroupConfig(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
-func TestAccAutoScalingGroup_targetGroupARNs(t *testing.T) {
-	var group autoscaling.Group
-	resourceName := "aws_autoscaling_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_TargetGroupARNs(rName, 11),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "11"),
-				),
-			},
-			testAccGroupImportStep(resourceName),
-			{
-				Config: testAccGroupConfig_TargetGroupARNs(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_TargetGroupARNs(rName, 11),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
 				),
 			},
 		},
@@ -4114,7 +4076,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, elbCount))
 }
 
-func testAccGroupTargetGroupBaseConfig(rName string) string {
+func testAccGroupTargetGroupConfig(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigVpcWithSubnets(rName, 2),
@@ -4128,18 +4090,14 @@ resource "aws_launch_configuration" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  count = 2
+  count = %[2]d
 
   name     = format("%%s-%%s", substr(%[1]q, 0, 28), count.index)
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
-`, rName))
-}
 
-func testAccGroupTargetGroupConfig(rName string, targetGroupCount int) string {
-	return acctest.ConfigCompose(testAccGroupTargetGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   vpc_zone_identifier = aws_subnet.test[*].id
   max_size             = 0
@@ -4147,7 +4105,7 @@ resource "aws_autoscaling_group" "test" {
   name                 = %[1]q
   launch_configuration = aws_launch_configuration.test.name
 
-  target_group_arns = slice(aws_lb_target_group.test[*].arn, 0, %[2]d)
+  target_group_arns = length(aws_lb_target_group.test) > 0 ? aws_lb_target_group.test[*].arn : []
 }
 `, rName, targetGroupCount))
 }
