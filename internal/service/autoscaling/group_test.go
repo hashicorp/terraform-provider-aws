@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sort"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -1042,33 +1041,10 @@ func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
+func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 	var group autoscaling.Group
-	var tg elbv2.TargetGroup
-	var tg2 elbv2.TargetGroup
+	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	testCheck := func(targets []*elbv2.TargetGroup) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			var ts []string
-			var gs []string
-			for _, t := range targets {
-				ts = append(ts, *t.TargetGroupArn)
-			}
-
-			for _, s := range group.TargetGroupARNs {
-				gs = append(gs, *s)
-			}
-
-			sort.Strings(ts)
-			sort.Strings(gs)
-
-			if !reflect.DeepEqual(ts, gs) {
-				return fmt.Errorf("Error: target group match not found!\nASG Target groups: %#v\nTarget Group: %#v", ts, gs)
-			}
-			return nil
-		}
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1077,47 +1053,25 @@ func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_ALB_TargetGroup_pre(rName),
+				Config: testAccGroupTargetGroupConfig(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "target_group_arns.#", "0"),
-				),
-			},
-
-			{
-				Config: testAccGroupConfig_ALB_TargetGroup_post_duo(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
-					testAccCheckLBTargetGroupExists("aws_lb_target_group.test_more", &tg2),
-					testCheck([]*elbv2.TargetGroup{&tg, &tg2}),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "target_group_arns.#", "2"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-			{
-				Config: testAccGroupConfig_ALB_TargetGroup_post(rName),
+				Config: testAccGroupTargetGroupConfig(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
-					testCheck([]*elbv2.TargetGroup{&tg}),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "target_group_arns.#", "1"),
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "2"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupTargetGroupConfig(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "2"),
 				),
 			},
 		},
@@ -4158,6 +4112,44 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, elbCount))
+}
+
+func testAccGroupTargetGroupBaseConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigVpcWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name            = %[1]q
+  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type   = "t2.micro"
+
+  enable_monitoring = false
+}
+
+resource "aws_lb_target_group" "test" {
+  count = 2
+
+  name     = format("%%s-%%s", substr(%[1]q, 0, 28), count.index)
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+}
+`, rName))
+}
+
+func testAccGroupTargetGroupConfig(rName string, targetGroupCount int) string {
+	return acctest.ConfigCompose(testAccGroupTargetGroupBaseConfig(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier = aws_subnet.test[*].id
+  max_size             = 0
+  min_size             = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  target_group_arns = slice(aws_lb_target_group.test[*].arn, 0, %[2]d)
+}
+`, rName, targetGroupCount))
 }
 
 func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
