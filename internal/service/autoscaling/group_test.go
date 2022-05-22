@@ -1472,7 +1472,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotMaxPrice(rName, "0.50"),
+				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, "0.50"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1482,7 +1482,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotMaxPrice(rName, "0.51"),
+				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, "0.51"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1491,7 +1491,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 				),
 			},
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotMaxPrice(rName, ""),
+				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -4592,19 +4592,18 @@ resource "aws_autoscaling_group" "test" {
 `, rName, spotInstancePools))
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotMaxPrice(rName, spotMaxPrice string) string {
-	return testAccGroupConfig_MixedInstancesPolicy_Base(rName) +
-		fmt.Sprintf(`
+func testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, spotMaxPrice string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   mixed_instances_policy {
     instances_distribution {
-      spot_max_price = %q
+      spot_max_price = %[2]q
     }
 
     launch_template {
@@ -4615,13 +4614,14 @@ resource "aws_autoscaling_group" "test" {
       override {
         instance_type = "t2.micro"
       }
+
       override {
         instance_type = "t3.small"
       }
     }
   }
 }
-`, rName, spotMaxPrice)
+`, rName, spotMaxPrice))
 }
 
 func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_LaunchTemplateName(rName string) string {
