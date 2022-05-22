@@ -25,6 +25,7 @@ func ResourceIndex() *schema.Resource {
 		CreateContext: resourceIndexCreate,
 		ReadContext:   resourceIndexRead,
 		UpdateContext: resourceIndexUpdate,
+		DeleteContext: resourceIndexDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -524,6 +525,22 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return resourceIndexRead(ctx, d, meta)
+}
+
+func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+
+	id := d.Id()
+
+	_, err := conn.DeleteIndexWithContext(ctx, &kendra.DeleteIndexInput{
+		Id: aws.String(id),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Index (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func expandCapacityUnits(capacityUnits []interface{}) *kendra.CapacityUnitsConfiguration {
