@@ -2,7 +2,9 @@ package kendra_test
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kendra"
@@ -23,6 +25,14 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	edition := "DEVELOPER_EDITION"
 	resourceName := "aws_kendra_index.test"
 
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -32,6 +42,10 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexBaseConfig(rName),
+				Check:  propagationSleep(),
+			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, description, edition),
 				Check: resource.ComposeTestCheckFunc(
