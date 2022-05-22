@@ -1107,6 +1107,7 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -1144,6 +1145,28 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "warm_pool.#"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupPartitionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+				),
+			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -2981,40 +3004,6 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
-func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
-	var group autoscaling.Group
-
-	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupPartitionConfig(randName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.test", &group),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-		},
-	})
-}
-
 func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 	var group autoscaling.Group
 	rName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
@@ -4280,6 +4269,41 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupPartitionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "m5.large"
+
+  placement {
+    tenancy    = "default"
+    group_name = aws_placement_group.test.id
+  }
+}
+
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+}
+`, rName))
+}
+
 func testAccGroupConfig_MixedInstancesPolicy_Base(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
 		fmt.Sprintf(`
@@ -4873,49 +4897,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, instanceRequirements)
-}
-
-func testAccGroupPartitionConfig(rName string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "this" {
-  name          = %[1]q
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "m5.large"
-
-  placement {
-    tenancy    = "default"
-    group_name = aws_placement_group.test.id
-  }
-}
-
-resource "aws_placement_group" "test" {
-  name     = %[1]q
-  strategy = "cluster"
-}
-
-resource "aws_autoscaling_group" "test" {
-  name_prefix        = "test"
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  min_size           = 0
-  max_size           = 0
-
-  launch_template {
-    id      = aws_launch_template.this.id
-    version = "$Latest"
-  }
-}
-`, rName)
 }
 
 func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(name string) string {
