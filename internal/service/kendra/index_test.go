@@ -21,6 +21,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "basic"
 	resourceName := "aws_kendra_index.test"
 
@@ -42,11 +43,11 @@ func TestAccKendraIndex_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName),
+				Config: testAccIndexBaseConfig(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -63,7 +64,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.text_document_statistics.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_bytes"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", kendra.IndexStatusActive),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
@@ -87,6 +88,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_kendra_index.test"
@@ -109,11 +111,11 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName),
+				Config: testAccIndexBaseConfig(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, originalDescription),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
@@ -125,7 +127,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, updatedDescription),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
@@ -136,6 +138,60 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 }
 
 func TestAccKendraIndex_updateName(t *testing.T) {
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "description"
+	resourceName := "aws_kendra_index.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexBaseConfig(rName, rName2),
+				Check:  propagationSleep(),
+			},
+			{
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexConfig_basic(rName, rName2, rName4, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKendraIndex_updateRoleArn(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -162,14 +218,14 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName),
+				Config: testAccIndexBaseConfig(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
 				),
 			},
 			{
@@ -178,10 +234,10 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName3, description),
+				Config: testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_sm", "arn"),
 				),
 			},
 		},
@@ -193,6 +249,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "disappears"
 	resourceName := "aws_kendra_index.test"
 
@@ -214,11 +271,11 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName),
+				Config: testAccIndexBaseConfig(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceIndex(), resourceName),
@@ -277,7 +334,7 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 	}
 }
 
-func testAccIndexBaseConfig(rName string) string {
+func testAccIndexBaseConfig(rName, rName2 string) string {
 	// Kendra IAM policies: https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -336,12 +393,71 @@ resource "aws_iam_role" "access_cw" {
     })
   }
 }
-`, rName)
+
+resource "aws_iam_role" "access_sm" {
+  name               = %[2]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_sm"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["cloudwatch:PutMetricData"]
+          Effect   = "Allow"
+          Resource = "*"
+          Condition = {
+            StringEquals = {
+              "cloudwatch:namespace" = "Kendra"
+            }
+          }
+        },
+        {
+          Action   = ["logs:DescribeLogGroups"]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+        {
+          Action   = ["logs:CreateLogGroup"]
+          Effect   = "Allow"
+          Resource = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+        },
+        {
+          Action = [
+            "logs:DescribeLogStreams",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          Effect   = "Allow"
+          Resource = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+        },
+        {
+          Action   = ["secretsmanager:GetSecretValue"]
+          Effect   = "Allow"
+          Resource = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:example"
+        },
+        {
+          Action   = ["kms:Decrypt"]
+          Effect   = "Allow"
+          Resource = "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/example"
+          Condition = {
+            StringLike = {
+              "kms:ViaService" = ["secretsmanager.*.amazonaws.com"]
+            }
+          }
+        }
+      ]
+    })
+  }
+}
+`, rName, rName2)
 }
 
-func testAccIndexConfig_basic(rName, rName2, description string) string {
+func testAccIndexConfig_basic(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName),
+		testAccIndexBaseConfig(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -352,5 +468,21 @@ resource "aws_kendra_index" "test" {
     "Key1" = "Value1"
   }
 }
-`, rName2, description))
+`, rName3, description))
+}
+
+func testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description string) string {
+	return acctest.ConfigCompose(
+		testAccIndexBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_kendra_index" "test" {
+  name        = %[1]q
+  description = %[2]q
+  role_arn    = aws_iam_role.access_sm.arn
+
+  tags = {
+    "Key1" = "Value1"
+  }
+}
+`, rName3, description))
 }
