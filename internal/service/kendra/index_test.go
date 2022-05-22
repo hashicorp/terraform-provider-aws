@@ -16,13 +16,12 @@ import (
 	tfkendra "github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
 )
 
-func TestAccKendraIndex_disappears(t *testing.T) {
+func TestAccKendraIndex_basic(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "disappears"
-	edition := "DEVELOPER_EDITION"
+	description := "basic"
 	resourceName := "aws_kendra_index.test"
 
 	propagationSleep := func() resource.TestCheckFunc {
@@ -47,7 +46,73 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, description, edition),
+				Config: testAccIndexConfig_basic(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "13"),
+					resource.TestCheckResourceAttr(resourceName, "edition", kendra.IndexEditionEnterpriseEdition),
+					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.faq_statistics.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.faq_statistics.0.indexed_question_answers_count"),
+					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.text_document_statistics.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_bytes"),
+					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", kendra.IndexStatusActive),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "user_context_policy", "ATTRIBUTE_FILTER"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKendraIndex_disappears(t *testing.T) {
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "disappears"
+	resourceName := "aws_kendra_index.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexBaseConfig(rName),
+				Check:  propagationSleep(),
+			},
+			{
+				Config: testAccIndexConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceIndex(), resourceName),
@@ -168,19 +233,18 @@ resource "aws_iam_role" "access_cw" {
 `, rName)
 }
 
-func testAccIndexConfig_basic(rName, rName2, description, edition string) string {
+func testAccIndexConfig_basic(rName, rName2, description string) string {
 	return acctest.ConfigCompose(
 		testAccIndexBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
   description = %[2]q
-  edition     = %[3]q
   role_arn    = aws_iam_role.access_cw.arn
 
   tags = {
     "Key1" = "Value1"
   }
 }
-`, rName2, description, edition))
+`, rName2, description))
 }
