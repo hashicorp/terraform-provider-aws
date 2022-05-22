@@ -50,13 +50,13 @@ func ResourceIndex() *schema.Resource {
 						"query_capacity_units": {
 							Type:         schema.TypeInt,
 							Computed:     true,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"storage_capacity_units": {
 							Type:         schema.TypeInt,
 							Computed:     true,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 					},
@@ -82,7 +82,7 @@ func ResourceIndex() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Computed:     true,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 30),
 						},
 						"relevance": {
@@ -162,7 +162,7 @@ func ResourceIndex() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Computed:     true,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(kendra.DocumentAttributeValueType_Values(), false),
 						},
 					},
