@@ -171,6 +171,7 @@ func ResourceIndex() *schema.Resource {
 			"edition": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(kendra.IndexEdition_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "ENTERPRISE_EDITION" by default.
