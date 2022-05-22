@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -23,6 +24,7 @@ func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceIndexCreate,
 		ReadContext:   resourceIndexRead,
+		UpdateContext: resourceIndexUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -486,6 +488,149 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+
+	id := d.Id()
+
+	if d.HasChanges("capacity_units, description, document_metadata_configuration_updates, name, role_arn, user_context_policy, user_group_resolution_configuration, user_token_configurations") {
+		input := &kendra.UpdateIndexInput{
+			Id: aws.String(id),
+		}
+
+		input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
+		input.Description = aws.String(d.Get("description").(string))
+		input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
+		input.Name = aws.String(d.Get("name").(string))
+		input.RoleArn = aws.String(d.Get("role_arn").(string))
+		input.UserContextPolicy = aws.String(d.Get("user_context_policy").(string))
+		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]interface{}))
+		input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
+
+		_, err := conn.UpdateIndexWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Index (%s): %w", d.Id(), err))
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceIndexRead(ctx, d, meta)
+}
+
+func expandCapacityUnits(capacityUnits []interface{}) *kendra.CapacityUnitsConfiguration {
+	if len(capacityUnits) == 0 || capacityUnits[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := capacityUnits[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.CapacityUnitsConfiguration{
+		QueryCapacityUnits:   aws.Int64(int64(tfMap["query_capacity_units"].(int))),
+		StorageCapacityUnits: aws.Int64(int64(tfMap["storage_capacity_units"].(int))),
+	}
+
+	return result
+}
+
+func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []interface{}) []*kendra.DocumentMetadataConfiguration {
+	if len(documentMetadataConfigurationUpdates) == 0 {
+		return nil
+	}
+
+	documentMetadataConfigurationUpdateConfigs := []*kendra.DocumentMetadataConfiguration{}
+
+	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
+		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
+		documentMetadataConfigurationUpdateConfig := &kendra.DocumentMetadataConfiguration{
+			Name: aws.String(tfMap["name"].(string)),
+			Type: aws.String(tfMap["type"].(string)),
+		}
+
+		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}))
+		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
+
+		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
+	}
+
+	return documentMetadataConfigurationUpdateConfigs
+}
+
+func expandRelevance(relevance []interface{}) *kendra.Relevance {
+	if len(relevance) == 0 || relevance[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := relevance[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.Relevance{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		result.Duration = aws.String(v)
+	}
+
+	if v, ok := tfMap["freshness"].(bool); ok {
+		result.Freshness = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["importance"].(int); ok {
+		result.Importance = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["rank_order"].(string); ok && v != "" {
+		result.RankOrder = aws.String(v)
+	}
+
+	if v, ok := tfMap["values_importance_map"].(map[string]interface{}); ok && len(v) > 0 {
+		result.ValueImportanceMap = flex.ExpandInt64Map(v)
+	}
+
+	return result
+}
+
+func expandSearch(search []interface{}) *kendra.Search {
+	if len(search) == 0 || search[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := search[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.Search{}
+
+	if v, ok := tfMap["displayable"].(bool); ok {
+		result.Displayable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["facetable"].(bool); ok {
+		result.Facetable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["searchable"].(bool); ok {
+		result.Searchable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["sortable"].(bool); ok {
+		result.Sortable = aws.Bool(v)
+	}
+
+	return result
 }
 
 func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *kendra.ServerSideEncryptionConfiguration {
