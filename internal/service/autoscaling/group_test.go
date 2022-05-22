@@ -1541,7 +1541,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "1"),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersionConfig(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1552,7 +1552,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "$Latest"),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersionConfig(rName, "$Latest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -4652,33 +4652,33 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, version string) string {
-	return testAccGroupConfig_MixedInstancesPolicy_Base(rName) +
-		fmt.Sprintf(`
+func testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersionConfig(rName, version string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   mixed_instances_policy {
     launch_template {
       launch_template_specification {
         launch_template_id = aws_launch_template.test.id
-        version            = %q
+        version            = %[2]q
       }
 
       override {
         instance_type = "t2.micro"
       }
+
       override {
         instance_type = "t3.small"
       }
     }
   }
 }
-`, rName, version)
+`, rName, version))
 }
 
 func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType(rName, instanceType string) string {
