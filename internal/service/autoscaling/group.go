@@ -1050,11 +1050,13 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("max_size", g.MaxSize)
 	d.Set("min_size", g.MinSize)
-
-	if err := d.Set("mixed_instances_policy", flattenMixedInstancesPolicy(g.MixedInstancesPolicy)); err != nil {
-		return fmt.Errorf("error setting mixed_instances_policy: %s", err)
+	if g.MixedInstancesPolicy != nil {
+		if err := d.Set("mixed_instances_policy", []interface{}{flattenMixedInstancesPolicy(g.MixedInstancesPolicy)}); err != nil {
+			return fmt.Errorf("setting mixed_instances_policy: %w", err)
+		}
+	} else {
+		d.Set("mixed_instances_policy", nil)
 	}
-
 	d.Set("name", g.AutoScalingGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(g.AutoScalingGroupName)))
 	d.Set("placement_group", g.PlacementGroup)
@@ -2541,54 +2543,140 @@ func expandMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPoli
 	return mixedInstancesPolicy
 }
 
-func flattenInstancesDistribution(instancesDistribution *autoscaling.InstancesDistribution) []interface{} {
-	if instancesDistribution == nil {
-		return []interface{}{}
+func flattenMixedInstancesPolicy(apiObject *autoscaling.MixedInstancesPolicy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"on_demand_allocation_strategy":            aws.StringValue(instancesDistribution.OnDemandAllocationStrategy),
-		"on_demand_base_capacity":                  aws.Int64Value(instancesDistribution.OnDemandBaseCapacity),
-		"on_demand_percentage_above_base_capacity": aws.Int64Value(instancesDistribution.OnDemandPercentageAboveBaseCapacity),
-		"spot_allocation_strategy":                 aws.StringValue(instancesDistribution.SpotAllocationStrategy),
-		"spot_instance_pools":                      aws.Int64Value(instancesDistribution.SpotInstancePools),
-		"spot_max_price":                           aws.StringValue(instancesDistribution.SpotMaxPrice),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.InstancesDistribution; v != nil {
+		tfMap["instances_distribution"] = []interface{}{flattenInstancesDistribution(v)}
 	}
 
-	return []interface{}{m}
+	if v := apiObject.LaunchTemplate; v != nil {
+		tfMap["launch_template"] = []interface{}{flattenLaunchTemplate(v)}
+	}
+
+	return tfMap
 }
 
-func flattenLaunchTemplate(launchTemplate *autoscaling.LaunchTemplate) []interface{} {
-	if launchTemplate == nil {
-		return []interface{}{}
+func flattenInstancesDistribution(apiObject *autoscaling.InstancesDistribution) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"launch_template_specification": flattenLaunchTemplateSpecification(launchTemplate.LaunchTemplateSpecification),
-		"override":                      flattenLaunchTemplateOverrides(launchTemplate.Overrides),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.OnDemandAllocationStrategy; v != nil {
+		tfMap["on_demand_allocation_strategy"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.OnDemandBaseCapacity; v != nil {
+		tfMap["on_demand_base_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.OnDemandPercentageAboveBaseCapacity; v != nil {
+		tfMap["on_demand_percentage_above_base_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SpotAllocationStrategy; v != nil {
+		tfMap["spot_allocation_strategy"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SpotInstancePools; v != nil {
+		tfMap["spot_instance_pools"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SpotMaxPrice; v != nil {
+		tfMap["spot_max_price"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-func flattenLaunchTemplateOverrides(launchTemplateOverrides []*autoscaling.LaunchTemplateOverrides) []interface{} {
-	l := make([]interface{}, len(launchTemplateOverrides))
+func flattenLaunchTemplate(apiObject *autoscaling.LaunchTemplate) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-	for i, launchTemplateOverride := range launchTemplateOverrides {
-		if launchTemplateOverride == nil {
-			l[i] = map[string]interface{}{}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateSpecification; v != nil {
+		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecification(v)}
+	}
+
+	if v := apiObject.Overrides; v != nil {
+		tfMap["override"] = flattenLaunchTemplateOverrideses(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["launch_template_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateName; v != nil {
+		tfMap["launch_template_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Version; v != nil {
+		tfMap["version"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateOverrides(apiObject *autoscaling.LaunchTemplateOverrides) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.InstanceRequirements; v != nil {
+		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap["instance_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateSpecification; v != nil {
+		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecification(v)}
+	}
+
+	if v := apiObject.WeightedCapacity; v != nil {
+		tfMap["weighted_capacity"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateOverrideses(apiObjects []*autoscaling.LaunchTemplateOverrides) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
 			continue
 		}
-		m := map[string]interface{}{
-			"instance_requirements":         []interface{}{flattenInstanceRequirements(launchTemplateOverride.InstanceRequirements)},
-			"instance_type":                 aws.StringValue(launchTemplateOverride.InstanceType),
-			"launch_template_specification": flattenLaunchTemplateSpecification(launchTemplateOverride.LaunchTemplateSpecification),
-			"weighted_capacity":             aws.StringValue(launchTemplateOverride.WeightedCapacity),
-		}
-		l[i] = m
+
+		tfList = append(tfList, flattenLaunchTemplateOverrides(apiObject))
 	}
 
-	return l
+	return tfList
 }
 
 func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) map[string]interface{} {
@@ -2827,33 +2915,6 @@ func flattenVCpuCount(apiObject *autoscaling.VCpuCountRequest) map[string]interf
 	}
 
 	return tfMap
-}
-
-func flattenLaunchTemplateSpecification(launchTemplateSpecification *autoscaling.LaunchTemplateSpecification) []interface{} {
-	if launchTemplateSpecification == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"launch_template_id":   aws.StringValue(launchTemplateSpecification.LaunchTemplateId),
-		"launch_template_name": aws.StringValue(launchTemplateSpecification.LaunchTemplateName),
-		"version":              aws.StringValue(launchTemplateSpecification.Version),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.MixedInstancesPolicy) []interface{} {
-	if mixedInstancesPolicy == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"instances_distribution": flattenInstancesDistribution(mixedInstancesPolicy.InstancesDistribution),
-		"launch_template":        flattenLaunchTemplate(mixedInstancesPolicy.LaunchTemplate),
-	}
-
-	return []interface{}{m}
 }
 
 func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolConfiguration) []interface{} {
