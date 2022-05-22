@@ -172,6 +172,14 @@ func ResourceIndex() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(kendra.IndexEdition_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// API returns "ENTERPRISE_EDITION" by default.
+					if old == kendra.IndexEditionEnterpriseEdition && new == "" {
+						return true
+					}
+
+					return old == new
+				},
 			},
 			"error_message": {
 				Type:     schema.TypeString,
