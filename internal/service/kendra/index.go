@@ -31,6 +31,7 @@ func ResourceIndex() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(kendraIndexCreatedTimeout),
+			Update: schema.DefaultTimeout(kendraIndexUpdatedTimeout),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -522,6 +523,11 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Index (%s): %w", d.Id(), err))
+		}
+
+		// waiter since the status changes from CREATING to either ACTIVE or FAILED
+		if _, err := waitIndexUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
+			return diag.FromErr(fmt.Errorf("error waiting for Index (%s) update: %w", d.Id(), err))
 		}
 	}
 
