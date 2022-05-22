@@ -1413,7 +1413,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotAlloc
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotAllocationStrategy(rName, "lowest-price"),
+				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotAllocationStrategyConfig(rName, "lowest-price"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -4528,19 +4528,18 @@ resource "aws_autoscaling_group" "test" {
 `, rName, onDemandPercentageAboveBaseCapacity))
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotAllocationStrategy(rName, spotAllocationStrategy string) string {
-	return testAccGroupConfig_MixedInstancesPolicy_Base(rName) +
-		fmt.Sprintf(`
+func testAccGroupMixedInstancesPolicyInstancesDistributionSpotAllocationStrategyConfig(rName, spotAllocationStrategy string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   mixed_instances_policy {
     instances_distribution {
-      spot_allocation_strategy = %q
+      spot_allocation_strategy = %[2]q
     }
 
     launch_template {
@@ -4551,13 +4550,14 @@ resource "aws_autoscaling_group" "test" {
       override {
         instance_type = "t2.micro"
       }
+
       override {
         instance_type = "t3.small"
       }
     }
   }
 }
-`, rName, spotAllocationStrategy)
+`, rName, spotAllocationStrategy))
 }
 
 func testAccGroupConfig_MixedInstancesPolicy_InstancesDistribution_SpotInstancePools(rName string, spotInstancePools int) string {
