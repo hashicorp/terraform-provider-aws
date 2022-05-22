@@ -527,14 +527,30 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Id: aws.String(id),
 		}
 
-		input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
-		input.Description = aws.String(d.Get("description").(string))
-		input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
-		input.Name = aws.String(d.Get("name").(string))
-		input.RoleArn = aws.String(d.Get("role_arn").(string))
-		input.UserContextPolicy = aws.String(d.Get("user_context_policy").(string))
-		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]interface{}))
-		input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
+		if d.HasChange("capacity_units") {
+			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
+		}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+		if d.HasChange("document_metadata_configuration_updates") {
+			input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
+		}
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+		if d.HasChange("role_arn") {
+			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		}
+		if d.HasChange("user_context_policy") {
+			input.UserContextPolicy = aws.String(d.Get("user_context_policy").(string))
+		}
+		if d.HasChange("user_group_resolution_configuration") {
+			input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]interface{}))
+		}
+		if d.HasChange("user_token_configurations") {
+			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
+		}
 
 		_, err := conn.UpdateIndexWithContext(ctx, input)
 
