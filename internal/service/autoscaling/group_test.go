@@ -1171,6 +1171,33 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupDestroyWhenProtectedFromScaleInBeforeDestroyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 2),
+					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "true"),
+				),
+			},
+			{
+				Config: testAccGroupDestroyWhenProtectedFromScaleInAfterDestroyConfig(rName),
+				// Reaching this step is good enough, as it indicates the ASG was destroyed successfully.
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_mixedInstancesPolicy(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -3004,33 +3031,6 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
-func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
-	var group autoscaling.Group
-	rName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_autoscaling_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					testAccCheckGroupHealthyInstanceCount(&group, 2),
-					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "true"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_afterDestroy(),
-				// Reaching this step is good enough, as it indicates the ASG was destroyed successfully.
-			},
-		},
-	})
-}
-
 func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -4304,6 +4304,30 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccGroupDestroyWhenProtectedFromScaleInBeforeDestroyConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  name                  = %[1]q
+  max_size              = 2
+  min_size              = 2
+  desired_capacity      = 2
+  protect_from_scale_in = true
+  launch_configuration  = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupDestroyWhenProtectedFromScaleInAfterDestroyConfig(rName string) string {
+	return testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro")
+}
+
 func testAccGroupConfig_MixedInstancesPolicy_Base(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
 		fmt.Sprintf(`
@@ -4897,56 +4921,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, instanceRequirements)
-}
-
-func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(name string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.micro"
-}
-
-resource "aws_autoscaling_group" "test" {
-  availability_zones    = [data.aws_availability_zones.available.names[0]]
-  name                  = %[1]q
-  max_size              = 2
-  min_size              = 2
-  desired_capacity      = 2
-  protect_from_scale_in = true
-  launch_configuration  = aws_launch_configuration.test.name
-}
-`, name)
-}
-
-func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_afterDestroy() string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.micro"
-}
-`
 }
 
 func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
