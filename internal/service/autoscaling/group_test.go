@@ -1577,7 +1577,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType(rName, "t3.small"),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeConfig(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1589,7 +1589,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType(rName, "t3.medium"),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeConfig(rName, "t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1607,7 +1607,6 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1616,7 +1615,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(rName, rName2),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeWithLaunchTemplateSpecificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1624,24 +1623,11 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
 					resource.TestCheckNoResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.launch_template_specification.#"),
-					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t4g.micro"),
-					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.launch_template_specification.0.launch_template_id", "aws_launch_template.testarm", "id"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t4g.small"),
+					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.launch_template_specification.0.launch_template_id", "aws_launch_template.test-arm", "id"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"name_prefix",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -4681,15 +4667,14 @@ resource "aws_autoscaling_group" "test" {
 `, rName, version))
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType(rName, instanceType string) string {
-	return testAccGroupConfig_MixedInstancesPolicy_Base(rName) +
-		fmt.Sprintf(`
+func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeConfig(rName, instanceType string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   mixed_instances_policy {
     launch_template {
@@ -4700,26 +4685,40 @@ resource "aws_autoscaling_group" "test" {
       override {
         instance_type = "t2.micro"
       }
+
       override {
-        instance_type = %q
+        instance_type = %[2]q
       }
     }
   }
 }
-`, rName, instanceType)
+`, rName, instanceType))
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(rName, rName2 string) string {
-	return testAccGroupConfig_MixedInstancesPolicy_Base(rName) +
-		testAccGroupConfig_MixedInstancesPolicy_Arm_Base(rName2) +
-		fmt.Sprintf(`
+func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeWithLaunchTemplateSpecificationConfig(rName string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
+data "aws_ami" "amzn-ami-hvm-arm64-gp2" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-arm64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "test-arm" {
+  image_id      = data.aws_ami.amzn-ami-hvm-arm64-gp2.id
+  instance_type = "t4g.micro"
+  name          = "%[1]s-arm"
+}
 
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   mixed_instances_policy {
     launch_template {
@@ -4730,16 +4729,18 @@ resource "aws_autoscaling_group" "test" {
       override {
         instance_type = "t2.micro"
       }
+
       override {
-        instance_type = "t4g.micro"
+        instance_type = "t4g.small"
+
         launch_template_specification {
-          launch_template_id = aws_launch_template.testarm.id
+          launch_template_id = aws_launch_template.test-arm.id
         }
       }
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(rName string) string {
