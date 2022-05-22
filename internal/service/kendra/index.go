@@ -265,6 +265,14 @@ func ResourceIndex() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(kendra.UserContextPolicy_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// API returns "ATTRIBUTE_FILTER" by default.
+					if old == kendra.UserContextPolicyAttributeFilter && new == "" {
+						return true
+					}
+
+					return old == new
+				},
 			},
 			"user_group_resolution_configuration": {
 				Type:     schema.TypeList,
