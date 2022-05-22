@@ -102,6 +102,14 @@ A `search` block supports the following arguments:
 * `searchable` - (Optional) Determines whether the field is used in the search. If the Searchable field is true, you can use relevance tuning to manually tune how Amazon Kendra weights the field in the search. The default is `true` for `string` fields and `false` for `number` and `date` fields.
 * `sortable` - (Optional) Determines whether the field can be used to sort the results of a query. If you specify sorting on a field that does not have Sortable set to true, Amazon Kendra returns an exception. The default is `false`.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the index.
+* `delete` - (Defaults to 40 mins) Used when deleting the index.
+* `update` - (Defaults to 40 mins) Used when updating the index.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
