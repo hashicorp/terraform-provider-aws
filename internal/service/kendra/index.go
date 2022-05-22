@@ -521,7 +521,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units, description, document_metadata_configuration_updates, name, role_arn, user_context_policy, user_group_resolution_configuration, user_token_configurations") {
+	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
@@ -541,7 +541,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Index (%s): %w", d.Id(), err))
 		}
 
-		// waiter since the status changes from CREATING to either ACTIVE or FAILED
+		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
 		if _, err := waitIndexUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for Index (%s) update: %w", d.Id(), err))
 		}
