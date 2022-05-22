@@ -83,6 +83,52 @@ func TestAccKendraIndex_basic(t *testing.T) {
 	})
 }
 
+func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_index.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexBaseConfig(rName, rName2),
+				Check:  propagationSleep(),
+			},
+			{
+				Config: testAccIndexConfig_serverSideEncryption(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_configuration.0.kms_key_id", "data.aws_kms_key.this", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccKendraIndex_updateDescription(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
@@ -339,6 +385,9 @@ func testAccIndexBaseConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+data "aws_kms_key" "this" {
+  key_id = "alias/aws/kendra"
+}
 data "aws_iam_policy_document" "test" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -485,4 +534,19 @@ resource "aws_kendra_index" "test" {
   }
 }
 `, rName3, description))
+}
+
+func testAccIndexConfig_serverSideEncryption(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccIndexBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_kendra_index" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.access_cw.arn
+
+  server_side_encryption_configuration {
+    kms_key_id = data.aws_kms_key.this.arn
+  }
+}
+`, rName3))
 }
