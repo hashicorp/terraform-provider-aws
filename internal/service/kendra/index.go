@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,7 +21,8 @@ import (
 
 func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceIndexRead,
+		CreateContext: resourceIndexCreate,
+		ReadContext:   resourceIndexRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -347,6 +349,63 @@ func ResourceIndex() *schema.Resource {
 	}
 }
 
+func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &kendra.CreateIndexInput{
+		ClientToken: aws.String(resource.UniqueId()),
+		Name:        aws.String(name),
+		RoleArn:     aws.String(d.Get("role_arn").(string)),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("edition"); ok {
+		input.Edition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("server_side_encryption_configuration"); ok {
+		input.ServerSideEncryptionConfiguration = expandServerSideEncryptionConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("user_context_policy"); ok {
+		input.UserContextPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("user_group_resolution_configuration"); ok {
+		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("user_token_configurations"); ok {
+		input.UserTokenConfigurations = expandUserTokenConfigurations(v.([]interface{}))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Kendra Index %s", input)
+	output, err := conn.CreateIndexWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Kendra Index (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Kendra Index (%s): empty output", name))
+	}
+
+	d.SetId(aws.StringValue(output.Id))
+
+	return resourceIndexRead(ctx, d, meta)
+}
+
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -427,6 +486,126 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *kendra.ServerSideEncryptionConfiguration {
+	if len(serverSideEncryptionConfiguration) == 0 || serverSideEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := serverSideEncryptionConfiguration[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.ServerSideEncryptionConfiguration{}
+
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+		result.KmsKeyId = aws.String(v)
+	}
+
+	return result
+}
+
+func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []interface{}) *kendra.UserGroupResolutionConfiguration {
+	if len(userGroupResolutionConfiguration) == 0 || userGroupResolutionConfiguration[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := userGroupResolutionConfiguration[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.UserGroupResolutionConfiguration{
+		UserGroupResolutionMode: aws.String(tfMap["user_group_resolution_mode"].(string)),
+	}
+
+	return result
+}
+
+func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []*kendra.UserTokenConfiguration {
+	if len(userTokenConfigurations) == 0 {
+		return nil
+	}
+
+	userTokenConfigurationsConfigs := []*kendra.UserTokenConfiguration{}
+
+	for _, userTokenConfiguration := range userTokenConfigurations {
+		tfMap := userTokenConfiguration.(map[string]interface{})
+		userTokenConfigurationConfig := &kendra.UserTokenConfiguration{}
+
+		if v, ok := tfMap["json_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
+			userTokenConfigurationConfig.JsonTokenTypeConfiguration = expandJsonTokenTypeConfiguration(v)
+		}
+
+		if v, ok := tfMap["jwt_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
+			userTokenConfigurationConfig.JwtTokenTypeConfiguration = expandJwtTokenTypeConfiguration(v)
+		}
+
+		userTokenConfigurationsConfigs = append(userTokenConfigurationsConfigs, userTokenConfigurationConfig)
+	}
+
+	return userTokenConfigurationsConfigs
+}
+
+func expandJsonTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *kendra.JsonTokenTypeConfiguration {
+	if len(jsonTokenTypeConfiguration) == 0 || jsonTokenTypeConfiguration[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := jsonTokenTypeConfiguration[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.JsonTokenTypeConfiguration{
+		GroupAttributeField:    aws.String(tfMap["group_attribute_field"].(string)),
+		UserNameAttributeField: aws.String(tfMap["user_name_attribute_field"].(string)),
+	}
+
+	return result
+}
+
+func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *kendra.JwtTokenTypeConfiguration {
+	if len(jwtTokenTypeConfiguration) == 0 || jwtTokenTypeConfiguration[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := jwtTokenTypeConfiguration[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &kendra.JwtTokenTypeConfiguration{
+		KeyLocation: aws.String(tfMap["key_location"].(string)),
+	}
+
+	if v, ok := tfMap["claim_regex"].(string); ok && v != "" {
+		result.ClaimRegex = aws.String(v)
+	}
+
+	if v, ok := tfMap["group_attribute_field"].(string); ok && v != "" {
+		result.GroupAttributeField = aws.String(v)
+	}
+
+	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+		result.Issuer = aws.String(v)
+	}
+
+	if v, ok := tfMap["secrets_manager_arn"].(string); ok && v != "" {
+		result.SecretManagerArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["url"].(string); ok && v != "" {
+		result.URL = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_name_attribute_field"].(string); ok && v != "" {
+		result.UserNameAttributeField = aws.String(v)
+	}
+
+	return result
 }
 
 func flattenCapacityUnits(capacityUnits *kendra.CapacityUnitsConfiguration) []interface{} {
