@@ -29,6 +29,9 @@ func ResourceIndex() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(kendraIndexCreatedTimeout),
+		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -405,6 +408,11 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.StringValue(output.Id))
+
+	// waiter since the status changes from CREATING to either ACTIVE or FAILED
+	if _, err := waitIndexCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Index (%s) creation: %w", d.Id(), err))
+	}
 
 	return resourceIndexRead(ctx, d, meta)
 }
