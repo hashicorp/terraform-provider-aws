@@ -11,6 +11,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+func testAccCheckIndexDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_kendra_index" {
+			continue
+		}
+
+		input := &kendra.DescribeIndexInput{
+			Id: aws.String(rs.Primary.ID),
+		}
+
+		resp, err := conn.DescribeIndex(input)
+
+		if err == nil {
+			if aws.StringValue(resp.Id) == rs.Primary.ID {
+				return fmt.Errorf("Index '%s' was not deleted properly", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
