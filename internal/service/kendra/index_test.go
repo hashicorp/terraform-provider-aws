@@ -82,6 +82,59 @@ func TestAccKendraIndex_basic(t *testing.T) {
 	})
 }
 
+func TestAccKendraIndex_updateDescription(t *testing.T) {
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalDescription := "original description"
+	updatedDescription := "updated description"
+	resourceName := "aws_kendra_index.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexBaseConfig(rName),
+				Check:  propagationSleep(),
+			},
+			{
+				Config: testAccIndexConfig_basic(rName, rName2, originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexConfig_basic(rName, rName2, updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKendraIndex_disappears(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
