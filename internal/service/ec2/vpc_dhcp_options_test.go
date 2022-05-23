@@ -27,7 +27,7 @@ func TestAccVPCDHCPOptions_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDHCPOptionsConfig(rName),
+				Config: testAccVPCDHCPOptionsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
@@ -62,7 +62,7 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDHCPOptionsConfigTags1(rName, "key1", "value1"),
+				Config: testAccVPCDHCPOptionsConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -75,7 +75,7 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDHCPOptionsConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCDHCPOptionsConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -84,7 +84,7 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDHCPOptionsConfigTags1(rName, "key2", "value2"),
+				Config: testAccVPCDHCPOptionsConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -107,7 +107,7 @@ func TestAccVPCDHCPOptions_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDHCPOptionsConfig(rName),
+				Config: testAccVPCDHCPOptionsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCDHCPOptions(), resourceName),
@@ -167,7 +167,7 @@ func testAccCheckDHCPOptionsExists(n string, v *ec2.DhcpOptions) resource.TestCh
 	}
 }
 
-func testAccDHCPOptionsConfig(rName string) string {
+func testAccVPCDHCPOptionsConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
   domain_name          = "service.%[1]s"
@@ -179,7 +179,7 @@ resource "aws_vpc_dhcp_options" "test" {
 `, rName)
 }
 
-func testAccDHCPOptionsConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccVPCDHCPOptionsConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
   domain_name          = "service.%[1]s"
@@ -195,7 +195,7 @@ resource "aws_vpc_dhcp_options" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDHCPOptionsConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCDHCPOptionsConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
   domain_name          = "service.%[1]s"

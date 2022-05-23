@@ -16,156 +16,129 @@ func DataSourceCluster() *schema.Resource {
 		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-
-			"cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"allow_version_upgrade": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
+			"aqua_configuration_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"automated_snapshot_retention_period": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zone_relocation_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"bucket_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"cluster_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"cluster_parameter_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cluster_public_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cluster_revision_number": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cluster_security_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cluster_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cluster_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"database_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"elastic_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"enable_logging": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"enhanced_vpc_routing": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"iam_roles": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"number_of_nodes": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"s3_key_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tags": tftags.TagsSchema(),
-
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"vpc_security_group_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -200,6 +173,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(cluster)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
+	if rsc.AquaConfiguration != nil {
+		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
+	}
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {

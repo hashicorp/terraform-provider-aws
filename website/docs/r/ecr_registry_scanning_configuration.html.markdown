@@ -75,5 +75,5 @@ In addition to all arguments above, the following attributes are exported:
 ECR Scanning Configurations can be imported using the `registry_id`, e.g.,
 
 ```
-$ terraform import aws_ecr_registry_scanning_configuration 012345678901
+$ terraform import aws_ecr_registry_scanning_configuration.example 012345678901
 ```

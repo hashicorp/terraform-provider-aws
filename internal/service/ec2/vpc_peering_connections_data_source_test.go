@@ -19,7 +19,7 @@ func TestAccVPCPeeringConnectionsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionsDataSourceConfig(rName),
+				Config: testAccVPCPeeringConnectionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test_by_filters", "ids.#", "2"),
 				),
@@ -37,7 +37,7 @@ func TestAccVPCPeeringConnectionsDataSource_NoMatches(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionsDataSourceConfig_NoMatches(rName),
+				Config: testAccVPCPeeringConnectionsDataSourceConfig_noMatches(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test", "ids.#", "0"),
 				),
@@ -46,7 +46,7 @@ func TestAccVPCPeeringConnectionsDataSource_NoMatches(t *testing.T) {
 	})
 }
 
-func testAccVPCPeeringConnectionsDataSourceConfig(rName string) string {
+func testAccVPCPeeringConnectionsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -101,7 +101,7 @@ data "aws_vpc_peering_connections" "test_by_filters" {
 `, rName)
 }
 
-func testAccVPCPeeringConnectionsDataSourceConfig_NoMatches(rName string) string {
+func testAccVPCPeeringConnectionsDataSourceConfig_noMatches(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_peering_connections" "test" {
   tags = {
