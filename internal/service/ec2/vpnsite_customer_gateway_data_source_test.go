@@ -24,7 +24,7 @@ func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayFilterDataSourceConfig(rName, asn, hostOctet),
+				Config: testAccSiteVPNCustomerGatewayDataSourceConfig_filter(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
@@ -53,7 +53,7 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayIDDataSourceConfig(rName, asn, hostOctet),
+				Config: testAccSiteVPNCustomerGatewayDataSourceConfig_id(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
@@ -68,7 +68,7 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 	})
 }
 
-func testAccCustomerGatewayFilterDataSourceConfig(rName string, asn, hostOctet int) string {
+func testAccSiteVPNCustomerGatewayDataSourceConfig_filter(rName string, asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
@@ -89,7 +89,7 @@ data "aws_customer_gateway" "test" {
 `, rName, asn, hostOctet)
 }
 
-func testAccCustomerGatewayIDDataSourceConfig(rName string, asn, hostOctet int) string {
+func testAccSiteVPNCustomerGatewayDataSourceConfig_id(rName string, asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d

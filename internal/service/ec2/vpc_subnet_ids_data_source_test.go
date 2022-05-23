@@ -21,10 +21,10 @@ func TestAccVPCSubnetIDsDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIDsDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetIDsDataSourceConfig_basic(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIDsWithDataSourceDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetIDsDataSourceConfig_dataSource(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.selected", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.private", "ids.#", "2"),
@@ -45,7 +45,7 @@ func TestAccVPCSubnetIDsDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIDsDataSource_filter(rName, rInt),
+				Config: testAccVPCSubnetIdsDataSourceConfig_filter(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.test", "ids.#", "2"),
 				),
@@ -54,7 +54,7 @@ func TestAccVPCSubnetIDsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccSubnetIDsWithDataSourceDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetIDsDataSourceConfig_dataSource(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[2]d.0.0/16"
@@ -111,7 +111,7 @@ data "aws_subnet_ids" "private" {
 `, rName, rInt))
 }
 
-func testAccSubnetIDsDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetIDsDataSourceConfig_basic(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[2]d.0.0/16"
@@ -156,7 +156,7 @@ resource "aws_subnet" "test_private_b" {
 `, rName, rInt))
 }
 
-func testAccSubnetIDsDataSource_filter(rName string, rInt int) string {
+func testAccVPCSubnetIdsDataSourceConfig_filter(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[2]d.0.0/16"
