@@ -22,6 +22,7 @@ func ResourceDataIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDataIntegrationCreate,
 		ReadContext:   resourceDataIntegrationRead,
+		UpdateContext: resourceDataIntegrationUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -183,6 +184,33 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
+}
+
+func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+
+	id := d.Id()
+
+	if d.HasChanges("description", "name") {
+		_, err := conn.UpdateDataIntegrationWithContext(ctx, &appintegrationsservice.UpdateDataIntegrationInput{
+			Description: aws.String(d.Get("description").(string)),
+			Identifier:  aws.String(id),
+			Name:        aws.String(d.Get("name").(string)),
+		})
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating DataIntegration (%s): %w", d.Id(), err))
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceDataIntegrationRead(ctx, d, meta)
 }
 
 func expandScheduleConfig(scheduleConfig []interface{}) *appintegrationsservice.ScheduleConfiguration {
