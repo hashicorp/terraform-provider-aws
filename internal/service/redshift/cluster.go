@@ -45,10 +45,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -59,6 +55,10 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(redshift.AquaConfigurationStatus_Values(), false),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"automated_snapshot_retention_period": {
 				Type:         schema.TypeInt,
@@ -126,7 +126,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -329,7 +328,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 		},
 
