@@ -1771,6 +1771,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_snapshot_schedule":             redshift.ResourceSnapshotSchedule(),
 			"aws_redshift_snapshot_schedule_association": redshift.ResourceSnapshotScheduleAssociation(),
 			"aws_redshift_subnet_group":                  redshift.ResourceSubnetGroup(),
+			"aws_redshift_usage_limit":                   redshift.ResourceUsageLimit(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
