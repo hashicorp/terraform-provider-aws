@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -130,14 +132,14 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", arn)
 
-	sub, err := resourceEventSubscriptionRetrieve(d.Id(), conn)
-	if err != nil {
-		return fmt.Errorf("Error retrieving Redshift Event Subscription %s: %s", d.Id(), err)
-	}
-	if sub == nil {
-		log.Printf("[WARN] Redshift Event Subscription (%s) not found - removing from state", d.Id())
+	sub, err := findEventSubscription(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Redshift Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving Redshift Event Subscription %s: %w", d.Id(), err)
 	}
 
 	if err := d.Set("name", sub.CustSubscriptionId); err != nil {
@@ -181,26 +183,29 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceEventSubscriptionRetrieve(name string, conn *redshift.Redshift) (*redshift.EventSubscription, error) {
-
-	request := &redshift.DescribeEventSubscriptionsInput{
+func findEventSubscription(conn *redshift.Redshift, name string) (*redshift.EventSubscription, error) {
+	input := &redshift.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
-
-	describeResp, err := conn.DescribeEventSubscriptions(request)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
-			log.Printf("[WARN] No Redshift Event Subscription by name (%s) found", name)
-			return nil, nil
+	out, err := conn.DescribeEventSubscriptions(input)
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		return nil, fmt.Errorf("Error reading Redshift Event Subscription %s: %s", name, err)
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	if len(describeResp.EventSubscriptionsList) != 1 {
-		return nil, fmt.Errorf("Unable to find Redshift Event Subscription: %#v", describeResp.EventSubscriptionsList)
+	switch count := len(out.EventSubscriptionsList); count {
+	case 0:
+		return nil, tfresource.NewEmptyResultError(input)
+	case 1:
+		return out.EventSubscriptionsList[0], nil
+	default:
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
-
-	return describeResp.EventSubscriptionsList[0], nil
 }
 
 func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {

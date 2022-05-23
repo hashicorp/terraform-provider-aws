@@ -112,11 +112,10 @@ func resourceSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) err
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	grantName := d.Id()
-	log.Printf("[DEBUG] Looking for grant: %s", grantName)
 
 	grant, err := findSnapshotCopyGrant(conn, grantName)
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
-		log.Printf("[WARN] snapshot copy grant (%s) not found, removing from state", grantName)
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil) {
+		log.Printf("[WARN] Redshift Snapshot Copy Grant (%s) not found, removing from state", grantName)
 		d.SetId("")
 		return nil
 	}

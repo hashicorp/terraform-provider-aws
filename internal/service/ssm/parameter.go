@@ -240,7 +240,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing SSM parameter (%s): %w", d.Id(), err)
 	}
 
-	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
+	if !d.IsNewResource() && (describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil) {
 		log.Printf("[WARN] SSM Parameter %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
