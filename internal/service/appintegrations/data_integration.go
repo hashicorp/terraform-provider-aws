@@ -23,6 +23,7 @@ func ResourceDataIntegration() *schema.Resource {
 		CreateContext: resourceDataIntegrationCreate,
 		ReadContext:   resourceDataIntegrationRead,
 		UpdateContext: resourceDataIntegrationUpdate,
+		DeleteContext: resourceDataIntegrationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -211,6 +212,22 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return resourceDataIntegrationRead(ctx, d, meta)
+}
+
+func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+
+	id := d.Id()
+
+	_, err := conn.DeleteDataIntegrationWithContext(ctx, &appintegrationsservice.DeleteDataIntegrationInput{
+		DataIntegrationIdentifier: aws.String(id),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting DataIntegration (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func expandScheduleConfig(scheduleConfig []interface{}) *appintegrationsservice.ScheduleConfiguration {
