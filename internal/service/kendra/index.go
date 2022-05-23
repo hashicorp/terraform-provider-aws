@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -43,21 +42,15 @@ func ResourceIndex() *schema.Resource {
 			"capacity_units": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Optional: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"query_capacity_units": {
-							Type:         schema.TypeInt,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 						"storage_capacity_units": {
-							Type:         schema.TypeInt,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 					},
 				},
@@ -74,56 +67,36 @@ func ResourceIndex() *schema.Resource {
 			"document_metadata_configuration_updates": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 500,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 30),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"relevance": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Optional: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"duration": {
 										Type:     schema.TypeString,
 										Computed: true,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 10),
-											validation.StringMatch(
-												regexp.MustCompile(`[0-9]+[s]`),
-												"numeric string followed by the character \"s\"",
-											),
-										),
 									},
 									"freshness": {
 										Type:     schema.TypeBool,
 										Computed: true,
-										Optional: true,
 									},
 									"importance": {
-										Type:         schema.TypeInt,
-										Computed:     true,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 10),
+										Type:     schema.TypeInt,
+										Computed: true,
 									},
 									"rank_order": {
-										Type:         schema.TypeString,
-										Computed:     true,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(kendra.Order_Values(), false),
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"values_importance_map": {
 										Type:     schema.TypeMap,
-										Optional: true,
+										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeInt},
 									},
 								},
@@ -132,38 +105,30 @@ func ResourceIndex() *schema.Resource {
 						"search": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Optional: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"displayable": {
 										Type:     schema.TypeBool,
 										Computed: true,
-										Optional: true,
 									},
 									"facetable": {
 										Type:     schema.TypeBool,
 										Computed: true,
-										Optional: true,
 									},
 									"searchable": {
 										Type:     schema.TypeBool,
 										Computed: true,
-										Optional: true,
 									},
 									"sortable": {
 										Type:     schema.TypeBool,
 										Computed: true,
-										Optional: true,
 									},
 								},
 							},
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(kendra.DocumentAttributeValueType_Values(), false),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -522,19 +487,13 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
 
-		if d.HasChange("capacity_units") {
-			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
-		}
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
-		}
-		if d.HasChange("document_metadata_configuration_updates") {
-			input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
 		}
 		if d.HasChange("name") {
 			input.Name = aws.String(d.Get("name").(string))
@@ -592,113 +551,6 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
-}
-
-func expandCapacityUnits(capacityUnits []interface{}) *kendra.CapacityUnitsConfiguration {
-	if len(capacityUnits) == 0 || capacityUnits[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := capacityUnits[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	result := &kendra.CapacityUnitsConfiguration{
-		QueryCapacityUnits:   aws.Int64(int64(tfMap["query_capacity_units"].(int))),
-		StorageCapacityUnits: aws.Int64(int64(tfMap["storage_capacity_units"].(int))),
-	}
-
-	return result
-}
-
-func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []interface{}) []*kendra.DocumentMetadataConfiguration {
-	if len(documentMetadataConfigurationUpdates) == 0 {
-		return nil
-	}
-
-	documentMetadataConfigurationUpdateConfigs := []*kendra.DocumentMetadataConfiguration{}
-
-	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
-		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
-		documentMetadataConfigurationUpdateConfig := &kendra.DocumentMetadataConfiguration{
-			Name: aws.String(tfMap["name"].(string)),
-			Type: aws.String(tfMap["type"].(string)),
-		}
-
-		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}))
-		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
-
-		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
-	}
-
-	return documentMetadataConfigurationUpdateConfigs
-}
-
-func expandRelevance(relevance []interface{}) *kendra.Relevance {
-	if len(relevance) == 0 || relevance[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := relevance[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	result := &kendra.Relevance{}
-
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
-		result.Duration = aws.String(v)
-	}
-
-	if v, ok := tfMap["freshness"].(bool); ok {
-		result.Freshness = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["importance"].(int); ok {
-		result.Importance = aws.Int64(int64(v))
-	}
-
-	if v, ok := tfMap["rank_order"].(string); ok && v != "" {
-		result.RankOrder = aws.String(v)
-	}
-
-	if v, ok := tfMap["values_importance_map"].(map[string]interface{}); ok && len(v) > 0 {
-		result.ValueImportanceMap = flex.ExpandInt64Map(v)
-	}
-
-	return result
-}
-
-func expandSearch(search []interface{}) *kendra.Search {
-	if len(search) == 0 || search[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := search[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	result := &kendra.Search{}
-
-	if v, ok := tfMap["displayable"].(bool); ok {
-		result.Displayable = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["facetable"].(bool); ok {
-		result.Facetable = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["searchable"].(bool); ok {
-		result.Searchable = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["sortable"].(bool); ok {
-		result.Sortable = aws.Bool(v)
-	}
-
-	return result
 }
 
 func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *kendra.ServerSideEncryptionConfiguration {

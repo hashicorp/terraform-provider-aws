@@ -99,38 +99,6 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `url` - (Optional) The signing key URL. Valid pattern is `^(https?|ftp|file):\/\/([^\s]*)`
 * `user_name_attribute_field` - (Optional) The user name attribute field. Minimum length of 1. Maximum length of 100.
 
-### Additional arguments supported after creation
-
-* `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. You can change the capacity of the index up to 5 times per day, or make 5 API calls. If you are using extra storage units, you can't reduce the storage capacity below what is required to meet the storage needs for your index. Documented below.
-* `document_metadata_configuration_updates` - (Optional) One or more blocks that specifies the configuration settings for any metadata applied to the documents in the index. Documented below.
-
-A `capacity_units` block supports the following arguments:
-
-* `query_capacity_units` - (Required) The amount of extra query capacity for an index and GetQuerySuggestions capacity. For more information, refer to [QueryCapacityUnits](https://docs.aws.amazon.com/kendra/latest/dg/API_CapacityUnitsConfiguration.html#Kendra-Type-CapacityUnitsConfiguration-QueryCapacityUnits).
-* `storage_capacity_units` - (Required) The amount of extra storage capacity for an index. A single capacity unit provides 30 GB of storage space or 100,000 documents, whichever is reached first. Minimum value of 0.
-
-A `document_metadata_configuration_updates` block supports the following arguments:
-
-* `name` - (Required) The name of the index field. Minimum length of 1. Maximum length of 30.
-* `relevance` - (Optional) A block that provides manual tuning parameters to determine how the field affects the search results. Documented below.
-* `search` - (Optional) A block that provides information about how the field is used during a search. Documented below.
-* `type` - (Required) The data type of the index field. Valid values are `STRING_VALUE`, `STRING_LIST_VALUE`, `LONG_VALUE`, `DATE_VALUE`.
-
-A `relevance` block supports the following arguments:
-
-* `duration` - (Optional) Specifies the time period that the boost applies to. For more information, refer to [Duration](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Duration).
-* `freshness` - (Optional) Indicates that this field determines how "fresh" a document is. For more information, refer to [Freshness](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Freshness).
-* `importance` - (Optional) The relative importance of the field in the search. Larger numbers provide more of a boost than smaller numbers. Minimum value of 1. Maximum value of 10.
-* `rank_order` - (Optional) Determines how values should be interpreted. For more information, refer to [RankOrder](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-RankOrder).
-* `values_importance_map` - (Optional) A list of values that should be given a different boost when they appear in the result list. For more information, refer to [ValueImportanceMap](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-ValueImportanceMap).
-
-A `search` block supports the following arguments:
-
-* `displayable` - (Optional) Determines whether the field is returned in the query response. The default is `true`.
-* `facetable` - (Optional) Indicates that the field can be used to create search facets, a count of results for each value in the field. The default is `false`.
-* `searchable` - (Optional) Determines whether the field is used in the search. If the Searchable field is true, you can use relevance tuning to manually tune how Amazon Kendra weights the field in the search. The default is `true` for `string` fields and `false` for `number` and `date` fields.
-* `sortable` - (Optional) Determines whether the field can be used to sort the results of a query. If you specify sorting on a field that does not have Sortable set to true, Amazon Kendra returns an exception. The default is `false`.
-
 ### Timeouts
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
@@ -144,13 +112,42 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
+* `capacity_units` - A block that sets the number of additional document storage and query capacity units that should be used by the index.
 * `created_at` - The Unix datetime that the index was created.
+* `document_metadata_configuration_updates` - One or more blocks that specify the configuration settings for any metadata applied to the documents in the index. Documented below.
 * `error_message` - When the Status field value is `FAILED`, this contains a message that explains why.
 * `id` - The identifier of the Index.
 * `index_statistics` - A block that provides information about the number of FAQ questions and answers and the number of text documents indexed. Documented below.
 * `status` - The current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updated_at` - The Unix datetime that the index was last updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+A `capacity_units` block supports the following attributes:
+
+* `query_capacity_units` - The amount of extra query capacity for an index and GetQuerySuggestions capacity. For more information, refer to [QueryCapacityUnits](https://docs.aws.amazon.com/kendra/latest/dg/API_CapacityUnitsConfiguration.html#Kendra-Type-CapacityUnitsConfiguration-QueryCapacityUnits).
+* `storage_capacity_units` - The amount of extra storage capacity for an index. A single capacity unit provides 30 GB of storage space or 100,000 documents, whichever is reached first. Minimum value of 0.
+
+A `document_metadata_configuration_updates` block supports the following attributes:
+
+* `name` - The name of the index field. Minimum length of 1. Maximum length of 30.
+* `relevance` - A block that provides manual tuning parameters to determine how the field affects the search results. Documented below.
+* `search` - A block that provides information about how the field is used during a search. Documented below.
+* `type` - The data type of the index field. Valid values are `STRING_VALUE`, `STRING_LIST_VALUE`, `LONG_VALUE`, `DATE_VALUE`.
+
+A `relevance` block supports the following attributes:
+
+* `duration` - Specifies the time period that the boost applies to. For more information, refer to [Duration](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Duration).
+* `freshness` - Indicates that this field determines how "fresh" a document is. For more information, refer to [Freshness](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Freshness).
+* `importance` - The relative importance of the field in the search. Larger numbers provide more of a boost than smaller numbers. Minimum value of 1. Maximum value of 10.
+* `rank_order` - Determines how values should be interpreted. For more information, refer to [RankOrder](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-RankOrder).
+* `values_importance_map` - A list of values that should be given a different boost when they appear in the result list. For more information, refer to [ValueImportanceMap](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-ValueImportanceMap).
+
+A `search` block supports the following attributes:
+
+* `displayable` - Determines whether the field is returned in the query response. The default is `true`.
+* `facetable` - Indicates that the field can be used to create search facets, a count of results for each value in the field. The default is `false`.
+* `searchable` - Determines whether the field is used in the search. If the Searchable field is true, you can use relevance tuning to manually tune how Amazon Kendra weights the field in the search. The default is `true` for `string` fields and `false` for `number` and `date` fields.
+* `sortable` - Determines whether the field can be used to sort the results of a query. If you specify sorting on a field that does not have Sortable set to true, Amazon Kendra returns an exception. The default is `false`.
 
 A `index_statistics` block supports the following attributes:
 

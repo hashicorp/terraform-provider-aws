@@ -47,15 +47,6 @@ func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 	return boolMap
 }
 
-// Expands a map of string to interface to a map of string to *int64
-func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
-	intMap := make(map[string]*int64, len(m))
-	for k, v := range m {
-		intMap[k] = aws.Int64(int64(v.(int)))
-	}
-	return intMap
-}
-
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
 	return ExpandStringList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-ExpandStringList-with-List
