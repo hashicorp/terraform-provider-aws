@@ -77,6 +77,12 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_performance_insights": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -120,6 +126,12 @@ func ResourceClusterInstance() *schema.Resource {
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			"performance_insights_kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 
 			"port": {
@@ -188,12 +200,14 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &docdb.CreateDBInstanceInput{
-		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
-		Engine:                  aws.String(d.Get("engine").(string)),
-		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		DBInstanceClass:             aws.String(d.Get("instance_class").(string)),
+		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
+		Engine:                      aws.String(d.Get("engine").(string)),
+		PromotionTier:               aws.Int64(int64(d.Get("promotion_tier").(int))),
+		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		Tags:                        Tags(tags.IgnoreAWS()),
+		EnablePerformanceInsights:   aws.Bool(d.Get("enable_performance_insights").(bool)),
+		PerformanceInsightsKMSKeyId: aws.String(d.Get("performance_insights_kms_key_id").(string)),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -313,11 +327,13 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("dbi_resource_id", db.DbiResourceId)
+	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	//d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
