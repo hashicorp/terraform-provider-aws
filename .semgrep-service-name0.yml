@@ -1051,6 +1051,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)AutoScalingPlans"
     severity: WARNING
+  - id: ce-in-func-name
+    languages:
+      - go
+    message: Do not use "CE" in func name inside ce package
+    paths:
+      include:
+        - internal/service/ce
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CE"
+            - pattern-not-regex: ource
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ce-in-test-name
+    languages:
+      - go
+    message: Include "CE" in test name
+    paths:
+      include:
+        - internal/service/ce/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCE"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ce-in-const-name
+    languages:
+      - go
+    message: Do not use "CE" in const name inside ce package
+    paths:
+      include:
+        - internal/service/ce
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CE"
+    severity: WARNING
+  - id: ce-in-var-name
+    languages:
+      - go
+    message: Do not use "CE" in var name inside ce package
+    paths:
+      include:
+      - internal/service/ce
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CE"
+    severity: WARNING
   - id: chime-in-func-name
     languages:
       - go
