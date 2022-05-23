@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const dynamoDbProvisionedThroughputMinValue = 1
+const provisionedThroughputMinValue = 1
 
 func ResourceTable() *schema.Resource {
 	//lintignore:R011
@@ -1554,8 +1554,8 @@ func expandProvisionedThroughputField(id string, data map[string]interface{}, ke
 	v := data[key].(int)
 	if v == 0 && billingMode == dynamodb.BillingModeProvisioned && oldBillingMode == dynamodb.BillingModePayPerRequest {
 		log.Printf("[WARN] Overriding %[1]s on DynamoDB Table (%[2]s) to %[3]d. Switching from billing mode %[4]q to %[5]q without value for %[1]s. Assuming changes are being ignored.",
-			key, id, dynamoDbProvisionedThroughputMinValue, oldBillingMode, billingMode)
-		v = dynamoDbProvisionedThroughputMinValue
+			key, id, provisionedThroughputMinValue, oldBillingMode, billingMode)
+		v = provisionedThroughputMinValue
 	}
 	return int64(v)
 }
@@ -1710,7 +1710,7 @@ func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) e
 	oldBillingMode, billingMode := diff.GetChange("billing_mode")
 	v := diff.Get(key).(int)
 	if billingMode == dynamodb.BillingModeProvisioned {
-		if v < dynamoDbProvisionedThroughputMinValue {
+		if v < provisionedThroughputMinValue {
 			// Assuming the field is ignored, likely due to autoscaling
 			if oldBillingMode == dynamodb.BillingModePayPerRequest {
 				return nil
