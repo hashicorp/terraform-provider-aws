@@ -69,6 +69,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "min_size", "2"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "mixed_instances_policy.#", "0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "name", randName),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "context", ""),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "placement_group", ""),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "protect_from_scale_in", "false"),
 					acctest.CheckResourceAttrGlobalARN("aws_autoscaling_group.bar", "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
