@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	kendraIndexCreatedTimeout = 40 * time.Minute
-	kendraIndexUpdatedTimeout = 40 * time.Minute
-	kendraIndexDeletedTimeout = 40 * time.Minute
+	kendraIndexCreatedTimeout = 60 * time.Minute
+	kendraIndexUpdatedTimeout = 60 * time.Minute
+	kendraIndexDeletedTimeout = 60 * time.Minute
 )
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Kendra, timeout time.Duration, Id string) (*kendra.DescribeIndexOutput, error) {
