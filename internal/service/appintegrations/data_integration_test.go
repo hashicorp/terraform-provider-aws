@@ -11,6 +11,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+func testAccCheckDataIntegrationDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_appintegrations_data_integration" {
+			continue
+		}
+
+		input := &appintegrationsservice.GetDataIntegrationInput{
+			Identifier: aws.String(rs.Primary.ID),
+		}
+
+		resp, err := conn.GetDataIntegration(input)
+
+		if err == nil {
+			if aws.StringValue(resp.Id) == rs.Primary.ID {
+				return fmt.Errorf("Data Integration '%s' was not deleted properly", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func testAccCheckDataIntegrationExists(name string, dataIntegration *appintegrationsservice.GetDataIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
