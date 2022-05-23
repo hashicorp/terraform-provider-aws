@@ -78,6 +78,64 @@ func TestAccDataIntegration_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataIntegration_updateTags(t *testing.T) {
+	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "example description"
+	firstExecutionFrom := "1439788442681"
+
+	resourceName := "aws_appintegrations_data_integration.test"
+
+	key := "DATA_INTEGRATION_SOURCE_URI"
+	var sourceUri string
+	sourceUri = os.Getenv(key)
+	if sourceUri == "" {
+		sourceUri = "Salesforce://AppFlow/test"
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataIntegrationConfig_tags(rName, description, sourceUri, firstExecutionFrom),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccDataIntegrationConfig_tagsUpdated(rName, description, sourceUri, firstExecutionFrom),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataIntegrationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn
 	for _, rs := range s.RootModule().Resources {
@@ -169,6 +227,55 @@ resource "aws_appintegrations_data_integration" "test" {
 
   tags = {
     "Key1" = "Value1"
+  }
+}
+`, rName, description, sourceUri, firstExecutionFrom))
+}
+
+func testAccDataIntegrationConfig_tags(rName, description, sourceUri, firstExecutionFrom string) string {
+	return acctest.ConfigCompose(
+		testAccDataIntegrationBaseConfig(),
+		fmt.Sprintf(`
+resource "aws_appintegrations_data_integration" "test" {
+  name        = %[1]q
+  description = %[2]q
+  kms_key     = aws_kms_key.test.arn
+  source_uri  = %[3]q
+
+  schedule_config {
+    first_execution_from = %[4]q
+    object               = "Account"
+    schedule_expression  = "rate(1 hour)"
+  }
+
+  tags = {
+    "Key1" = "Value1"
+    "Key2" = "Value2a"
+  }
+}
+`, rName, description, sourceUri, firstExecutionFrom))
+}
+
+func testAccDataIntegrationConfig_tagsUpdated(rName, description, sourceUri, firstExecutionFrom string) string {
+	return acctest.ConfigCompose(
+		testAccDataIntegrationBaseConfig(),
+		fmt.Sprintf(`
+resource "aws_appintegrations_data_integration" "test" {
+  name        = %[1]q
+  description = %[2]q
+  kms_key     = aws_kms_key.test.arn
+  source_uri  = %[3]q
+
+  schedule_config {
+    first_execution_from = %[4]q
+    object               = "Account"
+    schedule_expression  = "rate(1 hour)"
+  }
+
+  tags = {
+    "Key1" = "Value1"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName, description, sourceUri, firstExecutionFrom))
