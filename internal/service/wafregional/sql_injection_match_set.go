@@ -125,7 +125,7 @@ func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}
 		o, n := d.GetChange("sql_injection_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
+		err := updateSQLInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
 
 		if err != nil {
 			return fmt.Errorf("error updating Regional WAF SQL Injection Match Set (%s): %w", d.Id(), err)
@@ -144,9 +144,11 @@ func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}
 	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}
 		err := updateSQLInjectionMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
+
 		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
+
 		if err != nil {
 			return fmt.Errorf("error updating Regional WAF SQL Injection Match Set (%s): %w", d.Id(), err)
 		}
