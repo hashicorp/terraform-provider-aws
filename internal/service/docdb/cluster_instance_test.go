@@ -94,6 +94,8 @@ func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"identifier_prefix",
+					"enable_performance_insights",
+					"performance_insights_kms_key_id",
 				},
 			},
 		},
