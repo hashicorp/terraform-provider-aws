@@ -217,6 +217,16 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
+						"log_destination_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(redshift.LogDestinationType_Values(), false),
+						},
+						"log_exports": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"s3_key_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -940,15 +950,20 @@ func resourceClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.
 }
 
 func enableLogging(conn *redshift.Redshift, clusterID string, tfMap map[string]interface{}) error {
-	bucketName, ok := tfMap["bucket_name"].(string)
-
-	if !ok || bucketName == "" {
-		return fmt.Errorf("`bucket_name` must be set when enabling logging for Redshift Clusters")
+	input := &redshift.EnableLoggingInput{
+		ClusterIdentifier: aws.String(clusterID),
 	}
 
-	input := &redshift.EnableLoggingInput{
-		BucketName:        aws.String(bucketName),
-		ClusterIdentifier: aws.String(clusterID),
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		input.BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
+		input.LogDestinationType = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_exports"].(*schema.Set); ok && v.Len() > 0 {
+		input.LogExports = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {

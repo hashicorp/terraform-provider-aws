@@ -275,6 +275,14 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "false"),
 				),
 			},
+			{
+				Config: testAccClusterConfig_loggingCloudwatch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.log_destination_type", "cloudwatch"),
+				),
+			},
 		},
 	})
 }
@@ -1217,6 +1225,29 @@ resource "aws_redshift_cluster" "test" {
   logging {
     enable      = true
     bucket_name = aws_s3_bucket.test.bucket
+  }
+
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccClusterConfig_loggingCloudwatch(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+
+  logging {
+    enable               = true
+    log_destination_type = "cloudwatch"
+    log_exports          = ["connectionlog"]
   }
 
   skip_final_snapshot = true
