@@ -1043,6 +1043,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("launch_template", nil)
 	}
+	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
 	d.Set("max_size", g.MaxSize)
 	d.Set("min_size", g.MinSize)
 	if g.MixedInstancesPolicy != nil {
@@ -1057,11 +1058,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
-	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
-
-	if err := d.Set("suspended_processes", flattenASGSuspendedProcesses(g.SuspendedProcesses)); err != nil {
-		return fmt.Errorf("error setting suspended_processes: %s", err)
-	}
+	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
 
 	var tagOk, tagsOk bool
 	var v interface{}
@@ -1090,20 +1087,15 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("target_group_arns", flex.FlattenStringList(g.TargetGroupARNs)); err != nil {
-		return fmt.Errorf("error setting target_group_arns: %s", err)
-	}
+	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
 
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
-	// with the default AWS create API behavior.
-	_, ok := d.GetOk("termination_policies")
-	if !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == "Default" {
-		d.Set("termination_policies", []interface{}{})
+	// with the default AWS Create API behavior.
+	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == DefaultTerminationPolicy {
+		d.Set("termination_policies", nil)
 	} else {
-		if err := d.Set("termination_policies", flex.FlattenStringList(g.TerminationPolicies)); err != nil {
-			return fmt.Errorf("error setting termination_policies: %s", err)
-		}
+		d.Set("termination_policies", aws.StringValueSlice(g.TerminationPolicies))
 	}
 
 	d.Set("vpc_zone_identifier", []string{})
@@ -1216,7 +1208,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			opts.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 		} else {
 			log.Printf("[DEBUG] Explicitly setting null termination policy to 'Default'")
-			opts.TerminationPolicies = aws.StringSlice([]string{"Default"})
+			opts.TerminationPolicies = aws.StringSlice([]string{DefaultTerminationPolicy})
 		}
 	}
 
@@ -2952,6 +2944,22 @@ func flattenVCpuCount(apiObject *autoscaling.VCpuCountRequest) map[string]interf
 	}
 
 	return tfMap
+}
+
+func flattenSuspendedProcesses(apiObjects []*autoscaling.SuspendedProcess) []string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []string
+
+	for _, apiObject := range apiObjects {
+		if v := apiObject.ProcessName; v != nil {
+			tfList = append(tfList, aws.StringValue(v))
+		}
+	}
+
+	return tfList
 }
 
 func flattenWarmPoolConfiguration(apiObject *autoscaling.WarmPoolConfiguration) map[string]interface{} {

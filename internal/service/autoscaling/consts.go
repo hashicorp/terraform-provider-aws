@@ -15,6 +15,10 @@ const (
 )
 
 const (
+	DefaultTerminationPolicy = "Default"
+)
+
+const (
 	DefaultWarmPoolMaxGroupPreparedCapacity = -1
 )
 
