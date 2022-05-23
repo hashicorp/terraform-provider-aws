@@ -1059,6 +1059,27 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
+	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
+	// If no termination polices are explicitly configured and the upstream state
+	// is only using the "Default" policy, clear the state to make it consistent
+	// with the default AWS Create API behavior.
+	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == DefaultTerminationPolicy {
+		d.Set("termination_policies", nil)
+	} else {
+		d.Set("termination_policies", aws.StringValueSlice(g.TerminationPolicies))
+	}
+	if len(aws.StringValue(g.VPCZoneIdentifier)) > 0 {
+		d.Set("vpc_zone_identifier", strings.Split(aws.StringValue(g.VPCZoneIdentifier), ","))
+	} else {
+		d.Set("vpc_zone_identifier", nil)
+	}
+	if g.WarmPoolConfiguration != nil {
+		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(g.WarmPoolConfiguration)}); err != nil {
+			return fmt.Errorf("setting warm_pool: %w", err)
+		}
+	} else {
+		d.Set("warm_pool", nil)
+	}
 
 	var tagOk, tagsOk bool
 	var v interface{}
@@ -1077,40 +1098,14 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
 		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return fmt.Errorf("setting tags: %w", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
 		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
-			return fmt.Errorf("error setting tag: %w", err)
+			return fmt.Errorf("setting tag: %w", err)
 		}
-	}
-
-	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
-
-	// If no termination polices are explicitly configured and the upstream state
-	// is only using the "Default" policy, clear the state to make it consistent
-	// with the default AWS Create API behavior.
-	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == DefaultTerminationPolicy {
-		d.Set("termination_policies", nil)
-	} else {
-		d.Set("termination_policies", aws.StringValueSlice(g.TerminationPolicies))
-	}
-
-	d.Set("vpc_zone_identifier", []string{})
-	if len(aws.StringValue(g.VPCZoneIdentifier)) > 0 {
-		if err := d.Set("vpc_zone_identifier", strings.Split(aws.StringValue(g.VPCZoneIdentifier), ",")); err != nil {
-			return fmt.Errorf("error setting vpc_zone_identifier: %s", err)
-		}
-	}
-
-	if g.WarmPoolConfiguration != nil {
-		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(g.WarmPoolConfiguration)}); err != nil {
-			return fmt.Errorf("setting warm_pool: %w", err)
-		}
-	} else {
-		d.Set("warm_pool", nil)
 	}
 
 	return nil
