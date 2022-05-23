@@ -1,4 +1,10 @@
 ## 4.16.0 (Unreleased)
+## 4.15.1 (May 20, 2022)
+
+BUG FIXES:
+
+* resource/aws_organizations_account: Fix reading account state for existing accounts ([#24899](https://github.com/hashicorp/terraform-provider-aws/issues/24899))
+
 ## 4.15.0 (May 20, 2022)
 
 BREAKING CHANGES:

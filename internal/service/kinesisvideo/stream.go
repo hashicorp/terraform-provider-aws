@@ -152,13 +152,13 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeStream(descOpts)
-	if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing Kinesis Video Stream (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error describing Kinesis Video Stream (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", resp.StreamInfo.StreamName)
@@ -168,14 +168,14 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("media_type", resp.StreamInfo.MediaType)
 	d.Set("arn", resp.StreamInfo.StreamARN)
 	if err := d.Set("creation_time", resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %s", err)
+		return fmt.Errorf("error setting creation_time: %w", err)
 	}
 	d.Set("version", resp.StreamInfo.Version)
 
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Video Stream (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Kinesis Video Stream (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -209,19 +209,14 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.UpdateStream(updateOpts); err != nil {
-		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error updating Kinesis Video Stream (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error updating Kinesis Video Stream (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Video Stream (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating Kinesis Video Stream (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -235,7 +230,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for updating Kinesis Video Stream (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for updating Kinesis Video Stream (%s): %w", d.Id(), err)
 	}
 
 	return resourceStreamRead(d, meta)
@@ -251,7 +246,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Kinesis Video Stream (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting Kinesis Video Stream (%s): %w", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -264,7 +259,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for deleting Kinesis Video Stream (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for deleting Kinesis Video Stream (%s): %w", d.Id(), err)
 	}
 
 	return nil

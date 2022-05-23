@@ -25,7 +25,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Scaffold everything
 			{
-				Config: testAccSnapshotCreateVolumePermissionConfig(true, accountId),
+				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(true, accountId),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
 					testAccSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
@@ -33,7 +33,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 			},
 			// Drop just create volume permission to test destruction
 			{
-				Config: testAccSnapshotCreateVolumePermissionConfig(false, accountId),
+				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(false, accountId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSnapshotCreateVolumePermissionDestroyed(&accountId, &snapshotId),
 				),
@@ -53,7 +53,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 		CheckDestroy:      testAccSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCreateVolumePermissionConfig(true, accountId),
+				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(true, accountId),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
 					testAccSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
@@ -129,7 +129,7 @@ func testAccSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *strin
 	}
 }
 
-func testAccSnapshotCreateVolumePermissionConfig(includeCreateVolumePermission bool, accountID string) string {
+func testAccEBSSnapshotCreateVolumePermissionConfig_basic(includeCreateVolumePermission bool, accountID string) string {
 	base := `
 data "aws_availability_zones" "available" {
   state = "available"

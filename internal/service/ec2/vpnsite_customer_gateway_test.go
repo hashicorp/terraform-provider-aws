@@ -29,7 +29,7 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfig(rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
@@ -61,7 +61,7 @@ func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfig(rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCustomerGateway(), resourceName),
@@ -84,7 +84,7 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfigTags1(rBgpAsn, "key1", "value1"),
+				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomerGatewayConfigTags2(rBgpAsn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSiteVPNCustomerGatewayConfig_tags2(rBgpAsn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -104,7 +104,7 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
 			{
-				Config: testAccCustomerGatewayConfigTags1(rBgpAsn, "key2", "value2"),
+				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfigDeviceName(rName, rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "device_name", "test"),
@@ -155,7 +155,7 @@ func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_4ByteASN(rName, rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
@@ -190,7 +190,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// We need to create and activate the CAs before issuing a certificate.
 			{
-				Config: testAccCustomerGatewayConfigCAs(domain),
+				Config: testAccSiteVPNCustomerGatewayConfig_cas(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmRootCAResourceName, &caRoot),
 					acctest.CheckACMPCACertificateAuthorityExists(acmSubordinateCAResourceName, &caSubordinate),
@@ -199,7 +199,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
+				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
@@ -211,7 +211,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
+				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CAs must be DISABLED for deletion.
 					acctest.CheckACMPCACertificateAuthorityDisableCA(&caSubordinate),
@@ -272,7 +272,7 @@ func testAccCheckCustomerGatewayExists(n string, v *ec2.CustomerGateway) resourc
 	}
 }
 
-func testAccCustomerGatewayConfig(rBgpAsn int) string {
+func testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[1]d
@@ -282,7 +282,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn)
 }
 
-func testAccCustomerGatewayConfigTags1(rBgpAsn int, tagKey1, tagValue1 string) string {
+func testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[1]d
@@ -296,7 +296,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn, tagKey1, tagValue1)
 }
 
-func testAccCustomerGatewayConfigTags2(rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSiteVPNCustomerGatewayConfig_tags2(rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[1]d
@@ -311,7 +311,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCustomerGatewayConfigDeviceName(rName string, rBgpAsn int) string {
+func testAccSiteVPNCustomerGatewayConfig_deviceName(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d
@@ -326,7 +326,7 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_4ByteASN(rName, rBgpAsn string) string {
+func testAccSiteVPNCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]q
@@ -340,7 +340,7 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccCustomerGatewayConfigCAs(domain string) string {
+func testAccSiteVPNCustomerGatewayConfig_cas(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "root" {
   permanent_deletion_time_in_days = 7
@@ -372,9 +372,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, domain)
 }
 
-func testAccCustomerGatewayConfigCertificate(rName string, rBgpAsn int, domain string) string {
+func testAccSiteVPNCustomerGatewayConfig_certificate(rName string, rBgpAsn int, domain string) string {
 	return acctest.ConfigCompose(
-		testAccCustomerGatewayConfigCAs(domain),
+		testAccSiteVPNCustomerGatewayConfig_cas(domain),
 		fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = "test.sub.%[3]s"

@@ -26,7 +26,7 @@ func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVPNGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(resourceName, &v),
 				),
@@ -47,7 +47,7 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVPNGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
@@ -107,7 +107,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVPNGatewayAttachmentConfig_basic(rName string) string {
+func testAccSiteVPNGatewayAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

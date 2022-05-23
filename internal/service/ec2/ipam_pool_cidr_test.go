@@ -25,7 +25,7 @@ func TestAccIPAMPool_cidrIPv4Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIPAMProvisionedPoolCIDRDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMConfig_provisionedPoolCIDRIPv4(cidr_range),
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr_range),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMCIDRExists(resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr_range),
@@ -106,7 +106,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-func testAccIPAMConfig_provisionedPoolCIDRIPv4(cidr string) string {
+func testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr string) string {
 	return testAccIPAMPoolCIDRConfig_base + testAccIPAMPoolCIDRConfig_privatePool + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
