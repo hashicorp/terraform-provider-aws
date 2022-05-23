@@ -18,6 +18,7 @@ func TestAccDataIntegration_basic(t *testing.T) {
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	firstExecutionFrom := "1439788442681"
@@ -45,6 +46,7 @@ func TestAccDataIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_uri", sourceUri),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.first_execution_from", firstExecutionFrom),
@@ -65,6 +67,24 @@ func TestAccDataIntegration_basic(t *testing.T) {
 					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_uri", sourceUri),
+					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.first_execution_from", firstExecutionFrom),
+					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.object", "Account"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+				),
+			},
+			{
+				Config: testAccDataIntegrationConfig_basic(rName2, updatedDescription, sourceUri, firstExecutionFrom),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key", "aws_kms_key.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source_uri", sourceUri),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", "1"),
