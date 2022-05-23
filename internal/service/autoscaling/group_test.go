@@ -1692,6 +1692,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryMiBAndVCpuCount(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1701,7 +1702,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`memory_mib {
                        min = 500
                      }
@@ -1724,7 +1725,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`memory_mib {
                        min = 1000
                        max = 10000
@@ -1756,6 +1757,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorCount(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1765,7 +1767,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_count {
                        min = 2
                      }
@@ -1788,7 +1790,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_count {
                        min = 1
                        max = 3
@@ -1813,7 +1815,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_count {
                        max = 0
                      }
@@ -1841,6 +1843,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorManufacturers(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1850,7 +1853,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_manufacturers = ["amazon-web-services"]
                      memory_mib {
                        min = 500
@@ -1871,7 +1874,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_manufacturers = ["amazon-web-services", "amd", "nvidia", "xilinx"]
                      memory_mib {
                        min = 500
@@ -1900,6 +1903,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorNames(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1909,7 +1913,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_names = ["a100"]
                      memory_mib {
                        min = 500
@@ -1930,7 +1934,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_names = ["a100", "v100", "k80", "t4", "m60", "radeon-pro-v520", "vu9p"]
                      memory_mib {
                        min = 500
@@ -1962,6 +1966,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorTotalMemoryMiB(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1971,7 +1976,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_total_memory_mib {
                        min = 32
                      }
@@ -1995,7 +2000,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_total_memory_mib {
                        max = 12000
                      }
@@ -2019,7 +2024,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_total_memory_mib {
                        min = 32
                        max = 12000
@@ -2049,6 +2054,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorTypes(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2058,7 +2064,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_types = ["fpga"]
                      memory_mib {
                        min = 500
@@ -2079,7 +2085,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`accelerator_types = ["fpga", "gpu", "inference"]
                      memory_mib {
                        min = 500
@@ -2107,6 +2113,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_bareMetal(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2116,7 +2123,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`bare_metal = "excluded"
                      memory_mib {
                        min = 500
@@ -2136,7 +2143,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`bare_metal = "included"
                      memory_mib {
                        min = 500
@@ -2156,7 +2163,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`bare_metal = "required"
                      memory_mib {
                        min = 500
@@ -2181,6 +2188,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_baselineEbsBandwidthMbps(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2190,7 +2198,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`baseline_ebs_bandwidth_mbps {
                        min = 10
                      }
@@ -2213,7 +2221,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`baseline_ebs_bandwidth_mbps {
                        max = 20000
                      }
@@ -2236,7 +2244,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`baseline_ebs_bandwidth_mbps {
                        min = 10
                        max = 20000
@@ -2266,6 +2274,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_burstablePerformance(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2275,7 +2284,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`burstable_performance = "excluded"
                      memory_mib {
                        min = 500
@@ -2295,7 +2304,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`burstable_performance = "included"
                      memory_mib {
                        min = 500
@@ -2315,7 +2324,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`burstable_performance = "required"
                      memory_mib {
                        min = 500
@@ -2340,6 +2349,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_cpuManufacturers(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2349,7 +2359,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`cpu_manufacturers = ["amazon-web-services"]
                      memory_mib {
                        min = 500
@@ -2370,7 +2380,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`cpu_manufacturers = ["amazon-web-services", "amd", "intel"]
                      memory_mib {
                        min = 500
@@ -2398,6 +2408,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_excludedInstanceTypes(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2407,7 +2418,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`excluded_instance_types = ["t2.nano"]
                      memory_mib {
                        min = 500
@@ -2428,7 +2439,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`excluded_instance_types = ["t2.nano", "t3*", "t4g.*"]
                      memory_mib {
                        min = 500
@@ -2456,6 +2467,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_instanceGenerations(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2465,7 +2477,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`instance_generations = ["current"]
                      memory_mib {
                        min = 500
@@ -2486,7 +2498,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`instance_generations = ["current", "previous"]
                      memory_mib {
                        min = 500
@@ -2513,6 +2525,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_localStorage(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2522,7 +2535,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`local_storage = "excluded"
                      memory_mib {
                        min = 500
@@ -2542,7 +2555,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`local_storage = "included"
                      memory_mib {
                        min = 500
@@ -2562,7 +2575,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`local_storage = "required"
                      memory_mib {
                        min = 500
@@ -2587,6 +2600,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_localStorageTypes(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2596,7 +2610,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`local_storage_types = ["hdd"]
                      memory_mib {
                        min = 500
@@ -2617,7 +2631,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`local_storage_types = ["hdd", "ssd"]
                      memory_mib {
                        min = 500
@@ -2644,6 +2658,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryGiBPerVCpu(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2653,7 +2668,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`memory_gib_per_vcpu {
                        min = 0.5
                      }
@@ -2676,7 +2691,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`memory_gib_per_vcpu {
                        max = 9.5
                      }
@@ -2699,7 +2714,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`memory_gib_per_vcpu {
                        min = 0.5
                        max = 9.5
@@ -2729,6 +2744,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_networkInterfaceCount(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2738,7 +2754,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`network_interface_count {
                        min = 1
                      }
@@ -2761,7 +2777,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`network_interface_count {
                        max = 10
                      }
@@ -2784,7 +2800,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`network_interface_count {
                        min = 1
                        max = 10
@@ -2814,6 +2830,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_onDemandMaxPricePercentageOverLowestPrice(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2823,7 +2840,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`on_demand_max_price_percentage_over_lowest_price = 50
                      memory_mib {
                        min = 500
@@ -2848,6 +2865,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_requireHibernateSupport(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2857,7 +2875,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`require_hibernate_support = false
                      memory_mib {
                        min = 500
@@ -2877,7 +2895,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`require_hibernate_support = true
                      memory_mib {
                        min = 500
@@ -2902,6 +2920,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_spotMaxPricePercentageOverLowestPrice(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2911,7 +2930,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`spot_max_price_percentage_over_lowest_price = 75
                      memory_mib {
                        min = 500
@@ -2936,6 +2955,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_totalLocalStorageGB(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2945,7 +2965,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`total_local_storage_gb {
                        min = 0.5
                      }
@@ -2968,7 +2988,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`total_local_storage_gb {
                        max = 20.5
                      }
@@ -2991,7 +3011,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
 					`total_local_storage_gb {
                        min = 0.5
                        max = 20.5
@@ -4316,47 +4336,6 @@ func testAccGroupDestroyWhenProtectedFromScaleInAfterDestroyConfig(rName string)
 	return testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro")
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_Base(rName string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
-  instance_type = "t3.micro"
-  name          = %q
-}
-`, rName)
-}
-
-func testAccGroupConfig_MixedInstancesPolicy_Arm_Base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "testarm" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-arm64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "testarm" {
-  image_id      = data.aws_ami.testarm.id
-  instance_type = "t4g.micro"
-  name          = %q
-}
-`, rName)
-}
-
 func testAccGroupMixedInstancesPolicyConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
@@ -4833,14 +4812,14 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_instanceRequirements(rName string, instanceRequirements string) string {
-	return testAccGroupConfig_MixedInstancesPolicy_Base(rName) + fmt.Sprintf(`
+func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName string, instanceRequirements string) string {
+	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   mixed_instances_policy {
     launch_template {
@@ -4850,7 +4829,7 @@ resource "aws_autoscaling_group" "test" {
 
       override {
         instance_requirements {
-          %s
+          %[2]s
         }
       }
     }
@@ -4861,7 +4840,7 @@ resource "aws_autoscaling_group" "test" {
     }
   }
 }
-`, rName, instanceRequirements)
+`, rName, instanceRequirements))
 }
 
 func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
