@@ -149,8 +149,12 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
 	d.Set("launch_configuration", group.LaunchConfigurationName)
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecificationMap(group.LaunchTemplate)); err != nil {
-		return fmt.Errorf("error setting launch_template: %w", err)
+	if group.LaunchTemplate != nil {
+		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
+			return fmt.Errorf("setting launch_template: %w", err)
+		}
+	} else {
+		d.Set("launch_template", nil)
 	}
 	d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames))
 	d.Set("max_size", group.MaxSize)

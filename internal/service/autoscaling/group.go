@@ -1037,17 +1037,15 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
-
-	if err := d.Set("load_balancers", flex.FlattenStringList(g.LoadBalancerNames)); err != nil {
-		return fmt.Errorf("error setting load_balancers: %s", err)
-	}
-
+	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
 	d.Set("launch_configuration", g.LaunchConfigurationName)
-
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecificationMap(g.LaunchTemplate)); err != nil {
-		return fmt.Errorf("error setting launch_template: %s", err)
+	if g.LaunchTemplate != nil {
+		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
+			return fmt.Errorf("setting launch_template: %w", err)
+		}
+	} else {
+		d.Set("launch_template", nil)
 	}
-
 	d.Set("max_size", g.MaxSize)
 	d.Set("min_size", g.MinSize)
 	if g.MixedInstancesPolicy != nil {
@@ -2547,6 +2545,28 @@ func expandMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPoli
 	return mixedInstancesPolicy
 }
 
+func flattenLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateName; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Version; v != nil {
+		tfMap["version"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
 func flattenMixedInstancesPolicy(apiObject *autoscaling.MixedInstancesPolicy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -2607,7 +2627,7 @@ func flattenLaunchTemplate(apiObject *autoscaling.LaunchTemplate) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecification(v)}
+		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecificationForMixedInstancesPolicy(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2617,7 +2637,7 @@ func flattenLaunchTemplate(apiObject *autoscaling.LaunchTemplate) map[string]int
 	return tfMap
 }
 
-func flattenLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) map[string]interface{} {
+func flattenLaunchTemplateSpecificationForMixedInstancesPolicy(apiObject *autoscaling.LaunchTemplateSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2655,7 +2675,7 @@ func flattenLaunchTemplateOverrides(apiObject *autoscaling.LaunchTemplateOverrid
 	}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecification(v)}
+		tfMap["launch_template_specification"] = []interface{}{flattenLaunchTemplateSpecificationForMixedInstancesPolicy(v)}
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {
@@ -3235,30 +3255,6 @@ func expandLaunchTemplateSpecification(specs []interface{}) *autoscaling.LaunchT
 	if v, ok := spec["version"]; ok && v != "" {
 		result.Version = aws.String(v.(string))
 	}
-
-	return result
-}
-
-func flattenLaunchTemplateSpecificationMap(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
-	if lt == nil {
-		return []map[string]interface{}{}
-	}
-
-	attrs := map[string]interface{}{}
-	result := make([]map[string]interface{}, 0)
-
-	// id and name are always returned by DescribeAutoscalingGroups
-	attrs["id"] = aws.StringValue(lt.LaunchTemplateId)
-	attrs["name"] = aws.StringValue(lt.LaunchTemplateName)
-
-	// version is returned only if it was previously set
-	if lt.Version != nil {
-		attrs["version"] = aws.StringValue(lt.Version)
-	} else {
-		attrs["version"] = nil
-	}
-
-	result = append(result, attrs)
 
 	return result
 }
