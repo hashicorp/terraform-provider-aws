@@ -337,6 +337,7 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/deploy
         - internal/service/timestreamwrite
         - internal/service/transfer
         - internal/service/waf
