@@ -400,11 +400,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		input.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
-		backupInput.ClusterSubnetGroupName = aws.String(v.(string))
-		input.ClusterSubnetGroupName = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 		backupInput.ClusterParameterGroupName = aws.String(v.(string))
 		input.ClusterParameterGroupName = aws.String(v.(string))
@@ -413,6 +408,11 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
 		backupInput.ClusterSecurityGroups = flex.ExpandStringSet(v)
 		input.ClusterSecurityGroups = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
+		backupInput.ClusterSubnetGroupName = aws.String(v.(string))
+		input.ClusterSubnetGroupName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("elastic_ip"); ok {
@@ -437,6 +437,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("number_of_nodes"); ok {
 		backupInput.NumberOfNodes = aws.Int64(int64(v.(int)))
+		// NumberOfNodes set below for CreateCluster.
 	}
 
 	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
@@ -452,12 +453,12 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
 		backupInput.SnapshotIdentifier = aws.String(v.(string))
 
-		if v, ok := d.GetOk("snapshot_cluster_identifier"); ok {
-			backupInput.SnapshotClusterIdentifier = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("owner_account"); ok {
 			backupInput.OwnerAccount = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("snapshot_cluster_identifier"); ok {
+			backupInput.SnapshotClusterIdentifier = aws.String(v.(string))
 		}
 
 		log.Printf("[DEBUG] Restoring Redshift Cluster: %s", backupInput)
@@ -475,6 +476,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, ok := d.GetOk("master_username"); !ok {
 			return fmt.Errorf(`provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get("cluster_identifier").(string))
+		}
+
+		if v, ok := d.GetOk("encrypted"); ok {
+			input.Encrypted = aws.Bool(v.(bool))
 		}
 
 		if v := d.Get("number_of_nodes").(int); v > 1 {
