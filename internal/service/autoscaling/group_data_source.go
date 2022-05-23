@@ -80,20 +80,20 @@ func DataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"new_instances_protected_from_scale_in": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"max_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"min_size": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"new_instances_protected_from_scale_in": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"placement_group": {
