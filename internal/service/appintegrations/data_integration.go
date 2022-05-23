@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +20,8 @@ import (
 
 func ResourceDataIntegration() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceDataIntegrationRead,
+		CreateContext: resourceDataIntegrationCreate,
+		ReadContext:   resourceDataIntegrationRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -94,6 +96,46 @@ func ResourceDataIntegration() *schema.Resource {
 	}
 }
 
+func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &appintegrationsservice.CreateDataIntegrationInput{
+		ClientToken:    aws.String(resource.UniqueId()),
+		KmsKey:         aws.String(d.Get("kms_key").(string)),
+		Name:           aws.String(name),
+		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
+		SourceURI:      aws.String(d.Get("source_uri").(string)),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating AppIntegrations Data Integration %s", input)
+
+	output, err := conn.CreateDataIntegrationWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Data Integration (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Data Integration (%s): empty output", name))
+	}
+
+	d.SetId(aws.StringValue(output.Id))
+
+	return resourceDataIntegrationRead(ctx, d, meta)
+}
+
 func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppIntegrationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -141,6 +183,25 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
+}
+
+func expandScheduleConfig(scheduleConfig []interface{}) *appintegrationsservice.ScheduleConfiguration {
+	if len(scheduleConfig) == 0 || scheduleConfig[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := scheduleConfig[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &appintegrationsservice.ScheduleConfiguration{
+		FirstExecutionFrom: aws.String(tfMap["first_execution_from"].(string)),
+		Object:             aws.String(tfMap["object"].(string)),
+		ScheduleExpression: aws.String(tfMap["schedule_expression"].(string)),
+	}
+
+	return result
 }
 
 func flattenScheduleConfig(scheduleConfig *appintegrationsservice.ScheduleConfiguration) []interface{} {
