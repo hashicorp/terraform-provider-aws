@@ -353,7 +353,11 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name.yml
+    - run: semgrep -c .semgrep-service-name0.yml
+    - run: semgrep -c .semgrep-service-name1.yml
+    - run: semgrep -c .semgrep-service-name2.yml
+    - run: semgrep -c .semgrep-service-name3.yml
+
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
