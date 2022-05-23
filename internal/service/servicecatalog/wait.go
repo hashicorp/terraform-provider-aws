@@ -502,8 +502,10 @@ func WaitLaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, p
 
 func WaitProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &resource.StateChangeConf{
+		// "TAINTED" is a valid target state as its described as a stable state per API docs, though can result from a failed update
+		// such that the stack rolls back to a previous version.
 		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.StatusAvailable},
+		Target:                    []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusTainted},
 		Refresh:                   StatusProvisionedProduct(conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,

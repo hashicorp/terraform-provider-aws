@@ -416,10 +416,10 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("status_message", detail.StatusMessage)
 	d.Set("type", detail.Type)
 
-	// Previously, we waited for the record to return a target state of 'SUCCEEDED' or 'AVAILABLE'
+	// Previously, we waited for the record to only return a target state of 'SUCCEEDED' or 'AVAILABLE'
 	// but this can interfere complete reads of this resource when an error occurs after initial creation
-	// or after an invalid update. Thus, waiters are now present in the CREATE and UPDATE methods of this resource instead.
-	// TODO: determine if waiter is needed in the IMPORT case
+	// or after an invalid update that returns a 'FAILED' record state. Thus, waiters are now present in the CREATE and UPDATE methods of this resource instead.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574#issuecomment-1126339193
 	recordInput := &servicecatalog.DescribeRecordInput{
 		Id:             detail.LastProvisioningRecordId,
 		AcceptLanguage: aws.String(acceptLanguage),
@@ -441,7 +441,9 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// To enable debugging of potential errors, log as a warning
-	// instead of exiting prematurely with an error.
+	// instead of exiting prematurely with an error, e.g.
+	// errors can be present after update to a new version failed and the stack
+	// rolled back to the current version.
 	if errors := recordOutput.RecordDetail.RecordErrors; len(errors) > 0 {
 		var errs *multierror.Error
 
