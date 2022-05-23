@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
+func TestAccDSLogSubscription_basic(t *testing.T) {
 	resourceName := "aws_directory_service_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
