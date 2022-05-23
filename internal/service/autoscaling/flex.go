@@ -8,16 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
-func flattenASGEnabledMetrics(list []*autoscaling.EnabledMetric) []string {
-	strs := make([]string, 0, len(list))
-	for _, r := range list {
-		if r.Metric != nil {
-			strs = append(strs, *r.Metric)
-		}
-	}
-	return strs
-}
-
 func flattenASGSuspendedProcesses(list []*autoscaling.SuspendedProcess) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {

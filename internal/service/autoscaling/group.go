@@ -242,7 +242,7 @@ func ResourceGroup() *schema.Resource {
 			"metrics_granularity": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "1Minute",
+				Default:  DefaultEnabledMetricsGranularity,
 			},
 			"min_elb_capacity": {
 				Type:     schema.TypeInt,
@@ -1025,16 +1025,13 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("desired_capacity", g.DesiredCapacity)
-
-	d.Set("enabled_metrics", nil)
-	d.Set("metrics_granularity", "1Minute")
-	if g.EnabledMetrics != nil {
-		if err := d.Set("enabled_metrics", flattenASGEnabledMetrics(g.EnabledMetrics)); err != nil {
-			return fmt.Errorf("error setting enabled_metrics: %s", err)
-		}
+	if len(g.EnabledMetrics) > 0 {
+		d.Set("enabled_metrics", flattenEnabledMetrics(g.EnabledMetrics))
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
+	} else {
+		d.Set("enabled_metrics", nil)
+		d.Set("metrics_granularity", DefaultEnabledMetricsGranularity)
 	}
-
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
 	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
@@ -2543,6 +2540,22 @@ func expandMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPoli
 	}
 
 	return mixedInstancesPolicy
+}
+
+func flattenEnabledMetrics(apiObjects []*autoscaling.EnabledMetric) []string {
+	var tfList []string
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if v := apiObject.Metric; v != nil {
+			tfList = append(tfList, aws.StringValue(v))
+		}
+	}
+
+	return tfList
 }
 
 func flattenLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) map[string]interface{} {

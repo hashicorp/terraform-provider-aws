@@ -11,6 +11,10 @@ const (
 )
 
 const (
+	DefaultEnabledMetricsGranularity = "1Minute"
+)
+
+const (
 	DefaultWarmPoolMaxGroupPreparedCapacity = -1
 )
 

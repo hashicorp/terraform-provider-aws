@@ -143,9 +143,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones))
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
-	if err := d.Set("enabled_metrics", flattenASGEnabledMetrics(group.EnabledMetrics)); err != nil {
-		return fmt.Errorf("error setting enabled_metrics: %w", err)
-	}
+	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
 	d.Set("launch_configuration", group.LaunchConfigurationName)
