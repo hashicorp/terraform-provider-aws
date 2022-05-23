@@ -200,3 +200,32 @@ func FindAuthenticationProfileByID(conn *redshift.Redshift, id string) (*redshif
 
 	return out.AuthenticationProfiles[0], nil
 }
+
+func FindEventSubscriptionByName(conn *redshift.Redshift, name string) (*redshift.EventSubscription, error) {
+	input := &redshift.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEventSubscriptions(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.EventSubscriptionsList) == 0 || output.EventSubscriptionsList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.EventSubscriptionsList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.EventSubscriptionsList[0], nil
+}
