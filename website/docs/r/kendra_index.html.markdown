@@ -25,6 +25,35 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
+### With server side encryption configuration
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.this.arn
+
+  server_side_encryption_configuration {
+    kms_key_id = data.aws_kms_key.this.arn
+  }
+}
+```
+
+### With JSON token type configuration
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.this.arn
+
+  user_token_configurations {
+    json_token_type_configuration {
+      group_attribute_field     = "groups"
+      user_name_attribute_field = "username"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 ### Arguments supported at create time
