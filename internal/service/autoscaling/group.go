@@ -793,7 +793,7 @@ func ResourceGroup() *schema.Resource {
 						"max_group_prepared_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  -1,
+							Default:  DefaultWarmPoolMaxGroupPreparedCapacity,
 						},
 						"min_size": {
 							Type:     schema.TypeInt,
@@ -1118,8 +1118,12 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("warm_pool", FlattenWarmPoolConfiguration(g.WarmPoolConfiguration)); err != nil {
-		return fmt.Errorf("error setting warm_pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
+	if g.WarmPoolConfiguration != nil {
+		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(g.WarmPoolConfiguration)}); err != nil {
+			return fmt.Errorf("setting warm_pool: %w", err)
+		}
+	} else {
+		d.Set("warm_pool", nil)
 	}
 
 	return nil
@@ -2917,39 +2921,46 @@ func flattenVCpuCount(apiObject *autoscaling.VCpuCountRequest) map[string]interf
 	return tfMap
 }
 
-func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolConfiguration) []interface{} {
-	if warmPoolConfiguration == nil {
-		return []interface{}{}
+func flattenWarmPoolConfiguration(apiObject *autoscaling.WarmPoolConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	maxGroupPreparedCapacity := int64(-1)
-	if warmPoolConfiguration.MaxGroupPreparedCapacity != nil {
-		maxGroupPreparedCapacity = aws.Int64Value(warmPoolConfiguration.MaxGroupPreparedCapacity)
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.InstanceReusePolicy; v != nil {
+		tfMap["instance_reuse_policy"] = []interface{}{flattenWarmPoolInstanceReusePolicy(v)}
 	}
 
-	m := map[string]interface{}{
-		"pool_state":                  aws.StringValue(warmPoolConfiguration.PoolState),
-		"min_size":                    aws.Int64Value(warmPoolConfiguration.MinSize),
-		"max_group_prepared_capacity": maxGroupPreparedCapacity,
+	if v := apiObject.MaxGroupPreparedCapacity; v != nil {
+		tfMap["max_group_prepared_capacity"] = aws.Int64Value(v)
+	} else {
+		tfMap["max_group_prepared_capacity"] = int64(DefaultWarmPoolMaxGroupPreparedCapacity)
 	}
 
-	if warmPoolConfiguration.InstanceReusePolicy != nil {
-		m["instance_reuse_policy"] = flattenWarmPoolInstanceReusePolicy(warmPoolConfiguration.InstanceReusePolicy)
+	if v := apiObject.MinSize; v != nil {
+		tfMap["min_size"] = aws.Int64Value(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.PoolState; v != nil {
+		tfMap["pool_state"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-func flattenWarmPoolInstanceReusePolicy(instanceReusePolicy *autoscaling.InstanceReusePolicy) []interface{} {
-	if instanceReusePolicy == nil {
-		return []interface{}{}
+func flattenWarmPoolInstanceReusePolicy(apiObject *autoscaling.InstanceReusePolicy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"reuse_on_scale_in": aws.BoolValue(instanceReusePolicy.ReuseOnScaleIn),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ReuseOnScaleIn; v != nil {
+		tfMap["reuse_on_scale_in"] = aws.BoolValue(v)
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
 func waitUntilGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {

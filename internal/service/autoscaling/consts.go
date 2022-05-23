@@ -11,6 +11,10 @@ const (
 )
 
 const (
+	DefaultWarmPoolMaxGroupPreparedCapacity = -1
+)
+
+const (
 	InstanceHealthStatusHealthy   = "Healthy"
 	InstanceHealthStatusUnhealthy = "Unhealthy"
 )
