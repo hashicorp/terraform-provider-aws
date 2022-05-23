@@ -106,8 +106,8 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetXssMatchSet(params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, error code (404)", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
