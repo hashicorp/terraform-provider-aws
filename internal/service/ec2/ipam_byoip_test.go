@@ -54,7 +54,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: ipv4IPAMBYOIPIPv6DefaultNetmask(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv4IPv6DefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
@@ -65,13 +65,13 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			},
 			// disassociate ipv6
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPExplicitNetmask(p, m, s, netmaskLength),
+				Config: testAccIPAMBYOIPConfig_ipv6ExplicitNetmask(p, m, s, netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
@@ -82,13 +82,13 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			},
 			// // disassociate ipv6
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
-				Config:   testAccIPAMConfig_ipv6BYOIPExplicitCIDR(p, m, s, ipv6CidrVPC),
+				Config:   testAccIPAMBYOIPConfig_ipv6ExplicitCIDR(p, m, s, ipv6CidrVPC),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -99,7 +99,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			},
 			// disassociate ipv6
 			{
-				Config:   testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config:   testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -107,7 +107,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			},
 			// aws_vpc_ipv6_cidr_block_association
 			{
-				Config: testAccIPAMConfig_byoipIPv6CIDRBlockAssociationIPAMDefaultNetmask(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationDefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(assocName, &associationIPv6),
@@ -116,19 +116,19 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			},
 			// disassociate ipv6
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc)),
 				// vpc will still have association id because its based on the aws_vpc_ipv6_cidr_block_association resource
 			},
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
-				Config: testAccIPAMConfig_byoipIPv6CIDRBlockAssociationIPAMExplicitNetmask(p, m, s, netmaskLength),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitNetmask(p, m, s, netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(assocName, &associationIPv6),
 					testAccCheckVPCAssociationIPv6CIDRPrefix(&associationIPv6, strconv.Itoa(netmaskLength)),
@@ -136,19 +136,19 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			},
 			// disassociate ipv6
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc)),
 				// vpc will still have association id because its based on the aws_vpc_ipv6_cidr_block_association resource
 			},
 			{
-				Config: testAccIPAMConfig_ipv6BYOIPCIDRBase(p, m, s),
+				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
-				Config:   testAccIPAMConfig_byoipIPv6CIDRBlockAssociationIPAMExplicitCIDR(p, m, s, ipv6CidrAssoc),
+				Config:   testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitCIDR(p, m, s, ipv6CidrAssoc),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrAssoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(assocName, &associationIPv6),
@@ -169,7 +169,7 @@ func testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t *testing.T, ipv6CidrVPC strin
 	}
 }
 
-func testAccIPAMConfig_ipv6BYOIPCIDRBase(cidr, msg, signature string) string {
+func testAccIPAMBYOIPConfig_ipv6CIDRBase(cidr, msg, signature string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -204,7 +204,7 @@ resource "aws_vpc" "test" {
 	`, cidr, msg, signature)
 }
 
-func ipv4IPAMBYOIPIPv6DefaultNetmask(cidr, msg, signature string) string {
+func testAccIPAMBYOIPConfig_ipv4IPv6DefaultNetmask(cidr, msg, signature string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -243,7 +243,7 @@ resource "aws_vpc" "test" {
 	`, cidr, msg, signature)
 }
 
-func testAccIPAMConfig_ipv6BYOIPExplicitNetmask(cidr, msg, signature string, netmask int) string {
+func testAccIPAMBYOIPConfig_ipv6ExplicitNetmask(cidr, msg, signature string, netmask int) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -283,7 +283,7 @@ resource "aws_vpc" "test" {
 	`, cidr, msg, signature, netmask)
 }
 
-func testAccIPAMConfig_ipv6BYOIPExplicitCIDR(cidr, msg, signature, vpcCidr string) string {
+func testAccIPAMBYOIPConfig_ipv6ExplicitCIDR(cidr, msg, signature, vpcCidr string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -323,7 +323,7 @@ resource "aws_vpc" "test" {
 	`, cidr, msg, signature, vpcCidr)
 }
 
-func testAccIPAMConfig_byoipIPv6CIDRBlockAssociationIPAMDefaultNetmask(cidr, msg, signature string) string {
+func testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationDefaultNetmask(cidr, msg, signature string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -366,7 +366,7 @@ resource "aws_vpc_ipv6_cidr_block_association" "test" {
 	`, cidr, msg, signature)
 }
 
-func testAccIPAMConfig_byoipIPv6CIDRBlockAssociationIPAMExplicitNetmask(cidr, msg, signature string, netmask int) string {
+func testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitNetmask(cidr, msg, signature string, netmask int) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -410,7 +410,7 @@ resource "aws_vpc_ipv6_cidr_block_association" "test" {
 	`, cidr, msg, signature, netmask)
 }
 
-func testAccIPAMConfig_byoipIPv6CIDRBlockAssociationIPAMExplicitCIDR(cidr, msg, signature, vpcCidr string) string {
+func testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitCIDR(cidr, msg, signature, vpcCidr string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

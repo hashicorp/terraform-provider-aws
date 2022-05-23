@@ -53,6 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
 * `automated_snapshot_retention_period` - The backup retention period
+* `aqua_configuration_status` - The value represents how the cluster is configured to use AQUA.
 * `availability_zone` - The availability zone of the cluster
 * `availability_zone_relocation_enabled` - Indicates whether the cluster is able to be relocated to another availability zone.
 * `bucket_name` - The name of the S3 bucket where the log files are to be stored

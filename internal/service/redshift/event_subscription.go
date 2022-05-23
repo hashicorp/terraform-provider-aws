@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -154,10 +155,14 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sub, err := FindEventSubscriptionByName(conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving Redshift Event Subscription %s: %w", d.Id(), err)
 	}
 
 	if err != nil {

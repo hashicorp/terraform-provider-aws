@@ -15,7 +15,7 @@ func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSDefaultKMSKeyDataSourceConfig,
+				Config: testAccEBSDefaultKMSKeyDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSDefaultKMSKey("data.aws_ebs_default_kms_key.current"),
 				),
@@ -24,6 +24,6 @@ func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccEBSDefaultKMSKeyDataSourceConfig = `
+const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
 data "aws_ebs_default_kms_key" "current" {}
 `

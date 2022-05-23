@@ -28,7 +28,7 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteBasicDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By destination CIDR.
 					resource.TestCheckResourceAttrPair(datasource1Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
@@ -65,7 +65,7 @@ func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4TransitGatewayDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_ipv4TransitGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -88,7 +88,7 @@ func TestAccVPCRouteDataSource_ipv6DestinationCIDR(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6EgressOnlyInternetGatewayDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_ipv6EgressOnlyInternetGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_ipv6_cidr_block", dataSourceName, "destination_ipv6_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -110,7 +110,7 @@ func TestAccVPCRouteDataSource_localGatewayID(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4LocalGatewayDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_ipv4LocalGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -133,7 +133,7 @@ func TestAccVPCRouteDataSource_carrierGatewayID(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4CarrierGatewayDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_ipv4CarrierGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -156,7 +156,7 @@ func TestAccVPCRouteDataSource_destinationPrefixListID(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListNatGatewayDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_prefixListNATGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", dataSourceName, "destination_prefix_list_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", dataSourceName, "nat_gateway_id"),
@@ -181,7 +181,7 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName),
+				Config: testAccVPCRouteDataSourceConfig_gatewayEndpointNo(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckVPCEndpointExists(vpceResourceName, &vpce),
@@ -189,14 +189,14 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccRouteGatewayVPCEndpointWithDataSourceDataSourceConfig(rName),
+				Config:      testAccVPCRouteDataSourceConfig_gatewayEndpoint(rName),
 				ExpectError: regexp.MustCompile(`No routes matching supplied arguments found in Route Table`),
 			},
 		},
 	})
 }
 
-func testAccRouteBasicDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -290,7 +290,7 @@ data "aws_route" "by_instance_id" {
 `, rName))
 }
 
-func testAccRouteIPv4TransitGatewayDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_ipv4TransitGateway(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -341,7 +341,7 @@ data "aws_route" "test" {
 `, rName))
 }
 
-func testAccRouteIPv6EgressOnlyInternetGatewayDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_ipv6EgressOnlyInternetGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -380,7 +380,7 @@ data "aws_route" "test" {
 `, rName)
 }
 
-func testAccRouteIPv4LocalGatewayDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_ipv4LocalGateway(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
@@ -434,7 +434,7 @@ data "aws_route" "by_local_gateway_id" {
 `, rName)
 }
 
-func testAccRouteIPv4CarrierGatewayDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_ipv4CarrierGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -473,7 +473,7 @@ data "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListNatGatewayDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_prefixListNATGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -549,7 +549,7 @@ data "aws_route" "test" {
 `, rName)
 }
 
-func testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName string) string {
+func testAccVPCRouteDataSourceConfig_gatewayEndpointNo(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -577,8 +577,8 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccRouteGatewayVPCEndpointWithDataSourceDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName), `
+func testAccVPCRouteDataSourceConfig_gatewayEndpoint(rName string) string {
+	return acctest.ConfigCompose(testAccVPCRouteDataSourceConfig_gatewayEndpointNo(rName), `
 data "aws_prefix_list" "test" {
   name = aws_vpc_endpoint.test.service_name
 }

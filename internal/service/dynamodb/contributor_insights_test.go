@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccContributorInsights_basic(t *testing.T) {
+func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 	var conf dynamodb.DescribeContributorInsightsOutput
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	indexName := fmt.Sprintf("%s-index", rName)
@@ -52,7 +52,7 @@ func TestAccContributorInsights_basic(t *testing.T) {
 	})
 }
 
-func TestAccContributorInsights_disappears(t *testing.T) {
+func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 	var conf dynamodb.DescribeContributorInsightsOutput
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_dynamodb_contributor_insights.test"

@@ -82,10 +82,9 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:                   Tags(tags.IgnoreAWS()),
 	}
 
-	log.Printf("[DEBUG] Create Redshift Subnet Group: %#v", createOpts)
 	_, err := conn.CreateClusterSubnetGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Redshift Subnet Group: %s", err)
+		return fmt.Errorf("error creating Redshift Subnet Group: %w", err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.ClusterSubnetGroupName))
@@ -104,16 +103,18 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeResp, err := conn.DescribeClusterSubnetGroups(&describeOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "ClusterSubnetGroupNotFoundFault") {
-			log.Printf("[INFO] Redshift Subnet Group: %s was not found", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
+			log.Printf("[INFO] Redshift Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	if len(describeResp.ClusterSubnetGroups) == 0 {
-		return fmt.Errorf("Unable to find Redshift Subnet Group: %#v", describeResp.ClusterSubnetGroups)
+	if !d.IsNewResource() && len(describeResp.ClusterSubnetGroups) == 0 {
+		log.Printf("[INFO] Redshift Subnet Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("name", d.Id())

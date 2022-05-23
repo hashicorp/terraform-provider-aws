@@ -17,7 +17,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceAccount() *schema.Resource {
@@ -140,6 +139,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.AccountId))
+	d.Set("govcloud_id", output.GovCloudAccountId)
 
 	if v, ok := d.GetOk("parent_id"); ok {
 		oldParentAccountID, err := findParentAccountID(conn, d.Id())
@@ -195,14 +195,6 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", account.Name)
 	d.Set("parent_id", parentAccountID)
 	d.Set("status", account.Status)
-
-	s, err := findCreateAccountStatusByID(conn, d.Id())
-
-	if err != nil {
-		return names.Error(names.Organizations, "finding", "Create Account Status", d.Id(), err)
-	}
-
-	d.Set("govcloud_id", s.GovCloudAccountId)
 
 	tags, err := ListTags(conn, d.Id())
 

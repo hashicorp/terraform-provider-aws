@@ -10,7 +10,6 @@ on:
       - .github/workflows/terraform_provider.yml
       - .go-version
       - .golangci.yml
-      - .semgrep.yml
       - internal/**
       - providerlint/**
       - docs/index.md
@@ -335,25 +334,6 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/pavius/impi/cmd/impi
     - run: impi --local . --scheme stdThirdPartyLocal ./...
-
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-       fetch-depth: 0
-    - name: semgrep
-      uses: returntocorp/semgrep-action@v1
-
-  naming_semgrep:
-    name: Semgrep Naming Scan
-    runs-on: ubuntu-latest
-    container:
-      image: returntocorp/semgrep
-    if: (github.action != 'dependabot[bot]')
-    steps:
-    - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name.yml
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
