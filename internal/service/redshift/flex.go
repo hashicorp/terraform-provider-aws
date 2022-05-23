@@ -39,14 +39,14 @@ func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
 	if ls.BucketName != nil {
 		cfg["bucket_name"] = aws.StringValue(ls.BucketName)
 	}
-	if ls.S3KeyPrefix != nil {
-		cfg["s3_key_prefix"] = aws.StringValue(ls.S3KeyPrefix)
-	}
 	if ls.LogDestinationType != nil {
 		cfg["log_destination_type"] = aws.StringValue(ls.LogDestinationType)
 	}
 	if ls.LogExports != nil {
 		cfg["log_exports"] = flex.FlattenStringSet(ls.LogExports)
+	}
+	if ls.S3KeyPrefix != nil {
+		cfg["s3_key_prefix"] = aws.StringValue(ls.S3KeyPrefix)
 	}
 	return []interface{}{cfg}
 }

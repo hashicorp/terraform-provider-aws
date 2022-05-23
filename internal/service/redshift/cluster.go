@@ -217,11 +217,6 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"s3_key_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
 						"log_destination_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -231,6 +226,11 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"s3_key_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -958,16 +958,16 @@ func enableLogging(conn *redshift.Redshift, clusterID string, tfMap map[string]i
 		input.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
-		input.S3KeyPrefix = aws.String(v)
-	}
-
 	if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
 		input.LogDestinationType = aws.String(v)
 	}
 
 	if v, ok := tfMap["log_exports"].(*schema.Set); ok && v.Len() > 0 {
 		input.LogExports = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+		input.S3KeyPrefix = aws.String(v)
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
