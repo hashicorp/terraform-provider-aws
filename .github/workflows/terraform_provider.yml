@@ -227,7 +227,7 @@ jobs:
           if [ "${file}" = "" ]; then
             continue
           fi
-          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.* ]]; then
+          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.*|/ec2/generate/.* ]]; then
             echo "Skipping changed file: ${file}"
             continue
           fi
@@ -241,7 +241,7 @@ jobs:
             continue
           fi
           echo -n "Finding dependents for ${pkg}? "
-          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate|/ec2/generate/ ]]; then
             echo "No"
             continue
           fi
@@ -253,7 +253,7 @@ jobs:
             if [[ "${file}" != *.go ]]; then
               continue
             fi
-            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate|/ec2/generate/ ]]; then
               continue
             fi
             c=$((c+1))
@@ -344,6 +344,16 @@ jobs:
        fetch-depth: 0
     - name: semgrep
       uses: returntocorp/semgrep-action@v1
+
+  naming_semgrep:
+    name: Semgrep Naming Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: semgrep -c .semgrep-service-name.yml
 
   tfproviderdocs:
     needs: [terraform_providers_schema]

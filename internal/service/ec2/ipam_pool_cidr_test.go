@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIPAMPoolCidr_ipv4Basic(t *testing.T) {
+func TestAccIPAMPool_cidrIPv4Basic(t *testing.T) {
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidr_range := "10.0.0.0/24"
@@ -22,12 +22,12 @@ func TestAccIPAMPoolCidr_ipv4Basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamProvisionedPoolCidrDestroy,
+		CheckDestroy:      testAccCheckIPAMProvisionedPoolCIDRDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamProvisionedPoolCidrIpv4(cidr_range),
+				Config: testAccIPAMConfig_provisionedPoolCIDRIPv4(cidr_range),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIpamCidrExists(resourceName, &cidr),
+					testAccCheckIPAMCIDRExists(resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr_range),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
 				),
@@ -41,7 +41,7 @@ func TestAccIPAMPoolCidr_ipv4Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIpamCidrExists(n string, cidr *ec2.IpamPoolCidr) resource.TestCheckFunc {
+func testAccCheckIPAMCIDRExists(n string, cidr *ec2.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -50,7 +50,7 @@ func testAccCheckVPCIpamCidrExists(n string, cidr *ec2.IpamPoolCidr) resource.Te
 
 		id := rs.Primary.ID
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		found_cidr, _, err := tfec2.FindIpamPoolCidr(conn, id)
+		found_cidr, _, err := tfec2.FindIPAMPoolCIDR(conn, id)
 
 		if err != nil {
 			return err
@@ -61,7 +61,7 @@ func testAccCheckVPCIpamCidrExists(n string, cidr *ec2.IpamPoolCidr) resource.Te
 	}
 }
 
-func testAccCheckVPCIpamProvisionedPoolCidrDestroy(s *terraform.State) error {
+func testAccCheckIPAMProvisionedPoolCIDRDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -71,12 +71,12 @@ func testAccCheckVPCIpamProvisionedPoolCidrDestroy(s *terraform.State) error {
 
 		id := rs.Primary.ID
 
-		_, pool_id, err := tfec2.DecodeIpamPoolCidrID(id)
+		_, pool_id, err := tfec2.DecodeIPAMPoolCIDRID(id)
 		if err != nil {
 			return fmt.Errorf("error decoding ID (%s): %w", id, err)
 		}
 
-		if _, err = tfec2.WaitIpamPoolDeleted(conn, pool_id, tfec2.IpamPoolDeleteTimeout); err != nil {
+		if _, err = tfec2.WaitIPAMPoolDeleted(conn, pool_id, tfec2.IPAMPoolDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -87,7 +87,7 @@ func testAccCheckVPCIpamProvisionedPoolCidrDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccVPCIpamPoolCidrBase = `
+const testAccIPAMPoolCIDRConfig_base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -98,7 +98,7 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-const testAccVPCIpamPoolCidrPrivatePool = `
+const testAccIPAMPoolCIDRConfig_privatePool = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
@@ -106,8 +106,8 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-func testAccVPCIpamProvisionedPoolCidrIpv4(cidr string) string {
-	return testAccVPCIpamPoolCidrBase + testAccVPCIpamPoolCidrPrivatePool + fmt.Sprintf(`
+func testAccIPAMConfig_provisionedPoolCIDRIPv4(cidr string) string {
+	return testAccIPAMPoolCIDRConfig_base + testAccIPAMPoolCIDRConfig_privatePool + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q

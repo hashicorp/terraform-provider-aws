@@ -132,7 +132,7 @@ func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrimaryContainerModelDataUrlConfig(rName),
+				Config: testAccPrimaryContainerModelDataURLConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_url"),
@@ -292,7 +292,7 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelVpcConfig(rName),
+				Config: testAccModelVPCConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -506,7 +506,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPrimaryContainerModelDataUrlConfig(rName string) string {
+func testAccPrimaryContainerModelDataURLConfig(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -674,7 +674,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccModelVpcConfig(rName string) string {
+func testAccModelVPCConfig_basic(rName string) string {
 	return testAccModelConfigBase(rName) +
 		acctest.ConfigAvailableAZsNoOptIn() +
 		fmt.Sprintf(`

@@ -81,7 +81,7 @@ func TestAccEC2AvailabilityZonesDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAvailabilityZonesConfig,
+				Config: testAccAvailabilityZonesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesMeta("data.aws_availability_zones.availability_zones"),
 				),
@@ -171,7 +171,7 @@ func TestAccEC2AvailabilityZonesDataSource_stateFilter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAvailabilityZonesStateConfig,
+				Config: testAccAvailabilityZonesDataSourceConfig_state,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZoneState("data.aws_availability_zones.state_filter"),
 				),
@@ -302,7 +302,7 @@ func testAccCheckAvailabilityZonesBuildAvailable(attrs map[string]string) ([]str
 	return zones, nil
 }
 
-const testAccCheckAWSAvailabilityZonesConfig = `
+const testAccAvailabilityZonesDataSourceConfig_basic = `
 data "aws_availability_zones" "availability_zones" {}
 `
 
@@ -345,7 +345,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-const testAccCheckAWSAvailabilityZonesStateConfig = `
+const testAccAvailabilityZonesDataSourceConfig_state = `
 data "aws_availability_zones" "state_filter" {
   state = "available"
 }

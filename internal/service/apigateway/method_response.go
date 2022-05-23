@@ -6,13 +6,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 var resourceMethodResponseMutex = &sync.Mutex{}
@@ -104,7 +105,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 	resourceMethodResponseMutex.Lock()
 	defer resourceMethodResponseMutex.Unlock()
 
-	_, err := verify.RetryOnAWSCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutMethodResponse(&apigateway.PutMethodResponseInput{
 			HttpMethod:         aws.String(d.Get("http_method").(string)),
 			ResourceId:         aws.String(d.Get("resource_id").(string)),
@@ -113,7 +114,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 			ResponseModels:     aws.StringMap(models),
 			ResponseParameters: aws.BoolMap(parameters),
 		})
-	})
+	}, apigateway.ErrCodeConflictException)
 
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Method Response: %s", err)

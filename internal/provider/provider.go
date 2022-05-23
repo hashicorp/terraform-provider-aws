@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -503,6 +504,9 @@ func Provider() *schema.Provider {
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
 			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
+			"aws_connect_routing_profile":             connect.DataSourceRoutingProfile(),
+			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
+			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -585,8 +589,8 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
-			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
-			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceVPCIpamPreviewNextCidr(),
+			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),
@@ -632,12 +636,13 @@ func Provider() *schema.Provider {
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 
 			// Adding the Aliases for the ALB -> LB Rename
-			"aws_alb_listener":     elbv2.DataSourceListener(),
-			"aws_alb_target_group": elbv2.DataSourceTargetGroup(),
-			"aws_alb":              elbv2.DataSourceLoadBalancer(),
-			"aws_lb_listener":      elbv2.DataSourceListener(),
-			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
-			"aws_lb":               elbv2.DataSourceLoadBalancer(),
+			"aws_alb":               elbv2.DataSourceLoadBalancer(),
+			"aws_alb_listener":      elbv2.DataSourceListener(),
+			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
+			"aws_lb":                elbv2.DataSourceLoadBalancer(),
+			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
+			"aws_lb_listener":       elbv2.DataSourceListener(),
+			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
 
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
 
@@ -751,16 +756,17 @@ func Provider() *schema.Provider {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
-			"aws_networkmanager_connection":      networkmanager.DataSourceConnection(),
-			"aws_networkmanager_connections":     networkmanager.DataSourceConnections(),
-			"aws_networkmanager_device":          networkmanager.DataSourceDevice(),
-			"aws_networkmanager_devices":         networkmanager.DataSourceDevices(),
-			"aws_networkmanager_global_network":  networkmanager.DataSourceGlobalNetwork(),
-			"aws_networkmanager_global_networks": networkmanager.DataSourceGlobalNetworks(),
-			"aws_networkmanager_link":            networkmanager.DataSourceLink(),
-			"aws_networkmanager_links":           networkmanager.DataSourceLinks(),
-			"aws_networkmanager_site":            networkmanager.DataSourceSite(),
-			"aws_networkmanager_sites":           networkmanager.DataSourceSites(),
+			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
+			"aws_networkmanager_connections":                  networkmanager.DataSourceConnections(),
+			"aws_networkmanager_core_network_policy_document": networkmanager.DataSourceCoreNetworkPolicyDocument(),
+			"aws_networkmanager_device":                       networkmanager.DataSourceDevice(),
+			"aws_networkmanager_devices":                      networkmanager.DataSourceDevices(),
+			"aws_networkmanager_global_network":               networkmanager.DataSourceGlobalNetwork(),
+			"aws_networkmanager_global_networks":              networkmanager.DataSourceGlobalNetworks(),
+			"aws_networkmanager_link":                         networkmanager.DataSourceLink(),
+			"aws_networkmanager_links":                        networkmanager.DataSourceLinks(),
+			"aws_networkmanager_site":                         networkmanager.DataSourceSite(),
+			"aws_networkmanager_sites":                        networkmanager.DataSourceSites(),
 
 			"aws_opensearch_domain": opensearch.DataSourceDomain(),
 
@@ -958,7 +964,10 @@ func Provider() *schema.Provider {
 			"aws_appautoscaling_scheduled_action": appautoscaling.ResourceScheduledAction(),
 			"aws_appautoscaling_target":           appautoscaling.ResourceTarget(),
 
-			"aws_appflow_flow": appflow.ResourceFlow(),
+			"aws_appflow_connector_profile": appflow.ResourceConnectorProfile(),
+			"aws_appflow_flow":              appflow.ResourceFlow(),
+
+			"aws_appintegrations_event_integration": appintegrations.ResourceEventIntegration(),
 
 			"aws_appmesh_gateway_route":   appmesh.ResourceGatewayRoute(),
 			"aws_appmesh_mesh":            appmesh.ResourceMesh(),
@@ -1155,6 +1164,7 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user_hierarchy_group":        connect.ResourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
@@ -1168,9 +1178,9 @@ func Provider() *schema.Provider {
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
 			"aws_datasync_location_fsx_lustre_file_system":  datasync.ResourceLocationFSxLustreFileSystem(),
-			"aws_datasync_location_fsx_openzfs_file_system": datasync.ResourceLocationFSxOpenZfsFileSystem(),
+			"aws_datasync_location_fsx_openzfs_file_system": datasync.ResourceLocationFSxOpenZFSFileSystem(),
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
-			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHdfs(),
+			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHDFS(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
@@ -1333,13 +1343,13 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_service":                             ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":           ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
 			"aws_vpc_endpoint_subnet_association":                  ec2.ResourceVPCEndpointSubnetAssociation(),
-			"aws_vpc_ipam":                                         ec2.ResourceVPCIpam(),
-			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceVPCIpamOrganizationAdminAccount(),
-			"aws_vpc_ipam_pool":                                    ec2.ResourceVPCIpamPool(),
-			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceVPCIpamPoolCidrAllocation(),
-			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceVPCIpamPoolCidr(),
-			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceVPCIpamPreviewNextCidr(),
-			"aws_vpc_ipam_scope":                                   ec2.ResourceVPCIpamScope(),
+			"aws_vpc_ipam":                                         ec2.ResourceIPAM(),
+			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceIPAMOrganizationAdminAccount(),
+			"aws_vpc_ipam_pool":                                    ec2.ResourceIPAMPool(),
+			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceIPAMPoolCIDRAllocation(),
+			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceIPAMPoolCIDR(),
+			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceIPAMPreviewNextCIDR(),
+			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),
 			"aws_vpc_peering_connection":                           ec2.ResourceVPCPeeringConnection(),
@@ -1566,6 +1576,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
 			"aws_keyspaces_keyspace": keyspaces.ResourceKeyspace(),
+			"aws_keyspaces_table":    keyspaces.ResourceTable(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
@@ -1739,6 +1750,7 @@ func Provider() *schema.Provider {
 			"aws_db_proxy_target":                           rds.ResourceProxyTarget(),
 			"aws_db_security_group":                         rds.ResourceSecurityGroup(),
 			"aws_db_snapshot":                               rds.ResourceSnapshot(),
+			"aws_db_snapshot_copy":                          rds.ResourceSnapshotCopy(),
 			"aws_db_subnet_group":                           rds.ResourceSubnetGroup(),
 			"aws_rds_cluster":                               rds.ResourceCluster(),
 			"aws_rds_cluster_activity_stream":               rds.ResourceClusterActivityStream(),
@@ -1798,7 +1810,7 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                      s3.ResourceBucket(),
 			"aws_s3_bucket_accelerate_configuration":             s3.ResourceBucketAccelerateConfiguration(),
-			"aws_s3_bucket_acl":                                  s3.ResourceBucketAcl(),
+			"aws_s3_bucket_acl":                                  s3.ResourceBucketACL(),
 			"aws_s3_bucket_analytics_configuration":              s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_cors_configuration":                   s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration":    s3.ResourceBucketIntelligentTieringConfiguration(),

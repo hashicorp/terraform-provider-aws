@@ -26,8 +26,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/aws/aws-sdk-go v1.42.18/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/aws/aws-sdk-go v1.42.52/go.mod h1:OGr6lGMAKGlG9CVrYnWYDKIyb829c6EVBRjxqjmPepc=
-github.com/aws/aws-sdk-go v1.44.10 h1:ohCdgQpJ9ojzm0fOk7ykrMTgTpHJBk5nnA7X+HzmnOA=
-github.com/aws/aws-sdk-go v1.44.10/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
+github.com/aws/aws-sdk-go v1.44.15 h1:z02BVeV6k7hZMfWEQmKh3X23s3F9PBHFCcIVfNlut7A=
+github.com/aws/aws-sdk-go v1.44.15/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go-v2 v1.16.3 h1:0W1TSJ7O6OzwuEvIXAtJGvOeQ0SGAhcpxPN2/NK5EhM=
 github.com/aws/aws-sdk-go-v2 v1.16.3/go.mod h1:ytwTPBG6fXTZLxxeeCCWj2/EMYp/xDUgX+OET6TLNNU=
 github.com/aws/aws-sdk-go-v2/config v1.15.4 h1:P4mesY1hYUxru4f9SU0XxNKXmzfxsD0FtMIPRBjkH7Q=

@@ -22,12 +22,12 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					testAccCheckAMICopyAttributes(&image, rName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
@@ -50,19 +50,19 @@ func TestAccEC2AMICopy_description(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyDescriptionConfig(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
 				Config: testAccAMICopyDescriptionConfig(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -79,12 +79,12 @@ func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyENASupportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 				),
 			},
@@ -102,12 +102,12 @@ func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyDestOutpostConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, "arn"),
 				),
 			},
@@ -124,12 +124,12 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -138,7 +138,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 			{
 				Config: testAccAMICopyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -148,7 +148,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 			{
 				Config: testAccAMICopyTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),

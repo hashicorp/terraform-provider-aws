@@ -33,14 +33,8 @@ jobs:
       - run: cd tools && go install github.com/katbyte/terrafmt
 
       - run: |
-          # efs/file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # kms/grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # sns/platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
           find ./internal/service -type f -name '*_test.go' \
             | sort -u \
-            | grep -v efs/file_system_test.go \
-            | grep -v kms/grant_test.go \
-            | grep -v sns/platform_application_test.go \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
   validate-terraform:
@@ -72,12 +66,5 @@ jobs:
       - run: tflint --init
 
       - run: |
-          # efs/file_system_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # kms/grant_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
-          # sns/platform_application_test.go: argument name is format verb and replaced with quoted string. https://github.com/katbyte/terrafmt/issues/47
           find ./internal/service -type f -name '*_test.go' \
-            | sort -u \
-            | grep -v efs/file_system_test.go \
-            | grep -v kms/grant_test.go \
-            | grep -v sns/platform_application_test.go \
-           | ./scripts/validate-terraform.sh
+            | ./scripts/validate-terraform.sh

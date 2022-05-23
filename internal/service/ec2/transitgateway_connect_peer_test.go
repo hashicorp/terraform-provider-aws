@@ -70,7 +70,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
+func testAccTransitGatewayConnectPeer_bgpASN(t *testing.T) {
 	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -82,7 +82,7 @@ func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerBgpAsnConfig(rName, "4294967294"),
+				Config: testAccTransitGatewayConnectPeerConfig_bgpASN2(rName, "4294967294"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "4294967294"),
@@ -92,7 +92,7 @@ func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
+func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T) {
 	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -104,7 +104,7 @@ func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerInsideCidrBlocks2Config(rName),
+				Config: testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "2"),
@@ -292,7 +292,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayConnectPeerBgpAsnConfig(rName string, bgpAsn string) string {
+func testAccTransitGatewayConnectPeerConfig_bgpASN2(rName string, bgpAsn string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -471,7 +471,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccTransitGatewayConnectPeerInsideCidrBlocks2Config(rName string) string {
+func testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks2(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

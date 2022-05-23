@@ -409,6 +409,7 @@ service/elbv2:
   - 'website/**/lb\.*'
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
+  - 'website/**/lb_hosted*'
 service/emr:
   - 'internal/service/emr/**/*'
   - 'website/**/emr_*'

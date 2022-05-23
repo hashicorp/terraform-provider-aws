@@ -23,12 +23,12 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointConnectionNotificationDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConnectionNotificationBasicConfig(lbName),
+				Config: testAccVPCEndpointConnectionNotificationConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointConnectionNotificationExists(resourceName),
+					testAccCheckVPCEndpointConnectionNotificationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
@@ -40,9 +40,9 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointConnectionNotificationModifiedConfig(lbName),
+				Config: testAccVPCEndpointConnectionNotificationConfig_modified(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointConnectionNotificationExists(resourceName),
+					testAccCheckVPCEndpointConnectionNotificationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
@@ -52,7 +52,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcEndpointConnectionNotificationDestroy(s *terraform.State) error {
+func testAccCheckVPCEndpointConnectionNotificationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -81,7 +81,7 @@ func testAccCheckVpcEndpointConnectionNotificationDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccCheckVpcEndpointConnectionNotificationExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCEndpointConnectionNotificationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -108,7 +108,7 @@ func testAccCheckVpcEndpointConnectionNotificationExists(n string) resource.Test
 	}
 }
 
-func testAccVpcEndpointConnectionNotificationBasicConfig(lbName string) string {
+func testAccVPCEndpointConnectionNotificationConfig_basic(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -201,7 +201,7 @@ resource "aws_vpc_endpoint_connection_notification" "test" {
 `, lbName))
 }
 
-func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) string {
+func testAccVPCEndpointConnectionNotificationConfig_modified(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 

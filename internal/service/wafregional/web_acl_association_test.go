@@ -25,7 +25,7 @@ func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
+				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 				),
@@ -47,7 +47,7 @@ func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
+				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists("aws_wafregional_web_acl_association.foo"),
 					testAccCheckWebACLAssociationDisappears("aws_wafregional_web_acl_association.foo"),
@@ -68,7 +68,7 @@ func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
+				Config: testAccWebACLAssociationConfig_multiples,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					testAccCheckWebACLAssociationExists("aws_wafregional_web_acl_association.bar"),
@@ -194,7 +194,7 @@ func testAccCheckWebACLAssociationDisappears(resourceName string) resource.TestC
 	}
 }
 
-const testAccCheckWafRegionalWebAclAssociationConfig_basic = `
+const testAccWebACLAssociationConfig_basic = `
 resource "aws_wafregional_rule" "foo" {
   name        = "foo"
   metric_name = "foo"
@@ -254,7 +254,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 `
 
-const testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations = testAccCheckWafRegionalWebAclAssociationConfig_basic + `
+const testAccWebACLAssociationConfig_multiples = testAccWebACLAssociationConfig_basic + `
 resource "aws_alb" "bar" {
   internal = true
   subnets  = [aws_subnet.foo.id, aws_subnet.bar.id]

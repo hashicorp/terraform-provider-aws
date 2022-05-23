@@ -101,7 +101,7 @@ func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr),
+				Config: testAccDefaultRouteTableConfig_ipv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
@@ -171,7 +171,7 @@ func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr1),
+				Config: testAccDefaultRouteTableConfig_ipv4InternetGateway(rName, destinationCidr1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
@@ -241,7 +241,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigIpv4TransitGateway(rName, destinationCidr),
+				Config: testAccDefaultRouteTableConfig_ipv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
@@ -271,13 +271,13 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	destinationCidr := "0.0.0.0/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckELBv2GatewayLoadBalancer(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigIpv4VpcEndpoint(rName, destinationCidr),
+				Config: testAccDefaultRouteTableConfig_ipv4VPCEndpoint(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
@@ -295,7 +295,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 			// VPC Endpoints will not delete unless the route is removed prior, otherwise will error:
 			// InvalidParameter: Endpoint must be removed from route table before deletion
 			{
-				Config: testAccDefaultRouteTableConfigIpv4VpcEndpointNoRoute(rName),
+				Config: testAccDefaultRouteTableConfig_ipv4VPCEndpointNoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 				),
@@ -318,7 +318,7 @@ func TestAccVPCDefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigVpcEndpointAssociation(rName, destinationCidr),
+				Config: testAccDefaultRouteTableConfig_vpcEndpointAssociation(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
@@ -391,14 +391,14 @@ func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
+				Config: testAccDefaultRouteTableConfig_conditionalIPv4v6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
-				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
+				Config: testAccDefaultRouteTableConfig_conditionalIPv4v6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, "id"),
@@ -422,7 +422,7 @@ func TestAccVPCDefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRouteTableDestroy,
@@ -575,7 +575,7 @@ resource "aws_default_route_table" "test" {
 `, rName)
 }
 
-func testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr string) string {
+func testAccDefaultRouteTableConfig_ipv4InternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
@@ -719,7 +719,7 @@ resource "aws_main_route_table_association" "test" {
 `, rName, destinationCidr1, destinationCidr2)
 }
 
-func testAccDefaultRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
+func testAccDefaultRouteTableConfig_ipv4TransitGateway(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -770,7 +770,7 @@ resource "aws_default_route_table" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccDefaultRouteTableConfigIpv4VpcEndpoint(rName, destinationCidr string) string {
+func testAccDefaultRouteTableConfig_ipv4VPCEndpoint(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -848,7 +848,7 @@ resource "aws_default_route_table" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccDefaultRouteTableConfigIpv4VpcEndpointNoRoute(rName string) string {
+func testAccDefaultRouteTableConfig_ipv4VPCEndpointNoRoute(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -926,7 +926,7 @@ resource "aws_default_route_table" "test" {
 `, rName))
 }
 
-func testAccDefaultRouteTableConfigVpcEndpointAssociation(rName, destinationCidr string) string {
+func testAccDefaultRouteTableConfig_vpcEndpointAssociation(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1012,7 +1012,7 @@ resource "aws_default_route_table" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
+func testAccDefaultRouteTableConfig_conditionalIPv4v6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1218,7 +1218,7 @@ resource "aws_default_route_table" "test" {
 `, rName))
 }
 
-func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
+func testAccPreCheckELBv2GatewayLoadBalancer(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	input := &elbv2.DescribeAccountLimitsInput{}

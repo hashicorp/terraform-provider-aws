@@ -24,8 +24,8 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 const (
 	CloudFormationStackNamePrefix = "serverlessrepo-"
 
-	serverlessApplicationRepositoryCloudFormationStackTagApplicationID   = "serverlessrepo:applicationId"
-	serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion = "serverlessrepo:semanticVersion"
+	cloudFormationStackTagApplicationID   = "serverlessrepo:applicationId"
+	cloudFormationStackTagSemanticVersion = "serverlessrepo:semanticVersion"
 )
 
 func ResourceCloudFormationStack() *schema.Resource {
@@ -147,17 +147,17 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 
 	tags := tfcloudformation.KeyValueTags(stack.Tags)
 	var applicationID, semanticVersion string
-	if v, ok := tags[serverlessApplicationRepositoryCloudFormationStackTagApplicationID]; ok {
+	if v, ok := tags[cloudFormationStackTagApplicationID]; ok {
 		applicationID = aws.StringValue(v.Value)
 		d.Set("application_id", applicationID)
 	} else {
-		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), serverlessApplicationRepositoryCloudFormationStackTagApplicationID)
+		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagApplicationID)
 	}
-	if v, ok := tags[serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion]; ok {
+	if v, ok := tags[cloudFormationStackTagSemanticVersion]; ok {
 		semanticVersion = aws.StringValue(v.Value)
 		d.Set("semantic_version", semanticVersion)
 	} else {
-		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion)
+		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagSemanticVersion)
 	}
 
 	tags = tags.IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig)

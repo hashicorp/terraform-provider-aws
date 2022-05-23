@@ -25,7 +25,7 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`no matching EC2 DHCP Options Set found`),
 			},
 			{
-				Config: testAccVPCDHCPOptionsDataSourceConfig_DhcpOptionsID,
+				Config: testAccVPCDHCPOptionsDataSourceConfig_dhcpOptionsID,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
@@ -96,7 +96,7 @@ data "aws_vpc_dhcp_options" "test" {
 }
 `
 
-const testAccVPCDHCPOptionsDataSourceConfig_DhcpOptionsID = `
+const testAccVPCDHCPOptionsDataSourceConfig_dhcpOptionsID = `
 resource "aws_vpc_dhcp_options" "incorrect" {
   domain_name = "tf-acc-test-incorrect.example.com"
 }

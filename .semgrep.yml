@@ -803,3 +803,15 @@ rules:
               if $AWSERR.Code() == $CODE { $BODY }
             }
     severity: WARNING
+
+  - id: fmt-Errorf-awserr-Error-Code
+    languages: [go]
+    message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+        - pattern: fmt.Errorf(..., $ERR.Code(), ...)
+        - pattern: fmt.Errorf(..., $ERR.Message(), ...)
+    severity: WARNING

@@ -1167,7 +1167,7 @@ func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	ruleName := d.Get("name").(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(tags.IgnoreAWS().UrlQueryString()),
+		Tags:             aws.String(tags.IgnoreAWS().URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 

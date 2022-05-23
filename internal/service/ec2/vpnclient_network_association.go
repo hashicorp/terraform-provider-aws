@@ -165,7 +165,7 @@ func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta inte
 		AssociationId:       aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAssociationIdNotFound, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNAssociationIDNotFound, errCodeInvalidClientVPNEndpointIDNotFound) {
 		return nil
 	}
 

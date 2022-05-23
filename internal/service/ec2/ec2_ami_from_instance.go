@@ -25,9 +25,9 @@ func ResourceAMIFromInstance() *schema.Resource {
 		Delete: resourceAMIDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
+			Create: schema.DefaultTimeout(amiRetryTimeout),
+			Update: schema.DefaultTimeout(amiRetryTimeout),
+			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -244,7 +244,7 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
 	}
 
 	output, err := conn.CreateImage(input)

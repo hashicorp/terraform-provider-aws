@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
+func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Connect": {
 			"Filter": testAccTransitGatewayConnectDataSource_Filter,
@@ -56,7 +56,7 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 		},
 		"VpnAttachment": {
 			"Filter":                             testAccTransitGatewayVPNAttachmentDataSource_filter,
-			"TransitGatewayIdAndVpnConnectionId": testAccTransitGatewayVPNAttachmentDataSource_TransitGatewayIdAndVpnConnectionID,
+			"TransitGatewayIdAndVpnConnectionId": testAccTransitGatewayVPNAttachmentDataSource_idAndVPNConnectionID,
 		},
 	}
 

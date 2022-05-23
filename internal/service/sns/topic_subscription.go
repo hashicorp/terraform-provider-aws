@@ -101,7 +101,7 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"arn":                            SubscriptionAttributeNameSubscriptionArn,
+		"arn":                            SubscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": SubscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                SubscriptionAttributeNameDeliveryPolicy,
 		"endpoint":                       SubscriptionAttributeNameEndpoint,
@@ -111,8 +111,8 @@ var (
 		"protocol":                       SubscriptionAttributeNameProtocol,
 		"raw_message_delivery":           SubscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
-		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleArn,
-		"topic_arn":                      SubscriptionAttributeNameTopicArn,
+		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleARN,
+		"topic_arn":                      SubscriptionAttributeNameTopicARN,
 	}, subscriptionSchema)
 )
 
@@ -142,7 +142,7 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	// Endpoint, Protocol and TopicArn are not passed in Attributes.
 	delete(attributes, SubscriptionAttributeNameEndpoint)
 	delete(attributes, SubscriptionAttributeNameProtocol)
-	delete(attributes, SubscriptionAttributeNameTopicArn)
+	delete(attributes, SubscriptionAttributeNameTopicARN)
 
 	input := &sns.SubscribeInput{
 		Attributes:            aws.StringMap(attributes),

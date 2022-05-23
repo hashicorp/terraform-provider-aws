@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	LexIntentCreateTimeout = 1 * time.Minute
-	LexIntentUpdateTimeout = 1 * time.Minute
-	LexIntentDeleteTimeout = 5 * time.Minute
+	intentCreateTimeout = 1 * time.Minute
+	intentUpdateTimeout = 1 * time.Minute
+	intentDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceIntent() *schema.Resource {
@@ -38,9 +38,9 @@ func ResourceIntent() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexIntentCreateTimeout),
-			Update: schema.DefaultTimeout(LexIntentUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexIntentDeleteTimeout),
+			Create: schema.DefaultTimeout(intentCreateTimeout),
+			Update: schema.DefaultTimeout(intentUpdateTimeout),
+			Delete: schema.DefaultTimeout(intentDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,7 +58,7 @@ func ResourceIntent() *schema.Resource {
 				MinItems:      1,
 				MaxItems:      1,
 				ConflictsWith: []string{"follow_up_prompt"},
-				Elem:          lexStatementResource,
+				Elem:          statementResource,
 			},
 			"confirmation_prompt": {
 				Type:         schema.TypeList,
@@ -66,7 +66,7 @@ func ResourceIntent() *schema.Resource {
 				MinItems:     1,
 				MaxItems:     1,
 				RequiredWith: []string{"rejection_statement"},
-				Elem:         lexPromptResource,
+				Elem:         promptResource,
 			},
 			"create_version": {
 				Type:     schema.TypeBool,
@@ -87,7 +87,7 @@ func ResourceIntent() *schema.Resource {
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 1,
-				Elem:     lexCodeHookResource,
+				Elem:     codeHookResource,
 			},
 			"follow_up_prompt": {
 				Type:          schema.TypeList,
@@ -102,14 +102,14 @@ func ResourceIntent() *schema.Resource {
 							Required: true,
 							MinItems: 1,
 							MaxItems: 1,
-							Elem:     lexPromptResource,
+							Elem:     promptResource,
 						},
 						"rejection_statement": {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
 							MaxItems: 1,
-							Elem:     lexStatementResource,
+							Elem:     statementResource,
 						},
 					},
 				},
@@ -126,7 +126,7 @@ func ResourceIntent() *schema.Resource {
 							Optional: true,
 							MinItems: 1,
 							MaxItems: 1,
-							Elem:     lexCodeHookResource,
+							Elem:     codeHookResource,
 						},
 						"type": {
 							Type:         schema.TypeString,
@@ -159,7 +159,7 @@ func ResourceIntent() *schema.Resource {
 				MinItems:     1,
 				MaxItems:     1,
 				RequiredWith: []string{"confirmation_prompt"},
-				Elem:         lexStatementResource,
+				Elem:         statementResource,
 			},
 			"sample_utterances": {
 				Type:     schema.TypeSet,
@@ -239,7 +239,7 @@ func ResourceIntent() *schema.Resource {
 							Optional: true,
 							MinItems: 1,
 							MaxItems: 1,
-							Elem:     lexPromptResource,
+							Elem:     promptResource,
 						},
 					},
 				},
@@ -535,7 +535,7 @@ func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-var lexCodeHookResource = &schema.Resource{
+var codeHookResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"message_version": {
 			Type:         schema.TypeString,
@@ -550,7 +550,7 @@ var lexCodeHookResource = &schema.Resource{
 	},
 }
 
-var lexMessageResource = &schema.Resource{
+var messageResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"content": {
 			Type:         schema.TypeString,
@@ -570,7 +570,7 @@ var lexMessageResource = &schema.Resource{
 	},
 }
 
-var lexPromptResource = &schema.Resource{
+var promptResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"max_attempts": {
 			Type:         schema.TypeInt,
@@ -582,7 +582,7 @@ var lexPromptResource = &schema.Resource{
 			Required: true,
 			MinItems: 1,
 			MaxItems: 15,
-			Elem:     lexMessageResource,
+			Elem:     messageResource,
 		},
 		"response_card": {
 			Type:         schema.TypeString,
@@ -592,14 +592,14 @@ var lexPromptResource = &schema.Resource{
 	},
 }
 
-var lexStatementResource = &schema.Resource{
+var statementResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"message": {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
 			MaxItems: 15,
-			Elem:     lexMessageResource,
+			Elem:     messageResource,
 		},
 		"response_card": {
 			Type:         schema.TypeString,

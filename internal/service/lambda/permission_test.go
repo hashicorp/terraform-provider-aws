@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestLambdaPermissionUnmarshalling(t *testing.T) {
+func TestPermissionUnmarshalling(t *testing.T) {
 	v := tflambda.Policy{}
-	err := json.Unmarshal(testLambdaPolicy, &v)
+	err := json.Unmarshal(testPolicy, &v)
 	if err != nil {
 		t.Fatalf("Expected no error when unmarshalling: %s", err)
 	}
@@ -58,9 +58,9 @@ func TestLambdaPermissionUnmarshalling(t *testing.T) {
 	}
 }
 
-func TestLambdaPermissionOrgUnmarshalling(t *testing.T) {
+func TestPermissionOrgUnmarshalling(t *testing.T) {
 	v := tflambda.Policy{}
-	err := json.Unmarshal(testLambdaOrgPolicy, &v)
+	err := json.Unmarshal(testOrgPolicy, &v)
 	if err != nil {
 		t.Fatalf("Expected no error when unmarshalling: %s", err)
 	}
@@ -94,7 +94,7 @@ func TestLambdaPermissionOrgUnmarshalling(t *testing.T) {
 	}
 }
 
-func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_alias(t *testing.T) {
+func TestPermissionGetQualifierFromAliasOrVersionARN_alias(t *testing.T) {
 	arnWithAlias := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:testalias" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "testalias"
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithAlias)
@@ -106,7 +106,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_alias(t *testin
 	}
 }
 
-func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_govcloud(t *testing.T) {
+func TestPermissionGetQualifierFromAliasOrVersionARN_govcloud(t *testing.T) {
 	arnWithAlias := "arn:aws-us-gov:lambda:us-gov-west-1:187636751137:function:lambda_function_name:testalias" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "testalias"
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithAlias)
@@ -118,7 +118,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_govcloud(t *tes
 	}
 }
 
-func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_version(t *testing.T) {
+func TestPermissionGetQualifierFromAliasOrVersionARN_version(t *testing.T) {
 	arnWithVersion := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:223" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "223"
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithVersion)
@@ -130,7 +130,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_version(t *test
 	}
 }
 
-func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_invalid(t *testing.T) {
+func TestPermissionGetQualifierFromAliasOrVersionARN_invalid(t *testing.T) {
 	invalidArn := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(invalidArn)
 	if err == nil {
@@ -151,7 +151,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_invalid(t *test
 	}
 }
 
-func TestLambdaPermissionGetFunctionNameFromLambdaArn_invalid(t *testing.T) {
+func TestPermissionGetFunctionNameFromARN_invalid(t *testing.T) {
 	invalidArn := "arn:aws:lambda:us-west-2:187636751137:function:" // lintignore:AWSAT003,AWSAT005 // unit test
 	fn, err := tflambda.GetFunctionNameFromARN(invalidArn)
 	if err == nil {
@@ -162,7 +162,7 @@ func TestLambdaPermissionGetFunctionNameFromLambdaArn_invalid(t *testing.T) {
 	}
 }
 
-func TestLambdaPermissionGetFunctionNameFromLambdaArn_valid(t *testing.T) {
+func TestPermissionGetFunctionNameFromARN_valid(t *testing.T) {
 	validArn := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
 	fn, err := tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
@@ -187,7 +187,7 @@ func TestLambdaPermissionGetFunctionNameFromLambdaArn_valid(t *testing.T) {
 	}
 }
 
-func TestLambdaPermissionGetFunctionNameFromGovCloudLambdaArn(t *testing.T) {
+func TestPermissionGetFunctionNameFromGovCloudARN(t *testing.T) {
 	validArn := "arn:aws-us-gov:lambda:us-gov-west-1:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
 	fn, err := tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
@@ -236,7 +236,7 @@ func TestAccLambdaPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_principalOrgId(t *testing.T) {
+func TestAccLambdaPermission_principalOrgID(t *testing.T) {
 	var statement tflambda.PolicyStatement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -272,7 +272,7 @@ func TestAccLambdaPermission_principalOrgId(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_StatementID_duplicate(t *testing.T) {
+func TestAccLambdaPermission_statementIDDuplicate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -289,7 +289,7 @@ func TestAccLambdaPermission_StatementID_duplicate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
+func TestAccLambdaPermission_rawFunctionName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -327,7 +327,7 @@ func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
+func TestAccLambdaPermission_statementIDPrefix(t *testing.T) {
 	var statement tflambda.PolicyStatement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_permission.test"
@@ -360,7 +360,7 @@ func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_withQualifier(t *testing.T) {
+func TestAccLambdaPermission_qualifier(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -496,7 +496,7 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_withS3(t *testing.T) {
+func TestAccLambdaPermission_s3(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -532,7 +532,7 @@ func TestAccLambdaPermission_withS3(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_withSNS(t *testing.T) {
+func TestAccLambdaPermission_sns(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -568,7 +568,7 @@ func TestAccLambdaPermission_withSNS(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_withIAMRole(t *testing.T) {
+func TestAccLambdaPermission_iamRole(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -603,7 +603,7 @@ func TestAccLambdaPermission_withIAMRole(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
+func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 	var statement tflambda.PolicyStatement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -617,7 +617,7 @@ func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionConfig_FunctionUrls_AwsIam(rName),
+				Config: testAccPermissionConfig_FunctionURLs_iam(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
@@ -638,7 +638,7 @@ func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_FunctionUrls_None(t *testing.T) {
+func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 	var statement tflambda.PolicyStatement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -976,7 +976,7 @@ resource "aws_lambda_permission" "test" {
 }
 
 // lintignore:AWSAT003,AWSAT005 // unit test
-var testLambdaPolicy = []byte(`{
+var testPolicy = []byte(`{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -1002,7 +1002,7 @@ var testLambdaPolicy = []byte(`{
 }`)
 
 // lintignore:AWSAT003,AWSAT005 // unit test
-var testLambdaOrgPolicy = []byte(`{
+var testOrgPolicy = []byte(`{
 	"Version": "2012-10-17",
 	"Statement": [
 	  {
@@ -1021,7 +1021,7 @@ var testLambdaOrgPolicy = []byte(`{
 	"Id": "default"
   }`)
 
-func testAccPermissionConfig_FunctionUrls_AwsIam(rName string) string {
+func testAccPermissionConfig_FunctionURLs_iam(rName string) string {
 	return acctest.ConfigCompose(testAccPermissionBaseConfig(rName), `
 resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionWithIAM"

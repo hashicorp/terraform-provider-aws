@@ -26,14 +26,16 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(ec2.EndpointsID, testAccErrorCheckSkipEC2)
+	acctest.RegisterServiceErrorCheckFunc(ec2.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"VolumeTypeNotAvailableInRegion",
 		"Invalid value specified for Phase",
 		"You have reached the maximum allowed number of license configurations created in one day",
+		"specified zone does not support multi-attach-enabled volumes",
+		"Unsupported volume type",
 	)
 }
 
@@ -106,7 +108,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -139,7 +141,7 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -165,7 +167,7 @@ func TestAccEC2Instance_tags(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -218,7 +220,7 @@ func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInDefaultVpcBySgName(rName),
+				Config: testAccInstanceConfig_inDefaultVPCBySgName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
@@ -245,7 +247,7 @@ func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInDefaultVpcBySgId(rName),
+				Config: testAccInstanceConfig_inDefaultVPCBySgId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
@@ -271,13 +273,13 @@ func TestAccEC2Instance_inEC2Classic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInEc2Classic(),
+				Config: testAccInstanceConfig_ec2Classic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceEc2ClassicExists(resourceName, &v),
+					testAccCheckInstanceClassicExists(resourceName, &v),
 				),
 			},
 			{
-				Config:            testAccInstanceConfigInEc2Classic(),
+				Config:            testAccInstanceConfig_ec2Classic(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -303,7 +305,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigAtLeastOneOtherEbsVolume(rName),
+				Config: testAccInstanceConfig_atLeastOneOtherEBSVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
@@ -323,7 +325,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 			// that the user data hash stuff is working without generating
 			// an incorrect diff.
 			{
-				Config: testAccInstanceConfigAtLeastOneOtherEbsVolume(rName),
+				Config: testAccInstanceConfig_atLeastOneOtherEBSVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
@@ -347,7 +349,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn(rName),
+				Config: testAccInstanceConfig_ebsKMSKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
@@ -433,7 +435,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigRootBlockDeviceKmsKeyArn(rName),
+				Config: testAccInstanceConfig_rootBlockDeviceKMSKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -1024,7 +1026,7 @@ func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2InstanceConfigDedicatedInstance(rName),
+				Config: testAccInstanceConfig_dedicated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
@@ -1143,7 +1145,7 @@ func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigIpv6Support(rName),
+				Config: testAccInstanceConfig_ipv6Support(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
@@ -1169,7 +1171,7 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccInstanceConfigIpv6ErrorConfig(rName),
+				Config:      testAccInstanceConfig_ipv6ErrorConfig(rName),
 				ExpectError: regexp.MustCompile("Conflicting configuration arguments"),
 			},
 		},
@@ -1188,7 +1190,7 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigIpv6SupportWithIpv4(rName),
+				Config: testAccInstanceConfig_ipv6SupportWithv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
@@ -3399,7 +3401,7 @@ func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3436,7 +3438,7 @@ func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_unlimitedCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3473,7 +3475,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits(rName, "t2.micro"),
+				Config: testAccInstanceConfig_CreditSpecification_unknownCPUCredits(rName, "t2.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3502,7 +3504,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits(rName, "t3.micro"),
+				Config: testAccInstanceConfig_CreditSpecification_unknownCPUCredits(rName, "t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3531,7 +3533,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3545,7 +3547,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_unlimitedCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &second),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3553,7 +3555,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &third),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3632,7 +3634,7 @@ func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3669,7 +3671,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) 
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_unlimitedCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3706,7 +3708,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3720,7 +3722,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_unlimitedCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &second),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3728,7 +3730,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &third),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3751,7 +3753,7 @@ func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *tes
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3765,7 +3767,7 @@ func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *tes
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_standardCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3789,7 +3791,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rName),
+				Config: testAccInstanceConfig_CreditSpecification_unlimitedCPUCredits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3803,7 +3805,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rName),
+				Config: testAccInstanceConfig_CreditSpecification_unlimitedCPUCreditsT3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -4489,7 +4491,7 @@ func testAccCheckInstanceExists(n string, v *ec2.Instance) resource.TestCheckFun
 	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckInstanceEc2ClassicExists(n string, v *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceClassicExists(n string, v *ec2.Instance) resource.TestCheckFunc {
 	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.ProviderEC2Classic })
 }
 
@@ -4579,7 +4581,7 @@ func TestInstanceHostIDSchema(t *testing.T) {
 	}
 }
 
-func TestInstanceCpuCoreCountSchema(t *testing.T) {
+func TestInstanceCPUCoreCountSchema(t *testing.T) {
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
@@ -4595,7 +4597,7 @@ func TestInstanceCpuCoreCountSchema(t *testing.T) {
 	}
 }
 
-func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
+func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
@@ -4627,11 +4629,11 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-// testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets checks that the test region has either
+// testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets checks that the test region has either
 // - The EC2-Classic platform available, or
 // - A default VPC with default subnets.
 // This check is useful to ensure that an instance can be launched without specifying a subnet.
-func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
+func testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t *testing.T) {
 	client := acctest.Provider.Meta().(*conns.AWSClient)
 
 	if !conns.HasEC2Classic(client.SupportedPlatforms) && !(hasDefaultVPC(t) && defaultSubnetCount(t) > 0) {
@@ -4886,7 +4888,7 @@ resource "aws_instance" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
+func testAccInstanceConfig_inDefaultVPCBySgName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -4914,7 +4916,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigInDefaultVpcBySgId(rName string) string {
+func testAccInstanceConfig_inDefaultVPCBySgId(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -4942,7 +4944,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigInEc2Classic() string {
+func testAccInstanceConfig_ec2Classic() string { // nosempgrep:ec2-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -4955,7 +4957,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfigAtLeastOneOtherEbsVolume(rName string) string {
+func testAccInstanceConfig_atLeastOneOtherEBSVolume(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -5475,7 +5477,7 @@ resource "aws_instance" "test" {
 `, rName, val))
 }
 
-func testAccEc2InstanceConfigDedicatedInstance(rName string) string {
+func testAccInstanceConfig_dedicated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		// Prevent frequent errors like
@@ -5606,7 +5608,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigIpv6ErrorConfig(rName string) string {
+func testAccInstanceConfig_ipv6ErrorConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCIPv6Config(rName),
@@ -5625,7 +5627,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigIpv6Support(rName string) string {
+func testAccInstanceConfig_ipv6Support(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCIPv6Config(rName),
@@ -5643,7 +5645,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigIpv6SupportWithIpv4(rName string) string {
+func testAccInstanceConfig_ipv6SupportWithv4(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCIPv6Config(rName),
@@ -5662,7 +5664,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigEbsBlockDeviceKmsKeyArn(rName string) string {
+func testAccInstanceConfig_ebsKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -5694,7 +5696,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigRootBlockDeviceKmsKeyArn(rName string) string {
+func testAccInstanceConfig_rootBlockDeviceKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -7099,7 +7101,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_creditSpecification_standardCpuCredits(rName string) string {
+func testAccInstanceConfig_CreditSpecification_standardCPUCredits(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -7120,7 +7122,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rName string) string {
+func testAccInstanceConfig_CreditSpecification_standardCPUCreditsT3(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -7141,7 +7143,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rName string) string {
+func testAccInstanceConfig_CreditSpecification_unlimitedCPUCredits(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -7162,7 +7164,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rName string) string {
+func testAccInstanceConfig_CreditSpecification_unlimitedCPUCreditsT3(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -7204,7 +7206,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_creditSpecification_unknownCpuCredits(rName, instanceType string) string {
+func testAccInstanceConfig_CreditSpecification_unknownCPUCredits(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),

@@ -26,7 +26,7 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
@@ -59,7 +59,7 @@ func TestAccLogsSubscriptionFilter_many(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfigMany(rName),
@@ -79,7 +79,7 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
@@ -105,7 +105,7 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
@@ -131,7 +131,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDestinationARNKinesisDataFirehoseConfig(rName),
@@ -161,7 +161,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDestinationARNKinesisStreamConfig(rName),
@@ -190,7 +190,7 @@ func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterDistributionConfig(rName, "Random"),
@@ -228,7 +228,7 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		CheckDestroy:      testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterRoleARN1Config(rName),
@@ -254,7 +254,7 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) error {
+func testAccCheckSubscriptionFilterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {

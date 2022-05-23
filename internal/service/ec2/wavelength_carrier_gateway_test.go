@@ -26,12 +26,12 @@ func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CarrierGatewayDestroy,
+		CheckDestroy:      testAccCheckCarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CarrierGatewayConfig(rName),
+				Config: testAccCarrierGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
+					testAccCheckCarrierGatewayExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`carrier-gateway/cagw-.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -56,12 +56,12 @@ func TestAccWavelengthCarrierGateway_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CarrierGatewayDestroy,
+		CheckDestroy:      testAccCheckCarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CarrierGatewayConfig(rName),
+				Config: testAccCarrierGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
+					testAccCheckCarrierGatewayExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCarrierGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,12 +79,12 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CarrierGatewayDestroy,
+		CheckDestroy:      testAccCheckCarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CarrierGatewayConfigTags1(rName, "key1", "value1"),
+				Config: testAccCarrierGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
+					testAccCheckCarrierGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -95,18 +95,18 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CarrierGatewayConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCarrierGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
+					testAccCheckCarrierGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccEc2CarrierGatewayConfigTags1(rName, "key2", "value2"),
+				Config: testAccCarrierGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
+					testAccCheckCarrierGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -115,7 +115,7 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckEc2CarrierGatewayDestroy(s *terraform.State) error {
+func testAccCheckCarrierGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -143,7 +143,7 @@ func testAccCheckEc2CarrierGatewayDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEc2CarrierGatewayExists(n string, v *ec2.CarrierGateway) resource.TestCheckFunc {
+func testAccCheckCarrierGatewayExists(n string, v *ec2.CarrierGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -197,7 +197,7 @@ func testAccPreCheckWavelengthZoneAvailable(t *testing.T) {
 	}
 }
 
-func testAccEc2CarrierGatewayConfig(rName string) string {
+func testAccCarrierGatewayConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -213,7 +213,7 @@ resource "aws_ec2_carrier_gateway" "test" {
 `, rName)
 }
 
-func testAccEc2CarrierGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccCarrierGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -233,7 +233,7 @@ resource "aws_ec2_carrier_gateway" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccEc2CarrierGatewayConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCarrierGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

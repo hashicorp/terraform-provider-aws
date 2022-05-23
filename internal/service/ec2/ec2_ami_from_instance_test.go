@@ -21,12 +21,12 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
@@ -50,12 +50,12 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -63,7 +63,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 			{
 				Config: testAccAMIFromInstanceTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -72,7 +72,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 			{
 				Config: testAccAMIFromInstanceTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -90,12 +90,12 @@ func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &image),
+					testAccCheckAMIExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,

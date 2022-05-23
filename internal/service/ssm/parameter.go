@@ -21,7 +21,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
-	ssmParameterCreationValidationTimeout = 2 * time.Minute
+	parameterCreationValidationTimeout = 2 * time.Minute
 )
 
 func ResourceParameter() *schema.Resource {
@@ -190,7 +190,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var resp *ssm.GetParameterOutput
-	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
+	err := resource.Retry(parameterCreationValidationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetParameter(input)
 

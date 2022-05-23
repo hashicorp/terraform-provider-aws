@@ -84,7 +84,7 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig(stackName, appARN),
@@ -537,7 +537,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 `, rName, appARN, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCheckAmiDestroy(s *terraform.State) error {
+func testAccCheckAMIDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

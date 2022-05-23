@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccVPNSiteCustomerGatewayDataSource_filter(t *testing.T) {
+func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -39,7 +39,7 @@ func TestAccVPNSiteCustomerGatewayDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteCustomerGatewayDataSource_id(t *testing.T) {
+func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

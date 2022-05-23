@@ -25,7 +25,7 @@ func testAccTransitGatewayConnect_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVPCAttachment(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTransitGatewayConnectDestroy,
@@ -57,7 +57,7 @@ func testAccTransitGatewayConnect_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVPCAttachment(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTransitGatewayConnectDestroy,
@@ -80,7 +80,7 @@ func testAccTransitGatewayConnect_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVPCAttachment(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTransitGatewayConnectDestroy,
@@ -127,7 +127,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndP
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVPCAttachment(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTransitGatewayConnectDestroy,
@@ -160,7 +160,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVPCAttachment(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTransitGatewayConnectDestroy,
@@ -211,7 +211,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVPCAttachment(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTransitGatewayConnectDestroy,

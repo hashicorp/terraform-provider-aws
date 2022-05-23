@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccVPNSiteGatewayDataSource_unattached(t *testing.T) {
+func TestAccSiteVPNGatewayDataSource_unattached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_vpn_gateway.test_by_id"
 	dataSourceNameByTags := "data.aws_vpn_gateway.test_by_tags"
@@ -40,7 +40,7 @@ func TestAccVPNSiteGatewayDataSource_unattached(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGatewayDataSource_attached(t *testing.T) {
+func TestAccSiteVPNGatewayDataSource_attached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpn_gateway.test"
 

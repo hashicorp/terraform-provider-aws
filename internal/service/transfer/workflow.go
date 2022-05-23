@@ -822,7 +822,7 @@ func expandDestinationFileLocation(tfMap []interface{}) *transfer.InputFileLocat
 	apiObject := &transfer.InputFileLocation{}
 
 	if v, ok := tfMapRaw["efs_file_location"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EfsFileLocation = expandEfsFileLocation(v)
+		apiObject.EfsFileLocation = expandEFSFileLocation(v)
 	}
 
 	if v, ok := tfMapRaw["s3_file_location"].([]interface{}); ok && len(v) > 0 {
@@ -840,7 +840,7 @@ func flattenDestinationFileLocation(apiObject *transfer.InputFileLocation) []int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EfsFileLocation; v != nil {
-		tfMap["efs_file_location"] = flattenEfsFileLocation(v)
+		tfMap["efs_file_location"] = flattenEFSFileLocation(v)
 	}
 
 	if v := apiObject.S3FileLocation; v != nil {
@@ -850,7 +850,7 @@ func flattenDestinationFileLocation(apiObject *transfer.InputFileLocation) []int
 	return []interface{}{tfMap}
 }
 
-func expandEfsFileLocation(tfMap []interface{}) *transfer.EfsFileLocation {
+func expandEFSFileLocation(tfMap []interface{}) *transfer.EfsFileLocation {
 	if tfMap == nil {
 		return nil
 	}
@@ -870,7 +870,7 @@ func expandEfsFileLocation(tfMap []interface{}) *transfer.EfsFileLocation {
 	return apiObject
 }
 
-func flattenEfsFileLocation(apiObject *transfer.EfsFileLocation) []interface{} {
+func flattenEFSFileLocation(apiObject *transfer.EfsFileLocation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

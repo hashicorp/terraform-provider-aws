@@ -30,8 +30,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"ConnectPeer": {
 			"basic":                 testAccTransitGatewayConnectPeer_basic,
 			"disappears":            testAccTransitGatewayConnectPeer_disappears,
-			"BgpAsn":                testAccTransitGatewayConnectPeer_BgpAsn,
-			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_InsideCidrBlocks,
+			"BgpAsn":                testAccTransitGatewayConnectPeer_bgpASN,
+			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
 			"Tags":                  testAccTransitGatewayConnectPeer_tags,
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
@@ -40,7 +40,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"disappears":                  testAccTransitGateway_disappears,
 			"AmazonSideASN":               testAccTransitGateway_AmazonSideASN,
 			"AutoAcceptSharedAttachments": testAccTransitGateway_AutoAcceptSharedAttachments,
-			"CidrBlocks":                  testAccTransitGateway_CidrBlocks,
+			"CidrBlocks":                  testAccTransitGateway_cidrBlocks,
 			"DefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled,
 			"DefaultRouteTableAssociation":                       testAccTransitGateway_DefaultRouteTableAssociation,
 			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
@@ -269,7 +269,7 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	})
 }
 
-func testAccTransitGateway_CidrBlocks(t *testing.T) {
+func testAccTransitGateway_cidrBlocks(t *testing.T) {
 	var v1, v2, v3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -281,7 +281,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayCidrBlocks2Config(rName),
+				Config: testAccTransitGatewayConfig_cidrBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
@@ -295,7 +295,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayCidrBlocks1Config(rName),
+				Config: testAccTransitGatewayConfig_cidrBlocks1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v2),
 					testAccCheckTransitGatewayNotRecreated(&v1, &v2),
@@ -304,7 +304,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayCidrBlocks2Config(rName),
+				Config: testAccTransitGatewayConfig_cidrBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v3),
 					testAccCheckTransitGatewayNotRecreated(&v2, &v3),
@@ -869,7 +869,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccTransitGatewayCidrBlocks1Config(rName string) string {
+func testAccTransitGatewayConfig_cidrBlocks1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   transit_gateway_cidr_blocks = ["10.120.0.0/24"]
@@ -881,7 +881,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayCidrBlocks2Config(rName string) string {
+func testAccTransitGatewayConfig_cidrBlocks2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   transit_gateway_cidr_blocks = ["10.120.0.0/24", "2001:1234:1234::/64"]

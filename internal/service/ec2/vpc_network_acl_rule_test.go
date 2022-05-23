@@ -234,7 +234,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleIPv6VPCNotAssignGeneratedIpv6CIDRBlockUpdateConfig(rName),
+				Config: testAccNetworkACLRuleConfig_ipv6VPCNotAssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &v),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
@@ -242,7 +242,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 				),
 			},
 			{
-				Config: testAccNetworkACLRuleIPv6VPCAssignGeneratedIpv6CIDRBlockUpdateConfig(rName),
+				Config: testAccNetworkACLRuleConfig_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &v),
 					testAccCheckNetworkACLRuleExists(resourceName),
@@ -676,7 +676,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName, rName)
 }
 
-func testAccNetworkACLRuleIPv6VPCAssignGeneratedIpv6CIDRBlockUpdateConfig(rName string) string {
+func testAccNetworkACLRuleConfig_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
@@ -707,7 +707,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleIPv6VPCNotAssignGeneratedIpv6CIDRBlockUpdateConfig(rName string) string {
+func testAccNetworkACLRuleConfig_ipv6VPCNotAssignGeneratedIPv6CIDRBlockUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = false

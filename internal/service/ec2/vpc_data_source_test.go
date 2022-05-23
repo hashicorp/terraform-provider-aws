@@ -69,7 +69,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName),

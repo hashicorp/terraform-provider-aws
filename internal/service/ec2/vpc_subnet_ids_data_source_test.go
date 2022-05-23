@@ -18,7 +18,7 @@ func TestAccVPCSubnetIDsDataSource_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetIDsDataSourceConfig(rName, rInt),
@@ -42,7 +42,7 @@ func TestAccVPCSubnetIDsDataSource_filter(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetIDsDataSource_filter(rName, rInt),

@@ -212,7 +212,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Security Group Rule must be type 'ingress' or type 'egress'")
 	}
 
-	if tfawserr.ErrCodeEquals(autherr, ErrCodeInvalidPermissionDuplicate) {
+	if tfawserr.ErrCodeEquals(autherr, errCodeInvalidPermissionDuplicate) {
 		return fmt.Errorf(`[WARN] A duplicate Security Group rule was found on (%s). This may be
 a side effect of a now-fixed Terraform issue causing two security groups with
 identical attributes but different source_security_group_ids to overwrite each

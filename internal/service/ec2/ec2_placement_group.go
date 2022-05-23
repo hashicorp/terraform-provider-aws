@@ -76,7 +76,7 @@ func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          aws.String(d.Get("strategy").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePlacementGroup),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
@@ -169,7 +169,7 @@ func resourcePlacementGroupDelete(d *schema.ResourceData, meta interface{}) erro
 		GroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidPlacementGroupUnknown) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
 		return nil
 	}
 

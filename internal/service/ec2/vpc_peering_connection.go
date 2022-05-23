@@ -109,7 +109,7 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -188,7 +188,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	} else {
@@ -196,7 +196,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	} else {
@@ -259,7 +259,7 @@ func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}
 		VpcPeeringConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCPeeringConnectionIDNotFound) {
 		return nil
 	}
 
@@ -402,7 +402,7 @@ func expandPeeringConnectionOptionsRequest(tfMap map[string]interface{}, crossRe
 	return apiObject
 }
 
-func flattenVpcPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
+func flattenVPCPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

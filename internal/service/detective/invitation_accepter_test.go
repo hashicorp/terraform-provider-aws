@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccDetectiveInvitationAccepter_basic(t *testing.T) {
+func testAccInvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_detective_invitation_accepter.test"
 	email := testAccMemberFromEnv(t)
@@ -27,17 +27,17 @@ func testAccDetectiveInvitationAccepter_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDetectiveInvitationAccepterDestroy,
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectiveInvitationAccepterConfigBasic(email),
+				Config: testAccInvitationAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectiveInvitationAccepterExists(resourceName),
+					testAccCheckInvitationAccepterExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccDetectiveInvitationAccepterConfigBasic(email),
+				Config:            testAccInvitationAccepterConfig_basic(email),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -46,7 +46,7 @@ func testAccDetectiveInvitationAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDetectiveInvitationAccepterExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckInvitationAccepterExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -73,7 +73,7 @@ func testAccCheckDetectiveInvitationAccepterExists(resourceName string) resource
 	}
 }
 
-func testAccCheckDetectiveInvitationAccepterDestroy(s *terraform.State) error {
+func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -97,7 +97,7 @@ func testAccCheckDetectiveInvitationAccepterDestroy(s *terraform.State) error {
 
 }
 
-func testAccDetectiveInvitationAccepterConfigBasic(email string) string {
+func testAccInvitationAccepterConfig_basic(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"

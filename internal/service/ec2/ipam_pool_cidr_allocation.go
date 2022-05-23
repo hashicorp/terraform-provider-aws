@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
+func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCIpamPoolCidrAllocationCreate,
-		Read:   resourceVPCIpamPoolCidrAllocationRead,
-		Delete: resourceVPCIpamPoolCidrAllocationDelete,
+		Create: resourceIPAMPoolCIDRAllocationCreate,
+		Read:   resourceIPAMPoolCIDRAllocationRead,
+		Delete: resourceIPAMPoolCIDRAllocationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -87,10 +87,10 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 }
 
 const (
-	IpamPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
+	IPAMPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
 )
 
-func resourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	pool_id := d.Get("ipam_pool_id").(string)
 
@@ -120,15 +120,15 @@ func resourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error allocating cidr from IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
 	}
-	d.SetId(encodeIpamPoolCidrAllocationID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), pool_id))
+	d.SetId(encodeIPAMPoolCIDRAllocationID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), pool_id))
 
-	return resourceVPCIpamPoolCidrAllocationRead(d, meta)
+	return resourceIPAMPoolCIDRAllocationRead(d, meta)
 }
 
-func resourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	cidr_allocation, pool_id, err := FindIpamPoolCidrAllocation(conn, d.Id())
+	cidr_allocation, pool_id, err := FindIPAMPoolCIDRAllocation(conn, d.Id())
 
 	if err != nil {
 		return err
@@ -158,7 +158,7 @@ func resourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReleaseIpamPoolAllocationInput{
@@ -170,7 +170,7 @@ func resourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Releasing IPAM Pool CIDR Allocation: %s", input)
 	output, err := conn.ReleaseIpamPoolAllocation(input)
 	if err != nil || !aws.BoolValue(output.Success) {
-		if tfawserr.ErrCodeEquals(err, InvalidIpamPoolIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error releasing IPAM CIDR Allocation: (%s): %w", d.Id(), err)
@@ -179,9 +179,9 @@ func resourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func FindIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocation, string, error) {
+func FindIPAMPoolCIDRAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocation, string, error) {
 
-	allocation_id, pool_id, err := DecodeIpamPoolCidrAllocationID(id)
+	allocation_id, pool_id, err := DecodeIPAMPoolCIDRAllocationID(id)
 	if err != nil {
 		return nil, "", fmt.Errorf("error decoding ID (%s): %w", allocation_id, err)
 	}
@@ -209,11 +209,11 @@ func FindIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocati
 	return output.IpamPoolAllocations[0], pool_id, nil
 }
 
-func encodeIpamPoolCidrAllocationID(allocation_id, pool_id string) string {
+func encodeIPAMPoolCIDRAllocationID(allocation_id, pool_id string) string {
 	return fmt.Sprintf("%s_%s", allocation_id, pool_id)
 }
 
-func DecodeIpamPoolCidrAllocationID(id string) (string, string, error) {
+func DecodeIPAMPoolCIDRAllocationID(id string) (string, string, error) {
 	idParts := strings.Split(id, "_")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("expected ID in the form of allocationId_poolId, given: %q", id)

@@ -130,7 +130,7 @@ elastic-inference,elasticinference,elasticinference,elasticinference,,elasticinf
 elastictranscoder,elastictranscoder,elastictranscoder,elastictranscoder,,elastictranscoder,,,ElasticTranscoder,ElasticTranscoder,,1,,aws_elastictranscoder_,,elastictranscoder_,Elastic Transcoder,Amazon,,,,,
 elasticache,elasticache,elasticache,elasticache,,elasticache,,,ElastiCache,ElastiCache,,1,,aws_elasticache_,,elasticache_,ElastiCache,Amazon,,,,,
 es,es,elasticsearchservice,elasticsearchservice,elasticsearch,es,,es;elasticsearchservice,Elasticsearch,ElasticsearchService,,1,aws_elasticsearch_,aws_es_,,elasticsearch_,Elasticsearch,Amazon,,,,,
-elbv2,elbv2,elbv2,elasticloadbalancingv2,,elbv2,,elasticloadbalancingv2,ELBV2,ELBV2,,1,aws_a?lb(\b|_listener|_target_group),aws_elbv2_,,lb\.;lb_listener;lb_target_group,ELB (Elastic Load Balancing),,,,,,
+elbv2,elbv2,elbv2,elasticloadbalancingv2,,elbv2,,elasticloadbalancingv2,ELBV2,ELBV2,,1,aws_a?lb(\b|_listener|_target_group),aws_elbv2_,,lb\.;lb_listener;lb_target_group;lb_hosted,ELB (Elastic Load Balancing),,,,,,
 elb,elb,elb,elasticloadbalancing,,elb,,elasticloadbalancing,ELB,ELB,,1,aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy),aws_elb_,,app_cookie_stickiness_policy;elb;lb_cookie_stickiness_policy;lb_ssl_negotiation_policy;load_balancer;proxy_protocol_policy,ELB Classic,,,,,,
 mediaconnect,mediaconnect,mediaconnect,mediaconnect,,mediaconnect,,,MediaConnect,MediaConnect,,1,,aws_mediaconnect_,,media_connect_,Elemental MediaConnect,AWS,,,,,
 mediaconvert,mediaconvert,mediaconvert,mediaconvert,,mediaconvert,,,MediaConvert,MediaConvert,,1,aws_media_convert_,aws_mediaconvert_,,media_convert_,Elemental MediaConvert,AWS,,,,,

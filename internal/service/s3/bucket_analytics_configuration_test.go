@@ -714,7 +714,7 @@ resource "aws_s3_bucket" "destination" {
 `, name, prefix, bucket)
 }
 
-func TestExpandS3AnalyticsFilter(t *testing.T) {
+func TestExpandAnalyticsFilter(t *testing.T) {
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.AnalyticsFilter
@@ -856,7 +856,7 @@ func TestExpandS3AnalyticsFilter(t *testing.T) {
 	}
 }
 
-func TestExpandS3StorageClassAnalysis(t *testing.T) {
+func TestExpandStorageClassAnalysis(t *testing.T) {
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.StorageClassAnalysis
@@ -1002,7 +1002,7 @@ func TestExpandS3StorageClassAnalysis(t *testing.T) {
 	}
 }
 
-func TestFlattenS3AnalyticsFilter(t *testing.T) {
+func TestFlattenAnalyticsFilter(t *testing.T) {
 	testCases := map[string]struct {
 		Input    *s3.AnalyticsFilter
 		Expected []map[string]interface{}
@@ -1122,7 +1122,7 @@ func TestFlattenS3AnalyticsFilter(t *testing.T) {
 	}
 }
 
-func TestFlattenS3StorageClassAnalysis(t *testing.T) {
+func TestFlattenStorageClassAnalysis(t *testing.T) {
 	testCases := map[string]struct {
 		Input    *s3.StorageClassAnalysis
 		Expected []map[string]interface{}

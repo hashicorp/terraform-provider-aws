@@ -24,7 +24,7 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingsFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName),
+					testAccCheckInstanceTypeOfferingsInstanceTypes(dataSourceName),
 				),
 			},
 		},
@@ -43,15 +43,15 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingsLocationTypeDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName),
-					testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName),
+					testAccCheckInstanceTypeOfferingsInstanceTypes(dataSourceName),
+					testAccCheckInstanceTypeOfferingsLocations(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckInstanceTypeOfferingsInstanceTypes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -74,7 +74,7 @@ func testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName string) re
 	}
 }
 
-func testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckInstanceTypeOfferingsLocations(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {

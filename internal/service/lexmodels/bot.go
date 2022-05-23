@@ -47,7 +47,7 @@ func ResourceBot() *schema.Resource {
 				Required: true,
 				MinItems: 1,
 				MaxItems: 1,
-				Elem:     lexStatementResource,
+				Elem:     statementResource,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -66,7 +66,7 @@ func ResourceBot() *schema.Resource {
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 1,
-				Elem:     lexPromptResource,
+				Elem:     promptResource,
 			},
 			"create_version": {
 				Type:     schema.TypeBool,
@@ -143,7 +143,7 @@ func ResourceBot() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLexBotName,
+				ValidateFunc: validBotName,
 			},
 			"nlu_intent_confidence_threshold": {
 				Type:         schema.TypeFloat,
@@ -206,12 +206,12 @@ func hasBotConfigChanges(d verify.ResourceDiffer) bool {
 	return false
 }
 
-var validateLexBotName = validation.All(
+var validBotName = validation.All(
 	validation.StringLenBetween(2, 50),
 	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
 
-var validateLexBotVersion = validation.All(
+var validBotVersion = validation.All(
 	validation.StringLenBetween(1, 64),
 	validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
 )

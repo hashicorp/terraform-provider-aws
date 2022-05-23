@@ -180,7 +180,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPartnerEventSourceConfig(busName),
+				Config: testAccBusConfig_partnerSource(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &busOutput),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
@@ -291,7 +291,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, name, key1, value1, key2, value2)
 }
 
-func testAccBusPartnerEventSourceConfig(name string) string {
+func testAccBusConfig_partnerSource(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name              = %[1]q

@@ -1,19 +1,19 @@
 package route53
 
 const (
-	Route53TrafficPolicyDocEndpointValue      = "value"
-	Route53TrafficPolicyDocEndpointCloudfront = "cloudfront"
-	Route53TrafficPolicyDocEndpointElastic    = "elastic-load-balancer"
-	Route53TrafficPolicyDocEndpointS3         = "s3-website"
+	trafficPolicyDocEndpointValue      = "value"
+	trafficPolicyDocEndpointCloudfront = "cloudfront"
+	trafficPolicyDocEndpointElastic    = "elastic-load-balancer"
+	trafficPolicyDocEndpointS3         = "s3-website"
 )
 
 // TrafficPolicyDocEndpointType_values returns all elements of the endpoints types
 func TrafficPolicyDocEndpointType_values() []string {
 	return []string{
-		Route53TrafficPolicyDocEndpointValue,
-		Route53TrafficPolicyDocEndpointCloudfront,
-		Route53TrafficPolicyDocEndpointElastic,
-		Route53TrafficPolicyDocEndpointS3,
+		trafficPolicyDocEndpointValue,
+		trafficPolicyDocEndpointCloudfront,
+		trafficPolicyDocEndpointElastic,
+		trafficPolicyDocEndpointS3,
 	}
 }
 

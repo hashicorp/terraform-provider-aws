@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	LexBotAliasCreateTimeout = 1 * time.Minute
-	LexBotAliasUpdateTimeout = 1 * time.Minute
-	LexBotAliasDeleteTimeout = 5 * time.Minute
+	botAliasCreateTimeout = 1 * time.Minute
+	botAliasUpdateTimeout = 1 * time.Minute
+	botAliasDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceBotAlias() *schema.Resource {
@@ -36,9 +36,9 @@ func ResourceBotAlias() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexBotAliasCreateTimeout),
-			Update: schema.DefaultTimeout(LexBotAliasUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexBotAliasDeleteTimeout),
+			Create: schema.DefaultTimeout(botAliasCreateTimeout),
+			Update: schema.DefaultTimeout(botAliasUpdateTimeout),
+			Delete: schema.DefaultTimeout(botAliasDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -50,12 +50,12 @@ func ResourceBotAlias() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLexBotName,
+				ValidateFunc: validBotName,
 			},
 			"bot_version": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotVersion,
+				ValidateFunc: validBotVersion,
 			},
 			"checksum": {
 				Type:     schema.TypeString,
@@ -81,7 +81,7 @@ func ResourceBotAlias() *schema.Resource {
 						"log_settings": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     lexLogSettings,
+							Elem:     logSettings,
 						},
 					},
 				},
@@ -104,13 +104,13 @@ func ResourceBotAlias() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLexBotAliasName,
+				ValidateFunc: validBotAliasName,
 			},
 		},
 	}
 }
 
-var validateLexBotAliasName = validation.All(
+var validBotAliasName = validation.All(
 	validation.StringLenBetween(1, 100),
 	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
@@ -307,7 +307,7 @@ func resourceBotAliasImport(d *schema.ResourceData, _ interface{}) ([]*schema.Re
 	return []*schema.ResourceData{d}, nil
 }
 
-var lexLogSettings = &schema.Resource{
+var logSettings = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"destination": {
 			Type:         schema.TypeString,

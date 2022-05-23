@@ -28,7 +28,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -59,7 +59,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -68,7 +68,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateTwoSingleHeaderRedactedFields(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_updateTwoSingleHeaderRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -83,7 +83,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateSingleHeaderRedactedField(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_updateSingleHeaderRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -117,7 +117,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -126,7 +126,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateRedactedField(rName, "method"),
+				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "method"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -160,7 +160,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *te
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -169,7 +169,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *te
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateRedactedField(rName, "query_string"),
+				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "query_string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -203,7 +203,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testin
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -212,7 +212,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testin
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateRedactedField(rName, "uri_path"),
+				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -246,7 +246,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_updateRedactedField(rName, "uri_path"),
+				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -258,7 +258,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateTwoRedactedFields(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_updateTwoRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -273,7 +273,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateThreeRedactedFields(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_updateThreeRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -313,7 +313,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &before),
 					resource.TestCheckResourceAttr(webACLResourceName, "name", rName),
@@ -323,7 +323,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rNameNew),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &after),
 					resource.TestCheckResourceAttr(webACLResourceName, "name", rNameNew),
@@ -356,7 +356,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &before),
 					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rName)),
@@ -366,7 +366,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateLogDestination(rName, rNameNew),
+				Config: testAccWebACLLoggingConfigurationConfig_updateLogDestination(rName, rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &after),
 					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
@@ -396,7 +396,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACLLoggingConfiguration(), resourceName),
@@ -420,7 +420,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_emptyRedactedField(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -450,7 +450,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_emptyRedactedField(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -459,7 +459,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateRedactedField(rName, "uri_path"),
+				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -492,7 +492,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_Disappears_webACL(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACL(), webACLResourceName),
@@ -515,7 +515,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLLoggingConfiguration_loggingFilter(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
@@ -538,7 +538,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateLoggingFilter_twoFilters(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_updateFilterTwoFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
@@ -569,7 +569,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_updateLoggingFilter_oneFilter(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_updateFilterOneFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
@@ -592,7 +592,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebACLLoggingConfiguration_basic(rName),
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "0"),
@@ -963,77 +963,77 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 }
 `
 
-func testAccWebACLLoggingConfiguration_basic(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResourceConfig)
 }
 
-func testAccWebACLLoggingConfiguration_updateLogDestination(rName, rNameNew string) string {
+func testAccWebACLLoggingConfigurationConfig_updateLogDestination(rName, rNameNew string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rNameNew),
 		testAccWebACLLoggingConfigurationResourceConfig)
 }
 
-func testAccWebACLLoggingConfiguration_updateTwoSingleHeaderRedactedFields(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_updateTwoSingleHeaderRedactedFields(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_updateTwoSingleHeaderRedactedFieldsConfig)
 }
 
-func testAccWebACLLoggingConfiguration_updateSingleHeaderRedactedField(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_updateSingleHeaderRedactedField(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_updateSingleHeaderRedactedFieldConfig)
 }
 
-func testAccWebACLLoggingConfiguration_updateRedactedField(rName, field string) string {
+func testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, field string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_updateRedactedFieldConfig(field))
 }
 
-func testAccWebACLLoggingConfiguration_updateTwoRedactedFields(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_updateTwoRedactedFields(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_updateTwoRedactedFieldsConfig)
 }
 
-func testAccWebACLLoggingConfiguration_updateThreeRedactedFields(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_updateThreeRedactedFields(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_updateThreeRedactedFieldsConfig)
 }
 
-func testAccWebACLLoggingConfiguration_emptyRedactedField(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_emptyRedactedFieldsConfig)
 }
 
-func testAccWebACLLoggingConfiguration_loggingFilter(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_loggingFilterConfig)
 }
 
-func testAccWebACLLoggingConfiguration_updateLoggingFilter_twoFilters(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_updateFilterTwoFilters(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFilters)
 }
 
-func testAccWebACLLoggingConfiguration_updateLoggingFilter_oneFilter(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_updateFilterOneFilter(rName string) string {
 	return acctest.ConfigCompose(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),

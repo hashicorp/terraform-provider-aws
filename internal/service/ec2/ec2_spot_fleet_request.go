@@ -178,7 +178,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 									},
 								},
 							},
-							Set: hashEbsBlockDevice,
+							Set: hashEBSBlockDevice,
 						},
 						"ebs_optimized": {
 							Type:     schema.TypeBool,
@@ -837,7 +837,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
 		Type:                             aws.String(d.Get("fleet_type").(string)),
-		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotFleetRequest),
+		TagSpecifications:                tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotFleetRequest),
 	}
 
 	if launchSpecificationOk {
@@ -944,7 +944,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		func() (interface{}, error) {
 			return conn.RequestSpotFleet(input)
 		},
-		ErrCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
+		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
 	)
 
 	if err != nil {
@@ -1611,7 +1611,7 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *ec2.InstanceRequi
 	}
 
 	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
-		apiObject.BaselineEbsBandwidthMbps = expandBaselineEbsBandwidthMbps(v[0].(map[string]interface{}))
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbps(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
@@ -1639,7 +1639,7 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *ec2.InstanceRequi
 	}
 
 	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCpu(v[0].(map[string]interface{}))
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPU(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
@@ -1667,7 +1667,7 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *ec2.InstanceRequi
 	}
 
 	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.VCpuCount = expandVCpuCountRange(v[0].(map[string]interface{}))
+		apiObject.VCpuCount = expandVCPUCountRange(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -1709,7 +1709,7 @@ func expandAcceleratorTotalMemoryMiB(tfMap map[string]interface{}) *ec2.Accelera
 	return apiObject
 }
 
-func expandBaselineEbsBandwidthMbps(tfMap map[string]interface{}) *ec2.BaselineEbsBandwidthMbps {
+func expandBaselineEBSBandwidthMbps(tfMap map[string]interface{}) *ec2.BaselineEbsBandwidthMbps {
 	if tfMap == nil {
 		return nil
 	}
@@ -1727,7 +1727,7 @@ func expandBaselineEbsBandwidthMbps(tfMap map[string]interface{}) *ec2.BaselineE
 	return apiObject
 }
 
-func expandMemoryGiBPerVCpu(tfMap map[string]interface{}) *ec2.MemoryGiBPerVCpu {
+func expandMemoryGiBPerVCPU(tfMap map[string]interface{}) *ec2.MemoryGiBPerVCpu {
 	if tfMap == nil {
 		return nil
 	}
@@ -1799,7 +1799,7 @@ func expandTotalLocalStorageGB(tfMap map[string]interface{}) *ec2.TotalLocalStor
 	return apiObject
 }
 
-func expandVCpuCountRange(tfMap map[string]interface{}) *ec2.VCpuCountRange {
+func expandVCPUCountRange(tfMap map[string]interface{}) *ec2.VCpuCountRange {
 	if tfMap == nil {
 		return nil
 	}
@@ -1943,7 +1943,7 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 }
 
 func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *schema.Set {
-	set := &schema.Set{F: hashEbsBlockDevice}
+	set := &schema.Set{F: hashEBSBlockDevice}
 
 	for _, val := range bdm {
 		if val.Ebs != nil {
@@ -2088,7 +2088,7 @@ func hashLaunchSpecification(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func hashEbsBlockDevice(v interface{}) int {
+func hashEBSBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if name, ok := m["device_name"]; ok {
@@ -2108,7 +2108,7 @@ func flattenLaunchTemplateConfig(apiObject *ec2.LaunchTemplateConfig) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecification(v)}
+		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2136,7 +2136,7 @@ func flattenLaunchTemplateConfigs(apiObjects []*ec2.LaunchTemplateConfig) []inte
 	return tfList
 }
 
-func flattenFleetLaunchTemplateSpecification(apiObject *ec2.FleetLaunchTemplateSpecification) map[string]interface{} {
+func flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(apiObject *ec2.FleetLaunchTemplateSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

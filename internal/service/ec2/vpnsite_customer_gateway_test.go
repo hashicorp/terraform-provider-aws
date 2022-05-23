@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPNSiteCustomerGateway_basic(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -49,7 +49,7 @@ func TestAccVPNSiteCustomerGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteCustomerGateway_disappears(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -72,7 +72,7 @@ func TestAccVPNSiteCustomerGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteCustomerGateway_tags(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -114,7 +114,7 @@ func TestAccVPNSiteCustomerGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteCustomerGateway_deviceName(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -142,7 +142,7 @@ func TestAccVPNSiteCustomerGateway_deviceName(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteCustomerGateway_4ByteASN(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := strconv.FormatInt(int64(sdkacctest.RandIntRange(64512, 65534))*10000, 10)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,7 +155,7 @@ func TestAccVPNSiteCustomerGateway_4ByteASN(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfig4ByteAsn(rName, rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_4ByteASN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
@@ -170,7 +170,7 @@ func TestAccVPNSiteCustomerGateway_4ByteASN(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteCustomerGateway_certificate(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	var caRoot acmpca.CertificateAuthority
 	var caSubordinate acmpca.CertificateAuthority
@@ -326,7 +326,7 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccCustomerGatewayConfig4ByteAsn(rName, rBgpAsn string) string {
+func testAccSiteVPNCustomerGatewayConfig_4ByteASN(rName, rBgpAsn string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]q

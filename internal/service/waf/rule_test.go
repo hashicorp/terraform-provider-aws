@@ -27,7 +27,7 @@ func TestAccWAFRule_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(wafRuleName),
+				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
@@ -58,7 +58,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(wafRuleName),
+				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
@@ -67,7 +67,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleChangeNameConfig(wafRuleNewName),
+				Config: testAccRuleConfig_changeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
@@ -91,7 +91,7 @@ func TestAccWAFRule_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(wafRuleName),
+				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceRule(), resourceName),
@@ -117,7 +117,7 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(ruleName),
+				Config: testAccRuleConfig_basic(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists("aws_waf_ipset.ipset", &ipset),
 					testAccCheckRuleExists(resourceName, &before),
@@ -196,7 +196,7 @@ func TestAccWAFRule_webACL(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_noRules(rName),
+				Config: testAccRuleConfig_webACLNos(rName),
 			},
 		},
 	})
@@ -237,7 +237,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleTags1Config(ruleName, "key1", "value1"),
+				Config: testAccRuleConfig_tags1(ruleName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
@@ -248,7 +248,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleTags2Config(ruleName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleConfig_tags2(ruleName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
@@ -260,7 +260,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleTags1Config(ruleName, "key2", "value2"),
+				Config: testAccRuleConfig_tags1(ruleName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
@@ -352,7 +352,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccRuleConfig(name string) string {
+func testAccRuleConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = %[1]q
@@ -377,7 +377,7 @@ resource "aws_waf_rule" "wafrule" {
 `, name)
 }
 
-func testAccRuleChangeNameConfig(name string) string {
+func testAccRuleConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = %[1]q
@@ -474,7 +474,7 @@ resource "aws_waf_rule" "wafrule" {
 `, name)
 }
 
-func testAccRuleTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccRuleConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = %[1]q
@@ -503,7 +503,7 @@ resource "aws_waf_rule" "wafrule" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccRuleTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccRuleConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = %[1]q
@@ -575,7 +575,7 @@ resource "aws_waf_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLConfig_noRules(rName string) string {
+func testAccRuleConfig_webACLNos(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   metric_name = "testwebaclmetric"

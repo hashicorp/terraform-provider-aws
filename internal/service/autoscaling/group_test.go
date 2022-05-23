@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -988,6 +987,20 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccGroupConfig_InstanceRefresh_SkipMatching(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "true"),
+				),
+			},
+			{
 				Config: testAccGroupConfig_InstanceRefresh_Full(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
@@ -1195,12 +1208,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Verify the error
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidGroup.NotFound" {
+		if err != nil {
 			return err
 		}
 	}
@@ -2256,6 +2264,47 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.small"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weightedCapacity_withELB(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity_WithELB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "2"),
 				),
 			},
 			{
@@ -4437,6 +4486,128 @@ resource "aws_autoscaling_group" "test" {
 `, rName)
 }
 
+func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity_WithELB(rName string) string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.foo.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_subnet" "foo" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.foo.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "foo" {
+  vpc_id = aws_vpc.foo.id
+
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb_target_group" "foo" {
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.foo.id
+}
+
+resource "aws_elb" "bar" {
+  subnets         = [aws_subnet.foo.id]
+  security_groups = [aws_security_group.foo.id]
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    target              = "HTTP:80/"
+    interval            = 5
+    timeout             = 2
+  }
+  depends_on = [aws_internet_gateway.gw]
+}
+
+locals {
+  user_data = <<EOF
+  #!/bin/bash
+  echo "Terraform aws_autoscaling_group Testing" > index.html
+  nohup python -m SimpleHTTPServer 80 &
+  EOF
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "test" {
+  image_id               = data.aws_ami.test.id
+  instance_type          = "t3.micro"
+  name                   = %[1]q
+  user_data              = base64encode(local.user_data)
+  vpc_security_group_ids = [aws_security_group.foo.id]
+}
+
+resource "aws_autoscaling_group" "test" {
+  desired_capacity      = 2
+  wait_for_elb_capacity = 2
+  max_size              = 2
+  min_size              = 2
+  name                  = %[1]q
+  load_balancers        = [aws_elb.bar.name]
+  vpc_zone_identifier   = aws_subnet.foo[*].id
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.test.id
+      }
+      override {
+        instance_type     = "t3.micro"
+        weighted_capacity = "2"
+      }
+      override {
+        instance_type     = "t3.small"
+        weighted_capacity = "2"
+      }
+    }
+  }
+}
+`, rName)
+}
+
 func testAccGroupPartitionConfig(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
 		fmt.Sprintf(`
@@ -4533,6 +4704,50 @@ resource "aws_autoscaling_group" "test" {
     strategy = "Rolling"
     preferences {
       min_healthy_percentage = 0
+    }
+  }
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.nano"
+}
+`
+}
+
+func testAccGroupConfig_InstanceRefresh_SkipMatching() string {
+	return `
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 0
+      skip_matching          = true
     }
   }
 }

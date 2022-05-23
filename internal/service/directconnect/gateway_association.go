@@ -123,7 +123,7 @@ func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v, ok := d.GetOk("allowed_prefixes"); ok && v.(*schema.Set).Len() > 0 {
-			input.OverrideAllowedPrefixesToDirectConnectGateway = expandDirectConnectRouteFilterPrefixes(v.(*schema.Set).List())
+			input.OverrideAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(v.(*schema.Set).List())
 		}
 
 		log.Printf("[DEBUG] Accepting Direct Connect Gateway Association Proposal: %s", input)
@@ -144,7 +144,7 @@ func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v, ok := d.GetOk("allowed_prefixes"); ok && v.(*schema.Set).Len() > 0 {
-			input.AddAllowedPrefixesToDirectConnectGateway = expandDirectConnectRouteFilterPrefixes(v.(*schema.Set).List())
+			input.AddAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(v.(*schema.Set).List())
 		}
 
 		log.Printf("[DEBUG] Creating Direct Connect Gateway Association: %s", input)
@@ -185,7 +185,7 @@ func resourceGatewayAssociationRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("allowed_prefixes", flattenDirectConnectRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
+	if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
 		return fmt.Errorf("error setting allowed_prefixes: %w", err)
 	}
 
@@ -211,11 +211,11 @@ func resourceGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) 
 	o, n := oraw.(*schema.Set), nraw.(*schema.Set)
 
 	if add := n.Difference(o); add.Len() > 0 {
-		input.AddAllowedPrefixesToDirectConnectGateway = expandDirectConnectRouteFilterPrefixes(add.List())
+		input.AddAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(add.List())
 	}
 
 	if del := o.Difference(n); del.Len() > 0 {
-		input.RemoveAllowedPrefixesToDirectConnectGateway = expandDirectConnectRouteFilterPrefixes(del.List())
+		input.RemoveAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(del.List())
 	}
 
 	log.Printf("[DEBUG] Updating Direct Connect Gateway Association: %s", input)
@@ -269,7 +269,7 @@ func resourceGatewayAssociationImport(d *schema.ResourceData, meta interface{}) 
 	directConnectGatewayID := parts[0]
 	associatedGatewayID := parts[1]
 
-	output, err := FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+	output, err := FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
 	if err != nil {
 		return nil, err

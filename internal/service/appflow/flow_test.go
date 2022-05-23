@@ -486,6 +486,7 @@ func testAccCheckFlowDestroy(s *terraform.State) error {
 		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}

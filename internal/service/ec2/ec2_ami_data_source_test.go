@@ -20,7 +20,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAmiDataSourceConfig,
+				Config: testAccAMIDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(resourceName),
 					// Check attributes. Some attributes are tough to test - any not contained here should not be considered
@@ -72,7 +72,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAmiDataSourceWindowsConfig,
+				Config: testAccAMIDataSourceConfig_windows,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
@@ -157,7 +157,7 @@ func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAmiDataSourceNameRegexConfig,
+				Config: testAccAMIDataSourceConfig_nameRegex,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource("data.aws_ami.name_regex_filtered_ami"),
 					resource.TestMatchResourceAttr("data.aws_ami.name_regex_filtered_ami", "image_id", regexp.MustCompile("^ami-")),
@@ -178,7 +178,7 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiDataSourceConfigGp3BlockDevice(rName),
+				Config: testAccAMIDataSourceConfig_gp3BlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "architecture", resourceName, "architecture"),
@@ -239,7 +239,7 @@ data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
 // that this will possibly be deprecated at some point in time. Other candidates
 // for testing this after that may be Ubuntu's AMI's, or Amazon's regular
 // Amazon Linux AMIs.
-const testAccCheckAWSAmiDataSourceConfig = `
+const testAccAMIDataSourceConfig_basic = `
 data "aws_ami" "nat_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -267,7 +267,7 @@ data "aws_ami" "nat_ami" {
 `
 
 // Windows image test.
-const testAccCheckAWSAmiDataSourceWindowsConfig = `
+const testAccAMIDataSourceConfig_windows = `
 data "aws_ami" "windows_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -295,7 +295,7 @@ data "aws_ami" "windows_ami" {
 `
 
 // Testing name_regex parameter
-const testAccCheckAWSAmiDataSourceNameRegexConfig = `
+const testAccAMIDataSourceConfig_nameRegex = `
 data "aws_ami" "name_regex_filtered_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -309,9 +309,9 @@ data "aws_ami" "name_regex_filtered_ami" {
 }
 `
 
-func testAccAmiDataSourceConfigGp3BlockDevice(rName string) string {
+func testAccAMIDataSourceConfig_gp3BlockDevice(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigGp3BlockDevice(rName),
+		testAccAMIConfig_gp3BlockDevice(rName),
 		`
 data "aws_caller_identity" "current" {}
 

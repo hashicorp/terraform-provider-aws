@@ -20,7 +20,7 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -62,7 +62,7 @@ func TestAccVPCManagedPrefixList_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -84,7 +84,7 @@ func TestAccVPCManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -111,7 +111,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -169,7 +169,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -223,7 +223,7 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -260,7 +260,7 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
@@ -349,7 +349,7 @@ func testAccManagedPrefixListExists(resourceName string) resource.TestCheckFunc 
 	}
 }
 
-func testAccPreCheckEc2ManagedPrefixList(t *testing.T) {
+func testAccPreCheckManagedPrefixList(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeManagedPrefixListsInput{}

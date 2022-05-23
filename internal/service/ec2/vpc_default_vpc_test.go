@@ -31,7 +31,7 @@ func TestAccVPCDefaultVPCAndSubnet_serial(t *testing.T) {
 			"existing.basic":                         testAccDefaultSubnet_Existing_basic,
 			"existing.forceDestroy":                  testAccDefaultSubnet_Existing_forceDestroy,
 			"existing.ipv6":                          testAccDefaultSubnet_Existing_ipv6,
-			"existing.privateDnsNameOptionsOnLaunch": testAccDefaultSubnet_Existing_privateDnsNameOptionsOnLaunch,
+			"existing.privateDnsNameOptionsOnLaunch": testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch,
 			"notFound.basic":                         testAccDefaultSubnet_NotFound_basic,
 			"notFound.ipv6Native":                    testAccDefaultSubnet_NotFound_ipv6Native,
 		},

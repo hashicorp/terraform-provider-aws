@@ -18,7 +18,7 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamPoolOptions,
+				Config: testAccIPAMPoolOptions_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "address_family", resourceName, "address_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocation_default_netmask_length", resourceName, "allocation_default_netmask_length"),
@@ -43,7 +43,7 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccVPCIpamPoolOptions = acctest.ConfigCompose(testAccVPCIpamPoolBase, `
+var testAccIPAMPoolOptions_basic = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
   ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
