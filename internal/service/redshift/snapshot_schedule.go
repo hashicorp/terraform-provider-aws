@@ -226,8 +226,10 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift
 			DisassociateSchedule: aws.Bool(true),
 		})
 
+		clusterId := aws.StringValue(associatedCluster.ClusterIdentifier)
+
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
-			log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", aws.StringValue(associatedCluster.ClusterIdentifier))
+			log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", clusterId)
 			continue
 		}
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
@@ -235,12 +237,13 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift
 			continue
 		}
 		if err != nil {
-			return fmt.Errorf("Error disassociate Redshift Cluster (%s) and Snapshot Schedule (%s) Association: %s", aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier, err)
+			return fmt.Errorf("Error disassociate Redshift Cluster (%s) and Snapshot Schedule (%s) Association: %s", clusterId, scheduleIdentifier, err)
 		}
 	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
-		if err := waitForSnapshotScheduleAssociationDestroy(conn, snapshotScheduleAssociationDestroyedTimeout, aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier); err != nil {
+		id := fmt.Sprintf("%s/%s", aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier)
+		if _, err := waitScheduleAssociationDeleted(conn, id); err != nil {
 			return err
 		}
 	}

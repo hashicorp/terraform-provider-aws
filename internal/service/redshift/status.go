@@ -70,3 +70,19 @@ func statusClusterAqua(conn *redshift.Redshift, id string) resource.StateRefresh
 		return output, aws.StringValue(output.AquaConfiguration.AquaStatus), nil
 	}
 }
+
+func statusScheduleAssociation(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		_, output, err := FindScheduleAssociationById(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ScheduleAssociationState), nil
+	}
+}

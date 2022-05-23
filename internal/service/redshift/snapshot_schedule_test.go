@@ -3,7 +3,6 @@ package redshift_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -294,7 +293,8 @@ func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *reds
 			return fmt.Errorf("Error associate Redshift Cluster and Snapshot Schedule: %s", err)
 		}
 
-		if err := tfredshift.WaitForSnapshotScheduleAssociationActive(conn, 75*time.Minute, aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier)); err != nil {
+		id := fmt.Sprintf("%s/%s", aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier))
+		if _, err := tfredshift.WaitScheduleAssociationActive(conn, id); err != nil {
 			return err
 		}
 

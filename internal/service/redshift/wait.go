@@ -14,6 +14,9 @@ const (
 	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
 
 	clusterRelocationStatusResolvedTimeout = 1 * time.Minute
+
+	snapshotScheduleAssociationActivatedTimeout = 75 * time.Minute
+	snapshotScheduleAssociationDestroyedTimeout = 75 * time.Minute
 )
 
 func waitClusterCreated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
@@ -125,6 +128,46 @@ func waitClusterAquaApplied(conn *redshift.Redshift, id string, timeout time.Dur
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitScheduleAssociationActive(conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{redshift.ScheduleStateModifying},
+		Target:     []string{redshift.ScheduleStateActive},
+		Refresh:    statusScheduleAssociation(conn, id),
+		Timeout:    snapshotScheduleAssociationActivatedTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
+		Target:     []string{},
+		Refresh:    statusScheduleAssociation(conn, id),
+		Timeout:    snapshotScheduleAssociationDestroyedTimeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
 		return output, err
 	}
 
