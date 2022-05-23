@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDirectoryServiceDirectoryDataSource_nonExistent(t *testing.T) {
+func TestAccDSDirectoryDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
@@ -25,7 +25,7 @@ func TestAccDirectoryServiceDirectoryDataSource_nonExistent(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
+func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test-simple-ad"
 	dataSourceName := "data.aws_directory_service_directory.test-simple-ad"
@@ -59,7 +59,7 @@ func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
+func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test-microsoft-ad"
 	dataSourceName := "data.aws_directory_service_directory.test-microsoft-ad"
@@ -93,7 +93,7 @@ func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
+func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

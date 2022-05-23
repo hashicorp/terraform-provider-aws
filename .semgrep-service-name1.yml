@@ -780,6 +780,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)DLM"
     severity: WARNING
+  - id: ds-in-func-name
+    languages:
+      - go
+    message: Do not use "DS" in func name inside ds package
+    paths:
+      include:
+        - internal/service/ds
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DS"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ds-in-test-name
+    languages:
+      - go
+    message: Include "DS" in test name
+    paths:
+      include:
+        - internal/service/ds/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDS"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ds-in-const-name
+    languages:
+      - go
+    message: Do not use "DS" in const name inside ds package
+    paths:
+      include:
+        - internal/service/ds
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DS"
+    severity: WARNING
+  - id: ds-in-var-name
+    languages:
+      - go
+    message: Do not use "DS" in var name inside ds package
+    paths:
+      include:
+      - internal/service/ds
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DS"
+    severity: WARNING
   - id: ec2-in-test-name
     languages:
       - go

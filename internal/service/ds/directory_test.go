@@ -15,7 +15,7 @@ import (
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
-func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
+func TestAccDSDirectory_basic(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,7 +50,7 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
+func TestAccDSDirectory_tags(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -105,7 +105,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
+func TestAccDSDirectory_microsoft(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +136,7 @@ func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
+func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -167,7 +167,7 @@ func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
+func TestAccDSDirectory_connector(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -203,7 +203,7 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
+func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
@@ -285,7 +285,7 @@ func testAccCheckDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
+func TestAccDSDirectory_disappears(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
