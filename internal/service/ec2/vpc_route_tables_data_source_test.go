@@ -20,7 +20,7 @@ func TestAccVPCRouteTablesDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTablesDataSourceConfig(rName),
+				Config: testAccVPCRouteTablesDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_route_tables.by_vpc_id", "ids.#", "2"), // Add the default route table.
 					resource.TestCheckResourceAttr("data.aws_route_tables.by_tags", "ids.#", "2"),
@@ -32,7 +32,7 @@ func TestAccVPCRouteTablesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRouteTablesDataSourceConfig(rName string) string {
+func testAccVPCRouteTablesDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "172.16.0.0/16"

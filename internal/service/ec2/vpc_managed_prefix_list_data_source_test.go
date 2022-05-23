@@ -51,7 +51,7 @@ func TestAccVPCManagedPrefixListDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListDataSourceConfig_basic,
+				Config: testAccVPCManagedPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccManagedPrefixListGetIdByNameDataSource(prefixListName, &prefixListId, &prefixListArn),
 
@@ -76,7 +76,7 @@ func TestAccVPCManagedPrefixListDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccManagedPrefixListDataSourceConfig_basic = `
+const testAccVPCManagedPrefixListDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
@@ -106,7 +106,7 @@ func TestAccVPCManagedPrefixListDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListDataSourceConfig_filter,
+				Config: testAccVPCManagedPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccManagedPrefixListGetIdByNameDataSource(prefixListName, &prefixListId, &prefixListArn),
 					resource.TestCheckResourceAttrPtr(resourceByName, "id", &prefixListId),
@@ -133,7 +133,7 @@ func TestAccVPCManagedPrefixListDataSource_filter(t *testing.T) {
 	})
 }
 
-const testAccManagedPrefixListDataSourceConfig_filter = `
+const testAccVPCManagedPrefixListDataSourceConfig_filter = `
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
@@ -158,13 +158,13 @@ func TestAccVPCManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPrefixListDataSourceConfig_matchesTooMany,
+				Config:      testAccVPCManagedPrefixListDataSourceConfig_matchesTooMany,
 				ExpectError: regexp.MustCompile(`more than 1 prefix list matched the given criteria`),
 			},
 		},
 	})
 }
 
-const testAccPrefixListDataSourceConfig_matchesTooMany = `
+const testAccVPCManagedPrefixListDataSourceConfig_matchesTooMany = `
 data "aws_ec2_managed_prefix_list" "test" {}
 `

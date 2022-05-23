@@ -23,7 +23,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointDataSourceConfig_basic(rName),
+				Config: testAccClientVPNEndpointDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasource1Name, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "authentication_options.#", resourceName, "authentication_options.#"),
@@ -90,7 +90,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEndpointDataSourceConfig_basic(rName string) string {
+func testAccClientVPNEndpointDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_basic(rName), `
 data "aws_ec2_client_vpn_endpoint" "by_id" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id

@@ -22,7 +22,7 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingsFilterDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceTypeOfferingsInstanceTypes(dataSourceName),
 				),
@@ -41,7 +41,7 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingsLocationTypeDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingsDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceTypeOfferingsInstanceTypes(dataSourceName),
 					testAccCheckInstanceTypeOfferingsLocations(dataSourceName),
@@ -107,7 +107,7 @@ func testAccPreCheckInstanceTypeOfferings(t *testing.T) {
 	}
 }
 
-func testAccInstanceTypeOfferingsFilterDataSourceConfig() string {
+func testAccInstanceTypeOfferingsDataSourceConfig_filter() string {
 	return `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
@@ -118,7 +118,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 `
 }
 
-func testAccInstanceTypeOfferingsLocationTypeDataSourceConfig() string {
+func testAccInstanceTypeOfferingsDataSourceConfig_location() string {
 	return acctest.ConfigAvailableAZsNoOptIn() + `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {

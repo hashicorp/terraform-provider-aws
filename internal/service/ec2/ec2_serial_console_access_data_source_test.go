@@ -20,7 +20,7 @@ func TestAccEC2SerialConsoleAccessDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSerialConsoleAccessDataSourceConfig,
+				Config: testAccSerialConsoleAccessDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSerialConsoleAccessDataSource("data.aws_ec2_serial_console_access.current"),
 				),
@@ -57,6 +57,6 @@ func testAccCheckSerialConsoleAccessDataSource(n string) resource.TestCheckFunc 
 	}
 }
 
-const testAccSerialConsoleAccessDataSourceConfig = `
+const testAccSerialConsoleAccessDataSourceConfig_basic = `
 data "aws_ec2_serial_console_access" "current" {}
 `
