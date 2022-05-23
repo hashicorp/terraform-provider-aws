@@ -25,10 +25,11 @@ func TestAccDataIntegration_basic(t *testing.T) {
 	resourceName := "aws_appintegrations_data_integration.test"
 
 	key := "DATA_INTEGRATION_SOURCE_URI"
-	var sourceUri string
-	sourceUri = os.Getenv(key)
+	sourceUri := os.Getenv(key)
 	if sourceUri == "" {
-		sourceUri = "Salesforce://AppFlow/test"
+		t.Skip("Environment variable DATA_INTEGRATION_SOURCE_URI is not set")
+		// sourceUri of the form Salesforce://AppFlow/<NameOfSalesforceConnectorProfile>
+		// sourceUri = "Salesforce://AppFlow/test"
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,10 +89,11 @@ func TestAccDataIntegration_updateTags(t *testing.T) {
 	resourceName := "aws_appintegrations_data_integration.test"
 
 	key := "DATA_INTEGRATION_SOURCE_URI"
-	var sourceUri string
-	sourceUri = os.Getenv(key)
+	sourceUri := os.Getenv(key)
 	if sourceUri == "" {
-		sourceUri = "Salesforce://AppFlow/test"
+		t.Skip("Environment variable DATA_INTEGRATION_SOURCE_URI is not set")
+		// sourceUri of the form Salesforce://AppFlow/<NameOfSalesforceConnectorProfile>
+		// sourceUri = "Salesforce://AppFlow/test"
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
