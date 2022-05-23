@@ -40,6 +40,8 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
 			{
@@ -50,7 +52,55 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_aqua(t *testing.T) {
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_aqua(rName, "enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccClusterConfig_aqua(rName, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "disabled"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_aqua(rName, "enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+				),
 			},
 		},
 	})
@@ -104,6 +154,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 		},
@@ -139,6 +190,7 @@ func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 		},
@@ -171,6 +223,7 @@ func TestAccRedshiftCluster_enhancedVPCRoutingEnabled(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -212,6 +265,7 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -219,6 +273,14 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "false"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_loggingCloudwatch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.log_destination_type", "cloudwatch"),
 				),
 			},
 		},
@@ -405,6 +467,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -639,6 +702,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -711,6 +775,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 					"master_password",
 					"skip_final_snapshot",
 					"snapshot_identifier",
+					"apply_immediately",
 				},
 			},
 		},
@@ -890,6 +955,24 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot                 = true
 }
 `, rName))
+}
+
+func testAccClusterConfig_aqua(rName, status string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+  aqua_configuration_status           = %[2]q
+  apply_immediately                   = true
+}
+`, rName, status))
 }
 
 func testAccClusterConfig_encrypted(rName string) string {
@@ -1142,6 +1225,29 @@ resource "aws_redshift_cluster" "test" {
   logging {
     enable      = true
     bucket_name = aws_s3_bucket.test.bucket
+  }
+
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccClusterConfig_loggingCloudwatch(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+
+  logging {
+    enable               = true
+    log_destination_type = "cloudwatch"
+    log_exports          = ["connectionlog"]
   }
 
   skip_final_snapshot = true

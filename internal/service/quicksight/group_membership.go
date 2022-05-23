@@ -111,8 +111,8 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
 
-	if !found {
-		log.Printf("[WARN] QuickSight User-group membership %s is not found, removing from state", d.Id())
+	if !d.IsNewResource() && !found {
+		log.Printf("[WARN] QuickSight User-group membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

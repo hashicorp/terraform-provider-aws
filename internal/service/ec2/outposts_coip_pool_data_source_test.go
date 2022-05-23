@@ -18,7 +18,7 @@ func TestAccEC2OutpostsCoIPPoolDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoIPPoolDataSourceFilterDataSourceConfig(),
+				Config: testAccOutpostsCoIPPoolDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexp.MustCompile(`^lgw-rtb-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexp.MustCompile(`^ipv4pool-coip-`)),
@@ -38,7 +38,7 @@ func TestAccEC2OutpostsCoIPPoolDataSource_id(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoIPPoolDataSourceIDDataSourceConfig(),
+				Config: testAccOutpostsCoIPPoolDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexp.MustCompile(`^lgw-rtb-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexp.MustCompile(`^ipv4pool-coip-`)),
@@ -50,7 +50,7 @@ func TestAccEC2OutpostsCoIPPoolDataSource_id(t *testing.T) {
 	})
 }
 
-func testAccCoIPPoolDataSourceFilterDataSourceConfig() string {
+func testAccOutpostsCoIPPoolDataSourceConfig_filter() string {
 	return `
 data "aws_ec2_coip_pools" "test" {}
 
@@ -63,7 +63,7 @@ data "aws_ec2_coip_pool" "test" {
 `
 }
 
-func testAccCoIPPoolDataSourceIDDataSourceConfig() string {
+func testAccOutpostsCoIPPoolDataSourceConfig_id() string {
 	return `
 data "aws_ec2_coip_pools" "test" {}
 

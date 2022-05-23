@@ -117,7 +117,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(),
+				Config: testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
@@ -213,10 +213,10 @@ func testAccCheckAMIIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-// testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig returns the configuration for a data source that
+// testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
 // The data source is named 'amzn-ami-minimal-hvm-instance-store'.
-func testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig() string {
+func testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore() string {
 	return `
 data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
   most_recent = true

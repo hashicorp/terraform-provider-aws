@@ -1,13 +1,12 @@
 package iam_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
@@ -137,25 +137,14 @@ func testAccCheckAccessKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to get access key
-		resp, err := conn.ListAccessKeys(&iam.ListAccessKeysInput{
-			UserName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			if len(resp.AccessKeyMetadata) > 0 {
-				return fmt.Errorf("still exist.")
-			}
+		_, err := tfiam.FindAccessKey(context.TODO(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+		if tfresource.NotFound(err) {
 			return nil
 		}
-
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+		return fmt.Errorf("IAM Access Key (%s) still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -169,25 +158,17 @@ func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Role name is set")
+			return fmt.Errorf("No Access Key ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		name := rs.Primary.Attributes["user"]
 
-		resp, err := conn.ListAccessKeys(&iam.ListAccessKeysInput{
-			UserName: aws.String(name),
-		})
+		accessKey, err := tfiam.FindAccessKey(context.TODO(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(resp.AccessKeyMetadata) != 1 ||
-			*resp.AccessKeyMetadata[0].UserName != name {
-			return fmt.Errorf("User not found not found")
-		}
-
-		*res = *resp.AccessKeyMetadata[0]
+		*res = *accessKey
 
 		return nil
 	}

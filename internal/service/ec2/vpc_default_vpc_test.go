@@ -93,7 +93,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCConfig,
+				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -140,7 +140,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName),
+				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -187,7 +187,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultVPCDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCForceDestroyConfig,
+				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
@@ -214,7 +214,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCConfig,
+				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -261,7 +261,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName),
+				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -308,7 +308,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultVPCDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCForceDestroyConfig,
+				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
@@ -437,17 +437,17 @@ func testAccEmptyDefaultVPC(vpcID string) error {
 	return nil
 }
 
-const testAccDefaultVPCConfig = `
+const testAccVPCDefaultVPCConfig_basic = `
 resource "aws_default_vpc" "test" {}
 `
 
-const testAccDefaultVPCForceDestroyConfig = `
+const testAccVPCDefaultVPCConfig_forceDestroy = `
 resource "aws_default_vpc" "test" {
   force_destroy = true
 }
 `
 
-func testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName string) string {
+func testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_default_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
