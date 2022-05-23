@@ -237,6 +237,78 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	})
 }
 
+func TestAccKendraIndex_updateUserTokenJson(t *testing.T) {
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalGroupAttributeField := "groups"
+	originalUserNameAttributeField := "username"
+	updatedGroupAttributeField := "groupings"
+	updatedUserNameAttributeField := "usernames"
+	resourceName := "aws_kendra_index.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexBaseConfig(rName, rName2),
+				Check:  propagationSleep(),
+			},
+			{
+				Config: testAccIndexConfig_userTokenJson(rName, rName2, rName3, originalGroupAttributeField, originalUserNameAttributeField),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", originalGroupAttributeField),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", originalUserNameAttributeField),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexConfig_userTokenJson(rName, rName2, rName3, updatedGroupAttributeField, originalUserNameAttributeField),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", originalUserNameAttributeField),
+				),
+			},
+			{
+				Config: testAccIndexConfig_userTokenJson(rName, rName2, rName3, updatedGroupAttributeField, updatedUserNameAttributeField),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", updatedUserNameAttributeField),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKendraIndex_updateTags(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
@@ -615,6 +687,24 @@ resource "aws_kendra_index" "test" {
   }
 }
 `, rName3))
+}
+
+func testAccIndexConfig_userTokenJson(rName, rName2, rName3, groupAttributeField, userNameAttributeField string) string {
+	return acctest.ConfigCompose(
+		testAccIndexBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_kendra_index" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.access_cw.arn
+
+  user_token_configurations {
+    json_token_type_configuration {
+      group_attribute_field     = %[2]q
+      user_name_attribute_field = %[3]q
+    }
+  }
+}
+`, rName3, groupAttributeField, userNameAttributeField))
 }
 
 func testAccIndexConfig_tags(rName, rName2, rName3, description string) string {
