@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,33 +24,30 @@ func ResourceEventSubscription() *schema.Resource {
 		Read:   resourceEventSubscriptionRead,
 		Update: resourceEventSubscriptionUpdate,
 		Delete: resourceEventSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sns_topic_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"status": {
+			"customer_aws_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"event_categories": {
 				Type:     schema.TypeSet,
@@ -66,6 +62,25 @@ func ResourceEventSubscription() *schema.Resource {
 						"pending",
 					}, false),
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"severity": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "INFO",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ERROR",
+					"INFO",
+				}, false),
+			},
+			"sns_topic_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"source_ids": {
 				Type:     schema.TypeSet,
@@ -83,21 +98,7 @@ func ResourceEventSubscription() *schema.Resource {
 					"scheduled-action",
 				}, false),
 			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"severity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "INFO",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ERROR",
-					"INFO",
-				}, false),
-			},
-			"customer_aws_id": {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,20 +170,24 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error reading Redshift Event Subscription (%s): %w", d.Id(), err)
 	}
 
-	d.Set("name", sub.CustSubscriptionId)
-	d.Set("sns_topic_arn", sub.SnsTopicArn)
-	d.Set("status", sub.Status)
-	d.Set("source_type", sub.SourceType)
-	d.Set("severity", sub.Severity)
-	d.Set("enabled", sub.Enabled)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "redshift",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
+	d.Set("enabled", sub.Enabled)
+	d.Set("event_categories", aws.StringValueSlice(sub.EventCategoriesList))
+	d.Set("name", sub.CustSubscriptionId)
+	d.Set("severity", sub.Severity)
+	d.Set("sns_topic_arn", sub.SnsTopicArn)
+	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
+	d.Set("source_type", sub.SourceType)
+	d.Set("status", sub.Status)
 
-	if err := d.Set("source_ids", flex.FlattenStringList(sub.SourceIdsList)); err != nil {
-		return err
-	}
-	if err := d.Set("event_categories", flex.FlattenStringList(sub.EventCategoriesList)); err != nil {
-		return err
-	}
 	tags := KeyValueTags(sub.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -193,16 +198,6 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
