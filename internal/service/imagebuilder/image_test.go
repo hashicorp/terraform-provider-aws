@@ -199,7 +199,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageTags1Config(rName, "key1", "value1"),
+				Config: testAccImageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -212,7 +212,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImageTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccImageConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -221,7 +221,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccImageTags1Config(rName, "key2", "value2"),
+				Config: testAccImageConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -491,7 +491,7 @@ resource "aws_imagebuilder_image" "test" {
 `)
 }
 
-func testAccImageTags1Config(rName string, tagKey1 string, tagValue1 string) string {
+func testAccImageConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -506,7 +506,7 @@ resource "aws_imagebuilder_image" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccImageTags2Config(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccImageConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`

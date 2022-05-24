@@ -25,7 +25,7 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig(rName),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -62,14 +62,14 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig(rName),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName1, "name"),
 				),
 			},
 			{
-				Config: testAccEndpointConfigEndpointConfigNameUpdate(rName),
+				Config: testAccEndpointConfig_nameUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName2, "name"),
@@ -99,7 +99,7 @@ func TestAccSageMakerEndpoint_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfigTags(rName),
+				Config: testAccEndpointConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -107,7 +107,7 @@ func TestAccSageMakerEndpoint_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEndpointConfigTagsUpdate(rName),
+				Config: testAccEndpointConfig_tagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -138,7 +138,7 @@ func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointDeploymentBasicConfig(rName, "ALL_AT_ONCE", 60),
+				Config: testAccEndpointConfig_deploymentBasic(rName, "ALL_AT_ONCE", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -178,7 +178,7 @@ func TestAccSageMakerEndpoint_deploymentConfig_full(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointDeploymentFullConfig(rName),
+				Config: testAccEndpointConfig_deploymentFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -217,7 +217,7 @@ func TestAccSageMakerEndpoint_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig(rName),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceEndpoint(), resourceName),
@@ -365,7 +365,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig(rName string) string {
+func testAccEndpointConfig_basic(rName string) string {
 	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
@@ -374,7 +374,7 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfigEndpointConfigNameUpdate(rName string) string {
+func testAccEndpointConfig_nameUpdate(rName string) string {
 	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test2" {
   name = "%[1]s2"
@@ -395,7 +395,7 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfigTags(rName string) string {
+func testAccEndpointConfig_tags(rName string) string {
 	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
@@ -408,7 +408,7 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfigTagsUpdate(rName string) string {
+func testAccEndpointConfig_tagsUpdate(rName string) string {
 	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
@@ -421,7 +421,7 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointDeploymentBasicConfig(rName, tType string, wait int) string {
+func testAccEndpointConfig_deploymentBasic(rName, tType string, wait int) string {
 	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
@@ -439,7 +439,7 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName, tType, wait)
 }
 
-func testAccEndpointDeploymentFullConfig(rName string) string {
+func testAccEndpointConfig_deploymentFull(rName string) string {
 	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q

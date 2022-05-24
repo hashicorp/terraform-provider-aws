@@ -19,7 +19,7 @@ func TestAccIoTEndpointDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig,
+				Config: testAccEndpointConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "endpoint_address", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]+(-ats)?.iot.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -100,7 +100,7 @@ func TestAccIoTEndpointDataSource_EndpointType_iotJobs(t *testing.T) {
 	})
 }
 
-const testAccEndpointConfig = `
+const testAccEndpointConfig_basic = `
 data "aws_iot_endpoint" "test" {}
 `
 
