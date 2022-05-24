@@ -372,7 +372,7 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsC2S(t *testing.T) {
+func TestAccProvider_Region_c2s(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -394,7 +394,7 @@ func TestAccProvider_Region_awsC2S(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsChina(t *testing.T) {
+func TestAccProvider_Region_china(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -416,7 +416,7 @@ func TestAccProvider_Region_awsChina(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsCommercial(t *testing.T) {
+func TestAccProvider_Region_commercial(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -438,7 +438,7 @@ func TestAccProvider_Region_awsCommercial(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsGovCloudUs(t *testing.T) {
+func TestAccProvider_Region_govCloud(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -460,7 +460,7 @@ func TestAccProvider_Region_awsGovCloudUs(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsSC2S(t *testing.T) {
+func TestAccProvider_Region_sc2s(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -513,7 +513,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
+				Config: testAccProviderConfig_assumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
 					CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
 				),

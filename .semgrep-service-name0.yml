@@ -6,15 +6,7 @@ rules:
     message: Do not use "AWS" in func name inside AWS Provider
     paths:
       include:
-        - internal/service/ec2
-        - internal/service/timestreamwrite
-        - internal/service/transfer
-        - internal/service/waf
-        - internal/service/wafregional
-        - internal/service/wafv2
-        - internal/service/worklink
-        - internal/service/workspaces
-        - internal/service/xray
+        - internal
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -28,15 +20,7 @@ rules:
     message: Do not use "AWS" in const name inside AWS Provider
     paths:
       include:
-        - internal/service/ec2
-        - internal/service/timestreamwrite
-        - internal/service/transfer
-        - internal/service/waf
-        - internal/service/wafregional
-        - internal/service/wafv2
-        - internal/service/worklink
-        - internal/service/workspaces
-        - internal/service/xray
+        - internal
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -50,15 +34,7 @@ rules:
     message: Do not use "AWS" in var name inside AWS Provider
     paths:
       include:
-        - internal/service/ec2
-        - internal/service/timestreamwrite
-        - internal/service/transfer
-        - internal/service/waf
-        - internal/service/wafregional
-        - internal/service/wafv2
-        - internal/service/worklink
-        - internal/service/workspaces
-        - internal/service/xray
+        - internal
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
