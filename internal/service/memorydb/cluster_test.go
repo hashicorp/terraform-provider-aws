@@ -330,7 +330,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"final_snapshot_name"},
 			},
 			{
-				Config: testAccClusterConfigBaseNetwork(rName), // empty Config not supported
+				Config: testAccClusterConfig_baseNetwork(rName), // empty Config not supported
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExistsByName(rName),
 				),
@@ -1069,7 +1069,7 @@ func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFun
 	}
 }
 
-func testAccClusterConfigBaseNetwork(rName string) string {
+func testAccClusterConfig_baseNetwork(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
@@ -1101,7 +1101,7 @@ resource "aws_memorydb_acl" "test" {
 
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -1142,7 +1142,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_noName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1157,7 +1157,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_namePrefix(rName, prefix string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1173,7 +1173,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_noTLS(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1190,7 +1190,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_aclName(rName, aclName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
@@ -1208,7 +1208,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
@@ -1223,7 +1223,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_engineVersionNull(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1239,7 +1239,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_engineVersion(rName, engineVersion string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1256,7 +1256,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_finalSnapshotName(rName, finalSnapshotName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1273,7 +1273,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -1292,7 +1292,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_maintenanceWindow(rName, maintenanceWindow string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1309,7 +1309,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_nodeType(rName, nodeType string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1325,7 +1325,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_numReplicasPerShard(rName string, numReplicasPerShard int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1340,7 +1340,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_numShards(rName string, numShards int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
@@ -1355,7 +1355,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_parameterGroup(rName, parameterGroup string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -1388,7 +1388,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_port(rName string, port int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1405,7 +1405,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_securityGroups(rName string, sgCount, sgCountInCluster int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count  = %[2]d
@@ -1427,7 +1427,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_snapshotRetentionLimit(rName string, retentionLimit int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
@@ -1444,7 +1444,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_snapshotFrom(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName1),
+		testAccClusterConfig_baseNetwork(rName1),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test1" {
   acl_name               = "open-access"
@@ -1474,7 +1474,7 @@ resource "aws_memorydb_cluster" "test2" {
 
 func testAccClusterConfig_snapshotWindow(rName, snapshotWindow string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
@@ -1492,7 +1492,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_snsTopicNull(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1514,7 +1514,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_snsTopic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1537,7 +1537,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_tags0(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1553,7 +1553,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1573,7 +1573,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
