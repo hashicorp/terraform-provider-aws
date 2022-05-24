@@ -19,41 +19,36 @@ func ResourceProxyTarget() *schema.Resource {
 		Create: resourceProxyTargetCreate,
 		Read:   resourceProxyTargetRead,
 		Delete: resourceProxyTargetDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"db_cluster_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+				ExactlyOneOf: []string{
+					"db_instance_identifier",
+					"db_cluster_identifier",
+				},
+			},
+			"db_instance_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+				ExactlyOneOf: []string{
+					"db_instance_identifier",
+					"db_cluster_identifier",
+				},
+			},
 			"db_proxy_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"target_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
-				},
-				ValidateFunc: validIdentifier,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
-				},
 				ValidateFunc: validIdentifier,
 			},
 			"endpoint": {
@@ -71,6 +66,12 @@ func ResourceProxyTarget() *schema.Resource {
 			"target_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"target_group_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
 			},
 			"tracked_cluster_id": {
 				Type:     schema.TypeString,
