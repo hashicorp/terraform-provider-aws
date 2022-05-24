@@ -27,7 +27,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
@@ -54,7 +54,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
@@ -77,7 +77,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears_cluster(t *testing.T)
 		CheckDestroy:      testAccCheckSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
@@ -135,8 +135,8 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 	}
 }
 
-func testAccSnapshotScheduleAssociationConfig(rName, definition string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig(rName, definition), `
+func testAccSnapshotScheduleAssociationConfig_basic(rName, definition string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig_basic(rName, definition), `
 resource "aws_redshift_snapshot_schedule_association" "test" {
   schedule_identifier = aws_redshift_snapshot_schedule.default.id
   cluster_identifier  = aws_redshift_cluster.test.id
