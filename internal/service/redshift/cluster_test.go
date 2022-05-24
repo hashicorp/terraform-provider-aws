@@ -276,7 +276,7 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_loggingCloudwatch(rName),
+				Config: testAccClusterConfig_loggingCloudWatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "true"),
@@ -1232,7 +1232,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_loggingCloudwatch(rName string) string {
+func testAccClusterConfig_loggingCloudWatch(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q

@@ -17,10 +17,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkipCloudwatch)
+	acctest.RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipCloudwatch(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"context deadline exceeded", // tests never fail in GovCloud, they just timeout
 	)

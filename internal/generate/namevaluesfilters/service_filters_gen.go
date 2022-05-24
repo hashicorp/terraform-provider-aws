@@ -22,8 +22,8 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 
 // []*SERVICE.Filter handling
 
-// AutoscalingFilters returns autoscaling service filters.
-func (filters NameValuesFilters) AutoscalingFilters() []*autoscaling.Filter {
+// AutoScalingFilters returns autoscaling service filters.
+func (filters NameValuesFilters) AutoScalingFilters() []*autoscaling.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -66,8 +66,8 @@ func (filters NameValuesFilters) DatabasemigrationserviceFilters() []*databasemi
 	return result
 }
 
-// DocdbFilters returns docdb service filters.
-func (filters NameValuesFilters) DocdbFilters() []*docdb.Filter {
+// DocDBFilters returns docdb service filters.
+func (filters NameValuesFilters) DocDBFilters() []*docdb.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
