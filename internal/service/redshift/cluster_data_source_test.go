@@ -21,7 +21,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
@@ -59,7 +59,7 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithVPCDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", "1"),
@@ -82,7 +82,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithLoggingDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_logging(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", "true"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_name", bucketResourceName, "bucket"),
@@ -113,7 +113,7 @@ func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testi
 	})
 }
 
-func testAccClusterDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = %[1]q
@@ -132,7 +132,7 @@ data "aws_redshift_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterWithVPCDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -197,7 +197,7 @@ data "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterWithLoggingDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_logging(rName string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_service_account" "test" {}
 

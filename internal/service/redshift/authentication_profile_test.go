@@ -26,7 +26,7 @@ func TestAccRedshiftAuthenticationProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthenticationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthenticationProfileBasic(rName, rName),
+				Config: testAccAuthenticationProfileConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_profile_name", rName),
@@ -38,7 +38,7 @@ func TestAccRedshiftAuthenticationProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAuthenticationProfileBasic(rName, rNameUpdated),
+				Config: testAccAuthenticationProfileConfig_basic(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_profile_name", rName),
@@ -59,7 +59,7 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthenticationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthenticationProfileBasic(rName, rName),
+				Config: testAccAuthenticationProfileConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationProfileExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceAuthenticationProfile(), resourceName),
@@ -117,7 +117,7 @@ func testAccCheckAuthenticationProfileExists(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccAuthenticationProfileBasic(rName, id string) string {
+func testAccAuthenticationProfileConfig_basic(rName, id string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_authentication_profile" "test" {
   authentication_profile_name = %[1]q

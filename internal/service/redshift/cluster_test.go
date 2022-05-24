@@ -141,7 +141,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyClusterSnapshot(rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithFinalSnapshotConfig(rName),
+				Config: testAccClusterConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 				),
@@ -452,7 +452,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigTags1(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -471,7 +471,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -480,7 +480,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfigTags1(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -567,7 +567,7 @@ func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocati
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 0),
+				Config: testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -600,7 +600,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 0),
+				Config: testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -609,7 +609,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 				),
 			},
 			{
-				Config:      testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 1),
+				Config:      testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 1),
 				ExpectError: regexp.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
 			},
 		},
@@ -726,7 +726,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName),
+				Config:      testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName),
 				ExpectError: regexp.MustCompile("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true"),
 			},
 		},
@@ -745,7 +745,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyClusterSnapshot(rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCreateSnapshotConfig(rName),
+				Config: testAccClusterConfig_createSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
@@ -758,7 +758,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 				Config: acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 			},
 			{
-				Config: testAccClusterRestoreFromSnapshotConfig(rName),
+				Config: testAccClusterConfig_restoreFromSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
@@ -1057,7 +1057,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterWithFinalSnapshotConfig(rName string) string {
+func testAccClusterConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1303,7 +1303,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1323,7 +1323,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1582,7 +1582,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, regionIndex))
 }
 
-func testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName string, regionIndex int) string {
+func testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName string, regionIndex int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 		fmt.Sprintf(`
@@ -1624,7 +1624,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, enabled))
 }
 
-func testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName string) string {
+func testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
@@ -1643,7 +1643,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterCreateSnapshotConfig(rName string) string {
+func testAccClusterConfig_createSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier        = %[1]q
@@ -1658,7 +1658,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterRestoreFromSnapshotConfig(rName string) string {
+func testAccClusterConfig_restoreFromSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier  = %[1]q

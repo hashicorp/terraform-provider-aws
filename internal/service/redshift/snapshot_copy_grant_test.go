@@ -25,7 +25,7 @@ func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCopyGrant_Basic(rName),
+				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy_grant_name", rName),
@@ -53,7 +53,7 @@ func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCopyGrantWithTags(rName),
+				Config: testAccSnapshotCopyGrantConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -62,14 +62,14 @@ func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSnapshotCopyGrant_Basic(rName),
+				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccSnapshotCopyGrantWithTags(rName),
+				Config: testAccSnapshotCopyGrantConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -97,7 +97,7 @@ func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCopyGrant_Basic(rName),
+				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
@@ -159,7 +159,7 @@ func testAccCheckSnapshotCopyGrantExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccSnapshotCopyGrant_Basic(rName string) string {
+func testAccSnapshotCopyGrantConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_copy_grant" "test" {
   snapshot_copy_grant_name = %[1]q
@@ -167,7 +167,7 @@ resource "aws_redshift_snapshot_copy_grant" "test" {
 `, rName)
 }
 
-func testAccSnapshotCopyGrantWithTags(rName string) string {
+func testAccSnapshotCopyGrantConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_copy_grant" "test" {
   snapshot_copy_grant_name = %[1]q
