@@ -369,7 +369,6 @@ rules:
         - internal/service/signer
         - internal/service/simpledb
         - internal/service/sns
-        - internal/service/sqs
         - internal/service/ssm
         - internal/service/ssoadmin
         - internal/service/storagegateway
