@@ -1757,6 +1757,24 @@ func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.Desc
 	return output, nil
 }
 
+func findInstanceRefresh(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) (*autoscaling.InstanceRefresh, error) {
+	output, err := FindInstanceRefreshes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
 func FindInstanceRefreshes(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) ([]*autoscaling.InstanceRefresh, error) {
 	var output []*autoscaling.InstanceRefresh
 
@@ -1806,6 +1824,27 @@ func statusGroupInstanceCount(conn *autoscaling.AutoScaling, name string) resour
 	}
 }
 
+func statusInstanceRefresh(conn *autoscaling.AutoScaling, name, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &autoscaling.DescribeInstanceRefreshesInput{
+			AutoScalingGroupName: aws.String(name),
+			InstanceRefreshIds:   aws.StringSlice([]string{id}),
+		}
+
+		output, err := findInstanceRefresh(conn, input)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func statusWarmPool(conn *autoscaling.AutoScaling, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findWarmPool(conn, name)
@@ -1848,6 +1887,41 @@ func waitGroupDrained(conn *autoscaling.AutoScaling, name string, timeout time.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*autoscaling.Group); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	// Maximum amount of time to wait for an InstanceRefresh to be started
+	// Must be at least as long as instanceRefreshCancelledTimeout, since we try to cancel any
+	// existing Instance Refreshes when starting.
+	instanceRefreshStartedTimeout = instanceRefreshCancelledTimeout
+
+	// Maximum amount of time to wait for an Instance Refresh to be Cancelled
+	instanceRefreshCancelledTimeout = 15 * time.Minute
+)
+
+func waitInstanceRefreshCancelled(conn *autoscaling.AutoScaling, name, id string, timeout time.Duration) (*autoscaling.InstanceRefresh, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			autoscaling.InstanceRefreshStatusCancelling,
+			autoscaling.InstanceRefreshStatusInProgress,
+			autoscaling.InstanceRefreshStatusPending,
+		},
+		Target: []string{
+			autoscaling.InstanceRefreshStatusCancelled,
+			autoscaling.InstanceRefreshStatusFailed,
+			autoscaling.InstanceRefreshStatusSuccessful,
+		},
+		Refresh: statusInstanceRefresh(conn, name, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*autoscaling.InstanceRefresh); ok {
 		return output, err
 	}
 
@@ -2569,6 +2643,60 @@ func expandInstanceReusePolicy(tfMap map[string]interface{}) *autoscaling.Instan
 	return apiObject
 }
 
+func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}) *autoscaling.StartInstanceRefreshInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.StartInstanceRefreshInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+
+	if v, ok := tfMap["preferences"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Preferences = expandRefreshPreferences(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["strategy"].(string); ok && v != "" {
+		apiObject.Strategy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.RefreshPreferences {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.RefreshPreferences{}
+
+	if v, ok := tfMap["checkpoint_delay"].(string); ok {
+		if v, null, _ := nullable.Int(v).Value(); !null {
+			apiObject.CheckpointDelay = aws.Int64(v)
+		}
+	}
+
+	if v, ok := tfMap["checkpoint_percentages"].([]interface{}); ok && len(v) > 0 {
+		apiObject.CheckpointPercentages = flex.ExpandInt64List(v)
+	}
+
+	if v, ok := tfMap["instance_warmup"].(string); ok {
+		if v, null, _ := nullable.Int(v).Value(); !null {
+			apiObject.InstanceWarmup = aws.Int64(v)
+		}
+	}
+
+	if v, ok := tfMap["min_healthy_percentage"].(int); ok {
+		apiObject.MinHealthyPercentage = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["skip_matching"].(bool); ok {
+		apiObject.SkipMatching = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func expandVpcZoneIdentifiers(tfList []interface{}) *string {
 	vpcZoneIDs := make([]string, len(tfList))
 
@@ -3201,24 +3329,25 @@ func GroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refres
 	return nil
 }
 
-func cancelInstanceRefresh(conn *autoscaling.AutoScaling, asgName string) error {
-	input := autoscaling.CancelInstanceRefreshInput{
-		AutoScalingGroupName: aws.String(asgName),
+func cancelInstanceRefresh(conn *autoscaling.AutoScaling, name string) error {
+	input := &autoscaling.CancelInstanceRefreshInput{
+		AutoScalingGroupName: aws.String(name),
 	}
-	output, err := conn.CancelInstanceRefresh(&input)
+
+	output, err := conn.CancelInstanceRefresh(input)
+
 	if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeActiveInstanceRefreshNotFoundFault) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error cancelling Instance Refresh on Auto Scaling Group (%s): %w", asgName, err)
-	}
-	if output == nil {
-		return fmt.Errorf("error cancelling Instance Refresh on Auto Scaling Group (%s): empty result", asgName)
+		return fmt.Errorf("cancelling Auto Scaling Group (%s) instance refresh: %w", name, err)
 	}
 
-	_, err = waitInstanceRefreshCancelled(conn, asgName, aws.StringValue(output.InstanceRefreshId))
+	_, err = waitInstanceRefreshCancelled(conn, name, aws.StringValue(output.InstanceRefreshId), instanceRefreshCancelledTimeout)
+
 	if err != nil {
-		return fmt.Errorf("error waiting for cancellation of Instance Refresh (%s) on Auto Scaling Group (%s): %w", aws.StringValue(output.InstanceRefreshId), asgName, err)
+		return fmt.Errorf("waiting for Auto Scaling Group (%s) instance refresh cancel: %w", name, err)
 	}
 
 	return nil
