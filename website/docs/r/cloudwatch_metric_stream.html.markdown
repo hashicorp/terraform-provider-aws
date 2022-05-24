@@ -161,7 +161,7 @@ resource "aws_cloudwatch_metric_stream" "main" {
 
   statistics_configuration {
     additional_statistics = [
-	    "TS(50.5:)"
+      "TS(50.5:)"
     ]
 
     include_metric {
