@@ -1381,11 +1381,12 @@ func Provider() *schema.Provider {
 			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
 			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
-			"aws_efs_access_point":       efs.ResourceAccessPoint(),
-			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
-			"aws_efs_file_system":        efs.ResourceFileSystem(),
-			"aws_efs_file_system_policy": efs.ResourceFileSystemPolicy(),
-			"aws_efs_mount_target":       efs.ResourceMountTarget(),
+			"aws_efs_access_point":              efs.ResourceAccessPoint(),
+			"aws_efs_backup_policy":             efs.ResourceBackupPolicy(),
+			"aws_efs_file_system":               efs.ResourceFileSystem(),
+			"aws_efs_file_system_policy":        efs.ResourceFileSystemPolicy(),
+			"aws_efs_mount_target":              efs.ResourceMountTarget(),
+			"aws_efs_replication_configuration": efs.ResourceReplicationConfiguration(),
 
 			"aws_eks_addon":                    eks.ResourceAddon(),
 			"aws_eks_cluster":                  eks.ResourceCluster(),
