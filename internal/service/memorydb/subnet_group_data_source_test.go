@@ -21,7 +21,7 @@ func TestAccMemoryDBSubnetGroupDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupDataSourceConfig(rName),
+				Config: testAccSubnetGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
@@ -38,7 +38,7 @@ func TestAccMemoryDBSubnetGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSubnetGroupDataSourceConfig(rName string) string {
+func testAccSubnetGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`

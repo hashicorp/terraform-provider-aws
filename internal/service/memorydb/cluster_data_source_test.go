@@ -21,7 +21,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "acl_name", resourceName, "acl_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -64,7 +64,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfigBaseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
