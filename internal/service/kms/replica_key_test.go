@@ -243,7 +243,7 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaKeyConfig_twos(rName),
+				Config: testAccReplicaKeyConfig_two(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 				),
@@ -369,7 +369,7 @@ resource "aws_kms_replica_key" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccReplicaKeyConfig_twos(rName string) string {
+func testAccReplicaKeyConfig_two(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(3), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   provider = awsalternate
