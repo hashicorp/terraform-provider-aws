@@ -31,7 +31,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLBasic(rName),
+				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "glue", regexp.MustCompile(`mlTransform/tfm-.+`)),
@@ -79,7 +79,7 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLTypeFindMatchesFull(rName, true, 0.5),
+				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, true, 0.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
@@ -97,7 +97,7 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMlTransformConfig_mLTypeFindMatchesFull(rName, false, 1),
+				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, false, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
@@ -110,7 +110,7 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLTypeFindMatchesFull(rName, true, 0.5),
+				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, true, 0.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
@@ -139,14 +139,14 @@ func TestAccGlueMlTransform_description(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLDescription(rName, "First Description"),
+				Config: testAccMLTransformConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLDescription(rName, "Second Description"),
+				Config: testAccMLTransformConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
@@ -174,14 +174,14 @@ func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLVersion(rName, "0.9"),
+				Config: testAccMLTransformConfig_version(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLVersion(rName, "1.0"),
+				Config: testAccMLTransformConfig_version(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -209,18 +209,18 @@ func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMlTransformConfig_mLMaxRetries(rName, 11),
+				Config:      testAccMLTransformConfig_maxRetries(rName, 11),
 				ExpectError: regexp.MustCompile(`expected max_retries to be in the range`),
 			},
 			{
-				Config: testAccMlTransformConfig_mLMaxRetries(rName, 0),
+				Config: testAccMLTransformConfig_maxRetries(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "0"),
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLMaxRetries(rName, 10),
+				Config: testAccMLTransformConfig_maxRetries(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "10"),
@@ -248,7 +248,7 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLTags1(rName, "key1", "value1"),
+				Config: testAccMLTransformConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -261,7 +261,7 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMlTransformConfig_mLTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMLTransformConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -270,7 +270,7 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLTags1(rName, "key2", "value2"),
+				Config: testAccMLTransformConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -294,14 +294,14 @@ func TestAccGlueMlTransform_timeout(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLTimeout(rName, 1),
+				Config: testAccMLTransformConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLTimeout(rName, 2),
+				Config: testAccMLTransformConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
@@ -329,7 +329,7 @@ func TestAccGlueMlTransform_workerType(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLWorkerType(rName, "Standard", 1),
+				Config: testAccMLTransformConfig_workerType(rName, "Standard", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "Standard"),
@@ -337,7 +337,7 @@ func TestAccGlueMlTransform_workerType(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLWorkerType(rName, "G.1X", 2),
+				Config: testAccMLTransformConfig_workerType(rName, "G.1X", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.1X"),
@@ -366,14 +366,14 @@ func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLMaxCapacity(rName, 10),
+				Config: testAccMLTransformConfig_maxCapacity(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "10"),
 				),
 			},
 			{
-				Config: testAccMlTransformConfig_mLMaxCapacity(rName, 15),
+				Config: testAccMLTransformConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "15"),
@@ -401,7 +401,7 @@ func TestAccGlueMlTransform_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlTransformConfig_mLBasic(rName),
+				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(resourceName, &transform),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
@@ -594,7 +594,7 @@ resource "aws_glue_catalog_table" "test" {
 `, rName)
 }
 
-func testAccMlTransformConfig_mLBasic(rName string) string {
+func testAccMLTransformConfig_basic(rName string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name     = %[1]q
@@ -618,7 +618,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName)
 }
 
-func testAccMlTransformConfig_mLTypeFindMatchesFull(rName string, enforce bool, tradeOff float64) string {
+func testAccMLTransformConfig_typeFindMatchesFull(rName string, enforce bool, tradeOff float64) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name     = %[1]q
@@ -645,7 +645,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, enforce, tradeOff)
 }
 
-func testAccMlTransformConfig_mLDescription(rName, description string) string {
+func testAccMLTransformConfig_description(rName, description string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name        = %[1]q
@@ -670,7 +670,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, description)
 }
 
-func testAccMlTransformConfig_mLVersion(rName, glueVersion string) string {
+func testAccMLTransformConfig_version(rName, glueVersion string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name         = %[1]q
@@ -695,7 +695,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, glueVersion)
 }
 
-func testAccMlTransformConfig_mLMaxRetries(rName string, maxRetries int) string {
+func testAccMLTransformConfig_maxRetries(rName string, maxRetries int) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name        = %[1]q
@@ -720,7 +720,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, maxRetries)
 }
 
-func testAccMlTransformConfig_mLTags1(rName, tagKey1, tagValue1 string) string {
+func testAccMLTransformConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name     = %[1]q
@@ -748,7 +748,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccMlTransformConfig_mLTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccMLTransformConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name     = %[1]q
@@ -777,7 +777,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccMlTransformConfig_mLTimeout(rName string, timeout int) string {
+func testAccMLTransformConfig_timeout(rName string, timeout int) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name     = %[1]q
@@ -802,7 +802,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, timeout)
 }
 
-func testAccMlTransformConfig_mLWorkerType(rName, workerType string, numOfWorkers int) string {
+func testAccMLTransformConfig_workerType(rName, workerType string, numOfWorkers int) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name              = %[1]q
@@ -828,7 +828,7 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, workerType, numOfWorkers)
 }
 
-func testAccMlTransformConfig_mLMaxCapacity(rName string, maxCapacity float64) string {
+func testAccMLTransformConfig_maxCapacity(rName string, maxCapacity float64) string {
 	return testAccMLTransformBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
   name         = %[1]q

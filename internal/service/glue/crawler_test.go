@@ -261,7 +261,7 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 		CheckDestroy:      testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_jDBCTargetExclusions2(rName, jdbcConnectionUrl, "exclusion1", "exclusion2"),
+				Config: testAccCrawlerConfig_jdbcTargetExclusions2(rName, jdbcConnectionUrl, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -272,7 +272,7 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_jDBCTargetExclusions1(rName, jdbcConnectionUrl, "exclusion1"),
+				Config: testAccCrawlerConfig_jdbcTargetExclusions1(rName, jdbcConnectionUrl, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -304,7 +304,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_jDBCTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
+				Config: testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -329,7 +329,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_jDBCTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
+				Config: testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "2"),
@@ -1848,7 +1848,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, jdbcConnectionUrl, path)
 }
 
-func testAccCrawlerConfig_jDBCTargetExclusions1(rName, jdbcConnectionUrl, exclusion1 string) string {
+func testAccCrawlerConfig_jdbcTargetExclusions1(rName, jdbcConnectionUrl, exclusion1 string) string {
 	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -1880,7 +1880,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, jdbcConnectionUrl, exclusion1)
 }
 
-func testAccCrawlerConfig_jDBCTargetExclusions2(rName, jdbcConnectionUrl, exclusion1, exclusion2 string) string {
+func testAccCrawlerConfig_jdbcTargetExclusions2(rName, jdbcConnectionUrl, exclusion1, exclusion2 string) string {
 	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -1912,7 +1912,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, jdbcConnectionUrl, exclusion1, exclusion2)
 }
 
-func testAccCrawlerConfig_jDBCTargetMultiple(rName, jdbcConnectionUrl, path1, path2 string) string {
+func testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, path1, path2 string) string {
 	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
