@@ -2144,6 +2144,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)MQ"
     severity: WARNING
+  - id: msk-in-func-name
+    languages:
+      - go
+    message: Do not use "msk" in func name inside kafka package
+    paths:
+      include:
+        - internal/service/kafka
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)msk"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: msk-in-const-name
+    languages:
+      - go
+    message: Do not use "msk" in const name inside kafka package
+    paths:
+      include:
+        - internal/service/kafka
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)msk"
+    severity: WARNING
+  - id: msk-in-var-name
+    languages:
+      - go
+    message: Do not use "msk" in var name inside kafka package
+    paths:
+      include:
+      - internal/service/kafka
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)msk"
+    severity: WARNING
   - id: mwaa-in-func-name
     languages:
       - go

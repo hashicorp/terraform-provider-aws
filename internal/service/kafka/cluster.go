@@ -981,13 +981,13 @@ func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
 	apiObject := &kafka.StorageInfo{}
 
 	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EbsStorageInfo = expandEbsStorageInfo(v[0].(map[string]interface{}))
+		apiObject.EbsStorageInfo = expandEBSStorageInfo(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandEbsStorageInfo(tfMap map[string]interface{}) *kafka.EBSStorageInfo {
+func expandEBSStorageInfo(tfMap map[string]interface{}) *kafka.EBSStorageInfo {
 	if tfMap == nil {
 		return nil
 	}
@@ -1374,13 +1374,13 @@ func flattenStorageInfo(apiObject *kafka.StorageInfo) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EbsStorageInfo; v != nil {
-		tfMap["ebs_storage_info"] = flattenEbsStorageInfo(v)
+		tfMap["ebs_storage_info"] = flattenEBSStorageInfo(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenEbsStorageInfo(apiObject *kafka.EBSStorageInfo) []interface{} {
+func flattenEBSStorageInfo(apiObject *kafka.EBSStorageInfo) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

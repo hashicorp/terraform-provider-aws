@@ -219,7 +219,7 @@ func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyARN(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName, true),
+				Config: testAccDeliveryStreamConfig_s3BasicWithSSEAndKeyARN(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -239,7 +239,7 @@ func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyARN(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName, true),
+				Config: testAccDeliveryStreamConfig_s3BasicWithSSEAndKeyARN(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -903,7 +903,7 @@ func TestAccFirehoseDeliveryStream_extendedS3KMSKeyARN(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_extendedS3KmsKeyArn(rName),
+				Config: testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -2225,7 +2225,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName, sseEnabled))
 }
 
-func testAccDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName string, sseEnabled bool) string {
+func testAccDeliveryStreamConfig_s3BasicWithSSEAndKeyARN(rName string, sseEnabled bool) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseConfig(rName),
 		fmt.Sprintf(`
@@ -2830,7 +2830,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_extendedS3KmsKeyArn(rName string) string {
+func testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
 		testAccDeliveryStreamBaseConfig(rName),

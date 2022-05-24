@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceHsmClientCertificate() *schema.Resource {
+func ResourceHSMClientCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHsmClientCertificateCreate,
-		Read:   resourceHsmClientCertificateRead,
-		Update: resourceHsmClientCertificateUpdate,
-		Delete: resourceHsmClientCertificateDelete,
+		Create: resourceHSMClientCertificateCreate,
+		Read:   resourceHSMClientCertificateRead,
+		Update: resourceHSMClientCertificateUpdate,
+		Delete: resourceHSMClientCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -48,7 +48,7 @@ func ResourceHsmClientCertificate() *schema.Resource {
 	}
 }
 
-func resourceHsmClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -68,15 +68,15 @@ func resourceHsmClientCertificateCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(out.HsmClientCertificate.HsmClientCertificateIdentifier))
 
-	return resourceHsmClientCertificateRead(d, meta)
+	return resourceHSMClientCertificateRead(d, meta)
 }
 
-func resourceHsmClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	out, err := FindHsmClientCertificateByID(conn, d.Id())
+	out, err := FindHSMClientCertificateByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Hsm Client Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -114,7 +114,7 @@ func resourceHsmClientCertificateRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceHsmClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
@@ -125,10 +125,10 @@ func resourceHsmClientCertificateUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceHsmClientCertificateRead(d, meta)
+	return resourceHSMClientCertificateRead(d, meta)
 }
 
-func resourceHsmClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	deleteInput := redshift.DeleteHsmClientCertificateInput{

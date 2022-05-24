@@ -116,7 +116,7 @@ func FindScheduleAssociationById(conn *redshift.Redshift, id string) (string, *r
 	return aws.StringValue(snapshotSchedule.ScheduleIdentifier), associatedCluster, nil
 }
 
-func FindHsmClientCertificateByID(conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
+func FindHSMClientCertificateByID(conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
 	input := redshift.DescribeHsmClientCertificatesInput{
 		HsmClientCertificateIdentifier: aws.String(id),
 	}

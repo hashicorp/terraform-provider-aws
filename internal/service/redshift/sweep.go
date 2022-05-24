@@ -32,7 +32,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_redshift_hsm_client_certificate", &resource.Sweeper{
 		Name: "aws_redshift_hsm_client_certificate",
-		F:    sweepHsmClientCertificates,
+		F:    sweepHSMClientCertificates,
 	})
 
 	resource.AddTestSweepers("aws_redshift_authentication_profile", &resource.Sweeper{
@@ -346,7 +346,7 @@ func sweepSubnetGroups(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepHsmClientCertificates(region string) error {
+func sweepHSMClientCertificates(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -364,7 +364,7 @@ func sweepHsmClientCertificates(region string) error {
 		}
 
 		for _, c := range resp.HsmClientCertificates {
-			r := ResourceHsmClientCertificate()
+			r := ResourceHSMClientCertificate()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(c.HsmClientCertificateIdentifier))
 

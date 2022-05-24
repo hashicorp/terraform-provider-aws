@@ -292,13 +292,13 @@ func flattenContainerInfo(apiObject *emrcontainers.ContainerInfo) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EksInfo; v != nil {
-		tfMap["eks_info"] = []interface{}{flattenEksInfo(v)}
+		tfMap["eks_info"] = []interface{}{flattenEKSInfo(v)}
 	}
 
 	return tfMap
 }
 
-func flattenEksInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
+func flattenEKSInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
