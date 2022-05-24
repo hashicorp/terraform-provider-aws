@@ -1,3 +1,3 @@
 ```release-note:enhancement
-r/aws_cloudwatch_metric_stream: Add support for statistics_configurations field
+r/aws_cloudwatch_metric_stream: Add `statistics_configuration` argument
 ```
