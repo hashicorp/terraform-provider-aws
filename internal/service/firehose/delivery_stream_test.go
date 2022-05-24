@@ -372,7 +372,7 @@ func TestAccFirehoseDeliveryStream_s3WithCloudWatchLogging(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_s3WithCloudwatchLogging(rName),
+				Config: testAccDeliveryStreamConfig_s3CloudWatchLogging(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -2062,7 +2062,7 @@ EOF
 `, rName)
 }
 
-func testAccDeliveryStreamConfig_s3WithCloudwatchLogging(rName string) string {
+func testAccDeliveryStreamConfig_s3CloudWatchLogging(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

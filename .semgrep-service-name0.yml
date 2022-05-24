@@ -72,15 +72,7 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
     paths:
       include:
-        - internal/service/ec2
-        - internal/service/timestreamwrite
-        - internal/service/transfer
-        - internal/service/waf
-        - internal/service/wafregional
-        - internal/service/wafv2
-        - internal/service/worklink
-        - internal/service/workspaces
-        - internal/service/xray
+        - internal
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:

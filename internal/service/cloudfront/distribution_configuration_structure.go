@@ -1302,20 +1302,20 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenCloudfrontActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+func flattenActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
 	if atkg == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(atkg.Enabled),
-		"items":   flattenCloudfrontKGKeyPairIds(atkg.Items),
+		"items":   flattenKGKeyPairIds(atkg.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+func flattenKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
 	result := make([]interface{}, 0, len(keyPairIds))
 
 	for _, keyPairId := range keyPairIds {
@@ -1330,20 +1330,20 @@ func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []inte
 	return result
 }
 
-func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
+func flattenActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
 	if ats == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(ats.Enabled),
-		"items":   flattenCloudfrontSigners(ats.Items),
+		"items":   flattenSigners(ats.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontSigners(signers []*cloudfront.Signer) []interface{} {
+func flattenSigners(signers []*cloudfront.Signer) []interface{} {
 	result := make([]interface{}, 0, len(signers))
 
 	for _, signer := range signers {

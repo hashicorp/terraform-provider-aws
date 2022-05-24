@@ -31,7 +31,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestLBCloudwatchSuffixFromARN(t *testing.T) {
+func TestLBCloudWatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
 		name   string
 		arn    *string

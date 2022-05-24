@@ -110,7 +110,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvCnamePrefixConfig(rName),
+				Config: testAcEnvironmentConfig_cnamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					resource.TestMatchResourceAttr(resourceName, "cname", beanstalkCnameRegexp),
@@ -1043,7 +1043,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvCnamePrefixConfig(rName string) string {
+func testAcEnvironmentConfig_cnamePrefix(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name

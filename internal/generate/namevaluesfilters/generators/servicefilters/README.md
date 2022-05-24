@@ -11,8 +11,8 @@ To run this code generator, execute `go generate ./...` from the root of the rep
 ## Example Output
 
 ```go
-// DocdbFilters returns docdb service filters.
-func (filters NameValuesFilters) DocdbFilters() []*docdb.Filter {
+// DocDBFilters returns docdb service filters.
+func (filters NameValuesFilters) DocDBFilters() []*docdb.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
