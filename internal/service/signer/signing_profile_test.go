@@ -136,7 +136,7 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 		CheckDestroy:      testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileConfig_sVP(namePrefix),
+				Config: testAccSigningProfileConfig_svp(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
@@ -218,7 +218,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, namePrefix)
 }
 
-func testAccSigningProfileConfig_sVP(namePrefix string) string {
+func testAccSigningProfileConfig_svp(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
