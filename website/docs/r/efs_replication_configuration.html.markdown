@@ -21,7 +21,7 @@ resource "aws_efs_file_system" "example" {}
 resource "aws_efs_replication_configuration" "example" {
   source_file_system_id = aws_efs_file_system.example.id
 
-  destinations {
+  destination {
     region = "us-west-2"
   }
 }
@@ -35,7 +35,7 @@ resource "aws_efs_file_system" "example" {}
 resource "aws_efs_replication_configuration" "example" {
   source_file_system_id = aws_efs_file_system.example.id
 
-  destinations {
+  destination {
     availability_zone_name = "us-west-2b"
     kms_key_id             = "1234abcd-12ab-34cd-56ef-1234567890ab"
   }
@@ -47,11 +47,11 @@ resource "aws_efs_replication_configuration" "example" {
 The following arguments are supported:
 
 * `source_file_system_id` - (Required) The ID of the file system that is to be replicated.
-* `destinations` - (Required) A destinations configuration block (documented below).
+* `destination` - (Required) A destination configuration block (documented below).
 
-### Destinations Arguments
+### Destination Arguments
 
-For **destinations** the following attributes are supported:
+For **destination** the following attributes are supported:
 
 * `availability_zone_name` - (Optional) The availability zone in which the replica should be created. If specified, the replica will be created with One Zone storage. If omitted, regional storage will be used and `region` below is required.
 * `kms_key_id` - (Optional) The Key ID, ARN, alias, or alias ARN of the KMS key that should be used to encrypt the replica file system. If omitted, the default KMS key for EFS `/aws/elasticfilesystem` will be used.
@@ -65,8 +65,8 @@ In addition to all arguments above, the following attributes are exported:
 * `original_source_file_system_arn` - The Amazon Resource Name (ARN) of the original source Amazon EFS file system in the replication configuration.
 * `source_file_system_arn` - The Amazon Resource Name (ARN) of the current source file system in the replication configuration.
 * `source_file_system_region` - The AWS Region in which the source Amazon EFS file system is located.
-* `destinations[0].file_system_id` - The fs ID of the replica.
-* `destinations[0].status` - The status of the replication.
+* `destination[0].file_system_id` - The fs ID of the replica.
+* `destination[0].status` - The status of the replication.
 
 ## Import
 

@@ -40,10 +40,10 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(replicationName, "source_file_system_arn", efsName, "arn"),
 					resource.TestCheckResourceAttrPair(replicationName, "source_file_system_id", efsName, "id"),
 					resource.TestCheckResourceAttr(replicationName, "source_file_system_region", region),
-					resource.TestCheckResourceAttr(replicationName, "destinations.#", "1"),
-					resource.TestMatchResourceAttr(replicationName, "destinations.0.file_system_id", regexp.MustCompile(`fs-.+`)),
-					resource.TestCheckResourceAttr(replicationName, "destinations.0.region", region),
-					resource.TestCheckResourceAttr(replicationName, "destinations.0.status", efs.ReplicationStatusEnabled),
+					resource.TestCheckResourceAttr(replicationName, "destination.#", "1"),
+					resource.TestMatchResourceAttr(replicationName, "destination.0.file_system_id", regexp.MustCompile(`fs-.+`)),
+					resource.TestCheckResourceAttr(replicationName, "destination.0.region", region),
+					resource.TestCheckResourceAttr(replicationName, "destination.0.status", efs.ReplicationStatusEnabled),
 					//cleanupOtherRegion(alternateRegion, v.Destinations[0].FileSystemId) //TODO ??
 				),
 			},
@@ -86,12 +86,12 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(replicationName, "source_file_system_arn", efsName, "arn"),
 					resource.TestCheckResourceAttrPair(replicationName, "source_file_system_id", efsName, "id"),
 					resource.TestCheckResourceAttr(replicationName, "source_file_system_region", acctest.Region()),
-					resource.TestCheckResourceAttr(replicationName, "destinations.#", "1"),
-					resource.TestCheckResourceAttr(replicationName, "destinations.0.availability_zone_name", azName),
-					resource.TestMatchResourceAttr(replicationName, "destinations.0.file_system_id", regexp.MustCompile(`fs-.+`)),
-					resource.TestCheckResourceAttrPair(replicationName, "destinations.0.kms_key_id", kmsName, "key_id"),
-					resource.TestCheckResourceAttr(replicationName, "destinations.0.region", alternateRegion),
-					resource.TestCheckResourceAttr(replicationName, "destinations.0.status", efs.ReplicationStatusEnabled),
+					resource.TestCheckResourceAttr(replicationName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(replicationName, "destination.0.availability_zone_name", azName),
+					resource.TestMatchResourceAttr(replicationName, "destination.0.file_system_id", regexp.MustCompile(`fs-.+`)),
+					resource.TestCheckResourceAttrPair(replicationName, "destination.0.kms_key_id", kmsName, "key_id"),
+					resource.TestCheckResourceAttr(replicationName, "destination.0.region", alternateRegion),
+					resource.TestCheckResourceAttr(replicationName, "destination.0.status", efs.ReplicationStatusEnabled),
 					//cleanupOtherRegion(alternateRegion, v.Destinations[0].FileSystemId) //TODO ??
 				),
 			},
@@ -159,7 +159,7 @@ resource "aws_efs_file_system" "test" {}
 resource "aws_efs_replication_configuration" "test" {
   source_file_system_id = aws_efs_file_system.test.id
 
-  destinations {
+  destination {
     region = %[1]q
   }
 }
@@ -181,7 +181,7 @@ resource "aws_efs_file_system" "test" {}
 resource "aws_efs_replication_configuration" "test" {
   source_file_system_id = aws_efs_file_system.test.id
 
-  destinations {
+  destination {
     availability_zone_name = %[1]q
     kms_key_id             = aws_kms_key.test.key_id
     region                 = %[2]q

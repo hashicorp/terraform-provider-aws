@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -18,8 +19,9 @@ func ResourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceReplicationConfigurationCreate,
 		Read:   resourceReplicationConfigurationRead,
-		Update: resourceReplicationConfigurationUpdate,
+		Update: schema.Noop,
 		Delete: resourceReplicationConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -29,17 +31,18 @@ func ResourceReplicationConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destinations": {
+			"destination": {
 				Type:     schema.TypeList,
 				Required: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						//TODO looks like you must specify either AZ or region, can we validate for that?
 						"availability_zone_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ExactlyOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
 						"file_system_id": {
 							Type:     schema.TypeString,
@@ -53,9 +56,10 @@ func ResourceReplicationConfiguration() *schema.Resource {
 						"region": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidRegionName,
+							ExactlyOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
 						"status": {
 							Type:     schema.TypeString,
@@ -91,7 +95,7 @@ func resourceReplicationConfigurationCreate(d *schema.ResourceData, meta interfa
 	fsId := d.Get("source_file_system_id").(string)
 
 	input := &efs.CreateReplicationConfigurationInput{
-		Destinations:       expandEfsReplicationConfigurationDestinations(d.Get("destinations").([]interface{})),
+		Destinations:       expandEfsReplicationConfigurationDestinations(d.Get("destination").([]interface{})),
 		SourceFileSystemId: aws.String(fsId),
 	}
 
@@ -175,8 +179,8 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 		}
 	*/
 
-	if err := d.Set("destinations", []interface{}{destination}); err != nil {
-		return fmt.Errorf("error setting destinations: %w", err)
+	if err := d.Set("destination", []interface{}{destination}); err != nil {
+		return fmt.Errorf("error setting destination: %w", err)
 	}
 
 	d.Set("creation_time", aws.TimeValue(replication.CreationTime).String())
@@ -186,12 +190,6 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("source_file_system_region", replication.SourceFileSystemRegion)
 
 	return nil
-}
-
-func resourceReplicationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	// I don't think you can update a replication configuration... TODO
-
-	return resourceReplicationConfigurationRead(d, meta)
 }
 
 func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
@@ -231,11 +229,6 @@ func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interfa
 
 func expandEfsReplicationConfigurationDestinations(l []interface{}) []*efs.DestinationToCreate {
 	destination := &efs.DestinationToCreate{}
-
-	// TODO this should be an error. Either AZ or Region must be specified.
-	if len(l) == 0 || l[0] == nil {
-		return []*efs.DestinationToCreate{destination} //TODO return error instead?
-	}
 
 	m := l[0].(map[string]interface{})
 
