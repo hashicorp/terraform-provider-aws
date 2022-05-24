@@ -1584,7 +1584,7 @@ func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.
 	}
 
 	if v, ok := m["api_key"].([]interface{}); ok && len(v) > 0 {
-		credentials.ApiKey = expandApiKeyCredentials(v[0].(map[string]interface{}))
+		credentials.ApiKey = expandAPIKeyCredentials(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := m["basic"].([]interface{}); ok && len(v) > 0 {
@@ -1816,7 +1816,7 @@ func expandOAuthRequest(m map[string]interface{}) *appflow.ConnectorOAuthRequest
 	return &r
 }
 
-func expandApiKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredentials {
+func expandAPIKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredentials {
 	credentials := appflow.ApiKeyCredentials{}
 
 	if v, ok := m["api_key"].(string); ok && v != "" {

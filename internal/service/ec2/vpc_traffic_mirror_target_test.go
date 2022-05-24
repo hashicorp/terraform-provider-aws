@@ -258,7 +258,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 func testAccVPCTrafficMirrorTargetConfig_eni(rName, description string) string {
 	return acctest.ConfigCompose(
 		testAccTrafficMirrorTargetConfigBase(rName),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "src" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id

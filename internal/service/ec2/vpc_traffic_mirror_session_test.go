@@ -189,7 +189,7 @@ func testAccCheckTrafficMirrorSessionExists(name string, session *ec2.TrafficMir
 }
 
 func testAccTrafficMirrorSessionConfigBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_availability_zones" "azs" {
   state = "available"
 

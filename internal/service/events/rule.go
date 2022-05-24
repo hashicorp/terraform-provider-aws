@@ -404,9 +404,9 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 
 		// Check whether the normalized JSON is within the given length.
-		const maxJsonLength = 2048
-		if len(json) > maxJsonLength {
-			errors = append(errors, fmt.Errorf("%q cannot be longer than %d characters: %q", k, maxJsonLength, json))
+		const maxJSONLength = 2048
+		if len(json) > maxJSONLength {
+			errors = append(errors, fmt.Errorf("%q cannot be longer than %d characters: %q", k, maxJSONLength, json))
 		}
 		return
 	}

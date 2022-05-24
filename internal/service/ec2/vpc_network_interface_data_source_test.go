@@ -370,7 +370,7 @@ data "aws_network_interface" "test" {
 func testAccVPCNetworkInterfaceDataSourceConfig_attachment(rName string) string {
 	return acctest.ConfigCompose(
 		testAccNetworkInterfaceBaseDataSourceConfig(rName),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {

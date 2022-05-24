@@ -772,7 +772,7 @@ resource "aws_ssm_parameter" "test" {
 
 func testAccParameterDataTypeEC2ImageConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name      = %[1]q

@@ -701,7 +701,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 
 func testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectErrors(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
