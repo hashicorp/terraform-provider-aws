@@ -525,7 +525,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeKmsKeyIDConfig(rName),
+				Config: testAccContainerRecipeConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -1294,7 +1294,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeKmsKeyIDConfig(rName string) string {
+func testAccContainerRecipeConfig_kmsKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`

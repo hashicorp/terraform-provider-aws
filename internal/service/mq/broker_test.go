@@ -405,7 +405,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
+				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -476,7 +476,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			},
 			{
 				// Update configuration in-place
-				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter),
+				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -487,7 +487,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			},
 			{
 				// Replace configuration
-				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter),
+				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -533,7 +533,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
+				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -604,7 +604,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			},
 			{
 				// Update configuration in-place
-				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter, "GMT"),
+				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter, "GMT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -619,7 +619,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			},
 			{
 				// Replace configuration
-				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter, "GMT"),
+				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter, "GMT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -653,7 +653,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfigEncryptionOptionsKmsKeyId(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -1440,7 +1440,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfig_allFieldsDefaultVpc(rName, version, cfgName, cfgBody string) string {
+func testAccBrokerConfig_allFieldsDefaultVPC(rName, version, cfgName, cfgBody string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "mq1" {
   name = %[1]q
@@ -1500,7 +1500,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody)
 }
 
-func testAccBrokerConfig_allFieldsCustomVpc(rName, version, cfgName, cfgBody, tz string) string {
+func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1633,7 +1633,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody, tz)
 }
 
-func testAccBrokerConfigEncryptionOptionsKmsKeyId(rName, version string) string {
+func testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
