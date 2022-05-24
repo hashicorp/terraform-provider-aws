@@ -337,7 +337,6 @@ rules:
         - internal/service/neptune
         - internal/service/networkfirewall
         - internal/service/networkmanager
-        - internal/service/opensearch
         - internal/service/opsworks
         - internal/service/organizations
         - internal/service/outposts
