@@ -633,7 +633,7 @@ func testAccEndpointGroupConfig_instanceEndpoint(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccEndpointGroupConfig_baseVPC(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "test" {

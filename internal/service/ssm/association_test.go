@@ -681,7 +681,7 @@ resource "aws_ssm_association" "test" {
 }
 
 func testAccAssociationBasicWithAutomationTargetParamNameConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = %[1]q
   role = aws_iam_role.ssm_role.name

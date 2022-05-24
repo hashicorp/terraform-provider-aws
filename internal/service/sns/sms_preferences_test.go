@@ -116,7 +116,7 @@ func testAccCheckSMSPrefsDestroy(s *terraform.State) error {
 		var attrErrs *multierror.Error
 
 		// The API is returning undocumented keys, e.g. "UsageReportS3Enabled". Only check the keys we're aware of.
-		for _, snsAttrName := range tfsns.SMSPreferencesAttributeMap.ApiAttributeNames() {
+		for _, snsAttrName := range tfsns.SMSPreferencesAttributeMap.APIAttributeNames() {
 			v := aws.StringValue(attrs.Attributes[snsAttrName])
 			if snsAttrName != "MonthlySpendLimit" {
 				if v != "" {

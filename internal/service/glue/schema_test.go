@@ -68,7 +68,7 @@ func TestAccGlueSchema_json(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaJsonConfig(rName),
+				Config: testAccSchemaConfig_json(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "data_format", "JSON"),
@@ -430,7 +430,7 @@ resource "aws_glue_schema" "test" {
 `, rName)
 }
 
-func testAccSchemaJsonConfig(rName string) string {
+func testAccSchemaConfig_json(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q

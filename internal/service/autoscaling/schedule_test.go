@@ -239,7 +239,7 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(v *autoscaling.ScheduledUpd
 func testAccScheduleConfig(rName1, rName2, startTime, endTime string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -274,7 +274,7 @@ resource "aws_autoscaling_schedule" "test" {
 func testAccScheduleConfig_recurrence(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -309,7 +309,7 @@ resource "aws_autoscaling_schedule" "test" {
 func testAccScheduleConfig_zeroValues(rName, startTime, endTime string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -344,7 +344,7 @@ resource "aws_autoscaling_schedule" "test" {
 func testAccScheduleConfig_negativeOne(rName, startTime, endTime string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q

@@ -239,7 +239,7 @@ resource "aws_service_discovery_service" "sd_register_instance" {
 }
 
 func testAccInstanceHTTPNamespaceConfig(rName, domainName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_instance" "test_instance" {
   instance_type = "t2.micro"
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id

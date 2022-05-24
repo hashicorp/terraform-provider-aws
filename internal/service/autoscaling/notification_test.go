@@ -218,7 +218,7 @@ func testAccCheckASGNotificationAttributes(n string, asgn *autoscaling.DescribeN
 }
 
 func testAccASGNotificationConfig_basic(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
@@ -265,7 +265,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_update(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
@@ -329,7 +329,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_pagination() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }

@@ -122,7 +122,7 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2015.09"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
@@ -203,7 +203,7 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
@@ -465,7 +465,7 @@ func testAccCheckCreateStackAttributes(rName string) resource.TestCheckFunc {
 		resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 		resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
 		resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-		resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+		resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
 		resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 		resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 	)
@@ -1403,6 +1403,6 @@ const sshKey = "-----BEGIN RSA PRIVATE KEY-----" +
 	"tmm0+hpmkjX7jiPcljjs8S8gh+uCWieJoO4JNPk2SXRiePpYgKzdlg==" +
 	"-----END RSA PRIVATE KEY-----"
 
-const customJson = `{
+const customJSON = `{
   "key": "value"
 }`

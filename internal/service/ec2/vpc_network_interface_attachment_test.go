@@ -38,7 +38,7 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 
 func testAccVPCNetworkInterfaceAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
