@@ -363,7 +363,6 @@ rules:
         - internal/service/schemas
         - internal/service/secretsmanager
         - internal/service/securityhub
-        - internal/service/serverlessrepo
         - internal/service/servicecatalog
         - internal/service/servicediscovery
         - internal/service/servicequotas
