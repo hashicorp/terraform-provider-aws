@@ -354,7 +354,6 @@ rules:
         - internal/service/servicequotas
         - internal/service/ses
         - internal/service/sfn
-        - internal/service/signer
         - internal/service/simpledb
         - internal/service/sns
         - internal/service/ssm
