@@ -333,7 +333,6 @@ rules:
         - internal/service/meta
         - internal/service/mq
         - internal/service/mwaa
-        - internal/service/neptune
         - internal/service/networkfirewall
         - internal/service/networkmanager
         - internal/service/opsworks

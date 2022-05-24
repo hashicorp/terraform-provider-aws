@@ -31,7 +31,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
@@ -73,7 +73,7 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCopyTagsConfig(rName, true),
+				Config: testAccClusterConfig_copyTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
@@ -91,14 +91,14 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterCopyTagsConfig(rName, false),
+				Config: testAccClusterConfig_copyTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 				),
 			},
 			{
-				Config: testAccClusterCopyTagsConfig(rName, true),
+				Config: testAccClusterConfig_copyTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
@@ -153,7 +153,7 @@ func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterSnapshot(rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithFinalSnapshotConfig(rName),
+				Config: testAccClusterConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 				),
@@ -185,7 +185,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterTags1Config(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -204,7 +204,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -213,7 +213,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterTags1Config(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -236,20 +236,20 @@ func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterIncludingIAMRolesConfig(rName),
+				Config: testAccClusterConfig_includingIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 				),
 			},
 			{
-				Config: testAccClusterAddIAMRolesConfig(rName),
+				Config: testAccClusterConfig_addIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
 				),
 			},
 			{
-				Config: testAccClusterRemoveIAMRolesConfig(rName),
+				Config: testAccClusterConfig_removeIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
@@ -426,7 +426,7 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#"),
@@ -441,7 +441,7 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
@@ -525,7 +525,7 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -543,14 +543,14 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterDeleteProtectionConfig(rName, true),
+				Config: testAccClusterConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
 			},
 			{
-				Config: testAccClusterDeleteProtectionConfig(rName, false),
+				Config: testAccClusterConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -572,7 +572,7 @@ func TestAccNeptuneCluster_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rName),
+				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceCluster(), resourceName),
@@ -713,7 +713,7 @@ locals {
 `)
 }
 
-func testAccClusterConfig(rName string) string {
+func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
@@ -725,7 +725,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterCopyTagsConfig(rName string, copy bool) string {
+func testAccClusterConfig_copyTags(rName string, copy bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
@@ -738,7 +738,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName, copy))
 }
 
-func testAccClusterDeleteProtectionConfig(rName string, isProtected bool) string {
+func testAccClusterConfig_deleteProtection(rName string, isProtected bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
@@ -762,7 +762,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterWithFinalSnapshotConfig(rName string) string {
+func testAccClusterConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
@@ -773,7 +773,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
@@ -789,7 +789,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
@@ -806,7 +806,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccClusterIncludingIAMRolesConfig(rName string) string {
+func testAccClusterConfig_includingIAMRoles(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -893,7 +893,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterAddIAMRolesConfig(rName string) string {
+func testAccClusterConfig_addIAMRoles(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -980,7 +980,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterRemoveIAMRolesConfig(rName string) string {
+func testAccClusterConfig_removeIAMRoles(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
