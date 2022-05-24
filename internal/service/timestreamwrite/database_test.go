@@ -27,7 +27,7 @@ func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseBasicConfig(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%s", rName)),
@@ -56,7 +56,7 @@ func TestAccTimestreamWriteDatabase_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseBasicConfig(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceDatabase(), resourceName),
@@ -79,7 +79,7 @@ func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseKMSKeyConfig(rName),
+				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -107,14 +107,14 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseBasicConfig(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 				),
 			},
 			{
-				Config: testAccDatabaseKMSKeyConfig(rName),
+				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
@@ -126,7 +126,7 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDatabaseBasicConfig(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
@@ -147,7 +147,7 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseTags1Config(rName, "key1", "value1"),
+				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -157,7 +157,7 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDatabaseTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -169,7 +169,7 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDatabaseTags1Config(rName, "key2", "value2"),
+				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -260,7 +260,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccDatabaseBasicConfig(rName string) string {
+func testAccDatabaseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -268,7 +268,7 @@ resource "aws_timestreamwrite_database" "test" {
 `, rName)
 }
 
-func testAccDatabaseTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDatabaseConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -280,7 +280,7 @@ resource "aws_timestreamwrite_database" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDatabaseTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDatabaseConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -293,7 +293,7 @@ resource "aws_timestreamwrite_database" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDatabaseKMSKeyConfig(rName string) string {
+func testAccDatabaseConfig_kmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q

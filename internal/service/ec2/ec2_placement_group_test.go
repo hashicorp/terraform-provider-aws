@@ -26,7 +26,7 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlacementGroupConfig(rName),
+				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -55,7 +55,7 @@ func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlacementGroupConfig(rName),
+				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourcePlacementGroup(), resourceName),
@@ -78,7 +78,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlacementGroupTags1Config(rName, "key1", "value1"),
+				Config: testAccPlacementGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -91,7 +91,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPlacementGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPlacementGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -100,7 +100,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPlacementGroupTags1Config(rName, "key2", "value2"),
+				Config: testAccPlacementGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -122,7 +122,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 		CheckDestroy:      testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlacementGroupPartitionCountConfig(rName),
+				Config: testAccPlacementGroupConfig_partitionCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -188,7 +188,7 @@ func testAccCheckPlacementGroupExists(n string, v *ec2.PlacementGroup) resource.
 	}
 }
 
-func testAccPlacementGroupConfig(rName string) string {
+func testAccPlacementGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -197,7 +197,7 @@ resource "aws_placement_group" "test" {
 `, rName)
 }
 
-func testAccPlacementGroupTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccPlacementGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -210,7 +210,7 @@ resource "aws_placement_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccPlacementGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPlacementGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -224,7 +224,7 @@ resource "aws_placement_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPlacementGroupPartitionCountConfig(rName string) string {
+func testAccPlacementGroupConfig_partitionCount(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name            = %[1]q

@@ -19,4 +19,3 @@ jobs:
             Hey @${{ github.actor }} :wave: Thank you very much for your contribution! At times, our maintainers need to make direct edits to pull requests in order to help get it ready to be merged. Your current settings do not allow maintainers to make such edits. To help facilitate this, update your pull request to allow such edits as described in GitHub's [Allowing changes to a pull request branch created from a fork][1] documentation. (If you're using a fork owned by an organization, your organization may not allow you to change this setting. If that is the case, let us know.)
 
             [1]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork
-

@@ -1626,7 +1626,8 @@ func Provider() *schema.Provider {
 			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
 
-			"aws_location_map": location.ResourceMap(),
+			"aws_location_map":         location.ResourceMap(),
+			"aws_location_place_index": location.ResourcePlaceIndex(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
@@ -1760,8 +1761,10 @@ func Provider() *schema.Provider {
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
 
+			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
+			"aws_redshift_hsm_client_certificate":        redshift.ResourceHsmClientCertificate(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),
@@ -1769,6 +1772,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_snapshot_schedule":             redshift.ResourceSnapshotSchedule(),
 			"aws_redshift_snapshot_schedule_association": redshift.ResourceSnapshotScheduleAssociation(),
 			"aws_redshift_subnet_group":                  redshift.ResourceSubnetGroup(),
+			"aws_redshift_usage_limit":                   redshift.ResourceUsageLimit(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 

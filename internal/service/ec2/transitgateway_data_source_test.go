@@ -84,7 +84,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayFilterDataSourceConfig(),
+				Config: testAccTransitGatewayDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "amazon_side_asn", dataSourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -117,7 +117,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayIDDataSourceConfig(),
+				Config: testAccTransitGatewayDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "amazon_side_asn", dataSourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -138,7 +138,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayFilterDataSourceConfig() string {
+func testAccTransitGatewayDataSourceConfig_filter() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
@@ -151,7 +151,7 @@ data "aws_ec2_transit_gateway" "test" {
 `
 }
 
-func testAccTransitGatewayIDDataSourceConfig() string {
+func testAccTransitGatewayDataSourceConfig_id() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 

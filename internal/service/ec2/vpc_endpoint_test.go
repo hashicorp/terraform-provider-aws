@@ -68,7 +68,7 @@ func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_gatewayWithRouteTableAndPolicy(rName),
+				Config: testAccVPCEndpointConfig_gatewayRouteTableAndPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					testAccCheckRouteTableExists(routeTableResourceName, &routeTable),
@@ -87,7 +87,7 @@ func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCEndpointConfig_gatewayWithRouteTableAndPolicyModified(rName),
+				Config: testAccVPCEndpointConfig_gatewayRouteTableAndPolicyModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					testAccCheckRouteTableExists(routeTableResourceName, &routeTable),
@@ -257,7 +257,7 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_interfaceWithSubnet(rName),
+				Config: testAccVPCEndpointConfig_interfaceSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
@@ -276,7 +276,7 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCEndpointConfig_interfaceWithSubnetModified(rName),
+				Config: testAccVPCEndpointConfig_interfaceSubnetModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
@@ -598,7 +598,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_gatewayWithRouteTableAndPolicy(rName string) string {
+func testAccVPCEndpointConfig_gatewayRouteTableAndPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -664,7 +664,7 @@ resource "aws_route_table_association" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_gatewayWithRouteTableAndPolicyModified(rName string) string {
+func testAccVPCEndpointConfig_gatewayRouteTableAndPolicyModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -812,7 +812,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccVPCEndpointConfig_interfaceWithSubnet(rName string) string {
+func testAccVPCEndpointConfig_interfaceSubnet(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`
@@ -838,7 +838,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVPCEndpointConfig_interfaceWithSubnetModified(rName string) string {
+func testAccVPCEndpointConfig_interfaceSubnetModified(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`

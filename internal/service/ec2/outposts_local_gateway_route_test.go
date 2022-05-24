@@ -28,7 +28,7 @@ func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock),
+				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidrBlock),
@@ -57,7 +57,7 @@ func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock),
+				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceLocalGatewayRoute(), resourceName),
@@ -135,7 +135,7 @@ func testAccCheckLocalGatewayRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock string) string {
+func testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "test" {}
 

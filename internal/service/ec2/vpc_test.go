@@ -98,7 +98,7 @@ func TestAccVPC_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -111,7 +111,7 @@ func TestAccVPC_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -120,7 +120,7 @@ func TestAccVPC_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCTags1Config("key2", "value2"),
+				Config: testAccVPCConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -200,7 +200,7 @@ func TestAccVPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -254,7 +254,7 @@ func TestAccVPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -286,7 +286,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVPCTags1Config("resourcekey1", "resourcevalue1"),
+					testAccVPCConfig_tags1("resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -305,7 +305,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVPCTags2Config("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
+					testAccVPCConfig_tags2("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -321,7 +321,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
-					testAccVPCTags1Config("resourcekey3", "resourcevalue3"),
+					testAccVPCConfig_tags1("resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -350,7 +350,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccVPCTags1Config("overlapkey1", "resourcevalue1"),
+					testAccVPCConfig_tags1("overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -367,7 +367,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccVPCTags2Config("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
+					testAccVPCConfig_tags2("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -382,7 +382,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccVPCTags1Config("overlapkey1", "resourcevalue2"),
+					testAccVPCConfig_tags1("overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -408,7 +408,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccVPCTags1Config("overlapkey", "overlapvalue"),
+					testAccVPCConfig_tags1("overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
@@ -435,7 +435,7 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -453,7 +453,7 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -491,7 +491,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTags,
+				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -507,7 +507,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTags,
+				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -537,7 +537,7 @@ func TestAccVPC_defaultAndIgnoreTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVPCUpdateTags(&vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
@@ -547,14 +547,14 @@ func TestAccVPC_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccVPCTags1Config("key1", "value1"),
+					testAccVPCConfig_tags1("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccVPCTags1Config("key1", "value1"),
+					testAccVPCConfig_tags1("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -574,7 +574,7 @@ func TestAccVPC_ignoreTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVPCUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
@@ -582,11 +582,11 @@ func TestAccVPC_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCTags1Config("key1", "value1"),
+				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCConfig_tags1("key1", "value1"),
 				PlanOnly: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCTags1Config("key1", "value1"),
+				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCConfig_tags1("key1", "value1"),
 				PlanOnly: true,
 			},
 		},
@@ -840,7 +840,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockWithOptionalNetworkBorderGroup(rName, true),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -857,7 +857,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockWithOptionalNetworkBorderGroup(rName, false),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -888,7 +888,7 @@ func TestAccVPC_IPAMIPv4BasicNetmask(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMIPv4(rName, 28),
+				Config: testAccVPCConfig_ipamIPv4(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVPCCIDRPrefix(&vpc, "28"),
@@ -915,7 +915,7 @@ func TestAccVPC_IPAMIPv4BasicExplicitCIDR(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMIPv4Config_explicitCIDR(rName, cidr),
+				Config: testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", cidr),
@@ -993,7 +993,7 @@ resource "aws_vpc" "test" {
 }
 `
 
-func testAccVPCTags1Config(tagKey1, tagValue1 string) string {
+func testAccVPCConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1005,7 +1005,7 @@ resource "aws_vpc" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccVPCTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1018,7 +1018,7 @@ resource "aws_vpc" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals(localTagKey1, localTagValue1 string) string {
+func testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals(localTagKey1, localTagValue1 string) string {
 	return fmt.Sprintf(`
 locals {
   tags = {
@@ -1043,7 +1043,7 @@ resource "aws_vpc" "test" {
 `, localTagKey1, localTagValue1)
 }
 
-const testAccVPCWithIgnoreChangesConfig_DynamicTags = `
+const testAccVPCConfig_ignoreChangesDynamicTags = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1073,7 +1073,7 @@ resource "aws_vpc" "test" {
 `, rName, assignGeneratedIpv6CidrBlock)
 }
 
-func testAccVPCConfig_assignGeneratedIPv6CIDRBlockWithOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string {
+func testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1230,7 +1230,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 `, rName)
 }
 
-func testAccIPAMIPv4(rName string, netmaskLength int) string {
+func testAccVPCConfig_ipamIPv4(rName string, netmaskLength int) string {
 	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
@@ -1245,7 +1245,7 @@ resource "aws_vpc" "test" {
 `, rName, netmaskLength))
 }
 
-func testAccIPAMIPv4Config_explicitCIDR(rName, cidr string) string {
+func testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr string) string {
 	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id

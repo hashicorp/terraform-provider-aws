@@ -16,7 +16,7 @@ import (
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 )
 
-func TestAccCodeDeployApp_basic(t *testing.T) {
+func TestAccDeployApp_basic(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -28,7 +28,7 @@ func TestAccCodeDeployApp_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppNameConfig(rName),
+				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`application:%s`, rName)),
@@ -56,7 +56,7 @@ func TestAccCodeDeployApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeDeployApp_computePlatform(t *testing.T) {
+func TestAccDeployApp_computePlatform(t *testing.T) {
 	var application1, application2 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -68,14 +68,14 @@ func TestAccCodeDeployApp_computePlatform(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppComputePlatformConfig(rName, "Lambda"),
+				Config: testAccAppConfig_computePlatform(rName, "Lambda"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 				),
 			},
 			{
-				Config: testAccAppComputePlatformConfig(rName, "Server"),
+				Config: testAccAppConfig_computePlatform(rName, "Server"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application2),
 					testAccCheckAppRecreated(&application1, &application2),
@@ -86,7 +86,7 @@ func TestAccCodeDeployApp_computePlatform(t *testing.T) {
 	})
 }
 
-func TestAccCodeDeployApp_ComputePlatform_ecs(t *testing.T) {
+func TestAccDeployApp_ComputePlatform_ecs(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -98,7 +98,7 @@ func TestAccCodeDeployApp_ComputePlatform_ecs(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppComputePlatformConfig(rName, "ECS"),
+				Config: testAccAppConfig_computePlatform(rName, "ECS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "ECS"),
@@ -113,7 +113,7 @@ func TestAccCodeDeployApp_ComputePlatform_ecs(t *testing.T) {
 	})
 }
 
-func TestAccCodeDeployApp_ComputePlatform_lambda(t *testing.T) {
+func TestAccDeployApp_ComputePlatform_lambda(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -125,7 +125,7 @@ func TestAccCodeDeployApp_ComputePlatform_lambda(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppComputePlatformConfig(rName, "Lambda"),
+				Config: testAccAppConfig_computePlatform(rName, "Lambda"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
@@ -140,7 +140,7 @@ func TestAccCodeDeployApp_ComputePlatform_lambda(t *testing.T) {
 	})
 }
 
-func TestAccCodeDeployApp_name(t *testing.T) {
+func TestAccDeployApp_name(t *testing.T) {
 	var application1, application2 codedeploy.ApplicationInfo
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -153,14 +153,14 @@ func TestAccCodeDeployApp_name(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppNameConfig(rName1),
+				Config: testAccAppConfig_name(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
-				Config: testAccAppNameConfig(rName2),
+				Config: testAccAppConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -175,7 +175,7 @@ func TestAccCodeDeployApp_name(t *testing.T) {
 	})
 }
 
-func TestAccCodeDeployApp_tags(t *testing.T) {
+func TestAccDeployApp_tags(t *testing.T) {
 	var application codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -187,7 +187,7 @@ func TestAccCodeDeployApp_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppTags1Config(rName, "key1", "value1"),
+				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -200,7 +200,7 @@ func TestAccCodeDeployApp_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -209,7 +209,7 @@ func TestAccCodeDeployApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppTags1Config(rName, "key2", "value2"),
+				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -220,7 +220,7 @@ func TestAccCodeDeployApp_tags(t *testing.T) {
 	})
 }
 
-func TestAccCodeDeployApp_disappears(t *testing.T) {
+func TestAccDeployApp_disappears(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -232,7 +232,7 @@ func TestAccCodeDeployApp_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppNameConfig(rName),
+				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodedeploy.ResourceApp(), resourceName),
@@ -308,7 +308,7 @@ func testAccCheckAppRecreated(i, j *codedeploy.ApplicationInfo) resource.TestChe
 	}
 }
 
-func testAccAppComputePlatformConfig(rName string, computePlatform string) string {
+func testAccAppConfig_computePlatform(rName string, computePlatform string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
   compute_platform = %q
@@ -317,7 +317,7 @@ resource "aws_codedeploy_app" "test" {
 `, computePlatform, rName)
 }
 
-func testAccAppNameConfig(rName string) string {
+func testAccAppConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
   name = %q
@@ -325,7 +325,7 @@ resource "aws_codedeploy_app" "test" {
 `, rName)
 }
 
-func testAccAppTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
   name = %[1]q
@@ -337,7 +337,7 @@ resource "aws_codedeploy_app" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAppTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAppConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
   name = %[1]q
