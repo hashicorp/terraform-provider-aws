@@ -90,23 +90,22 @@ func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	targetGroupName := d.Get("target_group_name").(string)
-
-	params := rds.RegisterDBProxyTargetsInput{
+	input := &rds.RegisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(dbProxyName),
 		TargetGroupName: aws.String(targetGroupName),
 	}
 
-	if v, ok := d.GetOk("db_instance_identifier"); ok {
-		params.DBInstanceIdentifiers = []*string{aws.String(v.(string))}
+	if v, ok := d.GetOk("db_cluster_identifier"); ok {
+		input.DBClusterIdentifiers = aws.StringSlice([]string{v.(string)})
 	}
 
-	if v, ok := d.GetOk("db_cluster_identifier"); ok {
-		params.DBClusterIdentifiers = []*string{aws.String(v.(string))}
+	if v, ok := d.GetOk("db_instance_identifier"); ok {
+		input.DBInstanceIdentifiers = aws.StringSlice([]string{v.(string)})
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
 		func() (interface{}, error) {
-			return conn.RegisterDBProxyTargets(&params)
+			return conn.RegisterDBProxyTargets(input)
 		},
 		rds.ErrCodeInvalidDBInstanceStateFault, "CREATING")
 
