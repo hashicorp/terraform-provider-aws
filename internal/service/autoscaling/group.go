@@ -940,10 +940,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(asgName)
 
 	if twoPhases {
-		for _, hook := range generatePutLifecycleHookInputs(asgName, initialLifecycleHooks) {
+		for _, input := range expandPutLifecycleHookInputs(asgName, initialLifecycleHooks) {
 			_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
 				func() (interface{}, error) {
-					return conn.PutLifecycleHook(&hook)
+					return conn.PutLifecycleHook(input)
 				},
 				ErrCodeValidationError, "Unable to publish test message to notification target")
 
@@ -970,10 +970,17 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("enabled_metrics"); ok {
-		metricsErr := enableASGMetricsCollection(d, conn)
-		if metricsErr != nil {
-			return metricsErr
+	if v, ok := d.GetOk("enabled_metrics"); ok && v.(*schema.Set).Len() > 0 {
+		input := &autoscaling.EnableMetricsCollectionInput{
+			AutoScalingGroupName: aws.String(d.Id()),
+			Granularity:          aws.String(d.Get("metrics_granularity").(string)),
+			Metrics:              flex.ExpandStringSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.EnableMetricsCollection(input)
+
+		if err != nil {
+			return fmt.Errorf("enabling Auto Scaling Group (%s) metrics collection: %w", d.Id(), err)
 		}
 	}
 
@@ -1410,8 +1417,41 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enabled_metrics") {
-		if err := updateASGMetricsCollection(d, conn); err != nil {
-			return fmt.Errorf("Error updating Auto Scaling Group Metrics collection: %s", err)
+		o, n := d.GetChange("enabled_metrics")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		if disableMetrics := os.Difference(ns); disableMetrics.Len() != 0 {
+			input := &autoscaling.DisableMetricsCollectionInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				Metrics:              flex.ExpandStringSet(disableMetrics),
+			}
+
+			_, err := conn.DisableMetricsCollection(input)
+
+			if err != nil {
+				return fmt.Errorf("disabling Auto Scaling Group (%s) metrics collection: %w", d.Id(), err)
+			}
+		}
+
+		if enableMetrics := ns.Difference(os); enableMetrics.Len() != 0 {
+			input := &autoscaling.EnableMetricsCollectionInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				Granularity:          aws.String(d.Get("metrics_granularity").(string)),
+				Metrics:              flex.ExpandStringSet(enableMetrics),
+			}
+
+			_, err := conn.EnableMetricsCollection(input)
+
+			if err != nil {
+				return fmt.Errorf("enabling Auto Scaling Group (%s) metrics collection: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -1922,19 +1962,6 @@ func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	return err
 }
 
-func enableASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
-	props := &autoscaling.EnableMetricsCollectionInput{
-		AutoScalingGroupName: aws.String(d.Id()),
-		Granularity:          aws.String(d.Get("metrics_granularity").(string)),
-		Metrics:              flex.ExpandStringSet(d.Get("enabled_metrics").(*schema.Set)),
-	}
-
-	log.Printf("[INFO] Enabling metrics collection for the Auto Scaling Group: %s", d.Id())
-	_, metricsErr := conn.EnableMetricsCollection(props)
-	return metricsErr
-
-}
-
 func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
 	o, n := d.GetChange("suspended_processes")
 	if o == nil {
@@ -1974,89 +2001,6 @@ func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	}
 
 	return nil
-}
-
-func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
-	o, n := d.GetChange("enabled_metrics")
-	if o == nil {
-		o = new(schema.Set)
-	}
-	if n == nil {
-		n = new(schema.Set)
-	}
-
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-
-	disableMetrics := os.Difference(ns)
-	if disableMetrics.Len() != 0 {
-		props := &autoscaling.DisableMetricsCollectionInput{
-			AutoScalingGroupName: aws.String(d.Id()),
-			Metrics:              flex.ExpandStringSet(disableMetrics),
-		}
-
-		_, err := conn.DisableMetricsCollection(props)
-		if err != nil {
-			return fmt.Errorf("Failure to Disable metrics collection types for Auto Scaling Group %s: %s", d.Id(), err)
-		}
-	}
-
-	enabledMetrics := ns.Difference(os)
-	if enabledMetrics.Len() != 0 {
-		props := &autoscaling.EnableMetricsCollectionInput{
-			AutoScalingGroupName: aws.String(d.Id()),
-			Metrics:              flex.ExpandStringSet(enabledMetrics),
-			Granularity:          aws.String(d.Get("metrics_granularity").(string)),
-		}
-
-		_, err := conn.EnableMetricsCollection(props)
-		if err != nil {
-			return fmt.Errorf("Failure to Enable metrics collection types for Auto Scaling Group %s: %s", d.Id(), err)
-		}
-	}
-
-	return nil
-}
-
-func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autoscaling.PutLifecycleHookInput {
-	res := make([]autoscaling.PutLifecycleHookInput, 0, len(cfgs))
-
-	for _, raw := range cfgs {
-		cfg := raw.(map[string]interface{})
-
-		input := autoscaling.PutLifecycleHookInput{
-			AutoScalingGroupName: &asgName,
-			LifecycleHookName:    aws.String(cfg["name"].(string)),
-		}
-
-		if v, ok := cfg["default_result"]; ok && v.(string) != "" {
-			input.DefaultResult = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["heartbeat_timeout"]; ok && v.(int) > 0 {
-			input.HeartbeatTimeout = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := cfg["lifecycle_transition"]; ok && v.(string) != "" {
-			input.LifecycleTransition = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["notification_metadata"]; ok && v.(string) != "" {
-			input.NotificationMetadata = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["notification_target_arn"]; ok && v.(string) != "" {
-			input.NotificationTargetARN = aws.String(v.(string))
-		}
-
-		if v, ok := cfg["role_arn"]; ok && v.(string) != "" {
-			input.RoleARN = aws.String(v.(string))
-		}
-
-		res = append(res, input)
-	}
-
-	return res
 }
 
 // getELBInstanceStates returns a mapping of the instance states of all the ELBs attached to the
@@ -2114,14 +2058,6 @@ func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[s
 	}
 
 	return targetInstanceStates, nil
-}
-
-func expandVpcZoneIdentifiers(list []interface{}) *string {
-	strs := make([]string, len(list))
-	for i, s := range list {
-		strs[i] = s.(string)
-	}
-	return aws.String(strings.Join(strs, ","))
 }
 
 func expandInstancesDistribution(l []interface{}) *autoscaling.InstancesDistribution {
@@ -2538,6 +2474,72 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 	return apiObject
 }
 
+func expandPutLifecycleHookInput(name string, tfMap map[string]interface{}) *autoscaling.PutLifecycleHookInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.PutLifecycleHookInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+
+	if v, ok := tfMap["default_result"].(string); ok && v != "" {
+		apiObject.DefaultResult = aws.String(v)
+	}
+
+	if v, ok := tfMap["heartbeat_timeout"].(int); ok && v != 0 {
+		apiObject.HeartbeatTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.LifecycleHookName = aws.String(v)
+	}
+
+	if v, ok := tfMap["lifecycle_transition"].(string); ok && v != "" {
+		apiObject.LifecycleTransition = aws.String(v)
+	}
+
+	if v, ok := tfMap["notification_metadata"].(string); ok && v != "" {
+		apiObject.NotificationMetadata = aws.String(v)
+	}
+
+	if v, ok := tfMap["notification_target_arn"].(string); ok && v != "" {
+		apiObject.NotificationTargetARN = aws.String(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleARN = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPutLifecycleHookInputs(name string, tfList []interface{}) []*autoscaling.PutLifecycleHookInput {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*autoscaling.PutLifecycleHookInput
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPutLifecycleHookInput(name, tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func expandPutWarmPoolInput(name string, tfMap map[string]interface{}) *autoscaling.PutWarmPoolInput {
 	if tfMap == nil {
 		return nil
@@ -2578,6 +2580,16 @@ func expandInstanceReusePolicy(tfMap map[string]interface{}) *autoscaling.Instan
 	}
 
 	return apiObject
+}
+
+func expandVpcZoneIdentifiers(tfList []interface{}) *string {
+	vpcZoneIDs := make([]string, len(tfList))
+
+	for i, v := range tfList {
+		vpcZoneIDs[i] = v.(string)
+	}
+
+	return aws.String(strings.Join(vpcZoneIDs, ","))
 }
 
 func flattenEnabledMetrics(apiObjects []*autoscaling.EnabledMetric) []string {
