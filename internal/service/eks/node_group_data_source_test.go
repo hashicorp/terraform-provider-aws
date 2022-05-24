@@ -23,11 +23,11 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupNodeGroupNameConfig(rName),
+				Config: testAccNodeGroupConfig_dataSourceName(rName),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
-				Config: testAccNodeGroupDataSourceConfig(rName),
+				Config: testAccNodeGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "ami_type", dataSourceResourceName, "ami_type"),
@@ -57,8 +57,8 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNodeGroupDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupNodeGroupNameConfig(rName), fmt.Sprintf(`
+func testAccNodeGroupDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_dataSourceName(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
