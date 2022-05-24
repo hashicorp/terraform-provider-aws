@@ -549,7 +549,7 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_internetToVpcEndpoint(rName),
+				Config: testAccDomainConfig_internetToVPCEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -618,7 +618,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_AdvancedSecurityOptionsUserDb(rName),
+				Config: testAccDomainConfig_advancedSecurityOptionsUserDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, &domain),
@@ -2644,7 +2644,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_internetToVpcEndpoint(rName string) string {
+func testAccDomainConfig_internetToVPCEndpoint(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2706,7 +2706,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_AdvancedSecurityOptionsUserDb(rName string) string {
+func testAccDomainConfig_advancedSecurityOptionsUserDB(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = substr(%[1]q, 0, 28)

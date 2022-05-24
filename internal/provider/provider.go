@@ -977,7 +977,7 @@ func Provider() *schema.Provider {
 			"aws_appmesh_virtual_router":  appmesh.ResourceVirtualRouter(),
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
-			"aws_apprunner_vpc_connector":                      apprunner.ResourceVpcConnector(),
+			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
@@ -1604,7 +1604,7 @@ func Provider() *schema.Provider {
 			"aws_lambda_event_source_mapping":           lambda.ResourceEventSourceMapping(),
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
-			"aws_lambda_function_url":                   lambda.ResourceFunctionUrl(),
+			"aws_lambda_function_url":                   lambda.ResourceFunctionURL(),
 			"aws_lambda_invocation":                     lambda.ResourceInvocation(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
 			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),

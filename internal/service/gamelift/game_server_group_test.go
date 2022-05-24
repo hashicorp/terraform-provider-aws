@@ -523,7 +523,7 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 	})
 }
 
-func TestAccGameLiftGameServerGroup_VpcSubnets(t *testing.T) {
+func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -542,7 +542,7 @@ func TestAccGameLiftGameServerGroup_VpcSubnets(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigVpcSubnets(rName, 1),
+				Config: testAccGameServerGroupConfig_vpcSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 				),
@@ -554,7 +554,7 @@ func TestAccGameLiftGameServerGroup_VpcSubnets(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
-				Config: testAccGameServerGroupConfigVpcSubnets(rName, 2),
+				Config: testAccGameServerGroupConfig_vpcSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 				),
@@ -1126,7 +1126,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, roleArn))
 }
 
-func testAccGameServerGroupConfigVpcSubnets(rName string, count int) string {
+func testAccGameServerGroupConfig_vpcSubnets(rName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),

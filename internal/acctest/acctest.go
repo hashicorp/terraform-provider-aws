@@ -193,7 +193,7 @@ func PreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		conns.FailIfAllEnvVarEmpty(t, []string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullUri}, "credentials for running acceptance testing")
+		conns.FailIfAllEnvVarEmpty(t, []string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullURI}, "credentials for running acceptance testing")
 
 		if os.Getenv(conns.EnvVarAccessKeyId) != "" {
 			conns.FailIfEnvVarEmpty(t, conns.EnvVarSecretAccessKey, "static credentials value when using "+conns.EnvVarAccessKeyId)
@@ -1826,7 +1826,7 @@ resource "aws_security_group" "sg_for_lambda" {
 `, policyName, roleName, sgName)
 }
 
-func ConfigVpcWithSubnets(rName string, subnetCount int) string {
+func ConfigVPCWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

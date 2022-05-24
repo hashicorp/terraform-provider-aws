@@ -644,7 +644,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_internetToVpcEndpoint(rName),
+				Config: testAccDomainConfig_internetToVPCEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -2754,7 +2754,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_internetToVpcEndpoint(rName string) string {
+func testAccDomainConfig_internetToVPCEndpoint(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

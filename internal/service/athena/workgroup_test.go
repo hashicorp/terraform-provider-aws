@@ -320,7 +320,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption),
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -336,7 +336,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption2),
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -851,7 +851,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, encryptionOption string) string {
+func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, encryptionOption string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7

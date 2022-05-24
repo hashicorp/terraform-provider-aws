@@ -757,7 +757,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.VPCZoneIdentifier = expandVpcZoneIdentifiers(v.(*schema.Set).List())
+		createOpts.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
@@ -1119,7 +1119,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("vpc_zone_identifier") {
-		opts.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
+		opts.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 	}
 
 	if d.HasChange("availability_zones") {
@@ -1882,7 +1882,7 @@ func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[s
 	return targetInstanceStates, nil
 }
 
-func expandVpcZoneIdentifiers(list []interface{}) *string {
+func expandVPCZoneIdentifiers(list []interface{}) *string {
 	strs := make([]string, len(list))
 	for i, s := range list {
 		strs[i] = s.(string)

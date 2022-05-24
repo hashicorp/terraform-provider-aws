@@ -893,7 +893,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSnsTopic(rName),
+				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
@@ -905,7 +905,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnsTopicNull(rName),
+				Config: testAccClusterConfig_snsTopicNull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
@@ -917,7 +917,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnsTopic(rName),
+				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
@@ -1071,7 +1071,7 @@ func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFun
 
 func testAccClusterConfigBaseNetwork(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test.*.id
@@ -1490,7 +1490,7 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSnsTopicNull(rName string) string {
+func testAccClusterConfig_snsTopicNull(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfigBaseNetwork(rName),
 		fmt.Sprintf(`
@@ -1512,7 +1512,7 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSnsTopic(rName string) string {
+func testAccClusterConfig_snsTopic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfigBaseNetwork(rName),
 		fmt.Sprintf(`

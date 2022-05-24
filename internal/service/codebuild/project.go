@@ -801,7 +801,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+		params.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("badge_enabled"); ok {
@@ -1228,7 +1228,7 @@ func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConf
 	return s3LogsConfig
 }
 
-func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
+func expandVPCConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 	vpcConfig := codebuild.VpcConfig{}
 	if len(rawVpcConfig) == 0 || rawVpcConfig[0] == nil {
 		return &vpcConfig
@@ -1515,7 +1515,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("vpc_config") {
-			params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
+			params.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 		}
 
 		if d.HasChange("logs_config") {

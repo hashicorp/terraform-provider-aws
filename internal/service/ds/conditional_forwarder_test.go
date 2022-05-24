@@ -142,7 +142,7 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 
 func testAccConditionalForwarderConfig_basic(rName, domain, ip1, ip2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_conditional_forwarder" "fwd" {
   directory_id = aws_directory_service_directory.test.id
