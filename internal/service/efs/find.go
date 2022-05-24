@@ -83,7 +83,7 @@ func FindFileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystem
 	return output, nil
 }
 
-func FindReplicationConfigurationByID(conn *efs.EFS, id string) (*efs.DescribeReplicationConfigurationsOutput, error) {
+func FindReplicationConfigurationByID(conn *efs.EFS, id string) (*efs.ReplicationConfigurationDescription, error) {
 	input := &efs.DescribeReplicationConfigurationsInput{
 		FileSystemId: aws.String(id),
 	}
@@ -101,9 +101,13 @@ func FindReplicationConfigurationByID(conn *efs.EFS, id string) (*efs.DescribeRe
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil ||
+		len(output.Replications) == 0 ||
+		output.Replications[0] == nil ||
+		len(output.Replications[0].Destinations) == 0 ||
+		output.Replications[0].Destinations[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.Replications[0], nil
 }

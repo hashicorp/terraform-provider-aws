@@ -117,7 +117,7 @@ func resourceReplicationConfigurationCreate(d *schema.ResourceData, meta interfa
 func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	output, err := FindReplicationConfigurationByID(conn, d.Id())
+	replication, err := FindReplicationConfigurationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Replication Configuration (%s) not found, removing from state", d.Id())
@@ -126,14 +126,8 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS Replication Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EFS Replication Configuration (%s): %w", d.Id(), err)
 	}
-
-	if output == nil || len(output.Replications) == 0 || output.Replications[0] == nil {
-		return fmt.Errorf("error updating state of EFS replication configuration (%s)", d.Id())
-	}
-
-	replication := output.Replications[0]
 
 	if replication == nil || len(replication.Destinations) == 0 || replication.Destinations[0] == nil {
 		return fmt.Errorf("error updating state of EFS replication configuration (%s)", d.Id())
