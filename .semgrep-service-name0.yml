@@ -319,7 +319,6 @@ rules:
         - internal/service/iam
         - internal/service/identitystore
         - internal/service/imagebuilder
-        - internal/service/inspector
         - internal/service/iot
         - internal/service/kafka
         - internal/service/kafkaconnect
