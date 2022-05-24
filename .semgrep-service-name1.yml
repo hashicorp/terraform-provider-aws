@@ -505,6 +505,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)DAX"
     severity: WARNING
+  - id: deploy-in-func-name
+    languages:
+      - go
+    message: Do not use "Deploy" in func name inside deploy package
+    paths:
+      include:
+        - internal/service/deploy
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Deploy"
+            - pattern-not-regex: Deployment(Group|Config|Style)
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: deploy-in-test-name
+    languages:
+      - go
+    message: Include "Deploy" in test name
+    paths:
+      include:
+        - internal/service/deploy/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDeploy"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: deploy-in-const-name
+    languages:
+      - go
+    message: Do not use "Deploy" in const name inside deploy package
+    paths:
+      include:
+        - internal/service/deploy
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Deploy"
+    severity: WARNING
+  - id: deploy-in-var-name
+    languages:
+      - go
+    message: Do not use "Deploy" in var name inside deploy package
+    paths:
+      include:
+      - internal/service/deploy
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Deploy"
+    severity: WARNING
   - id: detective-in-func-name
     languages:
       - go

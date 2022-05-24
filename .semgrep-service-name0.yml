@@ -337,6 +337,7 @@ rules:
     paths:
       include:
         - internal/service/ec2
+        - internal/service/deploy
         - internal/service/timestreamwrite
         - internal/service/transfer
         - internal/service/waf
@@ -1512,6 +1513,49 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeCommit"
+    severity: WARNING
+  - id: codedeploy-in-func-name
+    languages:
+      - go
+    message: Do not use "codedeploy" in func name inside deploy package
+    paths:
+      include:
+        - internal/service/deploy
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)codedeploy"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codedeploy-in-const-name
+    languages:
+      - go
+    message: Do not use "codedeploy" in const name inside deploy package
+    paths:
+      include:
+        - internal/service/deploy
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)codedeploy"
+    severity: WARNING
+  - id: codedeploy-in-var-name
+    languages:
+      - go
+    message: Do not use "codedeploy" in var name inside deploy package
+    paths:
+      include:
+      - internal/service/deploy
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)codedeploy"
     severity: WARNING
   - id: codestarconnections-in-func-name
     languages:
