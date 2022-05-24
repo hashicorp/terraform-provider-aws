@@ -161,14 +161,14 @@ func TestAccGlueSchema_compatibility(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaConfig_compatibillity(rName, "DISABLED"),
+				Config: testAccSchemaConfig_compatibility(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "DISABLED"),
 				),
 			},
 			{
-				Config: testAccSchemaConfig_compatibillity(rName, "FULL"),
+				Config: testAccSchemaConfig_compatibility(rName, "FULL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "FULL"),
@@ -406,7 +406,7 @@ resource "aws_glue_schema" "test" {
 `, rName, description)
 }
 
-func testAccSchemaConfig_compatibillity(rName, compat string) string {
+func testAccSchemaConfig_compatibility(rName, compat string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
