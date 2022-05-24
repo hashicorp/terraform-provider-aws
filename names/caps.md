@@ -16,11 +16,11 @@ For principle 2, a quick look at the AWS website for a service shows the preferr
 
 To help enforce these principles, we are using [semgrep](https://semgrep.dev/) rules. Below, you will find a list of the specific caps cases we look for currently. This list is generated from the [same source](caps.csv) as the semgrep rules.
 
-**NOTE:** Please do NOT add "Id" to the list. We prefer "ID" or "id", not "Id", but we have found linter enforcement to be too error prone because of the number of false positives for "Id" (_e.g._, "Identifier").
+**NOTE:** Please do NOT add "Id" to the list. Use "ID" or "id", never "Id", but we have found linter enforcement of this initialism to be too error prone because of the number of false positives for "Id" (_e.g._, "Identifier").
 
-**NOTE:** Rule identifiers in the ".semgrep-service-name.yml" configuration file are named "<Test#>-in-func-name", "<Test#>-in-var-name", or "<Test#>-in-const-name", where "Test#" comes from the table below.
+**NOTE:** Capitalization rules are all found in the ".semgrep-service-name0.yml" configuration file are named `<Test#>-in-func-name`, `<Test#>-in-var-name`, or `<Test#>-in-const-name`, where `Test#` comes from the table below.
 
-**NOTE:** The "Test#" order is _wonky_ because we need to match on longer names first. In the future, with an option to automatically correct problems, fixing the longest possible initialism first is important (_e.g._, "HTTPS" needs to be fixed before "HTTP" to avoid "HttpS").
+**NOTE:** The `Test#` order is _wonky_ because we need to match on longer names first. In the future, with an option to automatically correct problems, fixing the longest possible initialism first is important (_e.g._, `HTTPS` needs to be fixed before `HTTP` to avoid something like "HTTPs").
 
 The caps enforced are as follows:
 
