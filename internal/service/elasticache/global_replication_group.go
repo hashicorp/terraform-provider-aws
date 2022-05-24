@@ -209,18 +209,18 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: error reading engine version: %w", d.Id(), err)
 		}
 
-		if requestedVersion.LessThan(engineVersion) {
+		diff := diffVersion(requestedVersion, engineVersion)
+
+		if diff[0] == -1 || diff[1] == -1 { // Ignore patch version downgrade
 			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: cannot downgrade version when creating, is %s, want %s", d.Id(), engineVersion.String(), requestedVersion.String())
 		}
 
-		diff := diffVersion(requestedVersion, engineVersion)
 		if diff[0] == 1 {
 			p := d.Get("parameter_group_name").(string)
 			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p))
 			if err != nil {
 				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
 			}
-
 		} else if diff[1] == 1 {
 			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
 			if err != nil {
@@ -276,9 +276,29 @@ type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicati
 func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
+	if d.HasChange("engine_version") {
+		o, n := d.GetChange("engine_version")
+
+		newVersion, _ := normalizeEngineVersion(n.(string))
+		oldVersion, _ := gversion.NewVersion(o.(string))
+
+		diff := diffVersion(newVersion, oldVersion)
+		if diff[0] == 1 {
+			p := d.Get("parameter_group_name").(string)
+			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(n.(string), p))
+			if err != nil {
+				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s): %w", d.Id(), err)
+			}
+		} else if diff[1] == 1 {
+			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(n.(string)))
+			if err != nil {
+				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s): %w", d.Id(), err)
+			}
+		}
+	}
+
 	// Only one field can be changed per request
 	updaters := map[string]globalReplicationGroupUpdater{}
-	updaters["engine_version"] = globalReplicationGroupEngineVersionMinorUpdater(d.Get("engine_version").(string))
 	updaters["global_replication_group_description"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 		input.GlobalReplicationGroupDescription = aws.String(d.Get("global_replication_group_description").(string))
 	}
