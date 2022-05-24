@@ -158,7 +158,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("api_stages"); ok && v.(*schema.Set).Len() > 0 {
-		params.ApiStages = expandUsageAPIStages(v.(*schema.Set))
+		params.ApiStages = expandAPIStages(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("quota_settings"); ok {
@@ -173,7 +173,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 			return errors.New("At least one field is expected inside quota_settings")
 		}
 
-		params.Quota = expandUsageQuotaSettings(v.([]interface{}))
+		params.Quota = expandQuotaSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("throttle_settings"); ok {
@@ -532,7 +532,7 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func expandUsageAPIStages(s *schema.Set) []*apigateway.ApiStage {
+func expandAPIStages(s *schema.Set) []*apigateway.ApiStage {
 	stages := []*apigateway.ApiStage{}
 
 	for _, stageRaw := range s.List() {
@@ -557,7 +557,7 @@ func expandUsageAPIStages(s *schema.Set) []*apigateway.ApiStage {
 	return stages
 }
 
-func expandUsageQuotaSettings(l []interface{}) *apigateway.QuotaSettings {
+func expandQuotaSettings(l []interface{}) *apigateway.QuotaSettings {
 	if len(l) == 0 {
 		return nil
 	}
