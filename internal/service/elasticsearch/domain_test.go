@@ -32,7 +32,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -152,7 +152,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -211,7 +211,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -268,7 +268,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -305,7 +305,7 @@ func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -348,7 +348,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
@@ -401,7 +401,7 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -434,7 +434,7 @@ func TestAccElasticsearchDomain_complex(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -465,7 +465,7 @@ func TestAccElasticsearchDomain_vpc(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -492,7 +492,7 @@ func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -531,7 +531,7 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -569,7 +569,7 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -612,7 +612,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -649,7 +649,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -686,7 +686,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -723,7 +723,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -758,7 +758,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -793,7 +793,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -828,7 +828,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -868,7 +868,7 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckCognitoIdentityProvider(t)
-			testAccPreCheckIamServiceLinkedRoleEs(t)
+			testAccPreCheckIAMServiceLinkedRoleEs(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -911,7 +911,7 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckCognitoIdentityProvider(t)
-			testAccPreCheckIamServiceLinkedRoleEs(t)
+			testAccPreCheckIAMServiceLinkedRoleEs(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -951,7 +951,7 @@ func TestAccElasticsearchDomain_policy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -982,7 +982,7 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1011,7 +1011,7 @@ func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1043,7 +1043,7 @@ func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1075,7 +1075,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1116,7 +1116,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1149,7 +1149,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1181,7 +1181,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1222,7 +1222,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1262,7 +1262,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckELBDestroy,
@@ -1312,7 +1312,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1352,7 +1352,7 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1400,7 +1400,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1434,7 +1434,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1480,7 +1480,7 @@ func TestAccElasticsearchDomain_disappears(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDestroy,
@@ -1732,7 +1732,7 @@ func testAccGetValidStartAtTime(t *testing.T, timeUntilStart string) string {
 	return n.Add(d).Format(time.RFC3339)
 }
 
-func testAccPreCheckIamServiceLinkedRoleEs(t *testing.T) {
+func testAccPreCheckIAMServiceLinkedRoleEs(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 	dnsSuffix := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
 

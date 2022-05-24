@@ -1482,7 +1482,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
@@ -3792,7 +3792,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName)
 }
 
-func testAccPreCheckIamServiceLinkedRoleEs(t *testing.T) {
+func testAccPreCheckIAMServiceLinkedRoleEs(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 	dnsSuffix := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
 

@@ -88,8 +88,8 @@ func (filters NameValuesFilters) DocDBFilters() []*docdb.Filter {
 	return result
 }
 
-// Ec2Filters returns ec2 service filters.
-func (filters NameValuesFilters) Ec2Filters() []*ec2.Filter {
+// EC2Filters returns ec2 service filters.
+func (filters NameValuesFilters) EC2Filters() []*ec2.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -154,8 +154,8 @@ func (filters NameValuesFilters) ElasticsearchserviceFilters() []*elasticsearchs
 	return result
 }
 
-// FsxFilters returns fsx service filters.
-func (filters NameValuesFilters) FsxFilters() []*fsx.Filter {
+// FSxFilters returns fsx service filters.
+func (filters NameValuesFilters) FSxFilters() []*fsx.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {

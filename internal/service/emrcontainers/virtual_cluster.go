@@ -242,13 +242,13 @@ func expandContainerInfo(tfMap map[string]interface{}) *emrcontainers.ContainerI
 	apiObject := &emrcontainers.ContainerInfo{}
 
 	if v, ok := tfMap["eks_info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EksInfo = expandEksInfo(v[0].(map[string]interface{}))
+		apiObject.EksInfo = expandEKSInfo(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandEksInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
+func expandEKSInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
 	if tfMap == nil {
 		return nil
 	}
