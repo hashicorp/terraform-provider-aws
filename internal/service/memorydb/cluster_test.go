@@ -339,7 +339,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
+func TestAccMemoryDBCluster_Update_aclName(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -377,7 +377,7 @@ func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_description(t *testing.T) {
+func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -427,7 +427,7 @@ func TestAccMemoryDBCluster_update_description(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
+func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
 	// As of writing, 6.2 is the one and only MemoryDB engine version available,
 	// so we cannot check upgrade behaviour.
 	//
@@ -471,7 +471,7 @@ func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
+func TestAccMemoryDBCluster_Update_maintenanceWindow(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -509,7 +509,7 @@ func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
+func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -547,7 +547,7 @@ func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -583,7 +583,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -619,7 +619,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleUp(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -655,7 +655,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleUp(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleDown(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -691,7 +691,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleDown(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
+func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -736,7 +736,7 @@ func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
+func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -794,7 +794,7 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
+func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -844,7 +844,7 @@ func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
+func TestAccMemoryDBCluster_Update_snapshotWindow(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -882,7 +882,7 @@ func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
+func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -932,7 +932,7 @@ func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_tags(t *testing.T) {
+func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 

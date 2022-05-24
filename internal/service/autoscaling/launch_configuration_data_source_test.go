@@ -70,7 +70,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName),
+				Config: testAccLaunchConfigurationDataSourceConfig_ebsNoDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "image_id"),
@@ -189,7 +189,7 @@ data "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string {
+func testAccLaunchConfigurationDataSourceConfig_ebsNoDevice(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`

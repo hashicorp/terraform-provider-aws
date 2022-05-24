@@ -4179,7 +4179,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccApplicationConfigBaseServiceExecutionIamRole(rName string) string {
+func testAccApplicationConfig_baseServiceExecutionIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   count = 2
@@ -4341,7 +4341,7 @@ resource "aws_security_group" "test" {
 
 func testAccApplicationConfigBasicFlinkApplication(rName, runtimeEnvironment string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4353,7 +4353,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigBasicSQLApplication(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4365,7 +4365,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigBasicSQLApplicationPlusDescription(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4378,7 +4378,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigBasicSQLApplicationServiceExecutionRoleUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4391,7 +4391,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigApplicationCodeConfiguration(rName, textContent string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4413,7 +4413,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -4440,7 +4440,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4487,7 +4487,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4540,7 +4540,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigEnvironmentPropertiesNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4570,7 +4570,7 @@ func testAccApplicationConfigFlinkApplicationConfiguration(rName, startApplicati
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4626,7 +4626,7 @@ func testAccApplicationConfigFlinkApplicationConfigurationUpdated(rName, startAp
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4678,7 +4678,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4753,7 +4753,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigFlinkApplicationConfigurationEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4841,7 +4841,7 @@ func testAccApplicationConfigStartSnapshotableFlinkApplication(rName, applicatio
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -4931,7 +4931,7 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 
 func testAccApplicationConfigStopSnapshotableFlinkApplication(rName string, forceStop bool) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -5012,7 +5012,7 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5035,7 +5035,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationInput(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5086,7 +5086,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationInputUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5149,7 +5149,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName string, lambdaIndex int) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5215,7 +5215,7 @@ func testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, startApp
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -5316,7 +5316,7 @@ func testAccApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, s
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5441,7 +5441,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationOutput(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5478,7 +5478,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationOutputUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5527,7 +5527,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5579,7 +5579,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationReferenceDataSourceUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5639,7 +5639,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5696,7 +5696,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5712,7 +5712,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5729,7 +5729,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigVPCConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseVPC(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
@@ -5761,7 +5761,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigVPCConfigurationUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseVPC(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
@@ -5793,7 +5793,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigVPCConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseVPC(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`

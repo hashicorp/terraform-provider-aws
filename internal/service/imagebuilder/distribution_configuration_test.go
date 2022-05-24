@@ -328,7 +328,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 	})
 }
 
-func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationArns(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	organizationResourceName := "aws_organizations_organization.test"
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
@@ -343,7 +343,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName),
+				Config: testAccDistributionConfigurationConfig_distributionAMILaunchPermissionOrganizationARNs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -359,7 +359,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 	})
 }
 
-func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationalUnitArns(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_ouARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	organizationalUnitResourceName := "aws_organizations_organizational_unit.test"
 
@@ -375,7 +375,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName),
+				Config: testAccDistributionConfigurationConfig_distributionAMILaunchPermissionOrganizationalUnitARNsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -951,7 +951,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName, userId)
 }
 
-func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName string) string {
+func testAccDistributionConfigurationConfig_distributionAMILaunchPermissionOrganizationARNs(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
@@ -972,7 +972,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName)
 }
 
-func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName string) string {
+func testAccDistributionConfigurationConfig_distributionAMILaunchPermissionOrganizationalUnitARNsConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
