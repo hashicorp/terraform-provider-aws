@@ -93,7 +93,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_policy(rName),
+				Config: testAccPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -133,7 +133,7 @@ func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_policy(rName),
+				Config: testAccPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					testAccCheckPolicyDisappears(&policy),
@@ -502,7 +502,7 @@ func testAccCheckPolicyDisappears(policy *applicationautoscaling.ScalingPolicy) 
 	}
 }
 
-func testAccQueueConfig_policy(rName string) string {
+func testAccPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
