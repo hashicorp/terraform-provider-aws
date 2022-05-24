@@ -153,6 +153,11 @@ func ResourceCluster() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`(?i)^[a-z_]`), "first character must be a letter or underscore"),
 				),
 			},
+			"default_iam_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -234,6 +239,17 @@ func ResourceCluster() *schema.Resource {
 						},
 					},
 				},
+			},
+			"maintenance_track_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "current",
+			},
+			"manual_snapshot_retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntBetween(-1, 3653),
 			},
 			"master_password": {
 				Type:      schema.TypeString,
@@ -425,6 +441,11 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ClusterSubnetGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("default_iam_role_arn"); ok {
+		backupInput.DefaultIamRoleArn = aws.String(v.(string))
+		input.DefaultIamRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("elastic_ip"); ok {
 		backupInput.ElasticIp = aws.String(v.(string))
 		input.ElasticIp = aws.String(v.(string))
@@ -443,6 +464,16 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		backupInput.KmsKeyId = aws.String(v.(string))
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("maintenance_track_name"); ok {
+		backupInput.MaintenanceTrackName = aws.String(v.(string))
+		input.MaintenanceTrackName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("manual_snapshot_retention_period"); ok {
+		backupInput.ManualSnapshotRetentionPeriod = aws.Int64(int64(v.(int)))
+		input.ManualSnapshotRetentionPeriod = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("number_of_nodes"); ok {
@@ -597,12 +628,15 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set("database_name", rsc.DBName)
+	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	d.Set("encrypted", rsc.Encrypted)
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("kms_key_id", rsc.KmsKeyId)
 	if err := d.Set("logging", flattenLogging(loggingStatus)); err != nil {
 		return fmt.Errorf("error setting logging: %w", err)
 	}
+	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
+	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 	d.Set("master_username", rsc.MasterUsername)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
@@ -690,6 +724,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.ClusterSecurityGroups = flex.ExpandStringSet(d.Get("cluster_security_groups").(*schema.Set))
 		}
 
+		if d.HasChange("maintenance_track_name") {
+			input.MaintenanceTrackName = aws.String(d.Get("maintenance_track_name").(string))
+		}
+
+		if d.HasChange("manual_snapshot_retention_period") {
+			input.ManualSnapshotRetentionPeriod = aws.Int64(int64(d.Get("manual_snapshot_retention_period").(int)))
+		}
+
 		// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
 		// items to be sent over.
 		if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
@@ -751,7 +793,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("iam_roles") {
+	if d.HasChanges("iam_roles", "default_iam_role_arn") {
 		o, n := d.GetChange("iam_roles")
 		if o == nil {
 			o = new(schema.Set)
@@ -769,6 +811,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			AddIamRoles:       flex.ExpandStringSet(add),
 			ClusterIdentifier: aws.String(d.Id()),
 			RemoveIamRoles:    flex.ExpandStringSet(del),
+			DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 		}
 
 		log.Printf("[DEBUG] Modifying Redshift Cluster IAM Roles: %s", input)
