@@ -341,6 +341,44 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 	})
 }
 
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MajorUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup elasticache.GlobalReplicationGroup
+	var rg elasticache.ReplicationGroup
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalReplicationGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_EngineVersionParamGroup(rName, primaryReplicationGroupId, "5.0.6", "6.2", "default.redis6.x"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
+					testAccCheckReplicationGroupExists(primaryReplicationGroupResourceName, &rg),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					testAccMatchReplicationGroupActualVersion(&rg, regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameter_group_name"},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorDowngrade(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -435,7 +473,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 			},
 			// This step fails with: Error running pre-apply refresh
 			// {
-			// 	Config: testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
+			// 	Config: testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.0", "6.0"),
 			// 	Taint: []string{
 			// 		resourceName,
 			// 		primaryReplicationGroupResourceName,
@@ -779,6 +817,32 @@ resource "aws_elasticache_replication_group" "test" {
   }
 }
 `, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion)
+}
+
+func testAccGlobalReplicationGroupConfig_EngineVersionParamGroup(rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion, parameterGroup string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
+  engine_version       = %[4]q
+  parameter_group_name = %[5]q
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[2]q
+  replication_group_description = "test"
+
+  engine                = "redis"
+  engine_version        = %[3]q
+  node_type             = "cache.m5.large"
+  number_cache_clusters = 1
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+`, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion, parameterGroup)
 }
 
 func testAccVPCBaseWithProvider(rName, name, provider string, subnetCount int) string {

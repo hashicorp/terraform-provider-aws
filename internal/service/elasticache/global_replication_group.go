@@ -119,6 +119,10 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			// 		},
 			// 	},
 			// },
+			"parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"primary_replication_group_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -205,13 +209,23 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: error reading engine version: %w", d.Id(), err)
 		}
 
-		if requestedVersion.GreaterThan(engineVersion) {
-			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionUpdater(v.(string)))
+		if requestedVersion.LessThan(engineVersion) {
+			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: cannot downgrade version when creating, is %s, want %s", d.Id(), engineVersion.String(), requestedVersion.String())
+		}
+
+		diff := diffVersion(requestedVersion, engineVersion)
+		if diff[0] == 1 {
+			p := d.Get("parameter_group_name").(string)
+			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p))
 			if err != nil {
 				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
 			}
-		} else if requestedVersion.LessThan(engineVersion) {
-			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: cannot downgrade version when creating, is %s, want %s", d.Id(), engineVersion.String(), requestedVersion.String())
+
+		} else if diff[1] == 1 {
+			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
+			if err != nil {
+				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -264,7 +278,7 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 
 	// Only one field can be changed per request
 	updaters := map[string]globalReplicationGroupUpdater{}
-	updaters["engine_version"] = globalReplicationGroupEngineVersionUpdater(d.Get("engine_version").(string))
+	updaters["engine_version"] = globalReplicationGroupEngineVersionMinorUpdater(d.Get("engine_version").(string))
 	updaters["global_replication_group_description"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 		input.GlobalReplicationGroupDescription = aws.String(d.Get("global_replication_group_description").(string))
 	}
@@ -280,9 +294,16 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 	return resourceGlobalReplicationGroupRead(d, meta)
 }
 
-func globalReplicationGroupEngineVersionUpdater(version string) globalReplicationGroupUpdater {
+func globalReplicationGroupEngineVersionMinorUpdater(version string) globalReplicationGroupUpdater {
 	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 		input.EngineVersion = aws.String(version)
+	}
+}
+
+func globalReplicationGroupEngineVersionMajorUpdater(version, paramGroupName string) globalReplicationGroupUpdater {
+	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.EngineVersion = aws.String(version)
+		input.CacheParameterGroupName = aws.String(paramGroupName)
 	}
 }
 

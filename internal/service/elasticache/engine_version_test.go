@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"testing"
+
+	"github.com/hashicorp/go-version"
 )
 
 func TestValidMemcachedVersionString(t *testing.T) {
@@ -523,5 +525,42 @@ func TestNormalizeEngineVersion(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestVersionDiff(t *testing.T) {
+	cases := []struct {
+		v1       string
+		v2       string
+		expected versionDiff
+	}{
+		{"1.2.3", "1.2.3", versionDiff{0, 0, 0}},
+		{"1.2.3", "1.1.7", versionDiff{0, 1, 0}},
+		{"1.2.3", "1.4.5", versionDiff{0, -1, 0}},
+		{"2.0.0", "1.2.3", versionDiff{1, 0, 0}},
+		{"1.2.3", "2.0.0", versionDiff{-1, 0, 0}},
+		{"1.2.3", "1.2.1", versionDiff{0, 0, 1}},
+		{"1.2.3", "1.2.4", versionDiff{0, 0, -1}},
+	}
+
+	for _, tc := range cases {
+		v1, err := version.NewVersion(tc.v1)
+		if err != nil {
+			t.Fatalf("err: %s", err)
+		}
+
+		v2, err := version.NewVersion(tc.v2)
+		if err != nil {
+			t.Fatalf("err: %s", err)
+		}
+
+		actual := diffVersion(v1, v2)
+		expected := tc.expected
+		if actual != expected {
+			t.Fatalf(
+				"%s <=> %s\nexpected: %d\nactual: %d",
+				tc.v1, tc.v2,
+				expected, actual)
+		}
 	}
 }

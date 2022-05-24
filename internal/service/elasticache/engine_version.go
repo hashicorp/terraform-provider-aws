@@ -167,3 +167,30 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 
 	return nil
 }
+
+type versionDiff [3]int
+
+// diffVersion returns a diff of the versions, component by component.
+// Only reports the first diff, since subsequent segments are unimportant for us.
+func diffVersion(n, o *gversion.Version) (result versionDiff) {
+	if n.String() == o.String() {
+		return
+	}
+
+	segmentsNew := n.Segments64()
+	segmentsOld := o.Segments64()
+
+	for i := 0; i < 3; i++ {
+		lhs := segmentsNew[i]
+		rhs := segmentsOld[i]
+		if lhs < rhs {
+			result[i] = -1
+			break
+		} else if lhs > rhs {
+			result[i] = 1
+			break
+		}
+	}
+
+	return
+}
