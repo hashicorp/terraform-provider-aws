@@ -1382,7 +1382,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting secondary_sources: %w", err)
 	}
 
-	if err := d.Set("secondary_source_version", flattenAwsCodeBuildProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
+	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
 		return fmt.Errorf("error setting secondary_source_version: %w", err)
 	}
 
@@ -1850,16 +1850,16 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	return m
 }
 
-func flattenAwsCodeBuildProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
+func flattenProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, sourceVersion := range sourceVersions {
-		l = append(l, flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion))
+		l = append(l, flattenProjectSourceVersionsData(sourceVersion))
 	}
 	return l
 }
 
-func flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
+func flattenProjectSourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
 	values := map[string]interface{}{}
 
 	if sourceVersion.SourceIdentifier != nil {

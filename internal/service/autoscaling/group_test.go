@@ -24,7 +24,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -2295,7 +2294,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity_WithELB(rName),
+				Config: testAccGroupConfig_MixedInstancesPolicy_LaunchTemplateOverrideWeightedCapacityELB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -4486,7 +4485,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName)
 }
 
-func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity_WithELB(rName string) string {
+func testAccGroupConfig_MixedInstancesPolicy_LaunchTemplateOverrideWeightedCapacityELB(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
 		fmt.Sprintf(`
 resource "aws_vpc" "foo" {

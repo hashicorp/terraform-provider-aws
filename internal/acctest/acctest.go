@@ -58,8 +58,8 @@ const (
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
-const awsRegionRegexp = `[a-z]{2}(-[a-z]+)+-\d`
-const awsAccountIDRegexp = `(aws|aws-managed|\d{12})`
+const regionRegexp = `[a-z]{2}(-[a-z]+)+-\d`
+const accountIDRegexp = `(aws|aws-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
 //
@@ -459,9 +459,9 @@ func MatchResourceAttrGlobalARN(resourceName, attributeName, arnService string, 
 func CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arnRegexp := arn.ARN{
-			AccountID: awsAccountIDRegexp,
+			AccountID: accountIDRegexp,
 			Partition: Partition(),
-			Region:    awsRegionRegexp,
+			Region:    regionRegexp,
 			Resource:  arnResource,
 			Service:   arnService,
 		}.String()
@@ -1199,7 +1199,7 @@ provider "aws" {
 `, os.Getenv(conns.EnvVarAccAssumeRoleARN), policy)
 }
 
-const testAccCheckAWSProviderConfigAssumeRoleEmpty = `
+const testAccProviderConfig_assumeRoleEmpty = `
 provider "aws" {
   assume_role {
   }
