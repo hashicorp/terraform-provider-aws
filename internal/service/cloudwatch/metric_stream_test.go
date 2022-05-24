@@ -294,28 +294,28 @@ func TestAccCloudWatchMetricStream_additional_statistics(t *testing.T) {
 				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "IQM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "statistics_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
 				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "PR(:50)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "statistics_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
 				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "TS(50.5:)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "statistics_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
 				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "TC(1:100)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "statistics_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
@@ -653,23 +653,23 @@ resource "aws_cloudwatch_metric_stream" "test" {
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
-  statistics_configurations {
+  statistics_configuration {
     additional_statistics = [
       "p1", "tm99"
     ]
 
-    include_metrics {
+    include_metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
     }
   }
 
-  statistics_configurations {
+  statistics_configuration {
     additional_statistics = [
 	  %[2]q
     ]
 
-    include_metrics {
+    include_metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
     }

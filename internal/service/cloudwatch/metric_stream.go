@@ -114,7 +114,7 @@ func ResourceMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"statistics_configurations": {
+			"statistics_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -142,7 +142,7 @@ func ResourceMetricStream() *schema.Resource {
 								),
 							},
 						},
-						"include_metrics": {
+						"include_metric": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
@@ -195,7 +195,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		params.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("statistics_configurations"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("statistics_configuration"); ok && v.(*schema.Set).Len() > 0 {
 		params.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set))
 	}
 
@@ -279,8 +279,8 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if output.StatisticsConfigurations != nil {
-		if err := d.Set("statistics_configurations", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting statistics_configurations error: %w", err))
+		if err := d.Set("statistics_configuration", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting statistics_configuration error: %w", err))
 		}
 	}
 
@@ -385,7 +385,7 @@ func expandMetricStreamStatisticsConfigurations(s *schema.Set) []*cloudwatch.Met
 			configuration.AdditionalStatistics = flex.ExpandStringSet(v)
 		}
 
-		if v, ok := mConfiguration["include_metrics"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := mConfiguration["include_metric"].(*schema.Set); ok && v.Len() > 0 {
 			log.Printf("[DEBUG] CloudWatch Metric Stream StatisticsConfigurations include_metrics: %#v", v)
 			configuration.IncludeMetrics = expandMetricStreamStatisticsConfigurationsIncludeMetrics(v)
 		}
@@ -434,7 +434,7 @@ func flattenMetricStreamStatisticsConfigurations(configurations []*cloudwatch.Me
 	for i, configuration := range configurations {
 		flatConfiguration := map[string]interface{}{
 			"additional_statistics": flex.FlattenStringSet(configuration.AdditionalStatistics),
-			"include_metrics":       flattenMetricStreamStatisticsConfigurationsIncludeMetrics(configuration.IncludeMetrics),
+			"include_metric":        flattenMetricStreamStatisticsConfigurationsIncludeMetrics(configuration.IncludeMetrics),
 		}
 
 		flatConfigurations[i] = flatConfiguration
