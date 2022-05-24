@@ -45,7 +45,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ExactlyOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
 						"file_system_id": {
 							Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidRegionName,
-							ExactlyOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
 						"status": {
 							Type:     schema.TypeString,

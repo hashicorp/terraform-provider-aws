@@ -53,9 +53,9 @@ The following arguments are supported:
 
 For **destination** the following attributes are supported:
 
-* `availability_zone_name` - (Optional) The availability zone in which the replica should be created. If specified, the replica will be created with One Zone storage. If omitted, regional storage will be used and `region` below is required.
+* `availability_zone_name` - (Optional) The availability zone in which the replica should be created. If specified, the replica will be created with One Zone storage. If omitted, regional storage will be used.
 * `kms_key_id` - (Optional) The Key ID, ARN, alias, or alias ARN of the KMS key that should be used to encrypt the replica file system. If omitted, the default KMS key for EFS `/aws/elasticfilesystem` will be used.
-* `region` - (Optional) The region in which the replica should be created. If omitted, `availability_zone_name` above is required.
+* `region` - (Optional) The region in which the replica should be created.
 
 ## Attributes Reference
 
