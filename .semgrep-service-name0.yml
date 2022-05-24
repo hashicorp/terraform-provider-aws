@@ -373,8 +373,7 @@ rules:
         - internal/service/ssm
         - internal/service/ssoadmin
         - internal/service/storagegateway
-        - internal/service/swf
-        - internal/service/synthetics        
+        - internal/service/swf     
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
