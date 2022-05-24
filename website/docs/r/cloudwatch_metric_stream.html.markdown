@@ -12,6 +12,8 @@ Provides a CloudWatch Metric Stream resource.
 
 ## Example Usage
 
+### Filters
+
 ```terraform
 resource "aws_cloudwatch_metric_stream" "main" {
   name          = "my-metric-stream"
@@ -133,6 +135,39 @@ resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
   s3_configuration {
     role_arn   = aws_iam_role.firehose_to_s3.arn
     bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+```
+
+### Additional Statistics
+
+```terraform
+resource "aws_cloudwatch_metric_stream" "main" {
+  name          = "my-metric-stream"
+  role_arn      = aws_iam_role.metric_stream_to_firehose.arn
+  firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
+  output_format = "json"
+
+  statistics_configuration {
+    additional_statistics = [
+      "p1", "tm99"
+    ]
+
+    include_metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+    }
+  }
+
+  statistics_configuration {
+    additional_statistics = [
+	    "TS(50.5:)"
+    ]
+
+    include_metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+    }
   }
 }
 ```
