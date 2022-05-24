@@ -360,7 +360,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 
 func testAccClusterInstanceConfigPerf(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-	resource "aws_kms_key" "foo" {
+	resource "aws_kms_key" "test" {
 		description = "Terraform acc test %[1]s"
 	  
 		policy = <<POLICY
@@ -400,7 +400,7 @@ resource "aws_docdb_cluster_instance" "test" {
   instance_class     = data.aws_docdb_orderable_db_instance.test.instance_class
   promotion_tier     = "3"
   enable_performance_insights = true
-  performance_insights_kms_key_id = aws_kms_key.foo.arn
+  performance_insights_kms_key_id = aws_kms_key.test.arn
 }
 `, rName))
 }
