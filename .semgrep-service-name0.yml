@@ -324,7 +324,6 @@ rules:
         - internal/service/iot
         - internal/service/kafka
         - internal/service/kafkaconnect
-        - internal/service/keyspaces
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
         - internal/service/kms
