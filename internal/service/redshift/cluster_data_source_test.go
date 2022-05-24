@@ -23,6 +23,8 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone"),
@@ -40,6 +42,9 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "number_of_nodes"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "manual_snapshot_retention_period"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_track_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 				),

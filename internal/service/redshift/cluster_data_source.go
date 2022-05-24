@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,10 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"aqua_configuration_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,6 +48,26 @@ func DataSourceCluster() *schema.Resource {
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"cluster_nodes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_role": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"private_ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"public_ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"cluster_parameter_group_name": {
 				Type:     schema.TypeString,
@@ -74,6 +99,10 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"database_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"default_iam_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,6 +139,14 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"maintenance_track_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"manual_snapshot_retention_period": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -134,6 +171,15 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_destination_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_exports": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags": tftags.TagsSchema(),
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -156,19 +202,11 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Reading Redshift Cluster Information: %s", cluster)
 
-	resp, err := conn.DescribeClusters(&redshift.DescribeClustersInput{
-		ClusterIdentifier: aws.String(cluster),
-	})
+	rsc, err := FindClusterByID(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("Error describing Redshift Cluster: %s, error: %w", cluster, err)
 	}
-
-	if resp.Clusters == nil || len(resp.Clusters) == 0 || resp.Clusters[0] == nil {
-		return fmt.Errorf("Error describing Redshift Cluster: %s, cluster information not found", cluster)
-	}
-
-	rsc := resp.Clusters[0]
 
 	d.SetId(cluster)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
@@ -183,6 +221,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
+		return fmt.Errorf("error setting cluster_nodes: %w", err)
+	}
 
 	if len(rsc.ClusterParameterGroups) > 0 {
 		d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
@@ -237,6 +278,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("port", rsc.Endpoint.Port)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
+	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
+	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
+	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 
 	if err := d.Set("tags", KeyValueTags(rsc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -252,6 +296,15 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error saving VPC Security Group IDs to state for Redshift Cluster (%s): %w", cluster, err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "redshift",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	log.Printf("[INFO] Reading Redshift Cluster Logging Status: %s", cluster)
 	loggingStatus, loggingErr := conn.DescribeLoggingStatus(&redshift.DescribeLoggingStatusInput{
 		ClusterIdentifier: aws.String(cluster),
@@ -265,6 +318,8 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("bucket_name", loggingStatus.BucketName)
 		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
+		d.Set("log_exports", loggingStatus.LogExports)
+		d.Set("log_destination_type", loggingStatus.LogDestinationType)
 	}
 
 	return nil
