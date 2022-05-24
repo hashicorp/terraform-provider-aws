@@ -355,7 +355,6 @@ rules:
         - internal/service/ses
         - internal/service/sfn
         - internal/service/simpledb
-        - internal/service/sns
         - internal/service/ssm
         - internal/service/ssoadmin
         - internal/service/storagegateway
