@@ -780,6 +780,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)DLM"
     severity: WARNING
+  - id: docdb-in-func-name
+    languages:
+      - go
+    message: Do not use "DocDB" in func name inside docdb package
+    paths:
+      include:
+        - internal/service/docdb
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DocDB"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: docdb-in-test-name
+    languages:
+      - go
+    message: Include "DocDB" in test name
+    paths:
+      include:
+        - internal/service/docdb/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDocDB"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: docdb-in-const-name
+    languages:
+      - go
+    message: Do not use "DocDB" in const name inside docdb package
+    paths:
+      include:
+        - internal/service/docdb
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DocDB"
+    severity: WARNING
+  - id: docdb-in-var-name
+    languages:
+      - go
+    message: Do not use "DocDB" in var name inside docdb package
+    paths:
+      include:
+      - internal/service/docdb
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DocDB"
+    severity: WARNING
   - id: ds-in-func-name
     languages:
       - go
