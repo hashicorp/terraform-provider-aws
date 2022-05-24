@@ -187,6 +187,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)costandusagereportservice"
     severity: WARNING
+  - id: costexplorer-in-func-name
+    languages:
+      - go
+    message: Do not use "costexplorer" in func name inside ce package
+    paths:
+      include:
+        - internal/service/ce
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)costexplorer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: costexplorer-in-const-name
+    languages:
+      - go
+    message: Do not use "costexplorer" in const name inside ce package
+    paths:
+      include:
+        - internal/service/ce
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)costexplorer"
+    severity: WARNING
+  - id: costexplorer-in-var-name
+    languages:
+      - go
+    message: Do not use "costexplorer" in var name inside ce package
+    paths:
+      include:
+      - internal/service/ce
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)costexplorer"
+    severity: WARNING
   - id: databasemigration-in-func-name
     languages:
       - go
