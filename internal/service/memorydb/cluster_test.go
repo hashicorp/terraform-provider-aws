@@ -1071,7 +1071,7 @@ func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFun
 
 func testAccClusterConfigBaseNetwork(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test.*.id

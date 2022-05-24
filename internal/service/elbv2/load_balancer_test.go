@@ -665,7 +665,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.lb_test"
@@ -681,7 +681,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testi
 		CheckDestroy:      testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLBConfig_enableWafFailOpen(rName, false),
+				Config: testAccLBConfig_enableWAFFailOpen(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "false"),
@@ -693,7 +693,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLBConfig_enableWafFailOpen(rName, true),
+				Config: testAccLBConfig_enableWAFFailOpen(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &mid),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "true"),
@@ -706,7 +706,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLBConfig_enableWafFailOpen(rName, false),
+				Config: testAccLBConfig_enableWAFFailOpen(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "false"),
@@ -1970,7 +1970,7 @@ resource "aws_security_group" "alb_test" {
 `, rName, deletionProtection))
 }
 
-func testAccLBConfig_enableWafFailOpen(rName string, wafFailOpen bool) string {
+func testAccLBConfig_enableWAFFailOpen(rName string, wafFailOpen bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

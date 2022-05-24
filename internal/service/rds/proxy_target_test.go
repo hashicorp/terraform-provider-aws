@@ -189,7 +189,7 @@ func testAccCheckProxyTargetExists(n string, v *rds.DBProxyTarget) resource.Test
 }
 
 func testAccProxyTargetBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVpcWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_db_proxy" "test" {
   depends_on = [
     aws_secretsmanager_secret_version.test,
