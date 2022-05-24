@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceProxyTarget() *schema.Resource {
@@ -104,24 +104,17 @@ func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
 		params.DBClusterIdentifiers = []*string{aws.String(v.(string))}
 	}
 
-	var err error
-	var registerDBProxyTargetsOutput *rds.RegisterDBProxyTargetsOutput
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		registerDBProxyTargetsOutput, err = conn.RegisterDBProxyTargets(&params)
-		if err != nil {
-			if isAWSErr(err, "InvalidDBInstanceState", "CREATING") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+		func() (interface{}, error) {
+			return conn.RegisterDBProxyTargets(&params)
+		},
+		rds.ErrCodeInvalidDBInstanceStateFault, "CREATING")
 
 	if err != nil {
 		return fmt.Errorf("error registering RDS DB Proxy (%s/%s) Target: %w", dbProxyName, targetGroupName, err)
 	}
 
-	dbProxyTarget := registerDBProxyTargetsOutput.DBProxyTargets[0]
+	dbProxyTarget := outputRaw.(*rds.RegisterDBProxyTargetsOutput).DBProxyTargets[0]
 
 	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, aws.StringValue(dbProxyTarget.Type), aws.StringValue(dbProxyTarget.RdsResourceId)}, "/"))
 
