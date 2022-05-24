@@ -27,7 +27,7 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceBasicConfig(rName),
+				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
@@ -57,7 +57,7 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceDescription(rName, rName),
+				Config: testAccDeviceConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device.0.description", rName),
@@ -69,7 +69,7 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceDescription(rName, "test"),
+				Config: testAccDeviceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device.0.description", "test"),
@@ -91,7 +91,7 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceBasicConfig(rName),
+				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName, &device),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
@@ -115,7 +115,7 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceBasicConfig(rName),
+				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName, &device),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), "aws_sagemaker_device_fleet.test"),
@@ -262,7 +262,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName)
 }
 
-func testAccDeviceBasicConfig(rName string) string {
+func testAccDeviceConfig_basic(rName string) string {
 	return testAccDeviceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device" "test" {
   device_fleet_name = aws_sagemaker_device_fleet.test.device_fleet_name
@@ -274,7 +274,7 @@ resource "aws_sagemaker_device" "test" {
 `, rName)
 }
 
-func testAccDeviceDescription(rName, desc string) string {
+func testAccDeviceConfig_description(rName, desc string) string {
 	return testAccDeviceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device" "test" {
   device_fleet_name = aws_sagemaker_device_fleet.test.device_fleet_name
