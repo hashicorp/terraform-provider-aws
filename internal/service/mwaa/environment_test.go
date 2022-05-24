@@ -115,7 +115,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_airflowConfigurationOptions(rName, "1", "16"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, "1", "16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -129,7 +129,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentConfig_airflowConfigurationOptions(rName, "2", "32"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, "2", "32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -161,7 +161,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_loggingConfiguration(rName, "true", mwaa.LoggingLevelCritical),
+				Config: testAccEnvironmentConfig_logging(rName, "true", mwaa.LoggingLevelCritical),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -198,7 +198,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentConfig_loggingConfiguration(rName, "false", mwaa.LoggingLevelInfo),
+				Config: testAccEnvironmentConfig_logging(rName, "false", mwaa.LoggingLevelInfo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -612,7 +612,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName)
 }
 
-func testAccEnvironmentConfig_airflowConfigurationOptions(rName, retries, parallelism string) string {
+func testAccEnvironmentConfig_airflowOptions(rName, retries, parallelism string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
@@ -634,7 +634,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName, retries, parallelism)
 }
 
-func testAccEnvironmentConfig_loggingConfiguration(rName, logEnabled, logLevel string) string {
+func testAccEnvironmentConfig_logging(rName, logEnabled, logLevel string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
