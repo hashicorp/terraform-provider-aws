@@ -29,10 +29,10 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckItemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemBasicConfig(tableName, hashKey, itemContent),
@@ -64,10 +64,10 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckItemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemContent),
@@ -108,10 +108,10 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckItemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithMultipleItemsConfig(tableName, hashKey, rangeKey, firstItem, secondItem),
@@ -129,6 +129,43 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "table_name", tableName),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "item", secondItem+"\n"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
+	var conf1 dynamodb.GetItemOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	hashKey := "hash.Key"
+	rangeKey := "range-Key"
+	item := `{
+	"hash.Key": {"S": "something"},
+	"range-Key": {"S": "first"},
+	"one1": {"N": "11111"},
+	"two2": {"N": "22222"},
+	"three3": {"N": "33333"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckItemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccItemWithWonkyItemsConfig(rName, hashKey, rangeKey, item),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemCount(rName, 1),
+
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "table_name", rName),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "item", item+"\n"),
 				),
 			},
 		},
@@ -156,10 +193,10 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckItemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemBasicConfig(tableName, hashKey, itemBefore),
@@ -204,10 +241,10 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckItemDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemBefore),
@@ -257,7 +294,7 @@ func testAccCheckItemDestroy(s *terraform.State) error {
 			ExpressionAttributeNames: tfdynamodb.BuildExpressionAttributeNames(attributes),
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return fmt.Errorf("Error retrieving DynamoDB table item: %s", err)
@@ -424,4 +461,36 @@ resource "aws_dynamodb_table_item" "test2" {
 ITEM
 }
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, firstItem, secondItem)
+}
+
+func testAccItemWithWonkyItemsConfig(tableName, hashKey, rangeKey, item string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 10
+  write_capacity = 10
+  hash_key       = %[2]q
+  range_key      = %[3]q
+
+  attribute {
+    name = %[2]q
+    type = "S"
+  }
+
+  attribute {
+    name = %[3]q
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table_item" "test1" {
+  table_name = aws_dynamodb_table.test.name
+  hash_key   = aws_dynamodb_table.test.hash_key
+  range_key  = aws_dynamodb_table.test.range_key
+
+  item = <<ITEM
+%[4]s
+ITEM
+}
+`, tableName, hashKey, rangeKey, item)
 }

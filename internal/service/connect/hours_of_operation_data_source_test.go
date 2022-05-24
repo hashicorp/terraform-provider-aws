@@ -16,9 +16,9 @@ func TestAccConnectHoursOfOperationDataSource_hoursOfOperationID(t *testing.T) {
 	datasourceName := "data.aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHoursOfOperationDataSourceConfig_HoursOfOperationID(rName, resourceName),
@@ -45,9 +45,9 @@ func TestAccConnectHoursOfOperationDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHoursOfOperationDataSourceConfig_Name(rName, rName2),

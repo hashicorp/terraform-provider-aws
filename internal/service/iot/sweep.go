@@ -67,8 +67,14 @@ func init() {
 	})
 
 	resource.AddTestSweepers("aws_iot_topic_rule", &resource.Sweeper{
-		Name: "aws_iot_topic_rule",
-		F:    sweepTopicRules,
+		Name:         "aws_iot_topic_rule",
+		F:            sweepTopicRules,
+		Dependencies: []string{"aws_iot_topic_rule_destination"},
+	})
+
+	resource.AddTestSweepers("aws_iot_topic_rule_destination", &resource.Sweeper{
+		Name: "aws_iot_topic_rule_destination",
+		F:    sweepTopicRuleDestinations,
 	})
 }
 
@@ -461,7 +467,7 @@ func sweepTopicRules(region string) error {
 			_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
 				RuleName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeUnauthorizedException, "") {
+			if tfawserr.ErrCodeEquals(err, iot.ErrCodeUnauthorizedException) {
 				continue
 			}
 			if err != nil {
@@ -519,6 +525,49 @@ func sweepThingGroups(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IoT Thing Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTopicRuleDestinations(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).IoTConn
+	input := &iot.ListTopicRuleDestinationsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.ListTopicRuleDestinationsPages(input, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DestinationSummaries {
+			r := ResourceTopicRuleDestination()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Arn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Topic Rule Destination sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Topic Rule Destinations (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Topic Rule Destinations (%s): %w", region, err)
 	}
 
 	return nil

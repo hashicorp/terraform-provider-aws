@@ -16,9 +16,9 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_batch_compute_environment.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentDataSourceConfig(rName),

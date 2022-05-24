@@ -49,7 +49,7 @@ func resourceKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.CreateKeyGroupInput{
-		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
+		KeyGroupConfig: expandKeyGroupConfig(d),
 	}
 
 	log.Println("[DEBUG] Create CloudFront Key Group:", input)
@@ -75,7 +75,7 @@ func resourceKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetKeyGroup(input)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -102,7 +102,7 @@ func resourceKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
-		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
+		KeyGroupConfig: expandKeyGroupConfig(d),
 		IfMatch:        aws.String(d.Get("etag").(string)),
 	}
 
@@ -124,7 +124,7 @@ func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteKeyGroup(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			return nil
 		}
 		return fmt.Errorf("error deleting CloudFront Key Group (%s): %w", d.Id(), err)
@@ -133,7 +133,7 @@ func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandCloudFrontKeyGroupConfig(d *schema.ResourceData) *cloudfront.KeyGroupConfig {
+func expandKeyGroupConfig(d *schema.ResourceData) *cloudfront.KeyGroupConfig {
 	keyGroupConfig := &cloudfront.KeyGroupConfig{
 		Items: flex.ExpandStringSet(d.Get("items").(*schema.Set)),
 		Name:  aws.String(d.Get("name").(string)),

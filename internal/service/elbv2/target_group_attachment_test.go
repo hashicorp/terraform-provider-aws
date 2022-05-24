@@ -20,10 +20,10 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentTargetIdInstanceConfig(targetGroupName),
@@ -38,10 +38,10 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentTargetIdInstanceConfig(targetGroupName),
@@ -59,10 +59,10 @@ func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentBackwardsCompatibilityConfig(targetGroupName),
@@ -78,10 +78,10 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentPortConfig(targetGroupName),
@@ -97,10 +97,10 @@ func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentTargetIdIPAddressConfig(targetGroupName),
@@ -116,10 +116,10 @@ func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentTargetIdLambdaConfig(targetGroupName),
@@ -157,7 +157,7 @@ func testAccCheckTargetGroupAttachmentDisappears(n string) resource.TestCheckFun
 		}
 
 		_, err := conn.DeregisterTargets(params)
-		if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 			return fmt.Errorf("Error deregistering Targets: %s", err)
 		}
 
@@ -236,7 +236,7 @@ func testAccCheckTargetGroupAttachmentDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) || tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException) {
 			return nil
 		} else {
 			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)

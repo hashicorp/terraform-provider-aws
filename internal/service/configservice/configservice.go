@@ -480,7 +480,7 @@ func waitForOrganizationRuleStatusDeleteSuccessful(conn *configservice.ConfigSer
 
 	_, err := stateChangeConf.WaitForState()
 
-	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 		return nil
 	}
 

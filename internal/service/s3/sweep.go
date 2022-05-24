@@ -101,10 +101,10 @@ func sweepObjects(region string) error {
 		}
 
 		// Delete everything including locked objects. Ignore any object errors.
-		err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
+		_, err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
 
 		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
+			return fmt.Errorf("error deleting S3 Bucket (%s) Objects: %s", bucketName, err)
 		}
 	}
 
@@ -179,11 +179,11 @@ func sweepBuckets(region string) error {
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
-			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 				return nil
 			}
 
-			if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
+			if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
 				return resource.RetryableError(err)
 			}
 
@@ -224,7 +224,7 @@ func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 
 	output, err := conn.GetObjectLockConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
+	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
 		return false, nil
 	}
 

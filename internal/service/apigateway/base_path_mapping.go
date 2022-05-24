@@ -62,7 +62,7 @@ func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) err
 		_, err := conn.CreateBasePathMapping(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "") {
+			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeBadRequestException) {
 				return resource.NonRetryableError(err)
 			}
 
@@ -198,7 +198,7 @@ func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			return nil
 		}
 

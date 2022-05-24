@@ -25,6 +25,7 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 				Config: testAccImagePipelineARNDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_last_run", resourceName, "date_last_run"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_next_run", resourceName, "date_next_run"),
@@ -46,7 +47,29 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccImagePipelineARNDataSourceConfig(rName string) string {
+func TestAccImageBuilderImagePipelineDataSource_containerRecipeARN(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_imagebuilder_image_pipeline.test"
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImagePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineContainerRecipeARNDataSourceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
+				),
+			},
+		},
+	})
+}
+
+func testAccImagePipelineBaseDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -92,6 +115,17 @@ resource "aws_imagebuilder_component" "test" {
   version  = "1.0.0"
 }
 
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+}
+`, rName)
+}
+
+func testAccImagePipelineARNDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImagePipelineBaseDataSourceConfig(rName),
+		fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test" {
   component {
     component_arn = aws_imagebuilder_component.test.arn
@@ -100,11 +134,6 @@ resource "aws_imagebuilder_image_recipe" "test" {
   name         = %[1]q
   parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
-}
-
-resource "aws_imagebuilder_infrastructure_configuration" "test" {
-  instance_profile_name = aws_iam_instance_profile.test.name
-  name                  = %[1]q
 }
 
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -116,5 +145,47 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 data "aws_imagebuilder_image_pipeline" "test" {
   arn = aws_imagebuilder_image_pipeline.test.arn
 }
-`, rName)
+`, rName))
+}
+
+func testAccImagePipelineContainerRecipeARNDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImagePipelineBaseDataSourceConfig(rName),
+		fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+resource "aws_imagebuilder_container_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  name           = %[1]q
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  version        = "1.0.0"
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+}
+
+data "aws_imagebuilder_image_pipeline" "test" {
+  arn = aws_imagebuilder_image_pipeline.test.arn
+}
+`, rName))
 }

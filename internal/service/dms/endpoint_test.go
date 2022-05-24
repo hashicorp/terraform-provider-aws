@@ -16,17 +16,17 @@ import (
 )
 
 func TestAccDMSEndpoint_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-basic"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointBasicConfig(randId),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -39,7 +39,7 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointBasicConfigUpdate(randId),
+				Config: testAccEndpointConfig_basicUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
@@ -55,18 +55,18 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_s3(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-s3"
+func TestAccDMSEndpoint_S3_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointS3Config(randId),
+				Config: testAccEndpointConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
@@ -75,12 +75,16 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
 				),
 			},
 			{
@@ -90,7 +94,7 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointS3ConfigUpdate(randId),
+				Config: testAccEndpointConfig_s3Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
@@ -109,17 +113,17 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-s3"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointS3ExtraConnectionAttributesConfig(randId),
+				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
@@ -136,17 +140,17 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-dynamodb"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointDynamoDbConfig(randId),
+				Config: testAccEndpointConfig_dynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -159,7 +163,7 @@ func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointDynamoDbConfigUpdate(randId),
+				Config: testAccEndpointConfig_dynamoDBUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 				),
@@ -168,18 +172,18 @@ func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfig(rName),
+				Config: testAccEndpointConfig_openSearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -198,22 +202,22 @@ func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
 	})
 }
 
-// TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes validates
+// TestAccDMSEndpoint_OpenSearch_extraConnectionAttributes validates
 // extra_connection_attributes handling for "elasticsearch" engine not affected
 // by changes made specific to suppressing diffs in the case of "s3"/"mongodb" engine
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_extraConnectionAttributes(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchExtraConnectionAttributesConfig(rName),
+				Config: testAccEndpointConfig_openSearchExtraConnectionAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "errorRetryDuration=400;"),
@@ -229,18 +233,18 @@ func TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_errorRetryDuration(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 60),
+				Config: testAccEndpointConfig_openSearchErrorRetryDuration(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -256,7 +260,7 @@ func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
 			// Resource needs additional creation retry handling for the following:
 			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
 			// {
-			// 	Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 120),
+			// 	Config: testAccEndpointConfig_openSearchErrorRetryDuration(rName, 120),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckEndpointExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -267,18 +271,18 @@ func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Elasticsearch_fullLoadErrorPercentage(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_fullLoadErrorPercentage(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 1),
+				Config: testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -294,7 +298,7 @@ func TestAccDMSEndpoint_Elasticsearch_fullLoadErrorPercentage(t *testing.T) {
 			// Resource needs additional creation retry handling for the following:
 			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
 			// {
-			// 	Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 2),
+			// 	Config: testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName, 2),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckEndpointExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -311,13 +315,13 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKafkaConfig(rName, domainName),
+				Config: testAccEndpointConfig_kafka(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
@@ -347,7 +351,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKafkaConfigUpdate(rName, domainName),
+				Config: testAccEndpointConfig_kafkaUpdate(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
@@ -382,13 +386,13 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKinesisConfig(rName),
+				Config: testAccEndpointConfig_kinesis(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
@@ -410,7 +414,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKinesisConfigUpdate(rName),
+				Config: testAccEndpointConfig_kinesisUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
@@ -429,18 +433,18 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_mongoDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-mongodb"
+func TestAccDMSEndpoint_MongoDB_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointMongoDbConfig(randId),
+				Config: testAccEndpointConfig_mongoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -460,24 +464,24 @@ func TestAccDMSEndpoint_mongoDB(t *testing.T) {
 // configured fields and extra_connection_attributes now set in the resource
 // per https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-mongodb"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointMongoDbConfig(randId),
+				Config: testAccEndpointConfig_mongoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointMongoDbConfigUpdate(randId),
+				Config: testAccEndpointConfig_mongoDBUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -504,18 +508,18 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Oracle(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-oracledb"
+func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointOracleConfig(randId),
+				Config: testAccEndpointConfig_oracle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -531,18 +535,18 @@ func TestAccDMSEndpoint_Oracle(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Oracle_secretId(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-oracledb"
+func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointOracleConfigSecretId(randId),
+				Config: testAccEndpointConfig_oracleSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -558,24 +562,24 @@ func TestAccDMSEndpoint_Oracle_secretId(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-oracledb"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointOracleConfig(randId),
+				Config: testAccEndpointConfig_oracle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointOracleConfigUpdate(randId),
+				Config: testAccEndpointConfig_oracleUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -597,18 +601,18 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Postgres(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-oracledb"
+func TestAccDMSEndpoint_PostgreSQL_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointPostgresConfig(randId),
+				Config: testAccEndpointConfig_postgreSQL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -624,18 +628,18 @@ func TestAccDMSEndpoint_Postgres(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-oracledb"
+func TestAccDMSEndpoint_PostgreSQL_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointPostgresConfigSecretId(randId),
+				Config: testAccEndpointConfig_postgreSQLSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -650,25 +654,25 @@ func TestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Postgres_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-oracledb"
+func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointPostgresConfig(randId),
+				Config: testAccEndpointConfig_postgreSQL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointPostgresConfigUpdate(randId),
+				Config: testAccEndpointConfig_postgreSQLUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -690,18 +694,40 @@ func TestAccDMSEndpoint_Postgres_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_docDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-docdb"
+// https://github.com/hashicorp/terraform-provider-aws/issues/23143
+func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointDocDBConfig(randId),
+				Config: testAccEndpointConfig_postgresKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_docDB(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_docDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -714,7 +740,7 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointDocDBConfigUpdate(randId),
+				Config: testAccEndpointConfig_docDBUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
@@ -731,17 +757,17 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_db2(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-db2"
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointDb2Config(randId),
+				Config: testAccEndpointConfig_db2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -754,7 +780,7 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointDb2ConfigUpdate(randId),
+				Config: testAccEndpointConfig_db2Update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
@@ -826,11 +852,11 @@ func testAccCheckEndpointExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func dmsEndpointBasicConfig(randId string) string {
+func testAccEndpointConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "aurora"
   extra_connection_attributes = ""
@@ -840,21 +866,21 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode                    = "none"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 
   username = "tftest"
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointBasicConfigUpdate(randId string) string {
+func testAccEndpointConfig_basicUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "aurora"
   extra_connection_attributes = "extra"
@@ -864,29 +890,29 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode                    = "none"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 
   username = "tftestupdate"
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointDynamoDbConfig(randId string) string {
+func testAccEndpointConfig_dynamoDB(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id         = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id         = %[1]q
   endpoint_type       = "target"
   engine_name         = "dynamodb"
   service_access_role = aws_iam_role.iam_role.arn
   ssl_mode            = "none"
 
   tags = {
-    Name   = "tf-test-dynamodb-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -895,7 +921,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -914,7 +940,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -937,29 +963,29 @@ resource "aws_iam_role_policy" "dms_dynamodb_access" {
 }
 EOF
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointDynamoDbConfigUpdate(randId string) string {
+func testAccEndpointConfig_dynamoDBUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id         = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id         = %[1]q
   endpoint_type       = "target"
   engine_name         = "dynamodb"
   service_access_role = aws_iam_role.iam_role.arn
   ssl_mode            = "none"
 
   tags = {
-    Name   = "tf-test-dynamodb-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -978,7 +1004,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1001,22 +1027,22 @@ resource "aws_iam_role_policy" "dms_dynamodb_access" {
 }
 EOF
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointS3Config(randId string) string {
+func testAccEndpointConfig_s3(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -1024,13 +1050,17 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   s3_settings {
     service_access_role_arn = aws_iam_role.iam_role.arn
     bucket_name             = "bucket_name"
+    cdc_path                = "cdc/path"
+    date_partition_enabled  = true
+    date_partition_sequence = "yyyymmddhh"
+    timestamp_column_name   = "tx_commit_time"
   }
 
   depends_on = [aws_iam_role_policy.dms_s3_access]
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1049,7 +1079,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1077,15 +1107,15 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 }
 EOF
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointS3ExtraConnectionAttributesConfig(randId string) string {
+func testAccEndpointConfig_s3ExtraConnectionAttributes(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
@@ -1099,7 +1129,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   }
 
   tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -1108,7 +1138,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1127,7 +1157,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1155,22 +1185,22 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 }
 EOF
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointS3ConfigUpdate(randId string) string {
+func testAccEndpointConfig_s3Config(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
   extra_connection_attributes = "key=value;"
 
   tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
@@ -1187,7 +1217,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1206,7 +1236,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1234,10 +1264,10 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 }
 EOF
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointElasticsearchConfigBase(rName string) string {
+func testAccEndpointConfig_openSearchBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1288,14 +1318,14 @@ EOF
 `, rName)
 }
 
-func dmsEndpointElasticsearchConfig(rName string) string {
+func testAccEndpointConfig_openSearch(rName string) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
-  engine_name   = "elasticsearch"
+  engine_name   = "opensearch"
 
   elasticsearch_settings {
     endpoint_uri            = "search-estest.es.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
@@ -1307,9 +1337,9 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointElasticsearchExtraConnectionAttributesConfig(rName string) string {
+func testAccEndpointConfig_openSearchExtraConnectionAttributes(rName string) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
@@ -1327,9 +1357,9 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointElasticsearchConfigErrorRetryDuration(rName string, errorRetryDuration int) string {
+func testAccEndpointConfig_openSearchErrorRetryDuration(rName string, errorRetryDuration int) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1347,9 +1377,9 @@ resource "aws_dms_endpoint" "test" {
 `, rName, errorRetryDuration))
 }
 
-func dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
+func testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1367,7 +1397,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, fullLoadErrorPercentage))
 }
 
-func dmsEndpointKafkaConfig(rName, domainName string) string {
+func testAccEndpointConfig_kafka(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1385,7 +1415,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, domainName)
 }
 
-func dmsEndpointKafkaConfigUpdate(rName, domainName string) string {
+func testAccEndpointConfig_kafkaUpdate(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1413,7 +1443,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, domainName)
 }
 
-func dmsEndpointKinesisConfigBase(rName string) string {
+func testAccEndpointConfig_kinesisBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1466,8 +1496,8 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func dmsEndpointKinesisConfig(rName string) string {
-	return acctest.ConfigCompose(dmsEndpointKinesisConfigBase(rName), fmt.Sprintf(`
+func testAccEndpointConfig_kinesis(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
@@ -1487,8 +1517,8 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointKinesisConfigUpdate(rName string) string {
-	return acctest.ConfigCompose(dmsEndpointKinesisConfigBase(rName), fmt.Sprintf(`
+func testAccEndpointConfig_kinesisUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
@@ -1511,14 +1541,14 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointMongoDbConfig(randId string) string {
+func testAccEndpointConfig_mongoDB(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "mongodb"
   server_name                 = "tftest"
@@ -1531,7 +1561,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   kms_key_arn                 = data.aws_kms_alias.dms.target_key_arn
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -1545,17 +1575,17 @@ resource "aws_dms_endpoint" "dms_endpoint" {
     auth_source         = "admin"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointMongoDbConfigUpdate(randId string) string {
+func testAccEndpointConfig_mongoDBUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "mongodb"
   server_name                 = "tftest-new-server_name"
@@ -1568,7 +1598,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   kms_key_arn                 = data.aws_kms_alias.dms.target_key_arn
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
@@ -1580,13 +1610,13 @@ resource "aws_dms_endpoint" "dms_endpoint" {
     docs_to_investigate = "1001"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointOracleConfig(randId string) string {
+func testAccEndpointConfig_oracle(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "oracle"
   server_name                 = "tftest"
@@ -1598,18 +1628,18 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointOracleConfigUpdate(randId string) string {
+func testAccEndpointConfig_oracleUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "oracle"
   server_name                 = "tftest-new-server_name"
@@ -1621,15 +1651,15 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = "key=value;"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointOracleConfigSecretId(randId string) string {
+func testAccEndpointConfig_oracleSecretID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1679,8 +1709,8 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                     = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "oracle"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
@@ -1691,18 +1721,18 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointPostgresConfig(randId string) string {
+func testAccEndpointConfig_postgreSQL(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
   server_name                 = "tftest"
@@ -1714,18 +1744,18 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointPostgresConfigUpdate(randId string) string {
+func testAccEndpointConfig_postgreSQLUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
   server_name                 = "tftest-new-server_name"
@@ -1737,15 +1767,15 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = "key=value;"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointPostgresConfigSecretId(randId string) string {
+func testAccEndpointConfig_postgreSQLSecretID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1794,8 +1824,8 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                     = "tf-test-dms-endpoint-%[1]s"
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "postgres"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
@@ -1806,19 +1836,19 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointDocDBConfig(randId string) string {
+func testAccEndpointConfig_docDB(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "docdb"
   extra_connection_attributes = ""
@@ -1828,21 +1858,21 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode                    = "none"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 
   username = "tftest"
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointDocDBConfigUpdate(randId string) string {
+func testAccEndpointConfig_docDBUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "docdb"
   extra_connection_attributes = "extra"
@@ -1852,21 +1882,21 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode                    = "none"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 
   username = "tftestupdate"
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointDb2Config(randId string) string {
+func testAccEndpointConfig_db2(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "db2"
   extra_connection_attributes = ""
@@ -1876,21 +1906,21 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode                    = "none"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
 
   username = "tftest"
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointDb2ConfigUpdate(randId string) string {
+func testAccEndpointConfig_db2Update(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "db2"
   extra_connection_attributes = "extra"
@@ -1900,12 +1930,39 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode                    = "none"
 
   tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 
   username = "tftestupdate"
 }
-`, randId)
+`, rName)
+}
+
+func testAccEndpointConfig_postgresKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 27018
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+  kms_key_arn                 = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

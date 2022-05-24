@@ -227,7 +227,7 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshVirtualServiceSpec(resp.VirtualService.Spec))
+	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -293,7 +293,7 @@ func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) erro
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

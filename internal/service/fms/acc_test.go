@@ -17,36 +17,36 @@ import (
 // Firewall Management Service admin APIs are only enabled in specific regions, otherwise:
 // InvalidOperationException: This operation is not supported in the 'us-west-2' region.
 
-// testAccFmsAdminRegion is the chosen Firewall Management Service testing region
+// testAccAdminRegion is the chosen Firewall Management Service testing region
 //
 // Cached to prevent issues should multiple regions become available.
-var testAccFmsAdminRegion string
+var testAccAdminRegion string
 
-// testAccProviderFmsAdmin is the Firewall Management Service provider instance
+// testAccProviderAdmin is the Firewall Management Service provider instance
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckFmsAdmin(t) must be called before using this provider instance.
-var testAccProviderFmsAdmin *schema.Provider
+// testAccPreCheckAdmin(t) must be called before using this provider instance.
+var testAccProviderAdmin *schema.Provider
 
-// testAccProviderFmsAdminConfigure ensures the provider is only configured once
-var testAccProviderFmsAdminConfigure sync.Once
+// testAccProviderAdminConfigure ensures the provider is only configured once
+var testAccProviderAdminConfigure sync.Once
 
-// testAccPreCheckFmsAdmin verifies AWS credentials and that Firewall Management Service is supported
-func testAccPreCheckFmsAdmin(t *testing.T) {
+// testAccPreCheckAdmin verifies AWS credentials and that Firewall Management Service is supported
+func testAccPreCheckAdmin(t *testing.T) {
 	acctest.PreCheckPartitionHasService(fms.EndpointsID, t)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
-	testAccProviderFmsAdminConfigure.Do(func() {
-		testAccProviderFmsAdmin = provider.Provider()
+	testAccProviderAdminConfigure.Do(func() {
+		testAccProviderAdmin = provider.Provider()
 
 		config := map[string]interface{}{
-			"region": testAccGetFmsAdminRegion(),
+			"region": testAccGetAdminRegion(),
 		}
 
-		diags := testAccProviderFmsAdmin.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderAdmin.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
@@ -58,21 +58,21 @@ func testAccPreCheckFmsAdmin(t *testing.T) {
 	})
 }
 
-// testAccFmsAdminRegionProviderConfig is the Terraform provider configuration for Firewall Management Service region testing
+// testAccAdminRegionProviderConfig is the Terraform provider configuration for Firewall Management Service region testing
 //
 // Testing Firewall Management Service assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccFmsAdminRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetFmsAdminRegion())
+func testAccAdminRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetAdminRegion())
 }
 
-// testAccGetFmsAdminRegion returns the Firewall Management Service region for testing
-func testAccGetFmsAdminRegion() string {
-	if testAccFmsAdminRegion != "" {
-		return testAccFmsAdminRegion
+// testAccGetAdminRegion returns the Firewall Management Service region for testing
+func testAccGetAdminRegion() string {
+	if testAccAdminRegion != "" {
+		return testAccAdminRegion
 	}
 
-	testAccFmsAdminRegion = endpoints.UsEast1RegionID
+	testAccAdminRegion = endpoints.UsEast1RegionID
 
-	return testAccFmsAdminRegion
+	return testAccAdminRegion
 }

@@ -11,7 +11,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -26,7 +25,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -392,6 +390,7 @@ func ResourceGroup() *schema.Resource {
 			"initial_lifecycle_hook": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -553,6 +552,11 @@ func ResourceGroup() *schema.Resource {
 										Default:      90,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
+									"skip_matching": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 								},
 							},
 						},
@@ -562,7 +566,7 @@ func ResourceGroup() *schema.Resource {
 							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validateAutoScalingGroupInstanceRefreshTriggerFields,
+								ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
 							},
 						},
 					},
@@ -590,6 +594,20 @@ func ResourceGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  -1,
+						},
+						"instance_reuse_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"reuse_on_scale_in": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -661,7 +679,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createOpts := autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
-		MixedInstancesPolicy:             expandAutoScalingMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{})),
+		MixedInstancesPolicy:             expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{})),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 	}
 	updateOpts := autoscaling.UpdateAutoScalingGroupInput{
@@ -761,7 +779,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Auto Scaling Group create configuration: %#v", createOpts)
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -787,8 +805,14 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if twoPhases {
 		for _, hook := range generatePutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			if err = resourceLifecycleHookPutOp(conn, &hook); err != nil {
-				return fmt.Errorf("Error creating initial lifecycle hooks: %s", err)
+			_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+				func() (interface{}, error) {
+					return conn.PutLifecycleHook(&hook)
+				},
+				ErrCodeValidationError, "Unable to publish test message to notification target")
+
+			if err != nil {
+				return fmt.Errorf("creating Auto Scaling Group (%s) Lifecycle Hook: %w", d.Id(), err)
 			}
 		}
 
@@ -872,14 +896,14 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(g.LaunchTemplate)); err != nil {
+	if err := d.Set("launch_template", flattenLaunchTemplateSpecificationMap(g.LaunchTemplate)); err != nil {
 		return fmt.Errorf("error setting launch_template: %s", err)
 	}
 
 	d.Set("max_size", g.MaxSize)
 	d.Set("min_size", g.MinSize)
 
-	if err := d.Set("mixed_instances_policy", flattenAutoScalingMixedInstancesPolicy(g.MixedInstancesPolicy)); err != nil {
+	if err := d.Set("mixed_instances_policy", flattenMixedInstancesPolicy(g.MixedInstancesPolicy)); err != nil {
 		return fmt.Errorf("error setting mixed_instances_policy: %s", err)
 	}
 
@@ -951,7 +975,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+func waitUntilGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
@@ -987,7 +1011,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.
 	return nil
 }
 
-func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
+func waitUntilGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
@@ -1068,7 +1092,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("mixed_instances_policy") {
-		opts.MixedInstancesPolicy = expandAutoScalingMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
+		opts.MixedInstancesPolicy = expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
 		shouldRefreshInstances = true
 	}
 
@@ -1182,7 +1206,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error detaching Auto Scaling Group (%s) Load Balancers: %s", d.Id(), err)
 				}
 
-				if err := waitUntilAutoscalingGroupLoadBalancersRemoved(conn, d.Id()); err != nil {
+				if err := waitUntilGroupLoadBalancersRemoved(conn, d.Id()); err != nil {
 					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancers being removed: %s", d.Id(), err)
 				}
 			}
@@ -1209,7 +1233,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error attaching Auto Scaling Group (%s) Load Balancers: %s", d.Id(), err)
 				}
 
-				if err := waitUntilAutoscalingGroupLoadBalancersAdded(conn, d.Id()); err != nil {
+				if err := waitUntilGroupLoadBalancersAdded(conn, d.Id()); err != nil {
 					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancers being added: %s", d.Id(), err)
 				}
 			}
@@ -1251,7 +1275,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("Error updating Load Balancers Target Groups for Auto Scaling Group (%s), error: %s", d.Id(), err)
 				}
 
-				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
+				if err := waitUntilGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
 					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancer Target Groups being removed: %s", d.Id(), err)
 				}
 			}
@@ -1278,7 +1302,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("Error updating Load Balancers Target Groups for Auto Scaling Group (%s), error: %s", d.Id(), err)
 				}
 
-				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
+				if err := waitUntilGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
 					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancer Target Groups being added: %s", d.Id(), err)
 				}
 			}
@@ -1305,7 +1329,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if shouldRefreshInstances {
-			if err := autoScalingGroupRefreshInstances(conn, d.Id(), instanceRefresh); err != nil {
+			if err := GroupRefreshInstances(conn, d.Id(), instanceRefresh); err != nil {
 				return fmt.Errorf("failed to start instance refresh of Auto Scaling Group %s: %w", d.Id(), err)
 			}
 		}
@@ -1321,7 +1345,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 
-			if err := resourceAutoScalingGroupWarmPoolDelete(g, d, meta); err != nil {
+			if err := resourceGroupWarmPoolDelete(g, d, meta); err != nil {
 				return fmt.Errorf("error deleting Warm pool for Auto Scaling Group %s: %s", d.Id(), err)
 			}
 
@@ -1374,7 +1398,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Try deleting Warm pool first.
-	if err := resourceAutoScalingGroupWarmPoolDelete(g, d, meta); err != nil {
+	if err := resourceGroupWarmPoolDelete(g, d, meta); err != nil {
 		return fmt.Errorf("error deleting Warm pool for Auto Scaling Group %s: %s", d.Id(), err)
 	}
 
@@ -1395,16 +1419,14 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	// scaling operations within 5m.
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				switch awserr.Code() {
-				case "InvalidGroup.NotFound":
-					// Already gone? Sure!
-					return nil
-				case "ResourceInUse", "ScalingActivityInProgress":
-					// These are retryable
-					return resource.RetryableError(awserr)
-				}
+			if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
+				return nil
 			}
+
+			if tfawserr.ErrCodeEquals(err, "ResourceInUse", "ScalingActivityInProgress") {
+				return resource.RetryableError(err)
+			}
+
 			// Didn't recognize the error, so shouldn't retry.
 			return resource.NonRetryableError(err)
 		}
@@ -1413,7 +1435,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}
@@ -1442,7 +1464,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.ResourceData, meta interface{}) error {
+func resourceGroupWarmPoolDelete(g *autoscaling.Group, d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	if g.WarmPoolConfiguration == nil {
@@ -1466,13 +1488,10 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 		err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 			_, err := conn.DeleteWarmPool(&deleteopts)
 			if err != nil {
-				if callerr, ok := err.(awserr.Error); ok {
-					switch callerr.Code() {
-					case "ResourceInUse", "ScalingActivityInProgress":
-						// These are retryable
-						return resource.RetryableError(callerr)
-					}
+				if tfawserr.ErrCodeEquals(err, "ResourceInUse", "ScalingActivityInProgress") {
+					return resource.RetryableError(err)
 				}
+
 				// Didn't recognize the error, so shouldn't retry.
 				return resource.NonRetryableError(err)
 			}
@@ -1540,8 +1559,7 @@ func getGroupWarmPool(asgName string, conn *autoscaling.AutoScaling) (*autoscali
 	log.Printf("[DEBUG] Warm Pool describe configuration input: %#v", describeOpts)
 	describeWarmPoolOutput, err := conn.DescribeWarmPool(&describeOpts)
 	if err != nil {
-		autoscalingerr, ok := err.(awserr.Error)
-		if ok && autoscalingerr.Code() == "InvalidGroup.NotFound" {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil, nil
 		}
 
@@ -1612,8 +1630,7 @@ func getGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group
 	log.Printf("[DEBUG] Auto Scaling Group describe configuration: %#v", describeOpts)
 	describeGroups, err := conn.DescribeAutoScalingGroups(&describeOpts)
 	if err != nil {
-		autoscalingerr, ok := err.(awserr.Error)
-		if ok && autoscalingerr.Code() == "InvalidGroup.NotFound" {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil, nil
 		}
 
@@ -1652,6 +1669,18 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 	}
 	if _, err := conn.UpdateAutoScalingGroup(&opts); err != nil {
 		return fmt.Errorf("Error setting capacity to zero to drain: %s", err)
+	}
+
+	// Next, ensure that instances are not prevented from scaling in.
+	//
+	// The ASG's own scale-in protection setting doesn't make a difference here,
+	// as it only affects new instances, which won't be launched now that the
+	// desired capacity is set to 0. There is also the possibility that this ASG
+	// no longer applies scale-in protection to new instances, but there's still
+	// old ones that have it.
+	log.Printf("[DEBUG] Disabling scale-in protection for all instances in the group")
+	if err := disableASGScaleInProtections(d, conn); err != nil {
+		return fmt.Errorf("Error disabling scale-in protection for all instances: %s", err)
 	}
 
 	// Next, wait for the Auto Scaling Group to drain
@@ -1861,7 +1890,7 @@ func expandVpcZoneIdentifiers(list []interface{}) *string {
 	return aws.String(strings.Join(strs, ","))
 }
 
-func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.InstancesDistribution {
+func expandInstancesDistribution(l []interface{}) *autoscaling.InstancesDistribution {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1909,13 +1938,13 @@ func expandMixedInstancesLaunchTemplate(l []interface{}) *autoscaling.LaunchTemp
 	}
 
 	if v, ok := m["override"]; ok {
-		launchTemplate.Overrides = expandAutoScalingLaunchTemplateOverrides(v.([]interface{}))
+		launchTemplate.Overrides = expandLaunchTemplateOverrides(v.([]interface{}))
 	}
 
 	return launchTemplate
 }
 
-func expandAutoScalingLaunchTemplateOverrides(l []interface{}) []*autoscaling.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrides(l []interface{}) []*autoscaling.LaunchTemplateOverrides {
 	if len(l) == 0 {
 		return nil
 	}
@@ -1927,12 +1956,12 @@ func expandAutoScalingLaunchTemplateOverrides(l []interface{}) []*autoscaling.La
 			continue
 		}
 
-		launchTemplateOverrides[i] = expandAutoScalingLaunchTemplateOverride(m.(map[string]interface{}))
+		launchTemplateOverrides[i] = expandLaunchTemplateOverride(m.(map[string]interface{}))
 	}
 	return launchTemplateOverrides
 }
 
-func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscaling.LaunchTemplateOverrides {
+func expandLaunchTemplateOverride(m map[string]interface{}) *autoscaling.LaunchTemplateOverrides {
 	launchTemplateOverrides := &autoscaling.LaunchTemplateOverrides{}
 
 	if v, ok := m["instance_type"]; ok && v.(string) != "" {
@@ -1977,7 +2006,7 @@ func expandMixedInstancesLaunchTemplateSpecification(l []interface{}) *autoscali
 	return launchTemplateSpecification
 }
 
-func expandAutoScalingMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPolicy {
+func expandMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1989,13 +2018,13 @@ func expandAutoScalingMixedInstancesPolicy(l []interface{}) *autoscaling.MixedIn
 	}
 
 	if v, ok := m["instances_distribution"]; ok {
-		mixedInstancesPolicy.InstancesDistribution = expandAutoScalingInstancesDistribution(v.([]interface{}))
+		mixedInstancesPolicy.InstancesDistribution = expandInstancesDistribution(v.([]interface{}))
 	}
 
 	return mixedInstancesPolicy
 }
 
-func flattenAutoScalingInstancesDistribution(instancesDistribution *autoscaling.InstancesDistribution) []interface{} {
+func flattenInstancesDistribution(instancesDistribution *autoscaling.InstancesDistribution) []interface{} {
 	if instancesDistribution == nil {
 		return []interface{}{}
 	}
@@ -2012,20 +2041,20 @@ func flattenAutoScalingInstancesDistribution(instancesDistribution *autoscaling.
 	return []interface{}{m}
 }
 
-func flattenAutoScalingLaunchTemplate(launchTemplate *autoscaling.LaunchTemplate) []interface{} {
+func flattenLaunchTemplate(launchTemplate *autoscaling.LaunchTemplate) []interface{} {
 	if launchTemplate == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"launch_template_specification": flattenAutoScalingLaunchTemplateSpecification(launchTemplate.LaunchTemplateSpecification),
-		"override":                      flattenAutoScalingLaunchTemplateOverrides(launchTemplate.Overrides),
+		"launch_template_specification": flattenLaunchTemplateSpecification(launchTemplate.LaunchTemplateSpecification),
+		"override":                      flattenLaunchTemplateOverrides(launchTemplate.Overrides),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autoscaling.LaunchTemplateOverrides) []interface{} {
+func flattenLaunchTemplateOverrides(launchTemplateOverrides []*autoscaling.LaunchTemplateOverrides) []interface{} {
 	l := make([]interface{}, len(launchTemplateOverrides))
 
 	for i, launchTemplateOverride := range launchTemplateOverrides {
@@ -2035,7 +2064,7 @@ func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autosc
 		}
 		m := map[string]interface{}{
 			"instance_type":                 aws.StringValue(launchTemplateOverride.InstanceType),
-			"launch_template_specification": flattenAutoScalingLaunchTemplateSpecification(launchTemplateOverride.LaunchTemplateSpecification),
+			"launch_template_specification": flattenLaunchTemplateSpecification(launchTemplateOverride.LaunchTemplateSpecification),
 			"weighted_capacity":             aws.StringValue(launchTemplateOverride.WeightedCapacity),
 		}
 		l[i] = m
@@ -2044,7 +2073,7 @@ func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autosc
 	return l
 }
 
-func flattenAutoScalingLaunchTemplateSpecification(launchTemplateSpecification *autoscaling.LaunchTemplateSpecification) []interface{} {
+func flattenLaunchTemplateSpecification(launchTemplateSpecification *autoscaling.LaunchTemplateSpecification) []interface{} {
 	if launchTemplateSpecification == nil {
 		return []interface{}{}
 	}
@@ -2058,14 +2087,14 @@ func flattenAutoScalingLaunchTemplateSpecification(launchTemplateSpecification *
 	return []interface{}{m}
 }
 
-func flattenAutoScalingMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.MixedInstancesPolicy) []interface{} {
+func flattenMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.MixedInstancesPolicy) []interface{} {
 	if mixedInstancesPolicy == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"instances_distribution": flattenAutoScalingInstancesDistribution(mixedInstancesPolicy.InstancesDistribution),
-		"launch_template":        flattenAutoScalingLaunchTemplate(mixedInstancesPolicy.LaunchTemplate),
+		"instances_distribution": flattenInstancesDistribution(mixedInstancesPolicy.InstancesDistribution),
+		"launch_template":        flattenLaunchTemplate(mixedInstancesPolicy.LaunchTemplate),
 	}
 
 	return []interface{}{m}
@@ -2087,10 +2116,26 @@ func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolCon
 		"max_group_prepared_capacity": maxGroupPreparedCapacity,
 	}
 
+	if warmPoolConfiguration.InstanceReusePolicy != nil {
+		m["instance_reuse_policy"] = flattenWarmPoolInstanceReusePolicy(warmPoolConfiguration.InstanceReusePolicy)
+	}
+
 	return []interface{}{m}
 }
 
-func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {
+func flattenWarmPoolInstanceReusePolicy(instanceReusePolicy *autoscaling.InstanceReusePolicy) []interface{} {
+	if instanceReusePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"reuse_on_scale_in": aws.BoolValue(instanceReusePolicy.ReuseOnScaleIn),
+	}
+
+	return []interface{}{m}
+}
+
+func waitUntilGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
@@ -2126,7 +2171,7 @@ func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, 
 	return nil
 }
 
-func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+func waitUntilGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
@@ -2185,6 +2230,10 @@ func CreatePutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWar
 		input.MaxGroupPreparedCapacity = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["instance_reuse_policy"]; ok && len(v.([]interface{})) > 0 {
+		input.InstanceReusePolicy = expandWarmPoolInstanceReusePolicy(v.([]interface{}))
+	}
+
 	return &input
 }
 
@@ -2198,11 +2247,11 @@ func CreateGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscali
 	return &autoscaling.StartInstanceRefreshInput{
 		AutoScalingGroupName: aws.String(asgName),
 		Strategy:             aws.String(m["strategy"].(string)),
-		Preferences:          expandAutoScalingGroupInstanceRefreshPreferences(m["preferences"].([]interface{})),
+		Preferences:          expandGroupInstanceRefreshPreferences(m["preferences"].([]interface{})),
 	}
 }
 
-func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscaling.RefreshPreferences {
+func expandGroupInstanceRefreshPreferences(l []interface{}) *autoscaling.RefreshPreferences {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2235,15 +2284,35 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 		refreshPreferences.MinHealthyPercentage = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["skip_matching"]; ok {
+		refreshPreferences.SkipMatching = aws.Bool(v.(bool))
+	}
+
 	return refreshPreferences
 }
 
-func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
+func expandWarmPoolInstanceReusePolicy(l []interface{}) *autoscaling.InstanceReusePolicy {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	instanceReusePolicy := &autoscaling.InstanceReusePolicy{}
+
+	if v, ok := m["reuse_on_scale_in"]; ok {
+		instanceReusePolicy.ReuseOnScaleIn = aws.Bool(v.(bool))
+	}
+
+	return instanceReusePolicy
+}
+
+func GroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
 	input := CreateGroupInstanceRefreshInput(asgName, refreshConfig)
 	err := resource.Retry(instanceRefreshStartedTimeout, func() *resource.RetryError {
 		_, err := conn.StartInstanceRefresh(input)
 		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {
-			cancelErr := cancelAutoscalingInstanceRefresh(conn, asgName)
+			cancelErr := cancelInstanceRefresh(conn, asgName)
 			if cancelErr != nil {
 				return resource.NonRetryableError(cancelErr)
 			}
@@ -2264,7 +2333,7 @@ func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName str
 	return nil
 }
 
-func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName string) error {
+func cancelInstanceRefresh(conn *autoscaling.AutoScaling, asgName string) error {
 	input := autoscaling.CancelInstanceRefreshInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
@@ -2287,7 +2356,7 @@ func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName str
 	return nil
 }
 
-func validateAutoScalingGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
+func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
 	v, ok := i.(string)
 	if !ok {
 		return diag.Errorf("expected type to be string")
@@ -2342,7 +2411,7 @@ func expandLaunchTemplateSpecification(specs []interface{}) *autoscaling.LaunchT
 	return result
 }
 
-func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+func flattenLaunchTemplateSpecificationMap(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
@@ -2364,4 +2433,41 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	result = append(result, attrs)
 
 	return result
+}
+
+// disableASGScaleInProtections disables scale-in protection for all instances
+// in the given Auto-Scaling Group.
+func disableASGScaleInProtections(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
+	g, err := getGroup(d.Id(), conn)
+	if err != nil {
+		return fmt.Errorf("Error getting group %s: %s", d.Id(), err)
+	}
+
+	var instanceIds []string
+	for _, instance := range g.Instances {
+		if aws.BoolValue(instance.ProtectedFromScaleIn) {
+			instanceIds = append(instanceIds, aws.StringValue(instance.InstanceId))
+		}
+	}
+
+	const chunkSize = 50 // API limit
+
+	for i := 0; i < len(instanceIds); i += chunkSize {
+		j := i + chunkSize
+		if j > len(instanceIds) {
+			j = len(instanceIds)
+		}
+
+		input := autoscaling.SetInstanceProtectionInput{
+			AutoScalingGroupName: aws.String(d.Id()),
+			InstanceIds:          aws.StringSlice(instanceIds[i:j]),
+			ProtectedFromScaleIn: aws.Bool(false),
+		}
+
+		if _, err := conn.SetInstanceProtection(&input); err != nil {
+			return fmt.Errorf("Error disabling scale-in protections: %s", err)
+		}
+	}
+
+	return nil
 }

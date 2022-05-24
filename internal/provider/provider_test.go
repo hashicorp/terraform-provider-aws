@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestExpandEndpoints(t *testing.T) {
@@ -13,7 +13,7 @@ func TestExpandEndpoints(t *testing.T) {
 	defer popEnv(oldEnv)
 
 	endpoints := make(map[string]interface{})
-	for _, serviceKey := range conns.HCLKeys() {
+	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
 	}
 	endpoints["sts"] = "https://sts.fake.test"
@@ -44,14 +44,14 @@ func TestEndpointMultipleKeys(t *testing.T) {
 			endpoints: map[string]string{
 				"transcribe": "https://transcribe.fake.test",
 			},
-			expectedService:  conns.Transcribe,
+			expectedService:  names.Transcribe,
 			expectedEndpoint: "https://transcribe.fake.test",
 		},
 		{
 			endpoints: map[string]string{
 				"transcribeservice": "https://transcribe.fake.test",
 			},
-			expectedService:  conns.Transcribe,
+			expectedService:  names.Transcribe,
 			expectedEndpoint: "https://transcribe.fake.test",
 		},
 		{
@@ -59,7 +59,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 				"transcribe":        "https://transcribe.fake.test",
 				"transcribeservice": "https://transcribeservice.fake.test",
 			},
-			expectedService:  conns.Transcribe,
+			expectedService:  names.Transcribe,
 			expectedEndpoint: "https://transcribe.fake.test",
 		},
 	}
@@ -69,7 +69,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 		defer popEnv(oldEnv)
 
 		endpoints := make(map[string]interface{})
-		for _, serviceKey := range conns.HCLKeys() {
+		for _, serviceKey := range names.Aliases() {
 			endpoints[serviceKey] = ""
 		}
 		for k, v := range testcase.endpoints {
@@ -105,7 +105,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			envvars: map[string]string{
 				"TF_AWS_STS_ENDPOINT": "https://sts.fake.test",
 			},
-			expectedService:  conns.STS,
+			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
 		},
 		{
@@ -113,7 +113,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			envvars: map[string]string{
 				"AWS_STS_ENDPOINT": "https://sts-deprecated.fake.test",
 			},
-			expectedService:  conns.STS,
+			expectedService:  names.STS,
 			expectedEndpoint: "https://sts-deprecated.fake.test",
 		},
 		{
@@ -122,7 +122,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 				"TF_AWS_STS_ENDPOINT": "https://sts.fake.test",
 				"AWS_STS_ENDPOINT":    "https://sts-deprecated.fake.test",
 			},
-			expectedService:  conns.STS,
+			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
 		},
 		{
@@ -132,7 +132,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			envvars: map[string]string{
 				"TF_AWS_STS_ENDPOINT": "https://sts-env.fake.test",
 			},
-			expectedService:  conns.STS,
+			expectedService:  names.STS,
 			expectedEndpoint: "https://sts-config.fake.test",
 		},
 	}
@@ -146,7 +146,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 		}
 
 		endpoints := make(map[string]interface{})
-		for _, serviceKey := range conns.HCLKeys() {
+		for _, serviceKey := range names.Aliases() {
 			endpoints[serviceKey] = ""
 		}
 		for k, v := range testcase.endpoints {

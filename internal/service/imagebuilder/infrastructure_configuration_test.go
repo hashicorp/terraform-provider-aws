@@ -34,6 +34,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_updated", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
@@ -107,6 +108,34 @@ func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderInfrastructureConfiguration_instanceMetadataOptions(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInfrastructureConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationInstanceMetadataOptionsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.0.http_put_response_hop_limit", "64"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.0.http_tokens", "required"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -618,6 +647,22 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
   name                  = %[1]q
 }
 `, rName, description))
+}
+
+func testAccInfrastructureConfigurationInstanceMetadataOptionsConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInfrastructureConfigurationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+
+  instance_metadata_options {
+    http_put_response_hop_limit = 64
+    http_tokens                 = "required"
+  }
+}
+`, rName))
 }
 
 func testAccInfrastructureConfigurationInstanceProfileName1Config(rName string) string {

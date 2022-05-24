@@ -87,7 +87,7 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Listing Route53 VPC Association Authorizations for hosted zone %s", zone_id)
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
 
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			log.Printf("[WARN] Route53 VPC Association Authorization (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

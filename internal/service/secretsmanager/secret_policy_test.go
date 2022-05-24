@@ -23,10 +23,10 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyBasicConfig(rName),
@@ -60,10 +60,10 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyBlockConfig(rName, true),
@@ -102,10 +102,10 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyBasicConfig(rName),
@@ -152,7 +152,7 @@ func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
 			output, err = conn.DescribeSecret(secretInput)
 		}
 
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -170,7 +170,7 @@ func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
 
 		_, err = conn.GetResourcePolicy(input)
 
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") ||
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException,
 				"You can't perform this operation on the secret because it was marked for deletion.") {
 			continue

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1383,7 +1382,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting secondary_sources: %w", err)
 	}
 
-	if err := d.Set("secondary_source_version", flattenAwsCodeBuildProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
+	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
 		return fmt.Errorf("error setting secondary_source_version: %w", err)
 	}
 
@@ -1575,7 +1574,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 
 		// Handle IAM eventual consistency
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateProject(params)
 			if err != nil {
 				// InvalidInputException: CodeBuild is not authorized to perform
@@ -1851,16 +1850,16 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	return m
 }
 
-func flattenAwsCodeBuildProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
+func flattenProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, sourceVersion := range sourceVersions {
-		l = append(l, flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion))
+		l = append(l, flattenProjectSourceVersionsData(sourceVersion))
 	}
 	return l
 }
 
-func flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
+func flattenProjectSourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
 	values := map[string]interface{}{}
 
 	if sourceVersion.SourceIdentifier != nil {

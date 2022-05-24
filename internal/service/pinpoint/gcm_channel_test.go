@@ -31,10 +31,10 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	apiKey := os.Getenv("GCM_API_KEY")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGCMChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGCMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGCMChannelConfig_basic(apiKey),
@@ -115,7 +115,7 @@ func testAccCheckGCMChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetGcmChannel(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

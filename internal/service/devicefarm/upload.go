@@ -116,7 +116,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metadata", upload.Metadata)
 	d.Set("arn", arn)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(arn, "upload", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
@@ -160,7 +160,7 @@ func resourceUploadDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting DeviceFarm Upload: %s", d.Id())
 	_, err := conn.DeleteUpload(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Upload: %w", err)

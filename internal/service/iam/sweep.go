@@ -78,7 +78,17 @@ func init() {
 
 	resource.AddTestSweepers("aws_iam_saml_provider", &resource.Sweeper{
 		Name: "aws_iam_saml_provider",
-		F:    sweepSamlProvider,
+		F:    sweepSAMLProvider,
+	})
+
+	resource.AddTestSweepers("aws_iam_service_specific_credential", &resource.Sweeper{
+		Name: "aws_iam_service_specific_credential",
+		F:    sweepServiceSpecificCredentials,
+	})
+
+	resource.AddTestSweepers("aws_iam_signing_certificate", &resource.Sweeper{
+		Name: "aws_iam_signing_certificate",
+		F:    sweepSigningCertificates,
 	})
 
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
@@ -94,6 +104,17 @@ func init() {
 	resource.AddTestSweepers("aws_iam_user", &resource.Sweeper{
 		Name: "aws_iam_user",
 		F:    sweepUsers,
+		Dependencies: []string{
+			"aws_iam_service_specific_credential",
+			"aws_iam_virtual_mfa_device",
+			"aws_iam_signing_certificate",
+			"aws_opsworks_user_profile",
+		},
+	})
+
+	resource.AddTestSweepers("aws_iam_virtual_mfa_device", &resource.Sweeper{
+		Name: "aws_iam_virtual_mfa_device",
+		F:    sweepVirtualMFADevice,
 	})
 }
 
@@ -308,6 +329,72 @@ func sweepOpenIDConnectProvider(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func sweepServiceSpecificCredentials(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).IAMConn
+
+	var sweeperErrs *multierror.Error
+
+	prefixes := []string{
+		"test-user",
+		"test_user",
+		"tf-acc",
+		"tf_acc",
+	}
+
+	users := make([]*iam.User, 0)
+
+	err = conn.ListUsersPages(&iam.ListUsersInput{}, func(page *iam.ListUsersOutput, lastPage bool) bool {
+		for _, user := range page.Users {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(aws.StringValue(user.UserName), prefix) {
+					users = append(users, user)
+					break
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	for _, user := range users {
+		out, err := conn.ListServiceSpecificCredentials(&iam.ListServiceSpecificCredentialsInput{
+			UserName: user.UserName,
+		})
+
+		for _, cred := range out.ServiceSpecificCredentials {
+
+			id := fmt.Sprintf("%s:%s:%s", aws.StringValue(cred.ServiceName), aws.StringValue(cred.UserName), aws.StringValue(cred.ServiceSpecificCredentialId))
+
+			r := ResourceServiceSpecificCredential()
+			d := r.Data(nil)
+			d.SetId(id)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Service Specific Credential (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Service Specific Credential sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Service Specific Credentials: %w", err))
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func sweepPolicies(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
@@ -439,7 +526,7 @@ func sweepRoles(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepSamlProvider(region string) error {
+func sweepSAMLProvider(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -453,7 +540,7 @@ func sweepSamlProvider(region string) error {
 	for _, sampProvider := range out.SAMLProviderList {
 		arn := aws.StringValue(sampProvider.Arn)
 
-		r := ResourceSamlProvider()
+		r := ResourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err := r.Delete(d, client)
@@ -781,4 +868,118 @@ func roleNameFilter(name string) bool {
 	}
 
 	return false
+}
+
+func sweepVirtualMFADevice(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).IAMConn
+	var sweeperErrs *multierror.Error
+	input := &iam.ListVirtualMFADevicesInput{}
+
+	err = conn.ListVirtualMFADevicesPages(input, func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) bool {
+		if len(page.VirtualMFADevices) == 0 {
+			log.Printf("[INFO] No IAM Virtual MFA Devices to sweep")
+			return true
+		}
+		for _, device := range page.VirtualMFADevices {
+			serialNum := aws.StringValue(device.SerialNumber)
+
+			if strings.Contains(serialNum, "root-account-mfa-device") {
+				log.Printf("[INFO] Skipping IAM Root Virtual MFA Device: %s", device)
+				continue
+			}
+
+			r := ResourceVirtualMFADevice()
+			d := r.Data(nil)
+			d.SetId(serialNum)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Virtual MFA Device (%s): %w", device, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Virtual MFA Device sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Virtual MFA Devices: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepSigningCertificates(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).IAMConn
+
+	var sweeperErrs *multierror.Error
+
+	prefixes := []string{
+		"test-user",
+		"test_user",
+		"tf-acc",
+		"tf_acc",
+	}
+
+	users := make([]*iam.User, 0)
+
+	err = conn.ListUsersPages(&iam.ListUsersInput{}, func(page *iam.ListUsersOutput, lastPage bool) bool {
+		for _, user := range page.Users {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(aws.StringValue(user.UserName), prefix) {
+					users = append(users, user)
+					break
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	for _, user := range users {
+		out, err := conn.ListSigningCertificates(&iam.ListSigningCertificatesInput{
+			UserName: user.UserName,
+		})
+
+		for _, cert := range out.Certificates {
+
+			id := fmt.Sprintf("%s:%s", aws.StringValue(cert.CertificateId), aws.StringValue(cert.UserName))
+
+			r := ResourceSigningCertificate()
+			d := r.Data(nil)
+			d.SetId(id)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Signing Certificate (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Signing Certificate sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Signing Certificates: %w", err))
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

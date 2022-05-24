@@ -149,7 +149,7 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 	out, err := conn.GetUserDefinedFunction(input)
 	if err != nil {
 
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue User Defined Function (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

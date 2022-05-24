@@ -1,3 +1,10 @@
+# 1.4.0 (January 5, 2021)
+
+FEATURES:
+
+ - Introduce `MustConstraints()` ([#87](https://github.com/hashicorp/go-version/pull/87))
+ - `Constraints`: Introduce `Equals()` and `sort.Interface` methods ([#88](https://github.com/hashicorp/go-version/pull/88))
+
 # 1.3.0 (March 31, 2021)
 
 Please note that CHANGELOG.md does not exist in the source code prior to this release.

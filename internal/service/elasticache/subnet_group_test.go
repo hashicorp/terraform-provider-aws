@@ -19,10 +19,10 @@ func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_elasticache_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig(sdkacctest.RandInt()),
@@ -49,10 +49,10 @@ func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupUpdatePreConfig(rInt),
@@ -85,10 +85,10 @@ func TestAccElastiCacheSubnetGroup_tags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupTags1(rInt, "key1", "value1"),

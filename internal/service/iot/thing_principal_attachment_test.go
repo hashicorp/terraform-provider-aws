@@ -20,10 +20,10 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingPrincipalAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingPrincipalAttachmentConfig(thingName),
@@ -143,7 +143,7 @@ func testAccCheckThingPrincipalAttachmentStatus(thingName string, exists bool, p
 			ThingName: aws.String(thingName),
 		})
 
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			if exists {
 				return fmt.Errorf("Error: Thing (%s) exists, but expected to be removed", thingName)
 			} else {

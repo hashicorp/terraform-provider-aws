@@ -69,7 +69,7 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) e
 
 	var gl []string
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		err := conn.ListGroupsForUserPages(input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
@@ -175,7 +175,7 @@ func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
 			GroupName: group,
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				continue
 			}
 			return err

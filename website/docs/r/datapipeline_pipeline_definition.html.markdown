@@ -1,5 +1,5 @@
 ---
-subcategory: "DataPipeline"
+subcategory: "Data Pipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_pipeline_definition"
 description: |-
@@ -96,10 +96,10 @@ The following arguments are optional:
 
 ### `parameter_object`
 
-* `attributes` - (Required) Configuration block for attributes of the parameter object. See below
+* `attribute` - (Required) Configuration block for attributes of the parameter object. See below
 * `id` - (Required) ID of the parameter object.
 
-### `attributes`
+### `attribute`
 
 * `key` - (Required) Field identifier.
 * `string_value` - (Required) Field value, expressed as a String.

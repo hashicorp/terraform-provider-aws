@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -24,6 +23,13 @@ func ResourceConstraint() *schema.Resource {
 		Delete: resourceConstraintDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ConstraintReadyTimeout),
+			Read:   schema.DefaultTimeout(ConstraintReadTimeout),
+			Update: schema.DefaultTimeout(ConstraintUpdateTimeout),
+			Delete: schema.DefaultTimeout(ConstraintDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -92,7 +98,7 @@ func resourceConstraintCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *servicecatalog.CreateConstraintOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateConstraint(input)
@@ -132,7 +138,7 @@ func resourceConstraintCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Id())
+	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Constraint (%s) not found, removing from state", d.Id())
@@ -189,7 +195,7 @@ func resourceConstraintUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Parameters = aws.String(d.Get("parameters").(string))
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.UpdateConstraint(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -235,7 +241,7 @@ func resourceConstraintDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Service Catalog Constraint (%s): %w", d.Id(), err)
 	}
 
-	err = WaitConstraintDeleted(conn, d.Get("accept_language").(string), d.Id())
+	err = WaitConstraintDeleted(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Constraint (%s) to be deleted: %w", d.Id(), err)

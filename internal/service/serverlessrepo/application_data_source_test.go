@@ -16,9 +16,9 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 	appARN := testAccCloudFormationApplicationID()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckApplicationDataSourceConfig(appARN),
@@ -49,9 +49,9 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckApplicationDataSourceConfig_Versioned(appARN, version1),

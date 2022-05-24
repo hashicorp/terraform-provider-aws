@@ -394,7 +394,7 @@ func resourceEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*nep
 
 	describeResp, err := conn.DescribeEventSubscriptions(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 			log.Printf("[DEBUG] Neptune Event Subscription (%s) not found", name)
 			return nil, nil
 		}

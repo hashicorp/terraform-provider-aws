@@ -13,10 +13,10 @@ func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostIDDataSourceConfig(),
@@ -39,10 +39,10 @@ func TestAccOutpostsOutpostDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostNameDataSourceConfig(),
@@ -65,10 +65,10 @@ func TestAccOutpostsOutpostDataSource_arn(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostARNDataSourceConfig(),
@@ -91,10 +91,10 @@ func TestAccOutpostsOutpostDataSource_ownerID(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostOwnerIDDataSourceConfig(),

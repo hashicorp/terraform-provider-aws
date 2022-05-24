@@ -2,16 +2,47 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func StatusAvailabilityZoneGroupOptInStatus(conn *ec2.EC2, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindAvailabilityZoneGroupByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.OptInStatus), nil
+	}
+}
+
+func StatusCapacityReservationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCapacityReservationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
 
 const (
 	carrierGatewayStateNotFound = "NotFound"
@@ -157,6 +188,41 @@ func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destination
 	}
 }
 
+func StatusFleetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
+		output, err := FindFleet(conn, &ec2.DescribeFleetsInput{
+			FleetIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.FleetState), nil
+	}
+}
+
+func StatusImageState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImageByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 // StatusInstanceIAMInstanceProfile fetches the Instance and its IamInstanceProfile
 //
 // The EC2 API accepts a name and always returns an ARN, so it is converted
@@ -177,13 +243,110 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 			return instance, "", nil
 		}
 
-		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
+		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
 			return instance, "", err
 		}
 
 		return instance, name, nil
+	}
+}
+
+func StatusInstanceState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		output, err := FindInstance(conn, &ec2.DescribeInstancesInput{
+			InstanceIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State.Name), nil
+	}
+}
+
+func StatusInstanceCapacityReservationSpecificationEquals(conn *ec2.EC2, id string, expectedValue *ec2.CapacityReservationSpecification) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.CapacityReservationSpecification, strconv.FormatBool(capacityReservationSpecificationResponsesEqual(output.CapacityReservationSpecification, expectedValue)), nil
+	}
+}
+
+func StatusInstanceMaintenanceOptionsAutoRecovery(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if v := output.MaintenanceOptions; v != nil {
+			return v, aws.StringValue(v.AutoRecovery), nil
+		}
+
+		return nil, "", nil
+	}
+}
+
+func StatusInstanceMetadataOptionsState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.MetadataOptions == nil {
+			return nil, "", nil
+		}
+
+		return output.MetadataOptions, aws.StringValue(output.MetadataOptions.State), nil
+	}
+}
+
+func StatusInstanceRootBlockDeviceDeleteOnTermination(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, v := range output.BlockDeviceMappings {
+			if aws.StringValue(v.DeviceName) == aws.StringValue(output.RootDeviceName) && v.Ebs != nil {
+				return v.Ebs, strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination)), nil
+			}
+		}
+
+		return nil, "", nil
 	}
 }
 
@@ -287,6 +450,64 @@ func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
+func StatusSpotFleetActivityStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSpotFleetRequestByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		activityStatus := aws.StringValue(output.ActivityStatus)
+		var errs *multierror.Error
+
+		if activityStatus == ec2.ActivityStatusError {
+			startTime := aws.TimeValue(output.CreateTime)
+
+			for _, eventType := range []string{ec2.EventTypeInformation, ec2.EventTypeError} {
+				input := &ec2.DescribeSpotFleetRequestHistoryInput{
+					EventType:          aws.String(eventType),
+					SpotFleetRequestId: aws.String(id),
+					StartTime:          aws.Time(startTime),
+				}
+
+				output, err := FindSpotFleetRequestHistoryRecords(conn, input)
+
+				if err != nil {
+					for _, v := range output {
+						errs = multierror.Append(errs, fmt.Errorf("%s", v))
+					}
+				}
+			}
+		}
+
+		return output, activityStatus, errs.ErrorOrNil()
+	}
+}
+
+func StatusSpotFleetRequestState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindSpotFleetRequestByID as it maps useful status codes to NotFoundError.
+		output, err := FindSpotFleetRequest(conn, &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.SpotFleetRequestState), nil
+	}
+}
+
 func StatusSubnetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
@@ -319,7 +540,7 @@ func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resourc
 	}
 }
 
-func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetAssignIPv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -335,7 +556,7 @@ func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.
 	}
 }
 
-func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableDNS64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -351,7 +572,7 @@ func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -367,7 +588,7 @@ func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id strin
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -431,19 +652,115 @@ func StatusSubnetPrivateDNSHostnameTypeOnLaunch(conn *ec2.EC2, id string) resour
 	}
 }
 
-func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
+func StatusTransitGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
+		output, err := FindTransitGatewayByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if transitGatewayPrefixListReference == nil {
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayConnectState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayConnectByID(conn, id)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return transitGatewayPrefixListReference, aws.StringValue(transitGatewayPrefixListReference.State), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayConnectPeerState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayConnectPeerByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayMulticastDomainState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayMulticastDomainByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayMulticastDomainAssociationState(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn, multicastDomainID, attachmentID, subnetID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Subnet.State), nil
+	}
+}
+
+func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayRouteState(conn *ec2.EC2, transitGatewayRouteTableID, destination string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
@@ -460,6 +777,54 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 		}
 
 		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
+	}
+}
+
+func StatusVolumeState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeAttachmentState(conn *ec2.EC2, volumeID, instanceID, deviceName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeAttachment(conn, volumeID, instanceID, deviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeModificationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVolumeModificationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ModificationState), nil
 	}
 }
 
@@ -527,40 +892,38 @@ func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.S
 	}
 }
 
-const (
-	vpcPeeringConnectionStatusNotFound = "NotFound"
-	vpcPeeringConnectionStatusUnknown  = "Unknown"
-)
-
-// StatusVPCPeeringConnection fetches the VPC peering connection and its status
-func StatusVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) resource.StateRefreshFunc {
+func StatusVPCPeeringConnectionActive(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
-			return nil, vpcPeeringConnectionStatusNotFound, nil
+		// Don't call FindVPCPeeringConnectionByID as it maps useful status codes to NotFoundError.
+		output, err := FindVPCPeeringConnection(conn, &ec2.DescribeVpcPeeringConnectionsInput{
+			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, vpcPeeringConnectionStatusUnknown, err
+			return nil, "", err
 		}
 
-		// Sometimes AWS just has consistency issues and doesn't see
-		// our peering connection yet. Return an empty state.
-		if vpcPeeringConnection == nil || vpcPeeringConnection.Status == nil {
-			return nil, vpcPeeringConnectionStatusNotFound, nil
+		return output, aws.StringValue(output.Status.Code), nil
+	}
+}
+
+func StatusVPCPeeringConnectionDeleted(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCPeeringConnectionByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		statusCode := aws.StringValue(vpcPeeringConnection.Status.Code)
-
-		// https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle
-		switch statusCode {
-		case ec2.VpcPeeringConnectionStateReasonCodeFailed:
-			log.Printf("[WARN] VPC Peering Connection (%s): %s: %s", vpcPeeringConnectionID, statusCode, aws.StringValue(vpcPeeringConnection.Status.Message))
-			fallthrough
-		case ec2.VpcPeeringConnectionStateReasonCodeDeleted, ec2.VpcPeeringConnectionStateReasonCodeExpired, ec2.VpcPeeringConnectionStateReasonCodeRejected:
-			return nil, vpcPeeringConnectionStatusNotFound, nil
+		if err != nil {
+			return nil, "", err
 		}
 
-		return vpcPeeringConnection, statusCode, nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 

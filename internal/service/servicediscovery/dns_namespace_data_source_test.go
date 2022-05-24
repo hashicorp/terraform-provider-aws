@@ -21,8 +21,8 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPrivateDNSNamespaceConfig(rName),
@@ -48,8 +48,8 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPublicDNSNamespaceConfig(rName),

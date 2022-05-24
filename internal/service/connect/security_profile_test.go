@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,8 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectSecurityProfile_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccSecurityProfile_basic,
-		"disappears": testAccSecurityProfile_disappears,
+		"basic":              testAccSecurityProfile_basic,
+		"disappears":         testAccSecurityProfile_disappears,
+		"update_permissions": testAccSecurityProfile_updatePermissions,
 	}
 
 	for name, tc := range testCases {
@@ -37,10 +38,10 @@ func testAccSecurityProfile_basic(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Created"),
@@ -52,15 +53,14 @@ func testAccSecurityProfile_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", "Created"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"permissions"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Updated"),
@@ -72,6 +72,56 @@ func testAccSecurityProfile_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccSecurityProfile_updatePermissions(t *testing.T) {
+	var v connect.DescribeSecurityProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_security_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityProfileBasicConfig(rName, rName2, "TestPermissionsUpdate"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
+
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "description", "TestPermissionsUpdate"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Test updating permissions
+				Config: testAccSecurityProfilePermissionsConfig(rName, rName2, "TestPermissionsUpdate"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
+
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "description", "TestPermissionsUpdate"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -87,10 +137,10 @@ func testAccSecurityProfile_disappears(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Disappear"),
@@ -157,15 +207,17 @@ func testAccCheckSecurityProfileDestroy(s *terraform.State) error {
 			SecurityProfileId: aws.String(securityProfileID),
 		}
 
-		_, experr := conn.DescribeSecurityProfile(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		_, err = conn.DescribeSecurityProfile(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
@@ -181,6 +233,22 @@ resource "aws_connect_instance" "test" {
 }
 
 func testAccSecurityProfileBasicConfig(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccSecurityProfileBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_security_profile" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Name" = "Test Security Profile"
+  }
+}
+`, rName2, label))
+}
+
+func testAccSecurityProfilePermissionsConfig(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseConfig(rName),
 		fmt.Sprintf(`

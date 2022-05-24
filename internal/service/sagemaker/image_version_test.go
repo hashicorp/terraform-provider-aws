@@ -28,10 +28,10 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionBasicConfig(rName, baseImage),
@@ -66,10 +66,10 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionBasicConfig(rName, baseImage),
@@ -95,10 +95,10 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageVersionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionBasicConfig(rName, baseImage),
@@ -127,7 +127,7 @@ func testAccCheckImageVersionDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Image Version (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(imageVersion.ImageVersionArn) == rs.Primary.Attributes["arn"] {

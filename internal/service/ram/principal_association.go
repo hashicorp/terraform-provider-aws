@@ -106,7 +106,7 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error reading RAM Resource Share (%s) Principal Association (%s): %s", resourceShareArn, principal, err)
 	}
 
-	if association == nil || aws.StringValue(association.Status) == ram.ResourceShareAssociationStatusDisassociated {
+	if !d.IsNewResource() && (association == nil || aws.StringValue(association.Status) == ram.ResourceShareAssociationStatusDisassociated) {
 		log.Printf("[WARN] RAM resource share principal association with ARN (%s) found, but empty or disassociated - removing from state", d.Id())
 		d.SetId("")
 		return nil

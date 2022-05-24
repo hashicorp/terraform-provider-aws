@@ -76,7 +76,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
-	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Glue Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

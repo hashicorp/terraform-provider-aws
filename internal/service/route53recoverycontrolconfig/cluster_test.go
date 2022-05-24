@@ -19,10 +19,10 @@ func testAccCluster_basic(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig(rName),
@@ -48,10 +48,10 @@ func testAccCluster_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig(rName),

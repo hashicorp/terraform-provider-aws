@@ -207,7 +207,7 @@ func resourceGlobalTableRetrieve(d *schema.ResourceData, meta interface{}) (*dyn
 
 	output, err := conn.DescribeGlobalTable(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeGlobalTableNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DynamoDB Global Table: %s", err)

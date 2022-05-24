@@ -17,9 +17,9 @@ func TestAccKMSPublicKeyDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicKeyDataSourceConfig(rName),
@@ -30,6 +30,7 @@ func TestAccKMSPublicKeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_usage", resourceName, "key_usage"),
 					resource.TestCheckResourceAttrSet(datasourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(datasourceName, "public_key_pem"),
 				),
 			},
 		},
@@ -42,9 +43,9 @@ func TestAccKMSPublicKeyDataSource_encrypt(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicKeyEncryptDataSourceConfig(rName),
@@ -55,6 +56,7 @@ func TestAccKMSPublicKeyDataSource_encrypt(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_usage", resourceName, "key_usage"),
 					resource.TestCheckResourceAttrSet(datasourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(datasourceName, "public_key_pem"),
 				),
 			},
 		},

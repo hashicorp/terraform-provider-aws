@@ -44,7 +44,7 @@ func FindResourceShareInvitationByResourceShareARNAndStatus(conn *ram.RAM, resou
 
 	// Retry for Ram resource share invitation eventual consistency
 	err := resource.Retry(FindInvitationTimeout, func() *resource.RetryError {
-		i, err := resourceShareInvitationByResourceShareArnAndStatus(conn, resourceShareArn, status)
+		i, err := resourceShareInvitationByResourceShareARNAndStatus(conn, resourceShareArn, status)
 		invitation = i
 
 		if err != nil {
@@ -59,7 +59,7 @@ func FindResourceShareInvitationByResourceShareARNAndStatus(conn *ram.RAM, resou
 	})
 
 	if tfresource.TimedOut(err) {
-		invitation, err = resourceShareInvitationByResourceShareArnAndStatus(conn, resourceShareArn, status)
+		invitation, err = resourceShareInvitationByResourceShareARNAndStatus(conn, resourceShareArn, status)
 	}
 
 	if invitation == nil {
@@ -80,7 +80,7 @@ func FindResourceShareInvitationByARN(conn *ram.RAM, arn string) (*ram.ResourceS
 
 	// Retry for Ram resource share invitation eventual consistency
 	err := resource.Retry(FindInvitationTimeout, func() *resource.RetryError {
-		i, err := resourceShareInvitationByArn(conn, arn)
+		i, err := resourceShareInvitationByARN(conn, arn)
 		invitation = i
 
 		if err != nil {
@@ -95,7 +95,7 @@ func FindResourceShareInvitationByARN(conn *ram.RAM, arn string) (*ram.ResourceS
 	})
 
 	if tfresource.TimedOut(err) {
-		invitation, err = resourceShareInvitationByArn(conn, arn)
+		invitation, err = resourceShareInvitationByARN(conn, arn)
 	}
 
 	if invitation == nil {
@@ -147,7 +147,7 @@ func resourceShare(conn *ram.RAM, input *ram.GetResourceSharesInput) (*ram.Resou
 	return shares.ResourceShares[0], nil
 }
 
-func resourceShareInvitationByResourceShareArnAndStatus(conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
+func resourceShareInvitationByResourceShareARNAndStatus(conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
 	var invitation *ram.ResourceShareInvitation
 
 	input := &ram.GetResourceShareInvitationsInput{
@@ -172,7 +172,7 @@ func resourceShareInvitationByResourceShareArnAndStatus(conn *ram.RAM, resourceS
 	return invitation, nil
 }
 
-func resourceShareInvitationByArn(conn *ram.RAM, arn string) (*ram.ResourceShareInvitation, error) {
+func resourceShareInvitationByARN(conn *ram.RAM, arn string) (*ram.ResourceShareInvitation, error) {
 	input := &ram.GetResourceShareInvitationsInput{
 		ResourceShareInvitationArns: []*string{aws.String(arn)},
 	}

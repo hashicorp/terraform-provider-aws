@@ -130,7 +130,7 @@ func dataSourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", apiArn)
-	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(api.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
 		return fmt.Errorf("error setting cors_configuration: %w", err)
 	}
 	d.Set("description", api.Description)

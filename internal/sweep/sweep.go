@@ -37,6 +37,10 @@ var SweeperClients map[string]interface{}
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
 func SharedRegionalSweepClient(region string) (interface{}, error) {
+	return SharedRegionalSweepClientWithContext(context.Background(), region)
+}
+
+func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
 	if client, ok := SweeperClients[region]; ok {
 		return client, nil
 	}
@@ -54,8 +58,9 @@ func SharedRegionalSweepClient(region string) (interface{}, error) {
 	}
 
 	conf := &conns.Config{
-		MaxRetries: 5,
-		Region:     region,
+		MaxRetries:       5,
+		Region:           region,
+		SuppressDebugLog: true,
 	}
 
 	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
@@ -80,9 +85,9 @@ func SharedRegionalSweepClient(region string) (interface{}, error) {
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, err := conf.Client()
-	if err != nil {
-		return nil, fmt.Errorf("error getting AWS client: %w", err)
+	client, diags := conf.Client(ctx)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
 	}
 
 	SweeperClients[region] = client
@@ -105,10 +110,10 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 }
 
 func SweepOrchestrator(sweepResources []*SweepResource) error {
-	return SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+	return SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
 }
 
-func SweepOrchestratorContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+func SweepOrchestratorWithContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {

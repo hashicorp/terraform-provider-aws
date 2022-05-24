@@ -454,9 +454,8 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	t, err := FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
-			tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) ||
-			regexp.MustCompile(" not found$").MatchString(err.Error()) {
+		if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) ||
+			regexp.MustCompile(" not found$").MatchString(err.Error())) {
 			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -517,7 +516,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if t.InputTransformer != nil {
-		if err := d.Set("input_transformer", flattenCloudWatchInputTransformer(t.InputTransformer)); err != nil {
+		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
 			return fmt.Errorf("Error setting input_transformer error: %w", err)
 		}
 	}
@@ -844,8 +843,8 @@ func expandTargetHTTPParameters(tfMap map[string]interface{}) *eventbridge.HttpP
 		apiObject.HeaderParameters = flex.ExpandStringMap(v)
 	}
 
-	if v, ok := tfMap["path_parameter_values"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PathParameterValues = flex.ExpandStringSet(v)
+	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PathParameterValues = flex.ExpandStringList(v)
 	}
 
 	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
@@ -1005,7 +1004,7 @@ func flattenTargetHTTPParameters(apiObject *eventbridge.HttpParameters) map[stri
 	return tfMap
 }
 
-func flattenCloudWatchInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
+func flattenInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
 	config := make(map[string]interface{})
 	inputPathsMap := make(map[string]string)
 	for k, v := range inputTransformer.InputPathsMap {

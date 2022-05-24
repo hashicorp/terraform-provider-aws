@@ -21,10 +21,10 @@ func TestAccSageMakerCodeRepository_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeRepositoryBasicConfig(rName),
@@ -52,10 +52,10 @@ func TestAccSageMakerCodeRepository_Git_branch(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeRepositoryGitBranchConfig(rName),
@@ -83,10 +83,10 @@ func TestAccSageMakerCodeRepository_Git_secret(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeRepositoryGitSecretConfig(rName),
@@ -125,10 +125,10 @@ func TestAccSageMakerCodeRepository_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeRepositoryBasicConfigTags1(rName, "key1", "value1"),
@@ -170,10 +170,10 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCodeRepositoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeRepositoryBasicConfig(rName),
@@ -203,7 +203,7 @@ func testAccCheckCodeRepositoryDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Code Repository (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Code Repository (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(codeRepository.CodeRepositoryName) == rs.Primary.ID {

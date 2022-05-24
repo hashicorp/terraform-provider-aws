@@ -21,7 +21,7 @@ func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket,
 
 		output, err := conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
 			return nil, "", nil
 		}
 
@@ -83,6 +83,10 @@ func bucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBu
 				Message:     "Empty result",
 				LastRequest: input,
 			}
+		}
+
+		if output.Status == nil {
+			return output, BucketVersioningStatusDisabled, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

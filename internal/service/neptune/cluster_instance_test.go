@@ -28,17 +28,17 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 	clusterInstanceName := fmt.Sprintf("tf-cluster-instance-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
-					testAccCheckNeptuneClusterAddress(&v, resourceName, tfneptune.DefaultPort),
+					testAccCheckClusterAddress(&v, resourceName, tfneptune.DefaultPort),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", clusterInstanceName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
@@ -80,10 +80,10 @@ func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 	availabiltyZonesDataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_az(rInt),
@@ -107,10 +107,10 @@ func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
 	namePrefix := "tf-cluster-instance-"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_namePrefix(namePrefix, rInt),
@@ -132,10 +132,10 @@ func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	subnetGroupResourceName := "aws_neptune_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_withSubnetGroup(rInt),
@@ -156,10 +156,10 @@ func TestAccNeptuneClusterInstance_generatedName(t *testing.T) {
 	resourceName := "aws_neptune_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_generatedName(rInt),
@@ -181,10 +181,10 @@ func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceKMSKeyConfig(rInt),
@@ -242,7 +242,7 @@ func testAccCheckClusterInstanceAttributes(v *neptune.DBInstance) resource.TestC
 	}
 }
 
-func testAccCheckNeptuneClusterAddress(v *neptune.DBInstance, resourceName string, portNumber int) resource.TestCheckFunc {
+func testAccCheckClusterAddress(v *neptune.DBInstance, resourceName string, portNumber int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		address := aws.StringValue(v.Endpoint.Address)
 		if err := resource.TestCheckResourceAttr(resourceName, "address", address)(s); err != nil {

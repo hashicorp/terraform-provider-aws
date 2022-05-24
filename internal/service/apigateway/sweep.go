@@ -46,7 +46,7 @@ func sweepRestAPIs(region string) error {
 			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteRestApi(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, apigateway.ErrCodeTooManyRequestsException, "") {
+					if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeTooManyRequestsException) {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
