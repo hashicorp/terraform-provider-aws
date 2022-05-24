@@ -15,6 +15,10 @@ ENHANCEMENTS:
 * resource/aws_redshift_cluster: Add plan-time validation for `iam_roles`, `owner_account`, and `port`. ([#24856](https://github.com/hashicorp/terraform-provider-aws/issues/24856))
 * resource/aws_redshift_event_subscription: Add plan time validations for `event_categories`, `source_type`, and `severity`. ([#24909](https://github.com/hashicorp/terraform-provider-aws/issues/24909))
 
+BUG FIXES:
+
+* resource/aws_db_proxy_target: Fix `InvalidDBInstanceState: DB Instance is in an unsupported state - CREATING, needs to be in [AVAILABLE, MODIFYING, BACKING_UP]` error on resource Create ([#24875](https://github.com/hashicorp/terraform-provider-aws/issues/24875))
+
 ## 4.15.1 (May 20, 2022)
 
 BUG FIXES:
