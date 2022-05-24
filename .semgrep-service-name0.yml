@@ -332,7 +332,6 @@ rules:
         - internal/service/logs
         - internal/service/memorydb
         - internal/service/meta
-        - internal/service/mq
         - internal/service/mwaa
         - internal/service/neptune
         - internal/service/networkfirewall
