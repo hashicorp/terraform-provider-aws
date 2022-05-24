@@ -435,6 +435,8 @@ func Provider() *schema.Provider {
 			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
 			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
+			"aws_appintegrations_event_integration": appintegrations.DataSourceEventIntegration(),
+
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
 
