@@ -344,7 +344,6 @@ rules:
         - internal/service/outposts
         - internal/service/pinpoint
         - internal/service/pricing
-        - internal/service/qldb
         - internal/service/quicksight
         - internal/service/ram
         - internal/service/rds
