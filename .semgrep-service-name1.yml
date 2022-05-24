@@ -940,6 +940,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)DocDB"
     severity: WARNING
+  - id: dms-in-func-name
+    languages:
+      - go
+    message: Do not use "DMS" in func name inside dms package
+    paths:
+      include:
+        - internal/service/dms
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DMS"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: dms-in-test-name
+    languages:
+      - go
+    message: Include "DMS" in test name
+    paths:
+      include:
+        - internal/service/dms/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDMS"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: dms-in-const-name
+    languages:
+      - go
+    message: Do not use "DMS" in const name inside dms package
+    paths:
+      include:
+        - internal/service/dms
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DMS"
+    severity: WARNING
+  - id: dms-in-var-name
+    languages:
+      - go
+    message: Do not use "DMS" in var name inside dms package
+    paths:
+      include:
+      - internal/service/dms
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DMS"
+    severity: WARNING
   - id: ds-in-func-name
     languages:
       - go
