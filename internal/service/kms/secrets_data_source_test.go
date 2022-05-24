@@ -72,7 +72,7 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 			ProviderFactories: acctest.ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccCheckSecretsSecretDataSource(*encryptedPayload),
+					Config: testAccSecretsDataSourceConfig_secret(*encryptedPayload),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", "1"),
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
@@ -92,7 +92,7 @@ resource "aws_kms_key" "test" {
 }
 `
 
-func testAccCheckSecretsSecretDataSource(payload string) string {
+func testAccSecretsDataSourceConfig_secret(payload string) string {
 	return testAccSecretsDataSourceConfig_key + fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
