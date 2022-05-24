@@ -68,6 +68,13 @@ In addition to all arguments above, the following attributes are exported:
 * `destination[0].file_system_id` - The fs ID of the replica.
 * `destination[0].status` - The status of the replication.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+
+* `create` - (Default `10 minutes`) Used when creating the replication configuration.
+* `delete` - (Default `20 minutes`) Used when deleting the replication configuration.
+
 ## Import
 
 EFS Replication Configurations can be imported using the file system ID of either the source or destination file system. When importing, the `availability_zone_name` and `kms_key_id` attributes must **not** be set in the configuration. The AWS API does not return these values when querying the replication configuration and their presence will therefore show as a diff in a subsequent plan.
