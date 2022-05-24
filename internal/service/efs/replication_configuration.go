@@ -161,23 +161,21 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	input := &efs.DeleteReplicationConfigurationInput{
-		SourceFileSystemId: aws.String(d.Id()),
-	}
-
-	// deletion of the replication configuration must be done from the
-	// region in which the destination file system is located.
+	// Deletion of the replication configuration must be done from the
+	// Region in which the destination file system is located.
 	destination := expandDestinationsToCreate(d.Get("destination").([]interface{}))[0]
-	session, sessionErr := conns.NewSessionForRegion(&conn.Config, *destination.Region, meta.(*conns.AWSClient).TerraformVersion)
+	session, err := conns.NewSessionForRegion(&conn.Config, aws.StringValue(destination.Region), meta.(*conns.AWSClient).TerraformVersion)
 
-	if sessionErr != nil {
-		return fmt.Errorf("error creating AWS session: %w", sessionErr)
+	if err != nil {
+		return fmt.Errorf("creating AWS session: %w", err)
 	}
 
 	deleteConn := efs.New(session)
 
 	log.Printf("[DEBUG] Deleting EFS Replication Configuration: %s", d.Id())
-	_, err := deleteConn.DeleteReplicationConfiguration(input)
+	_, err = deleteConn.DeleteReplicationConfiguration(&efs.DeleteReplicationConfigurationInput{
+		SourceFileSystemId: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound, efs.ErrCodeReplicationNotFound) {
 		return nil
