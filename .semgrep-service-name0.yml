@@ -250,7 +250,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/acctest
         - internal/service/accessanalyzer
         - internal/service/account
         - internal/service/acm
