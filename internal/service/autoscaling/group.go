@@ -827,132 +827,117 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-
-	createOpts := autoscaling.CreateAutoScalingGroupInput{
+	createInput := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		MixedInstancesPolicy:             expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{})),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 	}
-	updateOpts := autoscaling.UpdateAutoScalingGroupInput{
+	updateInput := &autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
 
 	initialLifecycleHooks := d.Get("initial_lifecycle_hook").(*schema.Set).List()
 	twoPhases := len(initialLifecycleHooks) > 0
 
-	minSize := aws.Int64(int64(d.Get("min_size").(int)))
 	maxSize := aws.Int64(int64(d.Get("max_size").(int)))
+	minSize := aws.Int64(int64(d.Get("min_size").(int)))
 
 	if twoPhases {
-		createOpts.MinSize = aws.Int64(0)
-		createOpts.MaxSize = aws.Int64(0)
+		createInput.MaxSize = aws.Int64(0)
+		createInput.MinSize = aws.Int64(0)
 
-		updateOpts.MinSize = minSize
-		updateOpts.MaxSize = maxSize
+		updateInput.MaxSize = maxSize
+		updateInput.MinSize = minSize
 
 		if v, ok := d.GetOk("desired_capacity"); ok {
-			updateOpts.DesiredCapacity = aws.Int64(int64(v.(int)))
+			updateInput.DesiredCapacity = aws.Int64(int64(v.(int)))
 		}
 	} else {
-		createOpts.MinSize = minSize
-		createOpts.MaxSize = maxSize
+		createInput.MaxSize = maxSize
+		createInput.MinSize = minSize
 
 		if v, ok := d.GetOk("desired_capacity"); ok {
-			createOpts.DesiredCapacity = aws.Int64(int64(v.(int)))
+			createInput.DesiredCapacity = aws.Int64(int64(v.(int)))
 		}
 	}
 
-	if v, ok := d.GetOk("launch_configuration"); ok {
-		createOpts.LaunchConfigurationName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("launch_template"); ok {
-		createOpts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
-	}
-
-	// Availability Zones are optional if VPC Zone Identifier(s) are specified
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
-		createOpts.CapacityRebalance = aws.Bool(v.(bool))
+		createInput.CapacityRebalance = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("default_cooldown"); ok {
-		createOpts.DefaultCooldown = aws.Int64(int64(v.(int)))
+		createInput.DefaultCooldown = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("health_check_type"); ok {
-		createOpts.HealthCheckType = aws.String(v.(string))
+		createInput.HealthCheckType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("health_check_grace_period"); ok {
-		createOpts.HealthCheckGracePeriod = aws.Int64(int64(v.(int)))
+		createInput.HealthCheckGracePeriod = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("placement_group"); ok {
-		createOpts.PlacementGroup = aws.String(v.(string))
+	if v, ok := d.GetOk("launch_configuration"); ok {
+		createInput.LaunchConfigurationName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		createInput.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.LoadBalancerNames = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.VPCZoneIdentifier = expandVpcZoneIdentifiers(v.(*schema.Set).List())
-	}
-
-	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-		createOpts.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
-		createOpts.TargetGroupARNs = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("service_linked_role_arn"); ok {
-		createOpts.ServiceLinkedRoleARN = aws.String(v.(string))
+		createInput.LoadBalancerNames = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("max_instance_lifetime"); ok {
-		createOpts.MaxInstanceLifetime = aws.Int64(int64(v.(int)))
+		createInput.MaxInstanceLifetime = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Auto Scaling Group create configuration: %#v", createOpts)
+	if v, ok := d.GetOk("placement_group"); ok {
+		createInput.PlacementGroup = aws.String(v.(string))
+	}
 
-	// Retry for IAM eventual consistency
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateAutoScalingGroup(&createOpts)
+	if v, ok := d.GetOk("service_linked_role_arn"); ok {
+		createInput.ServiceLinkedRoleARN = aws.String(v.(string))
+	}
 
+	if v, ok := d.GetOk("tag"); ok {
+		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
+		createInput.TargetGroupARNs = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
+		createInput.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
+		createInput.VPCZoneIdentifier = expandVpcZoneIdentifiers(v.(*schema.Set).List())
+	}
+
+	log.Printf("[DEBUG] Creating Auto Scaling Group: %s", createInput)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateAutoScalingGroup(createInput)
+		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IAM Instance Profile") {
-			return resource.RetryableError(err)
-		}
+		ErrCodeValidationError, "Invalid IAM Instance Profile")
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateAutoScalingGroup(&createOpts)
-	}
 	if err != nil {
-		return fmt.Errorf("Error creating Auto Scaling Group: %s", err)
+		return fmt.Errorf("creating Auto Scaling Group (%s): %w", asgName, err)
 	}
 
 	d.SetId(asgName)
-	log.Printf("[INFO] Auto Scaling Group ID: %s", d.Id())
 
 	if twoPhases {
 		for _, hook := range generatePutLifecycleHookInputs(asgName, initialLifecycleHooks) {
@@ -967,9 +952,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err = conn.UpdateAutoScalingGroup(&updateOpts)
+		_, err = conn.UpdateAutoScalingGroup(updateInput)
+
 		if err != nil {
-			return fmt.Errorf("Error setting Auto Scaling Group initial capacity: %s", err)
+			return fmt.Errorf("setting Auto Scaling Group (%s) initial capacity: %w", d.Id(), err)
 		}
 	}
 
@@ -991,15 +977,12 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("warm_pool"); ok {
-		_, err := conn.PutWarmPool(CreatePutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
+	if v, ok := d.GetOk("warm_pool"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		_, err := conn.PutWarmPool(expandPutWarmPoolInput(d.Id(), v.([]interface{})[0].(map[string]interface{})))
 
 		if err != nil {
-			return fmt.Errorf("error creating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
+			return fmt.Errorf("creating Auto Scaling Warm Pool (%s): %w", d.Id(), err)
 		}
-
-		log.Printf("[INFO] Successfully created Warm pool")
-
 	}
 
 	return resourceGroupRead(d, meta)
@@ -1117,99 +1100,99 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	shouldWaitForCapacity := false
 	shouldRefreshInstances := false
 
-	opts := autoscaling.UpdateAutoScalingGroupInput{
+	input := &autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(d.Id()),
 	}
 
-	opts.NewInstancesProtectedFromScaleIn = aws.Bool(d.Get("protect_from_scale_in").(bool))
+	input.NewInstancesProtectedFromScaleIn = aws.Bool(d.Get("protect_from_scale_in").(bool))
 
 	if d.HasChange("default_cooldown") {
-		opts.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
+		input.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
 	}
 
 	if d.HasChange("capacity_rebalance") {
 		// If the capacity rebalance field is set to null, we need to explicitly set
 		// it back to "false", or the API won't reset it for us.
 		if v, ok := d.GetOk("capacity_rebalance"); ok {
-			opts.CapacityRebalance = aws.Bool(v.(bool))
+			input.CapacityRebalance = aws.Bool(v.(bool))
 		} else {
-			opts.CapacityRebalance = aws.Bool(false)
+			input.CapacityRebalance = aws.Bool(false)
 		}
 	}
 
 	if d.HasChange("desired_capacity") {
-		opts.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
+		input.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
 		shouldWaitForCapacity = true
 	}
 
 	if d.HasChange("launch_configuration") {
 		if v, ok := d.GetOk("launch_configuration"); ok {
-			opts.LaunchConfigurationName = aws.String(v.(string))
+			input.LaunchConfigurationName = aws.String(v.(string))
 		}
 		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("launch_template") {
-		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 {
-			opts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
+		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
 		}
 		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("mixed_instances_policy") {
-		opts.MixedInstancesPolicy = expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
+		input.MixedInstancesPolicy = expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
 		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("min_size") {
-		opts.MinSize = aws.Int64(int64(d.Get("min_size").(int)))
+		input.MinSize = aws.Int64(int64(d.Get("min_size").(int)))
 		shouldWaitForCapacity = true
 	}
 
 	if d.HasChange("max_size") {
-		opts.MaxSize = aws.Int64(int64(d.Get("max_size").(int)))
+		input.MaxSize = aws.Int64(int64(d.Get("max_size").(int)))
 	}
 
 	if d.HasChange("max_instance_lifetime") {
-		opts.MaxInstanceLifetime = aws.Int64(int64(d.Get("max_instance_lifetime").(int)))
+		input.MaxInstanceLifetime = aws.Int64(int64(d.Get("max_instance_lifetime").(int)))
 	}
 
 	if d.HasChange("health_check_grace_period") {
-		opts.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
+		input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
 	}
 
 	if d.HasChange("health_check_type") {
-		opts.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
-		opts.HealthCheckType = aws.String(d.Get("health_check_type").(string))
+		input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
+		input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
 	}
 
 	if d.HasChange("vpc_zone_identifier") {
-		opts.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
+		input.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 	}
 
 	if d.HasChange("availability_zones") {
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-			opts.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
+			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 	}
 
 	if d.HasChange("placement_group") {
-		opts.PlacementGroup = aws.String(d.Get("placement_group").(string))
+		input.PlacementGroup = aws.String(d.Get("placement_group").(string))
 	}
 
 	if d.HasChange("termination_policies") {
 		// If the termination policy is set to null, we need to explicitly set
 		// it back to "Default", or the API won't reset it for us.
 		if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-			opts.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
+			input.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 		} else {
 			log.Printf("[DEBUG] Explicitly setting null termination policy to 'Default'")
-			opts.TerminationPolicies = aws.StringSlice([]string{DefaultTerminationPolicy})
+			input.TerminationPolicies = aws.StringSlice([]string{DefaultTerminationPolicy})
 		}
 	}
 
 	if d.HasChange("service_linked_role_arn") {
-		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
+		input.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
 	}
 
 	if d.HasChanges("tag", "tags") {
@@ -1229,10 +1212,11 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] Auto Scaling Group update configuration: %#v", opts)
-	_, err := conn.UpdateAutoScalingGroup(&opts)
+	log.Printf("[DEBUG] Updating Auto Scaling Group: %s", input)
+	_, err := conn.UpdateAutoScalingGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("Error updating Auto Scaling Group: %s", err)
+		return fmt.Errorf("updating Auto Scaling Group (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("load_balancers") {
@@ -1411,13 +1395,11 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		} else {
-			_, err := conn.PutWarmPool(CreatePutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
+			_, err := conn.PutWarmPool(expandPutWarmPoolInput(d.Id(), w[0].(map[string]interface{})))
 
 			if err != nil {
-				return fmt.Errorf("error updating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
+				return fmt.Errorf("updating Auto Scaling Warm Pool (%s): %w", d.Id(), err)
 			}
-
-			log.Printf("[INFO] Successfully updated Warm pool")
 		}
 	}
 
@@ -2534,6 +2516,70 @@ func expandMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPoli
 	return mixedInstancesPolicy
 }
 
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set.
+	if v, ok := tfMap["id"]; ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v.(string))
+	} else if v, ok := tfMap["name"]; ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPutWarmPoolInput(name string, tfMap map[string]interface{}) *autoscaling.PutWarmPoolInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.PutWarmPoolInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+
+	if v, ok := tfMap["instance_reuse_policy"].([]interface{}); ok && len(v) > 0 {
+		apiObject.InstanceReusePolicy = expandInstanceReusePolicy(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["max_group_prepared_capacity"].(int); ok && v != 0 {
+		apiObject.MaxGroupPreparedCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min_size"].(int); ok && v != 0 {
+		apiObject.MinSize = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["pool_state"].(string); ok && v != "" {
+		apiObject.PoolState = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandInstanceReusePolicy(tfMap map[string]interface{}) *autoscaling.InstanceReusePolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.InstanceReusePolicy{}
+
+	if v, ok := tfMap["reuse_on_scale_in"].(bool); ok {
+		apiObject.ReuseOnScaleIn = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenEnabledMetrics(apiObjects []*autoscaling.EnabledMetric) []string {
 	var tfList []string
 
@@ -3076,36 +3122,6 @@ func waitUntilGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName s
 	return nil
 }
 
-func CreatePutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWarmPoolInput {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	input := autoscaling.PutWarmPoolInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-
-	if v, ok := m["pool_state"]; ok && v.(string) != "" {
-		input.PoolState = aws.String(v.(string))
-	}
-
-	if v, ok := m["min_size"]; ok && v.(int) > -1 {
-		input.MinSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["max_group_prepared_capacity"]; ok && v.(int) > -2 {
-		input.MaxGroupPreparedCapacity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["instance_reuse_policy"]; ok && len(v.([]interface{})) > 0 {
-		input.InstanceReusePolicy = expandWarmPoolInstanceReusePolicy(v.([]interface{}))
-	}
-
-	return &input
-}
-
 func CreateGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -3158,22 +3174,6 @@ func expandGroupInstanceRefreshPreferences(l []interface{}) *autoscaling.Refresh
 	}
 
 	return refreshPreferences
-}
-
-func expandWarmPoolInstanceReusePolicy(l []interface{}) *autoscaling.InstanceReusePolicy {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	instanceReusePolicy := &autoscaling.InstanceReusePolicy{}
-
-	if v, ok := m["reuse_on_scale_in"]; ok {
-		instanceReusePolicy.ReuseOnScaleIn = aws.Bool(v.(bool))
-	}
-
-	return instanceReusePolicy
 }
 
 func GroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
@@ -3251,31 +3251,4 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
-}
-
-func expandLaunchTemplateSpecification(specs []interface{}) *autoscaling.LaunchTemplateSpecification {
-	if len(specs) < 1 {
-		return nil
-	}
-
-	spec := specs[0].(map[string]interface{})
-
-	idValue, idOk := spec["id"]
-	nameValue, nameOk := spec["name"]
-
-	result := &autoscaling.LaunchTemplateSpecification{}
-
-	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
-	// allows only one of them to be set
-	if idOk && idValue != "" {
-		result.LaunchTemplateId = aws.String(idValue.(string))
-	} else if nameOk && nameValue != "" {
-		result.LaunchTemplateName = aws.String(nameValue.(string))
-	}
-
-	if v, ok := spec["version"]; ok && v != "" {
-		result.Version = aws.String(v.(string))
-	}
-
-	return result
 }
