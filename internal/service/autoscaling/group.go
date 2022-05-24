@@ -963,10 +963,16 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if _, ok := d.GetOk("suspended_processes"); ok {
-		suspendedProcessesErr := enableASGSuspendedProcesses(d, conn)
-		if suspendedProcessesErr != nil {
-			return suspendedProcessesErr
+	if v, ok := d.GetOk("suspended_processes"); ok && v.(*schema.Set).Len() > 0 {
+		input := &autoscaling.ScalingProcessQuery{
+			AutoScalingGroupName: aws.String(d.Id()),
+			ScalingProcesses:     flex.ExpandStringSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.SuspendProcesses(input)
+
+		if err != nil {
+			return fmt.Errorf("suspending Auto Scaling Group (%s) scaling processes: %w", d.Id(), err)
 		}
 	}
 
@@ -1456,8 +1462,40 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("suspended_processes") {
-		if err := updateASGSuspendedProcesses(d, conn); err != nil {
-			return fmt.Errorf("Error updating Auto Scaling Group Suspended Processes: %s", err)
+		o, n := d.GetChange("suspended_processes")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		if resumeProcesses := os.Difference(ns); resumeProcesses.Len() != 0 {
+			input := &autoscaling.ScalingProcessQuery{
+				AutoScalingGroupName: aws.String(d.Id()),
+				ScalingProcesses:     flex.ExpandStringSet(resumeProcesses),
+			}
+
+			_, err := conn.ResumeProcesses(input)
+
+			if err != nil {
+				return fmt.Errorf("resuming Auto Scaling Group (%s) scaling processes: %w", d.Id(), err)
+			}
+		}
+
+		if suspendProcesses := ns.Difference(os); suspendProcesses.Len() != 0 {
+			input := &autoscaling.ScalingProcessQuery{
+				AutoScalingGroupName: aws.String(d.Id()),
+				ScalingProcesses:     flex.ExpandStringSet(suspendProcesses),
+			}
+
+			_, err := conn.SuspendProcesses(input)
+
+			if err != nil {
+				return fmt.Errorf("suspending Auto Scaling Group (%s) scaling processes: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -1950,57 +1988,6 @@ func getGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group
 	}
 
 	return nil, nil
-}
-
-func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
-	props := &autoscaling.ScalingProcessQuery{
-		AutoScalingGroupName: aws.String(d.Id()),
-		ScalingProcesses:     flex.ExpandStringSet(d.Get("suspended_processes").(*schema.Set)),
-	}
-
-	_, err := conn.SuspendProcesses(props)
-	return err
-}
-
-func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
-	o, n := d.GetChange("suspended_processes")
-	if o == nil {
-		o = new(schema.Set)
-	}
-	if n == nil {
-		n = new(schema.Set)
-	}
-
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-
-	resumeProcesses := os.Difference(ns)
-	if resumeProcesses.Len() != 0 {
-		props := &autoscaling.ScalingProcessQuery{
-			AutoScalingGroupName: aws.String(d.Id()),
-			ScalingProcesses:     flex.ExpandStringSet(resumeProcesses),
-		}
-
-		_, err := conn.ResumeProcesses(props)
-		if err != nil {
-			return fmt.Errorf("Error Resuming Processes for Auto Scaling Group %q: %s", d.Id(), err)
-		}
-	}
-
-	suspendedProcesses := ns.Difference(os)
-	if suspendedProcesses.Len() != 0 {
-		props := &autoscaling.ScalingProcessQuery{
-			AutoScalingGroupName: aws.String(d.Id()),
-			ScalingProcesses:     flex.ExpandStringSet(suspendedProcesses),
-		}
-
-		_, err := conn.SuspendProcesses(props)
-		if err != nil {
-			return fmt.Errorf("Error Suspending Processes for Auto Scaling Group %q: %s", d.Id(), err)
-		}
-	}
-
-	return nil
 }
 
 // getELBInstanceStates returns a mapping of the instance states of all the ELBs attached to the
