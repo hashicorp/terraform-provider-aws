@@ -30,7 +30,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailChannelConfig_FromAddress(domain, address1),
+				Config: testAccEmailChannelConfig_fromAddress(domain, address1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -46,7 +46,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEmailChannelConfig_FromAddress(domain, address2),
+				Config: testAccEmailChannelConfig_fromAddress(domain, address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -73,7 +73,7 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 		CheckDestroy:      testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailChannelConfigurationSetConfig(domain, address, rName),
+				Config: testAccEmailChannelConfig_configurationSet(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "name"),
@@ -103,7 +103,7 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 		CheckDestroy:      testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailChannelNoRoleConfig(domain, address, rName),
+				Config: testAccEmailChannelConfig_noRole(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "arn"),
@@ -132,7 +132,7 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailChannelConfig_FromAddress(domain, address),
+				Config: testAccEmailChannelConfig_fromAddress(domain, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(resourceName, &channel),
 					acctest.CheckResourceDisappears(acctest.Provider, tfpinpoint.ResourceEmailChannel(), resourceName),
@@ -172,7 +172,7 @@ func testAccCheckEmailChannelExists(n string, channel *pinpoint.EmailChannelResp
 	}
 }
 
-func testAccEmailChannelConfig_FromAddress(domain, fromAddress string) string {
+func testAccEmailChannelConfig_fromAddress(domain, fromAddress string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {}
 
@@ -229,7 +229,7 @@ EOF
 `, domain, fromAddress)
 }
 
-func testAccEmailChannelConfigurationSetConfig(domain, fromAddress, rName string) string {
+func testAccEmailChannelConfig_configurationSet(domain, fromAddress, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {}
 
@@ -291,7 +291,7 @@ EOF
 `, domain, fromAddress, rName)
 }
 
-func testAccEmailChannelNoRoleConfig(domain, fromAddress, rName string) string {
+func testAccEmailChannelConfig_noRole(domain, fromAddress, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {}
 
