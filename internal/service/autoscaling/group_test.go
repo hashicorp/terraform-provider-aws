@@ -849,6 +849,31 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_largeDesiredCapacity(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupLargeDesiredCapacityConfig(rName, 101),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 101),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "101"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "101"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "101"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3821,6 +3846,25 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGroupLargeDesiredCapacityConfig(rName string, n int) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  name                  = %[1]q
+  max_size              = %[2]d
+  min_size              = %[2]d
+  desired_capacity      = %[2]d
+  launch_configuration  = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName, n))
 }
 
 func testAccGroupInstanceRefreshBasicConfig(rName string) string {
