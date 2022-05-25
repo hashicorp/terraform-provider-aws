@@ -387,6 +387,7 @@ The following arguments are supported:
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `availability_zones` - (Optional) A list of one or more availability zones for the group. Used for EC2-Classic, attaching a network interface via id from a launch template and default subnets when not specified with `vpc_zone_identifier` argument. Conflicts with `vpc_zone_identifier`.
 * `capacity_rebalance` - (Optional) Indicates whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
+* `context` - (Optional) Reserved.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
 * `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. See [Launch Template](#launch_template) below for more details.

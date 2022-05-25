@@ -59,6 +59,10 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"context": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"default_cooldown": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -866,6 +870,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.CapacityRebalance = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("context"); ok {
+		createInput.Context = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("default_cooldown"); ok {
 		createInput.DefaultCooldown = aws.Int64(int64(v.(int)))
 	}
@@ -1021,6 +1029,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", g.AutoScalingGroupARN)
 	d.Set("availability_zones", aws.StringValueSlice(g.AvailabilityZones))
 	d.Set("capacity_rebalance", g.CapacityRebalance)
+	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("desired_capacity", g.DesiredCapacity)
 	if len(g.EnabledMetrics) > 0 {
@@ -1143,6 +1152,10 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			} else {
 				input.CapacityRebalance = aws.Bool(false)
 			}
+		}
+
+		if d.HasChange("context") {
+			input.Context = aws.String(d.Get("context").(string))
 		}
 
 		if d.HasChange("default_cooldown") {
