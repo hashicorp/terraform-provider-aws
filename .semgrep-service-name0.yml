@@ -345,7 +345,6 @@ rules:
         - internal/service/servicequotas
         - internal/service/simpledb
         - internal/service/ssm
-        - internal/service/ssoadmin
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
