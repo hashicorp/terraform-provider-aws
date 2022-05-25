@@ -35,7 +35,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScriptBasicConfig(rName),
+				Config: testAccScriptConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -53,7 +53,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file"},
 			},
 			{
-				Config: testAccScriptBasicConfig(rNameUpdated),
+				Config: testAccScriptConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
@@ -83,7 +83,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScriptBasicTags1Config(rName, "key1", "value1"),
+				Config: testAccScriptConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -97,7 +97,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file"},
 			},
 			{
-				Config: testAccScriptBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccScriptConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -106,7 +106,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccScriptBasicTags1Config(rName, "key2", "value2"),
+				Config: testAccScriptConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -134,7 +134,7 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScriptBasicConfig(rName),
+				Config: testAccScriptConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceScript(), resourceName),
@@ -196,7 +196,7 @@ func testAccCheckScriptDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccScriptBasicConfig(rName string) string {
+func testAccScriptConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q
@@ -205,7 +205,7 @@ resource "aws_gamelift_script" "test" {
 `, rName)
 }
 
-func testAccScriptBasicTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccScriptConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q
@@ -218,7 +218,7 @@ resource "aws_gamelift_script" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccScriptBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccScriptConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q

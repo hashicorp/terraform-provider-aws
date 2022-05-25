@@ -309,7 +309,6 @@ rules:
         - internal/service/events
         - internal/service/firehose
         - internal/service/fsx
-        - internal/service/gamelift
         - internal/service/glacier
         - internal/service/globalaccelerator
         - internal/service/grafana

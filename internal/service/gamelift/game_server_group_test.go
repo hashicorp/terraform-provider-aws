@@ -30,7 +30,7 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig(rName),
+				Config: testAccGameServerGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`gameservergroup/.+`)),
@@ -67,7 +67,7 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigAutoScalingPolicy(rName),
+				Config: testAccGameServerGroupConfig_autoScalingPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.0.estimated_instance_warmup", "60"),
@@ -99,7 +99,7 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t 
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigAutoScalingPolicyEstimatedInstanceWarmup(rName),
+				Config: testAccGameServerGroupConfig_autoScalingPolicyEstimatedInstanceWarmup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.0.estimated_instance_warmup", "66"),
@@ -131,7 +131,7 @@ func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigBalancingStrategy(rName, gamelift.BalancingStrategySpotOnly),
+				Config: testAccGameServerGroupConfig_balancingStrategy(rName, gamelift.BalancingStrategySpotOnly),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", gamelift.BalancingStrategySpotOnly),
@@ -166,7 +166,7 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigGameServerGroupName(rName, rName),
+				Config: testAccGameServerGroupConfig_name(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "game_server_group_name", rName),
@@ -179,7 +179,7 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
-				Config: testAccGameServerGroupConfigGameServerGroupName(rName, rName+"-new"),
+				Config: testAccGameServerGroupConfig_name(rName, rName+"-new"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "game_server_group_name", rName+"-new"),
@@ -204,7 +204,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigInstanceDefinition(rName, 2),
+				Config: testAccGameServerGroupConfig_instanceDefinition(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
@@ -217,7 +217,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
-				Config: testAccGameServerGroupConfigInstanceDefinition(rName, 3),
+				Config: testAccGameServerGroupConfig_instanceDefinition(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "3"),
@@ -242,7 +242,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigInstanceDefinitionWeightedCapacity(rName, "1"),
+				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
@@ -257,7 +257,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
-				Config: testAccGameServerGroupConfigInstanceDefinitionWeightedCapacity(rName, "2"),
+				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
@@ -284,7 +284,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigLaunchTemplateId(rName),
+				Config: testAccGameServerGroupConfig_launchTemplateID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
@@ -317,7 +317,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigLaunchTemplateName(rName),
+				Config: testAccGameServerGroupConfig_launchTemplateName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
@@ -350,7 +350,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigLaunchTemplateVersion(rName),
+				Config: testAccGameServerGroupConfig_launchTemplateVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
@@ -383,7 +383,7 @@ func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigGameServerProtectionPolicy(rName, gamelift.GameServerProtectionPolicyFullProtection),
+				Config: testAccGameServerGroupConfig_protectionPolicy(rName, gamelift.GameServerProtectionPolicyFullProtection),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", gamelift.GameServerProtectionPolicyFullProtection),
@@ -418,7 +418,7 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigMaxSize(rName, "1"),
+				Config: testAccGameServerGroupConfig_maxSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "1"),
@@ -431,7 +431,7 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
-				Config: testAccGameServerGroupConfigMaxSize(rName, "2"),
+				Config: testAccGameServerGroupConfig_maxSize(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "2"),
@@ -460,7 +460,7 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 		CheckDestroy:      testAccCheckGameServerGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfigMinSize(rName, "1"),
+				Config: testAccGameServerGroupConfig_minSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
@@ -473,7 +473,7 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
-				Config: testAccGameServerGroupConfigMinSize(rName, "2"),
+				Config: testAccGameServerGroupConfig_minSize(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
@@ -691,7 +691,7 @@ data "aws_ec2_instance_type_offerings" "available" {
 `
 }
 
-func testAccGameServerGroupConfig(rName string) string {
+func testAccGameServerGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -721,7 +721,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName))
 }
 
-func testAccGameServerGroupConfigAutoScalingPolicy(rName string) string {
+func testAccGameServerGroupConfig_autoScalingPolicy(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -756,7 +756,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName))
 }
 
-func testAccGameServerGroupConfigAutoScalingPolicyEstimatedInstanceWarmup(rName string) string {
+func testAccGameServerGroupConfig_autoScalingPolicyEstimatedInstanceWarmup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -792,7 +792,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName))
 }
 
-func testAccGameServerGroupConfigBalancingStrategy(rName string, balancingStrategy string) string {
+func testAccGameServerGroupConfig_balancingStrategy(rName string, balancingStrategy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -823,7 +823,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, balancingStrategy))
 }
 
-func testAccGameServerGroupConfigGameServerGroupName(rName string, gameServerGroupName string) string {
+func testAccGameServerGroupConfig_name(rName string, gameServerGroupName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -853,7 +853,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, gameServerGroupName))
 }
 
-func testAccGameServerGroupConfigInstanceDefinition(rName string, count int) string {
+func testAccGameServerGroupConfig_instanceDefinition(rName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -883,7 +883,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, count))
 }
 
-func testAccGameServerGroupConfigInstanceDefinitionWeightedCapacity(rName string, weightedCapacity string) string {
+func testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName string, weightedCapacity string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -914,7 +914,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, weightedCapacity))
 }
 
-func testAccGameServerGroupConfigLaunchTemplateId(rName string) string {
+func testAccGameServerGroupConfig_launchTemplateID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -944,7 +944,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName))
 }
 
-func testAccGameServerGroupConfigLaunchTemplateName(rName string) string {
+func testAccGameServerGroupConfig_launchTemplateName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -974,7 +974,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName))
 }
 
-func testAccGameServerGroupConfigLaunchTemplateVersion(rName string) string {
+func testAccGameServerGroupConfig_launchTemplateVersion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -1005,7 +1005,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName))
 }
 
-func testAccGameServerGroupConfigMaxSize(rName string, maxSize string) string {
+func testAccGameServerGroupConfig_maxSize(rName string, maxSize string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -1035,7 +1035,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, maxSize))
 }
 
-func testAccGameServerGroupConfigMinSize(rName string, minSize string) string {
+func testAccGameServerGroupConfig_minSize(rName string, minSize string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
@@ -1065,7 +1065,7 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, minSize))
 }
 
-func testAccGameServerGroupConfigGameServerProtectionPolicy(rName string, gameServerProtectionPolicy string) string {
+func testAccGameServerGroupConfig_protectionPolicy(rName string, gameServerProtectionPolicy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccGameServerGroupConfig_iam(rName, "test"),
