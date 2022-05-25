@@ -299,7 +299,6 @@ rules:
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elasticsearch
-        - internal/service/elastictranscoder
         - internal/service/elb
         - internal/service/elbv2
         - internal/service/emr
