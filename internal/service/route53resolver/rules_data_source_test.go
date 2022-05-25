@@ -60,9 +60,9 @@ func TestAccRoute53ResolverRulesDataSource_nameRegex(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRulesDataSourceConfig_nameRegex(rCount, rName),
@@ -78,9 +78,9 @@ func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRulesDataSourceConfig_nonExistentNameRegex,
