@@ -273,18 +273,16 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 			},
 			"server_timing_headers_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 						},
 						"sampling_rate": {
 							Type:         schema.TypeFloat,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.FloatBetween(0.0, 100.0),
 						},
 					},
