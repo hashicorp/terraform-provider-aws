@@ -216,6 +216,10 @@ const (
 	LaunchTemplateVersionLatest  = "$Latest"
 )
 
+const (
+	SriovNetSupportSimple = "simple"
+)
+
 func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
 	for i, v := range slice {
 		if v == s {

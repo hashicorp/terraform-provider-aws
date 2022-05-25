@@ -250,13 +250,14 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "simple",
+				Default:  SriovNetSupportSimple,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tpm_support": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TpmSupportValues_Values(), false),
 			},
 			"usage_operation": {
