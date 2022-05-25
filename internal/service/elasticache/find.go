@@ -240,16 +240,12 @@ func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elas
 		return nil, err
 	}
 
-	switch len(out.CacheParameterGroups) {
+	switch count := len(out.CacheParameterGroups); count {
 	case 0:
-		return nil, &resource.NotFoundError{
-			Message: "empty result",
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	case 1:
 		return out.CacheParameterGroups[0], nil
 	default:
-		return nil, &resource.NotFoundError{
-			Message: "too many results",
-		}
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 }
