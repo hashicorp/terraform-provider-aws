@@ -53,7 +53,7 @@ func TestAccConnectQuickConnectDataSource_name(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectDataSourceConfig_Name(rName, rName2, phoneNumber),
+				Config: testAccQuickConnectDataSourceConfig_name(rName, rName2, phoneNumber),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -111,7 +111,7 @@ data "aws_connect_quick_connect" "test" {
 `)
 }
 
-func testAccQuickConnectDataSourceConfig_Name(rName, rName2, phoneNumber string) string {
+func testAccQuickConnectDataSourceConfig_name(rName, rName2, phoneNumber string) string {
 	return acctest.ConfigCompose(
 		testAccQuickConnectBaseDataSourceConfig(rName, rName2, phoneNumber),
 		`

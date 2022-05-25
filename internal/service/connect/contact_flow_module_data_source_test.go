@@ -21,7 +21,7 @@ func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T)
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowModuleDataSourceConfig_ContactFlowModuleID(rName, resourceName),
+				Config: testAccContactFlowModuleDataSourceConfig_id(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -51,7 +51,7 @@ func TestAccConnectContactFlowModuleDataSource_name(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowModuleDataSourceConfig_Name(rName, rName2),
+				Config: testAccContactFlowModuleDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -93,7 +93,7 @@ resource "aws_connect_contact_flow_module" "test" {
     `, rName, rName2)
 }
 
-func testAccContactFlowModuleDataSourceConfig_ContactFlowModuleID(rName, rName2 string) string {
+func testAccContactFlowModuleDataSourceConfig_id(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccContactFlowModuleBaseDataSourceConfig(rName, rName2),
 		`
@@ -104,7 +104,7 @@ data "aws_connect_contact_flow_module" "test" {
 `)
 }
 
-func testAccContactFlowModuleDataSourceConfig_Name(rName, rName2 string) string {
+func testAccContactFlowModuleDataSourceConfig_name(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccContactFlowModuleBaseDataSourceConfig(rName, rName2),
 		`
