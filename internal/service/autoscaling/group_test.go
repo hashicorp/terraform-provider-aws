@@ -3245,7 +3245,7 @@ func testAccCheckALBTargetGroupHealthy(v *elbv2.TargetGroup) resource.TestCheckF
 func testAccGroupLaunchConfigurationBaseConfig(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -3442,8 +3442,8 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupWithAZConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigVpcWithSubnets(rName, 1),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -3465,8 +3465,8 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupWithVPCZoneIdentifierConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigVpcWithSubnets(rName, 1),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -3486,8 +3486,8 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupELBBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigVpcWithSubnets(rName, 1),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -3997,7 +3997,7 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupInstanceRefreshStartConfig(rName, launchConfigurationNamePrefix string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -4062,8 +4062,8 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupLoadBalancersConfig(rName string, elbCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigVpcWithSubnets(rName, 1),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -4113,8 +4113,8 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupTargetGroupConfig(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name            = %[1]q
@@ -4147,8 +4147,8 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupTargetGroupELBCapacityConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -4334,7 +4334,7 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupPartitionConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
