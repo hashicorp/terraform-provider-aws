@@ -3475,7 +3475,7 @@ resource "aws_launch_configuration" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  vpc_zone_identifier = aws_subnet.test[*].id
+  vpc_zone_identifier  = aws_subnet.test[*].id
   max_size             = 0
   min_size             = 0
   name                 = %[1]q
@@ -3569,7 +3569,7 @@ EOF
 func testAccGroupWithLoadBalancerConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  vpc_zone_identifier = aws_subnet.test[*].id
+  vpc_zone_identifier  = aws_subnet.test[*].id
   max_size             = 2
   min_size             = 2
   name                 = %[1]q
@@ -3593,7 +3593,7 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupWithTargetGroupConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  vpc_zone_identifier = aws_subnet.test[*].id
+  vpc_zone_identifier  = aws_subnet.test[*].id
   max_size             = 2
   min_size             = 2
   name                 = %[1]q
@@ -3804,10 +3804,10 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupLaunchTemplateConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
 
   launch_template {
     id      = aws_launch_template.test.id
@@ -3820,10 +3820,10 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupLaunchTemplateNameConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
 
   launch_template {
     name = aws_launch_template.test.name
@@ -3835,10 +3835,10 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupLaunchTemplateLatestVersionConfig(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
 
   launch_template {
     id      = aws_launch_template.test.id
@@ -3851,12 +3851,12 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupLargeDesiredCapacityConfig(rName string, n int) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones    = [data.aws_availability_zones.available.names[0]]
-  name                  = %[1]q
-  max_size              = %[2]d
-  min_size              = %[2]d
-  desired_capacity      = %[2]d
-  launch_configuration  = aws_launch_configuration.test.name
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = %[2]d
+  min_size             = %[2]d
+  desired_capacity     = %[2]d
+  launch_configuration = aws_launch_configuration.test.name
 
   tag {
     key                 = "Name"
@@ -4117,9 +4117,9 @@ func testAccGroupTargetGroupConfig(rName string, targetGroupCount int) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name            = %[1]q
-  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type   = "t2.micro"
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 
   enable_monitoring = false
 }
@@ -4134,7 +4134,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  vpc_zone_identifier = aws_subnet.test[*].id
+  vpc_zone_identifier  = aws_subnet.test[*].id
   max_size             = 0
   min_size             = 0
   name                 = %[1]q
@@ -4222,9 +4222,9 @@ resource "aws_route" "test" {
 }
 
 resource "aws_launch_configuration" "test" {
-  name            = %[1]q
-  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type   = "t2.micro"
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 
   associate_public_ip_address = "true"
 
