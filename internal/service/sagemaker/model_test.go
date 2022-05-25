@@ -26,7 +26,7 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig(rName),
+				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -61,7 +61,7 @@ func TestAccSageMakerModel_inferenceExecution(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelInferenceExecutionConfig(rName),
+				Config: testAccModelConfig_inferenceExecution(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", "1"),
@@ -88,7 +88,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfigTags1(rName, "key1", "value1"),
+				Config: testAccModelConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccModelConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccModelConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -105,7 +105,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccModelConfigTags1(rName, "key2", "value2"),
+				Config: testAccModelConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -132,7 +132,7 @@ func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrimaryContainerModelDataURLConfig(rName),
+				Config: testAccModelConfig_primaryContainerDataURL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_url"),
@@ -158,7 +158,7 @@ func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrimaryContainerHostnameConfig(rName),
+				Config: testAccModelConfig_primaryContainerHostname(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.container_hostname", "test"),
@@ -184,7 +184,7 @@ func TestAccSageMakerModel_primaryContainerImage(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrimaryContainerImageConfigConfig(rName),
+				Config: testAccModelConfig_primaryContainerImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
@@ -211,7 +211,7 @@ func TestAccSageMakerModel_primaryContainerEnvironment(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrimaryContainerEnvironmentConfig(rName),
+				Config: testAccModelConfig_primaryContainerEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", "1"),
@@ -238,7 +238,7 @@ func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrimaryContainerModeSingle(rName),
+				Config: testAccModelConfig_primaryContainerModeSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),
@@ -264,7 +264,7 @@ func TestAccSageMakerModel_containers(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelContainers(rName),
+				Config: testAccModelConfig_containers(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
@@ -292,7 +292,7 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelVPCConfig_basic(rName),
+				Config: testAccModelConfig_vpcBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -320,7 +320,7 @@ func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelNetworkIsolation(rName),
+				Config: testAccModelConfig_networkIsolation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "true"),
@@ -346,7 +346,7 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig(rName),
+				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModel(), resourceName),
@@ -437,7 +437,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 `, rName)
 }
 
-func testAccModelConfig(rName string) string {
+func testAccModelConfig_basic(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -450,7 +450,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccModelInferenceExecutionConfig(rName string) string {
+func testAccModelConfig_inferenceExecution(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -471,7 +471,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccModelConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccModelConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -488,7 +488,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccModelConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccModelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -506,7 +506,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPrimaryContainerModelDataURLConfig(rName string) string {
+func testAccModelConfig_primaryContainerDataURL(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -581,7 +581,7 @@ resource "aws_s3_object" "test" {
 `, rName)
 }
 
-func testAccPrimaryContainerHostnameConfig(rName string) string {
+func testAccModelConfig_primaryContainerHostname(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -595,7 +595,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccPrimaryContainerImageConfigConfig(rName string) string {
+func testAccModelConfig_primaryContainerImage(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -612,7 +612,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccPrimaryContainerEnvironmentConfig(rName string) string {
+func testAccModelConfig_primaryContainerEnvironment(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -629,7 +629,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccPrimaryContainerModeSingle(rName string) string {
+func testAccModelConfig_primaryContainerModeSingle(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -643,7 +643,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccModelContainers(rName string) string {
+func testAccModelConfig_containers(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
@@ -660,7 +660,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccModelNetworkIsolation(rName string) string {
+func testAccModelConfig_networkIsolation(rName string) string {
 	return testAccModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
@@ -674,7 +674,7 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
-func testAccModelVPCConfig_basic(rName string) string {
+func testAccModelConfig_vpcBasic(rName string) string {
 	return testAccModelConfigBase(rName) +
 		acctest.ConfigAvailableAZsNoOptIn() +
 		fmt.Sprintf(`

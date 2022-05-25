@@ -27,7 +27,7 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig(rName),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`eventsubscription:.+`)),
@@ -48,7 +48,7 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionUpdateConfig(rName),
+				Config: testAccEventSubscriptionConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -76,7 +76,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionWithSourceIDsConfig(rName),
+				Config: testAccEventSubscriptionConfig_sourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -86,7 +86,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSubscriptionUpdateSourceIDsConfig(rName),
+				Config: testAccEventSubscriptionConfig_updateSourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -116,7 +116,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig(rName),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -124,7 +124,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSubscriptionUpdateCategoriesConfig(rName),
+				Config: testAccEventSubscriptionConfig_updateCategories(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -152,7 +152,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfigTags1(rName, "key1", "value1"),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -165,7 +165,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEventSubscriptionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -174,7 +174,7 @@ func TestAccRedshiftEventSubscription_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSubscriptionConfigTags1(rName, "key2", "value2"),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -197,7 +197,7 @@ func TestAccRedshiftEventSubscription_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig(rName),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceEventSubscription(), resourceName),
@@ -257,7 +257,7 @@ func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccEventSubscriptionConfig(rName string) string {
+func testAccEventSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -270,7 +270,7 @@ resource "aws_redshift_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionUpdateConfig(rName string) string {
+func testAccEventSubscriptionConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -290,7 +290,7 @@ resource "aws_redshift_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionWithSourceIDsConfig(rName string) string {
+func testAccEventSubscriptionConfig_sourceIDs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -316,7 +316,7 @@ resource "aws_redshift_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionUpdateSourceIDsConfig(rName string) string {
+func testAccEventSubscriptionConfig_updateSourceIDs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -348,7 +348,7 @@ resource "aws_redshift_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionUpdateCategoriesConfig(rName string) string {
+func testAccEventSubscriptionConfig_updateCategories(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -367,7 +367,7 @@ resource "aws_redshift_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccEventSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -393,7 +393,7 @@ resource "aws_redshift_event_subscription" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccEventSubscriptionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEventSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q

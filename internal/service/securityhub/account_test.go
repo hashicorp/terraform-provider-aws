@@ -20,7 +20,7 @@ func testAccAccount_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig(),
+				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists("aws_securityhub_account.example"),
 				),
@@ -81,7 +81,7 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAccountConfig() string {
+func testAccAccountConfig_basic() string {
 	return `
 resource "aws_securityhub_account" "example" {}
 `

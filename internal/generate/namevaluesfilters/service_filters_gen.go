@@ -242,8 +242,8 @@ func (filters NameValuesFilters) NeptuneFilters() []*neptune.Filter {
 	return result
 }
 
-// RdsFilters returns rds service filters.
-func (filters NameValuesFilters) RdsFilters() []*rds.Filter {
+// RDSFilters returns rds service filters.
+func (filters NameValuesFilters) RDSFilters() []*rds.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {

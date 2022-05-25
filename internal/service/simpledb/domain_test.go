@@ -23,7 +23,7 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig,
+				Config: testAccDomainConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 				),
@@ -83,7 +83,7 @@ func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccDomainConfig = `
+var testAccDomainConfig_basic = `
 resource "aws_simpledb_domain" "test_domain" {
   name = "terraform-test-domain"
 }

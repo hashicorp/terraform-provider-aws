@@ -29,7 +29,7 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionConfig_SecretString(rName),
+				Config: testAccSecretVersionConfig_string(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -61,7 +61,7 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionConfig_SecretBinary(rName),
+				Config: testAccSecretVersionConfig_binary(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_binary", verify.Base64Encode([]byte("test-binary"))),
@@ -92,7 +92,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 		CheckDestroy:      testAccCheckSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionConfig_VersionStages_Single(rName),
+				Config: testAccSecretVersionConfig_stagesSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -102,7 +102,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSecretVersionConfig_VersionStages_SingleUpdated(rName),
+				Config: testAccSecretVersionConfig_stagesSingleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -112,7 +112,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSecretVersionConfig_VersionStages_Multiple(rName),
+				Config: testAccSecretVersionConfig_stagesMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -215,7 +215,7 @@ func testAccCheckSecretVersionExists(resourceName string, version *secretsmanage
 	}
 }
 
-func testAccSecretVersionConfig_SecretString(rName string) string {
+func testAccSecretVersionConfig_string(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -228,7 +228,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionConfig_SecretBinary(rName string) string {
+func testAccSecretVersionConfig_binary(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -241,7 +241,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionConfig_VersionStages_Single(rName string) string {
+func testAccSecretVersionConfig_stagesSingle(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -256,7 +256,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionConfig_VersionStages_SingleUpdated(rName string) string {
+func testAccSecretVersionConfig_stagesSingleUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -271,7 +271,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionConfig_VersionStages_Multiple(rName string) string {
+func testAccSecretVersionConfig_stagesMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"

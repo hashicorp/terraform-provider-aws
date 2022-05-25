@@ -1049,7 +1049,7 @@ func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthe
 	}
 
 	if v, ok := tfMap["tls"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Tls = expandTls(v[0].(map[string]interface{}))
+		apiObject.Tls = expandTLS(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["unauthenticated"].(bool); ok {
@@ -1083,7 +1083,7 @@ func expandSasl(tfMap map[string]interface{}) *kafka.Sasl {
 	return apiObject
 }
 
-func expandTls(tfMap map[string]interface{}) *kafka.Tls {
+func expandTLS(tfMap map[string]interface{}) *kafka.Tls {
 	if tfMap == nil {
 		return nil
 	}
@@ -1442,7 +1442,7 @@ func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[stri
 	}
 
 	if v := apiObject.Tls; v != nil {
-		tfMap["tls"] = []interface{}{flattenTls(v)}
+		tfMap["tls"] = []interface{}{flattenTLS(v)}
 	}
 
 	if v := apiObject.Unauthenticated; v != nil {
@@ -1476,7 +1476,7 @@ func flattenSasl(apiObject *kafka.Sasl) map[string]interface{} {
 	return tfMap
 }
 
-func flattenTls(apiObject *kafka.Tls) map[string]interface{} {
+func flattenTLS(apiObject *kafka.Tls) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

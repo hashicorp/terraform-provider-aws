@@ -25,7 +25,7 @@ func TestAccRedshiftUsageLimit_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUsageLimitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsageLimitBasicConfig(rName, 60),
+				Config: testAccUsageLimitConfig_basic(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "feature_type", "concurrency-scaling"),
@@ -43,7 +43,7 @@ func TestAccRedshiftUsageLimit_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsageLimitBasicConfig(rName, 120),
+				Config: testAccUsageLimitConfig_basic(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "feature_type", "concurrency-scaling"),
@@ -70,7 +70,7 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckUsageLimitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsageLimitConfigTags1(rName, "key1", "value1"),
+				Config: testAccUsageLimitConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -83,7 +83,7 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsageLimitConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUsageLimitConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -91,7 +91,7 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsageLimitConfigTags1(rName, "key2", "value2"),
+				Config: testAccUsageLimitConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -113,7 +113,7 @@ func TestAccRedshiftUsageLimit_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUsageLimitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsageLimitBasicConfig(rName, 60),
+				Config: testAccUsageLimitConfig_basic(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceUsageLimit(), resourceName),
@@ -170,7 +170,7 @@ func testAccCheckUsageLimitExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccUsageLimitBasicConfig(rName string, amount int) string {
+func testAccUsageLimitConfig_basic(rName string, amount int) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_usage_limit" "test" {
   cluster_identifier = aws_redshift_cluster.test.id
@@ -181,7 +181,7 @@ resource "aws_redshift_usage_limit" "test" {
 `, amount))
 }
 
-func testAccUsageLimitConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccUsageLimitConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_usage_limit" "test" {
   cluster_identifier = aws_redshift_cluster.test.id
@@ -196,7 +196,7 @@ resource "aws_redshift_usage_limit" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccUsageLimitConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccUsageLimitConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_usage_limit" "test" {
   cluster_identifier = aws_redshift_cluster.test.id

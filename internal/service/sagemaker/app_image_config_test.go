@@ -27,7 +27,7 @@ func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppImageBasicConfig(rName),
+				Config: testAccAppImageConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
@@ -57,7 +57,7 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppImageKernelGatewayImageKernalSpecs1Config(rName),
+				Config: testAccAppImageConfigConfig_kernelGatewayKernalSpecs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
@@ -73,7 +73,7 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppImageKernelGatewayImageKernalSpecs2Config(rName),
+				Config: testAccAppImageConfigConfig_kernelGatewayKernalSpecs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
@@ -100,7 +100,7 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) 
 		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppImageKernelGatewayImageFileSystem1Config(rName),
+				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
@@ -118,7 +118,7 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppImageKernelGatewayImageFileSystem2Config(rName),
+				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
@@ -146,7 +146,7 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppImageTags1Config(rName, "key1", "value1"),
+				Config: testAccAppImageConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -159,7 +159,7 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppImageTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppImageConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -168,7 +168,7 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppImageTags1Config(rName, "key2", "value2"),
+				Config: testAccAppImageConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -191,7 +191,7 @@ func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppImageBasicConfig(rName),
+				Config: testAccAppImageConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(resourceName, &config),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceAppImageConfig(), resourceName),
@@ -251,7 +251,7 @@ func testAccCheckAppImageExistsConfig(n string, config *sagemaker.DescribeAppIma
 	}
 }
 
-func testAccAppImageBasicConfig(rName string) string {
+func testAccAppImageConfigConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
@@ -259,7 +259,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName)
 }
 
-func testAccAppImageKernelGatewayImageKernalSpecs1Config(rName string) string {
+func testAccAppImageConfigConfig_kernelGatewayKernalSpecs1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
@@ -273,7 +273,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName)
 }
 
-func testAccAppImageKernelGatewayImageKernalSpecs2Config(rName string) string {
+func testAccAppImageConfigConfig_kernelGatewayKernalSpecs2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
@@ -288,7 +288,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName)
 }
 
-func testAccAppImageKernelGatewayImageFileSystem1Config(rName string) string {
+func testAccAppImageConfigConfig_kernelGatewayFileSystem1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
@@ -304,7 +304,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName)
 }
 
-func testAccAppImageKernelGatewayImageFileSystem2Config(rName string) string {
+func testAccAppImageConfigConfig_kernelGatewayFileSystem2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
@@ -324,7 +324,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName)
 }
 
-func testAccAppImageTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAppImageConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
@@ -336,7 +336,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAppImageTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAppImageConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q

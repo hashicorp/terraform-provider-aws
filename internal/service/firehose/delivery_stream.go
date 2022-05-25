@@ -254,7 +254,7 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 		"index_name":                 aws.StringValue(description.IndexName),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
-		"vpc_config":                 flattenVpcConfiguration(description.VpcConfigurationDescription),
+		"vpc_config":                 flattenVPCConfiguration(description.VpcConfigurationDescription),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
@@ -278,7 +278,7 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 	return []map[string]interface{}{m}
 }
 
-func flattenVpcConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
+func flattenVPCConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
 	if description == nil {
 		return []map[string]interface{}{}
 	}

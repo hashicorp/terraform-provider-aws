@@ -26,7 +26,7 @@ func TestAccLocationPlaceIndex_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPlaceIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigPlaceIndex_basic(rName),
+				Config: testAccPlaceIndexConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
@@ -60,7 +60,7 @@ func TestAccLocationPlaceIndex_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigPlaceIndex_basic(rName),
+				Config: testAccPlaceIndexConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourcePlaceIndex(), resourceName),
@@ -82,7 +82,7 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigPlaceIndex_dataSourceConfigurationIntendedUse(rName, locationservice.IntendedUseSingleUse),
+				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseSingleUse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
@@ -95,7 +95,7 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigPlaceIndex_dataSourceConfigurationIntendedUse(rName, locationservice.IntendedUseStorage),
+				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseStorage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
@@ -117,7 +117,7 @@ func TestAccLocationPlaceIndex_description(t *testing.T) {
 		CheckDestroy:      testAccCheckPlaceIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigPlaceIndex_description(rName, "description1"),
+				Config: testAccPlaceIndexConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -129,7 +129,7 @@ func TestAccLocationPlaceIndex_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigPlaceIndex_description(rName, "description2"),
+				Config: testAccPlaceIndexConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -150,7 +150,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPlaceIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigPlaceIndex_tags1(rName, "key1", "value1"),
+				Config: testAccPlaceIndexConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -163,7 +163,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigPlaceIndex_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPlaceIndexConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -172,7 +172,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigPlaceIndex_tags1(rName, "key2", "value2"),
+				Config: testAccPlaceIndexConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -237,7 +237,7 @@ func testAccCheckPlaceIndexExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccConfigPlaceIndex_basic(rName string) string {
+func testAccPlaceIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"
@@ -246,7 +246,7 @@ resource "aws_location_place_index" "test" {
 `, rName)
 }
 
-func testAccConfigPlaceIndex_dataSourceConfigurationIntendedUse(rName, intendedUse string) string {
+func testAccPlaceIndexConfig_configurationIntendedUse(rName, intendedUse string) string {
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"
@@ -260,7 +260,7 @@ resource "aws_location_place_index" "test" {
 `, rName, intendedUse)
 }
 
-func testAccConfigPlaceIndex_description(rName, description string) string {
+func testAccPlaceIndexConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"
@@ -270,7 +270,7 @@ resource "aws_location_place_index" "test" {
 `, rName, description)
 }
 
-func testAccConfigPlaceIndex_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccPlaceIndexConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"
@@ -283,7 +283,7 @@ resource "aws_location_place_index" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccConfigPlaceIndex_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPlaceIndexConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"

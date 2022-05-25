@@ -21,7 +21,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
@@ -64,7 +64,7 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithVPCDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", "1"),
@@ -87,7 +87,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithLoggingDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_logging(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", "true"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_name", bucketResourceName, "bucket"),
@@ -118,7 +118,7 @@ func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testi
 	})
 }
 
-func testAccClusterDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = %[1]q
@@ -137,7 +137,7 @@ data "aws_redshift_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterWithVPCDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVpcWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
@@ -174,7 +174,7 @@ data "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterWithLoggingDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_logging(rName string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_service_account" "test" {}
 
@@ -222,7 +222,7 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot = true
 
   logging {
-    bucket_name   = aws_s3_bucket.test.id
+   bucket_name   = aws_s3_bucket.test.id
     enable        = true
     s3_key_prefix = "cluster-logging/"
   }

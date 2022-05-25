@@ -732,7 +732,8 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map": location.DataSourceMap(),
+			"aws_location_map":         location.DataSourceMap(),
+			"aws_location_place_index": location.DataSourcePlaceIndex(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -977,7 +978,7 @@ func Provider() *schema.Provider {
 			"aws_appmesh_virtual_router":  appmesh.ResourceVirtualRouter(),
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
-			"aws_apprunner_vpc_connector":                      apprunner.ResourceVpcConnector(),
+			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
@@ -1381,11 +1382,12 @@ func Provider() *schema.Provider {
 			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
 			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
-			"aws_efs_access_point":       efs.ResourceAccessPoint(),
-			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
-			"aws_efs_file_system":        efs.ResourceFileSystem(),
-			"aws_efs_file_system_policy": efs.ResourceFileSystemPolicy(),
-			"aws_efs_mount_target":       efs.ResourceMountTarget(),
+			"aws_efs_access_point":              efs.ResourceAccessPoint(),
+			"aws_efs_backup_policy":             efs.ResourceBackupPolicy(),
+			"aws_efs_file_system":               efs.ResourceFileSystem(),
+			"aws_efs_file_system_policy":        efs.ResourceFileSystemPolicy(),
+			"aws_efs_mount_target":              efs.ResourceMountTarget(),
+			"aws_efs_replication_configuration": efs.ResourceReplicationConfiguration(),
 
 			"aws_eks_addon":                    eks.ResourceAddon(),
 			"aws_eks_cluster":                  eks.ResourceCluster(),
@@ -1604,7 +1606,7 @@ func Provider() *schema.Provider {
 			"aws_lambda_event_source_mapping":           lambda.ResourceEventSourceMapping(),
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
-			"aws_lambda_function_url":                   lambda.ResourceFunctionUrl(),
+			"aws_lambda_function_url":                   lambda.ResourceFunctionURL(),
 			"aws_lambda_invocation":                     lambda.ResourceInvocation(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
 			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),

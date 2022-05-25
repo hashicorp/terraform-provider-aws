@@ -30,7 +30,7 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileFargateProfileNameConfig(rName),
+				Config: testAccFargateProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName, &fargateProfile),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
@@ -64,7 +64,7 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileFargateProfileNameConfig(rName),
+				Config: testAccFargateProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName, &fargateProfile),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceFargateProfile(), resourceName),
@@ -88,7 +88,7 @@ func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileFargateProfileMultipleConfig(rName),
+				Config: testAccFargateProfileConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName1, &fargateProfile),
 					testAccCheckFargateProfileExists(resourceName2, &fargateProfile),
@@ -110,7 +110,7 @@ func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileSelectorLabels1Config(rName, "key1", "value1"),
+				Config: testAccFargateProfileConfig_selectorLabels1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName, &fargateProfile1),
 				),
@@ -136,7 +136,7 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileTags1Config(rName, "key1", "value1"),
+				Config: testAccFargateProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName, &fargateProfile1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -149,7 +149,7 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFargateProfileTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFargateProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName, &fargateProfile2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -158,7 +158,7 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFargateProfileTags1Config(rName, "key2", "value2"),
+				Config: testAccFargateProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(resourceName, &fargateProfile3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -459,7 +459,7 @@ resource "aws_eks_cluster" "test" {
 `, rName)
 }
 
-func testAccFargateProfileFargateProfileNameConfig(rName string) string {
+func testAccFargateProfileConfig_name(rName string) string {
 	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
@@ -479,7 +479,7 @@ resource "aws_eks_fargate_profile" "test" {
 `, rName)
 }
 
-func testAccFargateProfileFargateProfileMultipleConfig(rName string) string {
+func testAccFargateProfileConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFargateProfileBaseConfig(rName),
 		fmt.Sprintf(`
@@ -503,7 +503,7 @@ resource "aws_eks_fargate_profile" "test" {
 `, rName))
 }
 
-func testAccFargateProfileSelectorLabels1Config(rName, labelKey1, labelValue1 string) string {
+func testAccFargateProfileConfig_selectorLabels1(rName, labelKey1, labelValue1 string) string {
 	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
@@ -526,7 +526,7 @@ resource "aws_eks_fargate_profile" "test" {
 `, rName, labelKey1, labelValue1)
 }
 
-func testAccFargateProfileTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccFargateProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
@@ -550,7 +550,7 @@ resource "aws_eks_fargate_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccFargateProfileTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccFargateProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
