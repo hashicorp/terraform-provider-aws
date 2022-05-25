@@ -190,7 +190,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetBasicConfig(rName, launchPath, params, bucketName, key, roleArn),
+				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
@@ -218,7 +218,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 			{
-				Config: testAccFleetBasicUpdatedConfig(rNameUpdated, launchPath, params, bucketName, key, roleArn),
+				Config: testAccFleetConfig_basicUpdated(rNameUpdated, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
@@ -283,7 +283,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetBasicTags1Config(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccFleetConfig_basicTags1(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -297,7 +297,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 			{
-				Config: testAccFleetBasicTags2Config(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFleetConfig_basicTags2(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -306,7 +306,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetBasicTags1Config(rName, launchPath, params, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccFleetConfig_basicTags1(rName, launchPath, params, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -363,7 +363,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetAllFieldsConfig(rName, desc, launchPath, params[0], bucketName, key, roleArn),
+				Config: testAccFleetConfig_allFields(rName, desc, launchPath, params[0], bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
@@ -415,7 +415,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 			{
-				Config: testAccFleetAllFieldsUpdatedConfig(rNameUpdated, desc, launchPath, params[1], bucketName, key, roleArn),
+				Config: testAccFleetConfig_allFieldsUpdated(rNameUpdated, desc, launchPath, params[1], bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
@@ -503,7 +503,7 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCertConfig(rName, launchPath, params, bucketName, key, roleArn),
+				Config: testAccFleetConfig_cert(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
@@ -542,7 +542,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetScriptConfig(rName),
+				Config: testAccFleetConfig_script(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", "id"),
@@ -613,7 +613,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetBasicConfig(rName, launchPath, params, bucketName, key, roleArn),
+				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
@@ -673,7 +673,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFleetBasicConfig(rName, launchPath, params, bucketName, key, roleArn string) string {
+func testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
@@ -691,7 +691,7 @@ resource "aws_gamelift_fleet" "test" {
 `, rName, launchPath, params)
 }
 
-func testAccFleetBasicTags1Config(rName, launchPath, params, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
+func testAccFleetConfig_basicTags1(rName, launchPath, params, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
@@ -713,7 +713,7 @@ resource "aws_gamelift_fleet" "test" {
 `, rName, launchPath, params, tagKey1, tagValue1)
 }
 
-func testAccFleetBasicTags2Config(rName, launchPath, params, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccFleetConfig_basicTags2(rName, launchPath, params, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
@@ -736,7 +736,7 @@ resource "aws_gamelift_fleet" "test" {
 `, rName, launchPath, params, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccFleetBasicUpdatedConfig(rName, launchPath, params, bucketName, key, roleArn string) string {
+func testAccFleetConfig_basicUpdated(rName, launchPath, params, bucketName, key, roleArn string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id                           = aws_gamelift_build.test.id
@@ -762,7 +762,7 @@ resource "aws_gamelift_fleet" "test" {
 `, rName, launchPath, params)
 }
 
-func testAccFleetAllFieldsConfig(rName, desc, launchPath, params, bucketName, key, roleArn string) string {
+func testAccFleetConfig_allFields(rName, desc, launchPath, params, bucketName, key, roleArn string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) +
 		testAccFleetIAMRole(rName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
@@ -816,7 +816,7 @@ resource "aws_gamelift_fleet" "test" {
 `, rName, desc, launchPath, params)
 }
 
-func testAccFleetAllFieldsUpdatedConfig(rName, desc, launchPath, params, bucketName, key, roleArn string) string {
+func testAccFleetConfig_allFieldsUpdated(rName, desc, launchPath, params, bucketName, key, roleArn string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) +
 		testAccFleetIAMRole(rName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
@@ -944,7 +944,7 @@ resource "aws_iam_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccFleetCertConfig(rName, launchPath, params, bucketName, key, roleArn string) string {
+func testAccFleetConfig_cert(rName, launchPath, params, bucketName, key, roleArn string) string {
 	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
@@ -966,7 +966,7 @@ resource "aws_gamelift_fleet" "test" {
 `, rName, launchPath, params)
 }
 
-func testAccFleetScriptConfig(rName string) string {
+func testAccFleetConfig_script(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q

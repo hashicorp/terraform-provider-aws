@@ -22,7 +22,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEncryptionByDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSEncryptionByDefaultConfig(false),
+				Config: testAccEBSEncryptionByDefaultConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -34,7 +34,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEBSEncryptionByDefaultConfig(true),
+				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -85,7 +85,7 @@ func testAccCheckEBSEncryptionByDefault(n string, enabled bool) resource.TestChe
 	}
 }
 
-func testAccEBSEncryptionByDefaultConfig(enabled bool) string {
+func testAccEBSEncryptionByDefaultConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ebs_encryption_by_default" "test" {
   enabled = %[1]t

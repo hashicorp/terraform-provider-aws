@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var validateAuthorizerResultTtlInSeconds = validation.IntBetween(0, 3600)
+var validateAuthorizerResultTTLInSeconds = validation.IntBetween(0, 3600)
 
-const DefaultAuthorizerResultTtlInSeconds = 300
+const DefaultAuthorizerResultTTLInSeconds = 300
 
 func ResourceGraphQLAPI() *schema.Resource {
 	return &schema.Resource{
@@ -98,8 +98,8 @@ func ResourceGraphQLAPI() *schema.Resource {
 									"authorizer_result_ttl_in_seconds": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Default:      DefaultAuthorizerResultTtlInSeconds,
-										ValidateFunc: validateAuthorizerResultTtlInSeconds,
+										Default:      DefaultAuthorizerResultTTLInSeconds,
+										ValidateFunc: validateAuthorizerResultTTLInSeconds,
 									},
 									"authorizer_uri": {
 										Type:     schema.TypeString,
@@ -226,8 +226,8 @@ func ResourceGraphQLAPI() *schema.Resource {
 						"authorizer_result_ttl_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      DefaultAuthorizerResultTtlInSeconds,
-							ValidateFunc: validateAuthorizerResultTtlInSeconds,
+							Default:      DefaultAuthorizerResultTTLInSeconds,
+							ValidateFunc: validateAuthorizerResultTTLInSeconds,
 						},
 						"authorizer_uri": {
 							Type:     schema.TypeString,
@@ -655,7 +655,7 @@ func flattenGraphQLAPILambdaAuthorizerConfig(lambdaAuthorizerConfig *appsync.Lam
 	if lambdaAuthorizerConfig.AuthorizerResultTtlInSeconds != nil {
 		m["authorizer_result_ttl_in_seconds"] = aws.Int64Value(lambdaAuthorizerConfig.AuthorizerResultTtlInSeconds)
 	} else {
-		m["authorizer_result_ttl_in_seconds"] = DefaultAuthorizerResultTtlInSeconds
+		m["authorizer_result_ttl_in_seconds"] = DefaultAuthorizerResultTTLInSeconds
 	}
 
 	if lambdaAuthorizerConfig.IdentityValidationExpression != nil {

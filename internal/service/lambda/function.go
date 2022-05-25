@@ -883,7 +883,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := functionInvokeArn(*function.FunctionArn, meta)
+	invokeArn := functionInvokeARN(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
@@ -1341,7 +1341,7 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	return variables
 }
 
-func functionInvokeArn(functionArn string, meta interface{}) string {
+func functionInvokeARN(functionArn string, meta interface{}) string {
 	return arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",

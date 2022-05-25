@@ -27,7 +27,7 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerConfig(rName),
+				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
@@ -59,7 +59,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerConfig(rName),
+				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
@@ -133,7 +133,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerConfigTags1(rName, "key1", "value1"),
+				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -146,7 +146,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayConnectPeerConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayConnectPeerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -155,7 +155,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayConnectPeerConfigTags1(rName, "key2", "value2"),
+				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -178,7 +178,7 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerTransitGatewayAddressConfig(rName, "10.20.30.200"),
+				Config: testAccTransitGatewayConnectPeerConfig_address(rName, "10.20.30.200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_address", "10.20.30.200"),
@@ -237,7 +237,7 @@ func testAccCheckTransitGatewayConnectPeerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccTransitGatewayConnectPeerConfig(rName string) string {
+func testAccTransitGatewayConnectPeerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -352,7 +352,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "test" {
 `, rName, bgpAsn))
 }
 
-func testAccTransitGatewayConnectPeerConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccTransitGatewayConnectPeerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -411,7 +411,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccTransitGatewayConnectPeerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTransitGatewayConnectPeerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -530,7 +530,7 @@ resource "aws_ec2_transit_gateway_connect_peer" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayConnectPeerTransitGatewayAddressConfig(rName, transitGatewayAddress string) string {
+func testAccTransitGatewayConnectPeerConfig_address(rName, transitGatewayAddress string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

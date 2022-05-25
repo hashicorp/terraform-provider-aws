@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDynamoDBKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) (*dynamodb.KinesisDataStreamDestination, error) {
+func FindKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) (*dynamodb.KinesisDataStreamDestination, error) {
 	input := &dynamodb.DescribeKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),
 	}
@@ -41,7 +41,7 @@ func FindDynamoDBKinesisDataStreamDestination(ctx context.Context, conn *dynamod
 	return result, nil
 }
 
-func FindDynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func findTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	}
@@ -59,8 +59,8 @@ func FindDynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamo
 	return output.Table, nil
 }
 
-func FindDynamoDBGSIByTableNameIndexName(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
-	table, err := FindDynamoDBTableByName(conn, tableName)
+func findGSIByTableNameIndexName(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+	table, err := findTableByName(conn, tableName)
 
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func FindDynamoDBGSIByTableNameIndexName(conn *dynamodb.DynamoDB, tableName, ind
 	return nil, nil
 }
 
-func FindDynamoDBPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
+func findPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	}
@@ -101,7 +101,7 @@ func FindDynamoDBPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName s
 	return output.ContinuousBackupsDescription.PointInTimeRecoveryDescription, nil
 }
 
-func FindDynamoDBTTLRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
+func findTTLRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
 	input := &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(tableName),
 	}

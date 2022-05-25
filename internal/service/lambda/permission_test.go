@@ -652,7 +652,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionConfig_FunctionUrls_None(rName),
+				Config: testAccPermissionConfig_functionURLsNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
@@ -1033,7 +1033,7 @@ resource "aws_lambda_permission" "test" {
 `)
 }
 
-func testAccPermissionConfig_FunctionUrls_None(rName string) string {
+func testAccPermissionConfig_functionURLsNone(rName string) string {
 	return acctest.ConfigCompose(testAccPermissionBaseConfig(rName), `
 resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionFromWithoutAuth"

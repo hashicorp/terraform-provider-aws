@@ -36,7 +36,7 @@ func TestAccEC2EIP_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig,
+				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -64,7 +64,7 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig,
+				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEIP(), resourceName),
@@ -86,7 +86,7 @@ func TestAccEC2EIP_instance(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPInstanceConfig(),
+				Config: testAccEIPConfig_instance(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -115,13 +115,13 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPInstanceReassociateConfig(rName),
+				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
 			},
 			{
-				Config: testAccEIPInstanceReassociateConfig(rName),
+				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
@@ -145,7 +145,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPInstanceAssociatedConfig(rName),
+				Config: testAccEIPConfig_instanceAssociated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &one),
 					testAccCheckEIPAttributes(&one),
@@ -160,7 +160,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"associate_with_private_ip"},
 			},
 			{
-				Config: testAccEIPInstanceAssociatedSwitchConfig(rName),
+				Config: testAccEIPConfig_instanceAssociatedSwitch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &one),
 					testAccCheckEIPAttributes(&one),
@@ -183,7 +183,7 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPInstanceAssociateNotAssociatedConfig(),
+				Config: testAccEIPConfig_instanceAssociateNotAssociated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -195,7 +195,7 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEIPInstanceAssociateAssociatedConfig(),
+				Config: testAccEIPConfig_instanceAssociateAssociated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -246,7 +246,7 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPNetworkInterfaceConfig(rName),
+				Config: testAccEIPConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -278,7 +278,7 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPMultiNetworkInterfaceConfig(rName),
+				Config: testAccEIPConfig_multiNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &one),
 					testAccCheckEIPAttributes(&one),
@@ -456,7 +456,7 @@ func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPPublicIPv4PoolDefaultConfig,
+				Config: testAccEIPConfig_publicIPv4PoolDefault,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -490,7 +490,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPPublicIPv4PoolCustomConfig(poolName),
+				Config: testAccEIPConfig_publicIPv4PoolCustom(poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -518,7 +518,7 @@ func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPCustomerOwnedIPv4PoolConfig(),
+				Config: testAccEIPConfig_customerOwnedIPv4Pool(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexp.MustCompile(`^ipv4pool-coip-.+$`)),
@@ -545,7 +545,7 @@ func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPNetworkBorderGroupConfig,
+				Config: testAccEIPConfig_networkBorderGroup,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -574,7 +574,7 @@ func TestAccEC2EIP_carrierIP(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPCarrierIPConfig(rName),
+				Config: testAccEIPConfig_carrierIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "carrier_ip"),
@@ -603,7 +603,7 @@ func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_BYOIPAddress_custom_default,
+				Config: testAccEIPConfig_byoipAddressCustomDefault,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -632,7 +632,7 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_BYOIPAddress_custom(address),
+				Config: testAccEIPConfig_byoipAddressCustom(address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -666,7 +666,7 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 		CheckDestroy:      testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_BYOIPAddress_custom_with_PublicIPv4Pool(address, poolName),
+				Config: testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(address, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, false, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -881,7 +881,7 @@ func testAccCheckEIPPublicDNSClassic(resourceName string) resource.TestCheckFunc
 	}
 }
 
-const testAccEIPConfig = `
+const testAccEIPConfig_basic = `
 resource "aws_eip" "test" {
   vpc = true
 }
@@ -915,13 +915,13 @@ resource "aws_eip" "test" {
 `, vpcConfig, rName))
 }
 
-const testAccEIPPublicIPv4PoolDefaultConfig = `
+const testAccEIPConfig_publicIPv4PoolDefault = `
 resource "aws_eip" "test" {
   vpc = true
 }
 `
 
-func testAccEIPPublicIPv4PoolCustomConfig(poolName string) string {
+func testAccEIPConfig_publicIPv4PoolCustom(poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc              = true
@@ -947,13 +947,13 @@ resource "aws_eip" "test" {
 `)
 }
 
-const testAccEIPConfig_BYOIPAddress_custom_default = `
+const testAccEIPConfig_byoipAddressCustomDefault = `
 resource "aws_eip" "test" {
   vpc = true
 }
 `
 
-func testAccEIPConfig_BYOIPAddress_custom(address string) string {
+func testAccEIPConfig_byoipAddressCustom(address string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc     = true
@@ -962,7 +962,7 @@ resource "aws_eip" "test" {
 `, address)
 }
 
-func testAccEIPConfig_BYOIPAddress_custom_with_PublicIPv4Pool(address string, poolname string) string {
+func testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(address string, poolname string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc              = true
@@ -972,9 +972,9 @@ resource "aws_eip" "test" {
 `, address, poolname)
 }
 
-func testAccEIPInstanceConfig() string {
+func testAccEIPConfig_instance() string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		`
@@ -1005,9 +1005,9 @@ resource "aws_eip" "test" {
 `)
 }
 
-func testAccEIPInstanceAssociatedConfig(rName string) string {
+func testAccEIPConfig_instanceAssociated(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -1074,9 +1074,9 @@ resource "aws_eip" "test" {
 `, rName))
 }
 
-func testAccEIPInstanceAssociatedSwitchConfig(rName string) string {
+func testAccEIPConfig_instanceAssociatedSwitch(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
@@ -1141,7 +1141,7 @@ resource "aws_eip" "test" {
 `, rName))
 }
 
-func testAccEIPNetworkInterfaceConfig(rName string) string {
+func testAccEIPConfig_networkInterface(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1179,7 +1179,7 @@ resource "aws_eip" "test" {
 `, rName))
 }
 
-func testAccEIPMultiNetworkInterfaceConfig(rName string) string {
+func testAccEIPConfig_multiNetworkInterface(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1225,9 +1225,9 @@ resource "aws_eip" "test2" {
 `, rName))
 }
 
-func testAccEIPInstanceReassociateConfig(rName string) string {
+func testAccEIPConfig_instanceReassociate(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_eip" "test" {
@@ -1299,11 +1299,11 @@ resource "aws_route_table_association" "test" {
 `, rName))
 }
 
-func testAccEIPInstanceAssociateNotAssociatedConfig() string {
+func testAccEIPConfig_instanceAssociateNotAssociated() string {
 	return acctest.ConfigCompose(
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1329,11 +1329,11 @@ resource "aws_eip" "test" {
 `)
 }
 
-func testAccEIPInstanceAssociateAssociatedConfig() string {
+func testAccEIPConfig_instanceAssociateAssociated() string {
 	return acctest.ConfigCompose(
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1361,7 +1361,7 @@ resource "aws_eip" "test" {
 `)
 }
 
-func testAccEIPCustomerOwnedIPv4PoolConfig() string {
+func testAccEIPConfig_customerOwnedIPv4Pool() string {
 	return `
 data "aws_ec2_coip_pools" "test" {}
 
@@ -1372,7 +1372,7 @@ resource "aws_eip" "test" {
 `
 }
 
-const testAccEIPNetworkBorderGroupConfig = `
+const testAccEIPConfig_networkBorderGroup = `
 data "aws_region" current {}
 
 resource "aws_eip" "test" {
@@ -1381,7 +1381,7 @@ resource "aws_eip" "test" {
 }
 `
 
-func testAccEIPCarrierIPConfig(rName string) string {
+func testAccEIPConfig_carrierIP(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`

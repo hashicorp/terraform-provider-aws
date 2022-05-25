@@ -19,15 +19,15 @@ func TestAccSecretsManagerSecretDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretDataSourceConfig_MissingRequired,
+				Config:      testAccSecretDataSourceConfig_missingRequired,
 				ExpectError: regexp.MustCompile(`must specify either arn or name`),
 			},
 			{
-				Config:      testAccSecretDataSourceConfig_MultipleSpecified,
+				Config:      testAccSecretDataSourceConfig_multipleSpecified,
 				ExpectError: regexp.MustCompile(`specify only arn or name`),
 			},
 			{
-				Config:      testAccSecretDataSourceConfig_NonExistent,
+				Config:      testAccSecretDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccSecretsManagerSecretDataSource_arn(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretDataSourceConfig_ARN(rName),
+				Config: testAccSecretDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
@@ -65,7 +65,7 @@ func TestAccSecretsManagerSecretDataSource_name(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretDataSourceConfig_Name(rName),
+				Config: testAccSecretDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
@@ -85,7 +85,7 @@ func TestAccSecretsManagerSecretDataSource_policy(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretDataSourceConfig_Policy(rName),
+				Config: testAccSecretDataSourceConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
@@ -133,7 +133,7 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 	}
 }
 
-func testAccSecretDataSourceConfig_ARN(rName string) string {
+func testAccSecretDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
@@ -149,19 +149,19 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-const testAccSecretDataSourceConfig_MissingRequired = `
+const testAccSecretDataSourceConfig_missingRequired = `
 data "aws_secretsmanager_secret" "test" {}
 `
 
 //lintignore:AWSAT003,AWSAT005
-const testAccSecretDataSourceConfig_MultipleSpecified = `
+const testAccSecretDataSourceConfig_multipleSpecified = `
 data "aws_secretsmanager_secret" "test" {
   arn  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:tf-acc-test-does-not-exist"
   name = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccSecretDataSourceConfig_Name(rName string) string {
+func testAccSecretDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
@@ -177,7 +177,7 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccSecretDataSourceConfig_Policy(rName string) string {
+func testAccSecretDataSourceConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -206,7 +206,7 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-const testAccSecretDataSourceConfig_NonExistent = `
+const testAccSecretDataSourceConfig_nonExistent = `
 data "aws_secretsmanager_secret" "test" {
   name = "tf-acc-test-does-not-exist"
 }

@@ -3,7 +3,6 @@ package redshift_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -27,14 +26,14 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleConfig(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
 				),
 			},
 			{
-				Config: testAccSnapshotScheduleConfig(rName, "cron(30 12 *)"),
+				Config: testAccSnapshotScheduleConfig_basic(rName, "cron(30 12 *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
@@ -64,14 +63,14 @@ func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleWithMultipleDefinitionConfig(rName, "cron(30 12 *)", "cron(15 6 *)"),
+				Config: testAccSnapshotScheduleConfig_multipleDefinition(rName, "cron(30 12 *)", "cron(15 6 *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "2"),
 				),
 			},
 			{
-				Config: testAccSnapshotScheduleWithMultipleDefinitionConfig(rName, "cron(30 8 *)", "cron(15 10 *)"),
+				Config: testAccSnapshotScheduleConfig_multipleDefinition(rName, "cron(30 8 *)", "cron(15 10 *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "2"),
@@ -101,7 +100,7 @@ func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleWithIdentifierPrefixConfig,
+				Config: testAccSnapshotScheduleConfig_identifierPrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 				),
@@ -131,7 +130,7 @@ func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleWithDescriptionConfig(rName),
+				Config: testAccSnapshotScheduleConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -162,7 +161,7 @@ func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleWithTagsConfig(rName),
+				Config: testAccSnapshotScheduleConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -171,7 +170,7 @@ func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSnapshotScheduleWithTagsUpdateConfig(rName),
+				Config: testAccSnapshotScheduleConfig_tagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -205,7 +204,7 @@ func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleWithForceDestroyConfig(rName),
+				Config: testAccSnapshotScheduleConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &snapshotSchedule),
 					testAccCheckClusterExists(clusterResourceName, &cluster),
@@ -294,7 +293,8 @@ func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *reds
 			return fmt.Errorf("Error associate Redshift Cluster and Snapshot Schedule: %s", err)
 		}
 
-		if err := tfredshift.WaitForSnapshotScheduleAssociationActive(conn, 75*time.Minute, aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier)); err != nil {
+		id := fmt.Sprintf("%s/%s", aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier))
+		if _, err := tfredshift.WaitScheduleAssociationActive(conn, id); err != nil {
 			return err
 		}
 
@@ -302,7 +302,7 @@ func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *reds
 	}
 }
 
-const testAccSnapshotScheduleWithIdentifierPrefixConfig = `
+const testAccSnapshotScheduleConfig_identifierPrefix = `
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier_prefix = "tf-acc-test"
   definitions = [
@@ -311,7 +311,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 }
 `
 
-func testAccSnapshotScheduleConfig(rName, definition string) string {
+func testAccSnapshotScheduleConfig_basic(rName, definition string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier = %[1]q
@@ -322,7 +322,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 `, rName, definition)
 }
 
-func testAccSnapshotScheduleWithMultipleDefinitionConfig(rName, definition1, definition2 string) string {
+func testAccSnapshotScheduleConfig_multipleDefinition(rName, definition1, definition2 string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier = %[1]q
@@ -334,7 +334,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 `, rName, definition1, definition2)
 }
 
-func testAccSnapshotScheduleWithDescriptionConfig(rName string) string {
+func testAccSnapshotScheduleConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier  = %[1]q
@@ -346,7 +346,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 `, rName)
 }
 
-func testAccSnapshotScheduleWithTagsConfig(rName string) string {
+func testAccSnapshotScheduleConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier = %[1]q
@@ -362,7 +362,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 `, rName)
 }
 
-func testAccSnapshotScheduleWithTagsUpdateConfig(rName string) string {
+func testAccSnapshotScheduleConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier = %[1]q
@@ -378,7 +378,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 `, rName)
 }
 
-func testAccSnapshotScheduleWithForceDestroyConfig(rName string) string {
+func testAccSnapshotScheduleConfig_forceDestroy(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier  = %[1]q

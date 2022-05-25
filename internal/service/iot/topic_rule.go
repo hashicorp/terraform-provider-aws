@@ -1231,7 +1231,7 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting dynamodbv2: %w", err)
 	}
 
-	if err := d.Set("elasticsearch", flattenElasticSearchActions(output.Rule.Actions)); err != nil {
+	if err := d.Set("elasticsearch", flattenElasticsearchActions(output.Rule.Actions)); err != nil {
 		return fmt.Errorf("setting elasticsearch: %w", err)
 	}
 
@@ -1520,7 +1520,7 @@ func expandDynamoDBv2Action(tfList []interface{}) *iot.DynamoDBv2Action {
 	return apiObject
 }
 
-func expandElasticSearchAction(tfList []interface{}) *iot.ElasticsearchAction {
+func expandElasticsearchAction(tfList []interface{}) *iot.ElasticsearchAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1975,7 +1975,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 
 	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("elasticsearch").(*schema.Set).List() {
-		action := expandElasticSearchAction([]interface{}{tfMapRaw})
+		action := expandElasticsearchAction([]interface{}{tfMapRaw})
 
 		if action == nil {
 			continue
@@ -2190,7 +2190,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 				}
 			case "elasticsearch":
 				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandElasticSearchAction([]interface{}{tfMapRaw})
+					action := expandElasticsearchAction([]interface{}{tfMapRaw})
 
 					if action == nil {
 						continue
@@ -2574,7 +2574,7 @@ func flattenDynamoDBv2Action(apiObject *iot.DynamoDBv2Action) []interface{} {
 }
 
 // Legacy root attribute handling
-func flattenElasticSearchActions(actions []*iot.Action) []interface{} {
+func flattenElasticsearchActions(actions []*iot.Action) []interface{} {
 	results := make([]interface{}, 0)
 
 	for _, action := range actions {
@@ -2583,14 +2583,14 @@ func flattenElasticSearchActions(actions []*iot.Action) []interface{} {
 		}
 
 		if v := action.Elasticsearch; v != nil {
-			results = append(results, flattenElasticSearchAction(v)...)
+			results = append(results, flattenElasticsearchAction(v)...)
 		}
 	}
 
 	return results
 }
 
-func flattenElasticSearchAction(apiObject *iot.ElasticsearchAction) []interface{} {
+func flattenElasticsearchAction(apiObject *iot.ElasticsearchAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3230,7 +3230,7 @@ func flattenErrorAction(errorAction *iot.Action) []map[string]interface{} {
 		return results
 	}
 	if errorAction.Elasticsearch != nil {
-		results = append(results, map[string]interface{}{"elasticsearch": flattenElasticSearchActions(input)})
+		results = append(results, map[string]interface{}{"elasticsearch": flattenElasticsearchActions(input)})
 		return results
 	}
 	if errorAction.Firehose != nil {

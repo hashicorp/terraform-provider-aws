@@ -208,10 +208,10 @@ func testAccAccount_govCloud(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountGovCloudConfig(name, email),

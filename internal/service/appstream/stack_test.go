@@ -27,7 +27,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig(rName),
+				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -55,7 +55,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig(rName),
+				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
@@ -201,7 +201,7 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 
 }
 
-func testAccStackConfig(name string) string {
+func testAccStackConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name = %[1]q

@@ -33,7 +33,7 @@ const (
 
 	// Maximum amount of time for ACM Certificate asynchronous DNS validation record assignment.
 	// This timeout is unrelated to any creation or validation of those assigned DNS records.
-	AcmCertificateDnsValidationAssignmentTimeout = 5 * time.Minute
+	certificateDNSValidationAssignmentTimeout = 5 * time.Minute
 
 	certificateValidationMethodNone = "NONE"
 )
@@ -330,7 +330,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(output.CertificateArn))
 	}
 
-	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), AcmCertificateDnsValidationAssignmentTimeout); err != nil {
+	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
 		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", d.Id(), err)
 	}
 

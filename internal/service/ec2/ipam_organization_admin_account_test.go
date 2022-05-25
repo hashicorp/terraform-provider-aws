@@ -31,7 +31,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIPAMOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMOrganizationAdminAccount_basic(),
+				Config: testAccIPAMOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMOrganizationAdminAccountExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
@@ -114,7 +114,7 @@ func testAccCheckIPAMOrganizationAdminAccountExists(n string, org *organizations
 	}
 }
 
-func testAccIPAMOrganizationAdminAccount_basic() string {
+func testAccIPAMOrganizationAdminAccountConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider() + `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"

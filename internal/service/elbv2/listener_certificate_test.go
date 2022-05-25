@@ -63,7 +63,7 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfigCertificateArnUnderscores(rName, key, certificate),
+				Config: testAccListenerCertificateConfig_certificateARNUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
@@ -306,7 +306,7 @@ resource "aws_lb_listener_certificate" "test" {
 `
 }
 
-func testAccLbListenerCertificateConfigCertificateArnUnderscores(rName, key, certificate string) string {
+func testAccListenerCertificateConfig_certificateARNUnderscores(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

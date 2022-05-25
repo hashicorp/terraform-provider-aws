@@ -227,7 +227,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(name),
 	}
 
-	attributes, err := topicAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -303,7 +303,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading SNS Topic (%s): %w", d.Id(), err)
 	}
 
-	err = topicAttributeMap.ApiAttributesToResourceData(attributes, d)
+	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
 
 	if err != nil {
 		return err
@@ -353,7 +353,7 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		attributes, err := topicAttributeMap.ResourceDataToApiAttributesUpdate(d)
+		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 		if err != nil {
 			return err

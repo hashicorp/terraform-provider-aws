@@ -28,7 +28,7 @@ func TestAccIPAMPoolAllocation_ipv4Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIPAMPoolAllocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolAllocationConfig_ipv4(cidr),
+				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4(cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMAllocationExists(resourceName, &allocation),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
@@ -58,7 +58,7 @@ func TestAccIPAMPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 		CheckDestroy:      testAccCheckIPAMPoolAllocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolAllocationConfig_ipv4Netmask(netmask),
+				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(netmask),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMAllocationExists(resourceName, &allocation),
 					testAccCheckIPAMCIDRPrefix(&allocation, netmask),
@@ -87,7 +87,7 @@ func TestAccIPAMPoolAllocation_ipv4DisallowedCIDR(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolAllocationConfig_ipv4DisallowedCIDR(netmaskLength, disallowedCidr),
+				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Disallowed(netmaskLength, disallowedCidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
@@ -176,7 +176,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 `
 
-func testAccIPAMPoolAllocationConfig_ipv4(cidr string) string {
+func testAccIPAMPoolCIDRAllocationConfig_ipv4(cidr string) string {
 	return acctest.ConfigCompose(
 		testAccIPAMPoolCIDRConfig_privateBase,
 		fmt.Sprintf(`
@@ -190,7 +190,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 `, cidr))
 }
 
-func testAccIPAMPoolAllocationConfig_ipv4Netmask(netmask string) string {
+func testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(netmask string) string {
 	return acctest.ConfigCompose(
 		testAccIPAMPoolCIDRConfig_privateBase,
 		fmt.Sprintf(`
@@ -204,7 +204,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 `, netmask))
 }
 
-func testAccIPAMPoolAllocationConfig_ipv4DisallowedCIDR(netmaskLength, disallowedCidr string) string {
+func testAccIPAMPoolCIDRAllocationConfig_ipv4Disallowed(netmaskLength, disallowedCidr string) string {
 	return acctest.ConfigCompose(
 		testAccIPAMPoolCIDRConfig_privateBase,
 		fmt.Sprintf(`

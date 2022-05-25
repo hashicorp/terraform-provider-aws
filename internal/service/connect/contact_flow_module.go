@@ -20,7 +20,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexConnectContactFlowModuleKey = `aws_connect_contact_flow_module`
+const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
 
 func ResourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
@@ -104,8 +104,8 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		// Grab an exclusive lock so that we're only reading one contact flow module into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+		conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
+		defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
 		file, err := resourceContactFlowModuleLoadFileContent(filename)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -220,8 +220,8 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			// Grab an exclusive lock so that we're only reading one contact flow module into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+			conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
+			defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
 			file, err := resourceContactFlowModuleLoadFileContent(filename)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
