@@ -341,7 +341,6 @@ rules:
         - internal/service/schemas
         - internal/service/secretsmanager
         - internal/service/servicecatalog
-        - internal/service/servicediscovery
         - internal/service/servicequotas
         - internal/service/ssm
     patterns:
