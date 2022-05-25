@@ -28,6 +28,22 @@ const (
 )
 
 const (
+	LoadBalancerStateAdding    = "Adding"
+	LoadBalancerStateAdded     = "Added"
+	LoadBalancerStateInService = "InService"
+	LoadBalancerStateRemoving  = "Removing"
+	LoadBalancerStateRemoved   = "Removed"
+)
+
+const (
+	LoadBalancerTargetGroupStateAdding    = "Adding"
+	LoadBalancerTargetGroupStateAdded     = "Added"
+	LoadBalancerTargetGroupStateInService = "InService"
+	LoadBalancerTargetGroupStateRemoving  = "Removing"
+	LoadBalancerTargetGroupStateRemoved   = "Removed"
+)
+
+const (
 	PolicyTypePredictiveScaling     = "PredictiveScaling"
 	PolicyTypeSimpleScaling         = "SimpleScaling"
 	PolicyTypeStepScaling           = "StepScaling"
