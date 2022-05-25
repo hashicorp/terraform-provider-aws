@@ -22,7 +22,7 @@ func TestAccLocationPlaceIndexDataSource_indexName(t *testing.T) {
 		CheckDestroy:      testAccCheckPlaceIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigPlaceIndexDataSource_indexName(rName),
+				Config: testAccPlaceIndexDataSourceConfig_indexName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source", resourceName, "data_source"),
@@ -39,7 +39,7 @@ func TestAccLocationPlaceIndexDataSource_indexName(t *testing.T) {
 	})
 }
 
-func testAccConfigPlaceIndexDataSource_indexName(rName string) string {
+func testAccPlaceIndexDataSourceConfig_indexName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_location_place_index" "test" {
   data_source = "Here"
