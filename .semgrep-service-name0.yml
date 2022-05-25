@@ -335,7 +335,6 @@ rules:
         - internal/service/schemas
         - internal/service/servicecatalog
         - internal/service/servicequotas
-        - internal/service/ssm
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
