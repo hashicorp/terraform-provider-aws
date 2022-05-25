@@ -222,7 +222,7 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot = true
 
   logging {
-   bucket_name   = aws_s3_bucket.test.id
+    bucket_name   = aws_s3_bucket.test.id
     enable        = true
     s3_key_prefix = "cluster-logging/"
   }
