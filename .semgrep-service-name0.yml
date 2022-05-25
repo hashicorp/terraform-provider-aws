@@ -312,7 +312,6 @@ rules:
         - internal/service/gamelift
         - internal/service/glacier
         - internal/service/globalaccelerator
-        - internal/service/glue
         - internal/service/grafana
         - internal/service/guardduty
         - internal/service/iam
