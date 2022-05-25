@@ -531,7 +531,7 @@ func TestAccEC2AMI_tpmSupport(t *testing.T) {
 		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigTpmSupport(rName),
+				Config: testAccAMIConfigTpmSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "tpm_support", "v2.0"),
@@ -829,20 +829,20 @@ resource "aws_ami" "test" {
 `, rName))
 }
 
-func testAccAmiConfigTpmSupport(rName string) string {
+func testAccAMIConfigTpmSupport(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
   name                = %[1]q
-  root_device_name    = "/dev/sda1"
+  root_device_name    = "/dev/xvda"
   virtualization_type = "hvm"
   boot_mode           = "uefi"
   tpm_support         = "v2.0"
 
   ebs_block_device {
-    device_name = "/dev/sda1"
+    device_name = "/dev/xvda"
     snapshot_id = aws_ebs_snapshot.test.id
   }
 }

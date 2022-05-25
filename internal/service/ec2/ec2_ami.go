@@ -257,7 +257,6 @@ func ResourceAMI() *schema.Resource {
 			"tpm_support": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TpmSupportValues_Values(), false),
 			},
 			"usage_operation": {
