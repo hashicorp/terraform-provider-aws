@@ -345,18 +345,18 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 		CheckDestroy:      testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccELBConfig_Listener_IAMServerCertificate(rName, certificate, key, "tcp"),
+				Config:      testAccLBConfig_Listener_iamServerCertificate(rName, certificate, key, "tcp"),
 				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
 			},
 			{
-				Config: testAccELBConfig_Listener_IAMServerCertificate(rName, certificate, key, "https"),
+				Config: testAccLBConfig_Listener_iamServerCertificate(rName, certificate, key, "https"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testCheck,
 				),
 			},
 			{
-				Config:      testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(rName, certificate, key),
+				Config:      testAccLBConfig_Listener_iamServerCertificateAddInvalidListener(rName, certificate, key),
 				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
 			},
 		},
@@ -767,8 +767,8 @@ func TestLoadBalancerListenerHash(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
-	var elbName = "-Testing123"
-	_, errors := tfelb.ValidName(elbName, "SampleKey")
+	var n = "-Testing123"
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -776,8 +776,8 @@ func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
-	var elbName = ""
-	_, errors := tfelb.ValidName(elbName, "SampleKey")
+	var n = ""
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 0 {
 		t.Fatalf("Expected the ELB Name to pass validation")
@@ -785,8 +785,8 @@ func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
-	var elbName = "Testing123dddddddddddddddddddvvvv"
-	_, errors := tfelb.ValidName(elbName, "SampleKey")
+	var n = "Testing123dddddddddddddddddddvvvv"
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -794,8 +794,8 @@ func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
-	var elbName = "Testing123%%"
-	_, errors := tfelb.ValidName(elbName, "SampleKey")
+	var n = "Testing123%%"
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -803,8 +803,8 @@ func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotEndWithHyphen(t *testing.T) {
-	var elbName = "Testing123-"
-	_, errors := tfelb.ValidName(elbName, "SampleKey")
+	var n = "Testing123-"
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -1692,7 +1692,7 @@ resource "aws_security_group" "test" {
 }
 `
 
-func testAccELBConfig_Listener_IAMServerCertificate(certName, certificate, key, lbProtocol string) string {
+func testAccLBConfig_Listener_iamServerCertificate(certName, certificate, key, lbProtocol string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1723,7 +1723,7 @@ resource "aws_elb" "test" {
 `, certName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), lbProtocol)
 }
 
-func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
+func testAccLBConfig_Listener_iamServerCertificateAddInvalidListener(certName, certificate, key string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

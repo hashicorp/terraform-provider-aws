@@ -58,7 +58,7 @@ func FindTaskByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeTaskO
 	return output, nil
 }
 
-func FindLocationHdfsByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
+func FindLocationHDFSByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
 	input := &datasync.DescribeLocationHdfsInput{
 		LocationArn: aws.String(arn),
 	}
@@ -83,7 +83,7 @@ func FindLocationHdfsByARN(conn *datasync.DataSync, arn string) (*datasync.Descr
 	return output, nil
 }
 
-func FindFsxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
+func FindFSxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
 	input := &datasync.DescribeLocationFsxLustreInput{
 		LocationArn: aws.String(arn),
 	}
@@ -108,7 +108,7 @@ func FindFsxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.
 	return output, nil
 }
 
-func FindFsxOpenZfsLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
+func FindFSxOpenZFSLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
 	input := &datasync.DescribeLocationFsxOpenZfsInput{
 		LocationArn: aws.String(arn),
 	}

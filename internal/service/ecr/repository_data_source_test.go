@@ -73,14 +73,14 @@ func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckAWSEcrRepositoryDataSourceConfig_NonExistent,
+				Config:      testAccRepositoryDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
 	})
 }
 
-const testAccCheckAWSEcrRepositoryDataSourceConfig_NonExistent = `
+const testAccRepositoryDataSourceConfig_nonExistent = `
 data "aws_ecr_repository" "test" {
   name = "tf-acc-test-non-existent"
 }

@@ -234,7 +234,7 @@ resource "aws_guardduty_member" "test" {
   detector_id = aws_guardduty_detector.test.id
   email       = "%[3]s"
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email)
+`, testAccDetectorConfig_basic1, accountID, email)
 }
 
 func testAccMemberConfig_invite(accountID, email string, invite bool) string {
@@ -248,7 +248,7 @@ resource "aws_guardduty_member" "test" {
   email                      = "%[3]s"
   invite                     = %[4]t
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invite)
+`, testAccDetectorConfig_basic1, accountID, email, invite)
 }
 
 func testAccMemberConfig_invitationMessage(accountID, email, invitationMessage string) string {
@@ -263,5 +263,5 @@ resource "aws_guardduty_member" "test" {
   invitation_message         = "%[4]s"
   invite                     = true
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invitationMessage)
+`, testAccDetectorConfig_basic1, accountID, email, invitationMessage)
 }

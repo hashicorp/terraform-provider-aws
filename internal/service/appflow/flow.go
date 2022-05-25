@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1206,17 +1205,6 @@ func ResourceFlow() *schema.Resource {
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
-}
-
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
@@ -1260,7 +1248,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, err := FindFlowByArn(ctx, conn, d.Id())
+	out, err := FindFlowByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
@@ -1371,7 +1359,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, _ := FindFlowByArn(ctx, conn, d.Id())
+	out, _ := FindFlowByARN(ctx, conn, d.Id())
 
 	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
 

@@ -46,7 +46,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLocationFSxLustreImportStateID(resourceName),
 			},
 		},
 	})
@@ -104,7 +104,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_subdirectory(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLocationFSxLustreImportStateID(resourceName),
 			},
 		},
 	})
@@ -136,7 +136,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLocationFSxLustreImportStateID(resourceName),
 			},
 			{
 				Config: testAccLocationFSxLustreTags2Config("key1", "value1updated", "key2", "value2"),
@@ -167,7 +167,7 @@ func testAccCheckLocationFSxLustreDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfdatasync.FindFsxLustreLocationByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -191,7 +191,7 @@ func testAccCheckLocationFSxLustreExists(resourceName string, locationFsxLustre 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		output, err := tfdatasync.FindFsxLustreLocationByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -207,7 +207,7 @@ func testAccCheckLocationFSxLustreExists(resourceName string, locationFsxLustre 
 	}
 }
 
-func testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccLocationFSxLustreImportStateID(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

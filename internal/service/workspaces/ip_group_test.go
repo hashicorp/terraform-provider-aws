@@ -29,7 +29,7 @@ func testAccIPGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPGroupAConfig(ipGroupName, ipGroupDescription),
+				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", ipGroupName),
@@ -44,7 +44,7 @@ func testAccIPGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPGroupBConfig(ipGroupNewName, ipGroupDescription),
+				Config: testAccIPGroupConfig_b(ipGroupNewName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", ipGroupNewName),
@@ -73,7 +73,7 @@ func testAccIPGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPGroupTags1Config(rName, "key1", "value1"),
+				Config: testAccIPGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -86,7 +86,7 @@ func testAccIPGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccIPGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -95,7 +95,7 @@ func testAccIPGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIPGroupTags1Config(rName, "key2", "value2"),
+				Config: testAccIPGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -119,7 +119,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPGroupAConfig(ipGroupName, ipGroupDescription),
+				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfworkspaces.ResourceIPGroup(), resourceName),
@@ -148,7 +148,7 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 		CheckDestroy:      testAccCheckIPGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPGroupMultipleDirectoriesConfig(ipGroupName, domain),
+				Config: testAccIPGroupConfig_multipleDirectories(ipGroupName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(resourceName, &v),
 					testAccCheckDirectoryExists(directoryResourceName1, &d1),
@@ -217,7 +217,7 @@ func testAccCheckIPGroupExists(n string, v *workspaces.IpGroup) resource.TestChe
 	}
 }
 
-func testAccIPGroupAConfig(name, description string) string {
+func testAccIPGroupConfig_a(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
   name        = %[1]q
@@ -235,7 +235,7 @@ resource "aws_workspaces_ip_group" "test" {
 `, name, description)
 }
 
-func testAccIPGroupBConfig(name, description string) string {
+func testAccIPGroupConfig_b(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
   name        = %[1]q
@@ -249,7 +249,7 @@ resource "aws_workspaces_ip_group" "test" {
 `, name, description)
 }
 
-func testAccIPGroupTags1Config(name, tagKey1, tagValue1 string) string {
+func testAccIPGroupConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
   name = %[1]q
@@ -270,7 +270,7 @@ resource "aws_workspaces_ip_group" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccIPGroupTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccIPGroupConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
   name = %[1]q
@@ -292,7 +292,7 @@ resource "aws_workspaces_ip_group" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccIPGroupMultipleDirectoriesConfig(name, domain string) string {
+func testAccIPGroupConfig_multipleDirectories(name, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(name, domain),
 		fmt.Sprintf(`

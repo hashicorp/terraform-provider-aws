@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-const organizationsPolicyTypeStatusDisabled = "DISABLED"
+const policyTypeStatusDisabled = "DISABLED"
 
 func ResourceOrganization() *schema.Resource {
 	return &schema.Resource{
@@ -505,7 +505,7 @@ func getOrganizationDefaultRootPolicyTypeRefreshFunc(conn *organizations.Organiz
 			}
 		}
 
-		return &organizations.PolicyTypeSummary{}, organizationsPolicyTypeStatusDisabled, nil
+		return &organizations.PolicyTypeSummary{}, policyTypeStatusDisabled, nil
 	}
 }
 
@@ -515,7 +515,7 @@ func waitForOrganizationDefaultRootPolicyTypeDisable(conn *organizations.Organiz
 			organizations.PolicyTypeStatusEnabled,
 			organizations.PolicyTypeStatusPendingDisable,
 		},
-		Target:  []string{organizationsPolicyTypeStatusDisabled},
+		Target:  []string{policyTypeStatusDisabled},
 		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
@@ -528,7 +528,7 @@ func waitForOrganizationDefaultRootPolicyTypeDisable(conn *organizations.Organiz
 func waitForOrganizationDefaultRootPolicyTypeEnable(conn *organizations.Organizations, policyType string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			organizationsPolicyTypeStatusDisabled,
+			policyTypeStatusDisabled,
 			organizations.PolicyTypeStatusPendingEnable,
 		},
 		Target:  []string{organizations.PolicyTypeStatusEnabled},

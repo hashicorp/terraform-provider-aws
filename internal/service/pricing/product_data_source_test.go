@@ -18,7 +18,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProductEC2DataSourceConfig(),
+				Config: testAccProductDataSourceConfig_ec2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
 					testAccCheckValueIsJSON("data.aws_pricing_product.test"),
@@ -35,7 +35,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProductRedshiftDataSourceConfig(),
+				Config: testAccProductDataSourceConfig_redshift(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
 					testAccCheckValueIsJSON("data.aws_pricing_product.test"),
@@ -45,7 +45,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 	})
 }
 
-func testAccProductEC2DataSourceConfig() string {
+func testAccProductDataSourceConfig_ec2() string {
 	return acctest.ConfigCompose(
 		testAccRegionProviderConfig(),
 		`
@@ -96,7 +96,7 @@ data "aws_pricing_product" "test" {
 `)
 }
 
-func testAccProductRedshiftDataSourceConfig() string {
+func testAccProductDataSourceConfig_redshift() string {
 	return acctest.ConfigCompose(
 		testAccRegionProviderConfig(),
 		`

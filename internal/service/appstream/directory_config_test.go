@@ -216,7 +216,7 @@ func orgUnitFromDomain(orgUnit, domainName string) string {
 
 func testAccDirectoryConfigConfig(rName, domain, userName, password, orgUnitDN string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q
@@ -248,7 +248,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(rName, domain, userName, password, orgUnitDN1, orgUnitDN2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func TestAccImageRecipe_basic(t *testing.T) {
+func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -53,7 +53,7 @@ func TestAccImageRecipe_basic(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_disappears(t *testing.T) {
+func TestAccImageBuilderImageRecipe_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -75,7 +75,7 @@ func TestAccImageRecipe_disappears(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMapping_deviceName(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMapping_deviceName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -104,7 +104,7 @@ func TestAccImageRecipe_BlockDeviceMapping_deviceName(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_deleteOnTermination(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_deleteOnTermination(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -133,7 +133,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_deleteOnTermination(t *testing.T) 
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_encrypted(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_encrypted(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -162,7 +162,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_encrypted(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_iops(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_iops(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -191,7 +191,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_iops(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_kmsKeyID(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_kmsKeyID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_imagebuilder_image_recipe.test"
@@ -219,7 +219,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_kmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_snapshotID(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_snapshotID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ebsSnapshotResourceName := "aws_ebs_snapshot.test"
 	resourceName := "aws_imagebuilder_image_recipe.test"
@@ -247,7 +247,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_snapshotID(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_volumeSize(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeSize(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -276,7 +276,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_volumeSize(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -305,7 +305,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMappingEBS_volumeTypeGP3(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -334,7 +334,7 @@ func TestAccImageRecipe_BlockDeviceMappingEBS_volumeTypeGP3(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMapping_noDevice(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMapping_noDevice(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -363,7 +363,7 @@ func TestAccImageRecipe_BlockDeviceMapping_noDevice(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_BlockDeviceMapping_virtualName(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMapping_virtualName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -392,7 +392,7 @@ func TestAccImageRecipe_BlockDeviceMapping_virtualName(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_component(t *testing.T) {
+func TestAccImageBuilderImageRecipe_component(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -421,7 +421,7 @@ func TestAccImageRecipe_component(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_componentParameter(t *testing.T) {
+func TestAccImageBuilderImageRecipe_componentParameter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -447,7 +447,7 @@ func TestAccImageRecipe_componentParameter(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_description(t *testing.T) {
+func TestAccImageBuilderImageRecipe_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -473,7 +473,7 @@ func TestAccImageRecipe_description(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_tags(t *testing.T) {
+func TestAccImageBuilderImageRecipe_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -517,7 +517,7 @@ func TestAccImageRecipe_tags(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_workingDirectory(t *testing.T) {
+func TestAccImageBuilderImageRecipe_workingDirectory(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -543,7 +543,7 @@ func TestAccImageRecipe_workingDirectory(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_pipelineUpdateDependency(t *testing.T) {
+func TestAccImageBuilderImageRecipe_pipelineUpdateDependency(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -569,7 +569,7 @@ func TestAccImageRecipe_pipelineUpdateDependency(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_systemsManagerAgent(t *testing.T) {
+func TestAccImageBuilderImageRecipe_systemsManagerAgent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -596,7 +596,7 @@ func TestAccImageRecipe_systemsManagerAgent(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_updateDependency(t *testing.T) {
+func TestAccImageBuilderImageRecipe_updateDependency(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -631,7 +631,7 @@ func TestAccImageRecipe_updateDependency(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_userDataBase64(t *testing.T) {
+func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -657,7 +657,7 @@ func TestAccImageRecipe_userDataBase64(t *testing.T) {
 	})
 }
 
-func TestAccImageRecipe_WindowsBaseImage(t *testing.T) {
+func TestAccImageBuilderImageRecipe_windowsBaseImage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
 

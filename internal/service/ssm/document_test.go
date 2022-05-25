@@ -571,7 +571,7 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 	})
 }
 
-func TestValidateSSMDocumentPermissions(t *testing.T) {
+func TestValidateDocumentPermissions(t *testing.T) {
 	validValues := []map[string]interface{}{
 		{
 			"type":        "Share",
@@ -935,7 +935,7 @@ DOC
 }
 
 func testAccDocumentTypeAutomationConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "ssm_profile-%[1]s"
   role = aws_iam_role.ssm_role.name

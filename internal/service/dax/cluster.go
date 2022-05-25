@@ -280,7 +280,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
-		Refresh:    daxClusterStateRefreshFunc(conn, d.Id(), "available", pending),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -337,7 +337,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
-	d.Set("security_group_ids", flattenDAXSecurityGroupIDs(c.SecurityGroups))
+	d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups))
 
 	if c.ParameterGroup != nil {
 		d.Set("parameter_group_name", c.ParameterGroup.ParameterGroupName)
@@ -351,11 +351,11 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := setDaxClusterNodeData(d, c); err != nil {
+	if err := setClusterNodeData(d, c); err != nil {
 		return err
 	}
 
-	if err := d.Set("server_side_encryption", flattenDAXEncryptAtRestOptions(c.SSEDescription)); err != nil {
+	if err := d.Set("server_side_encryption", flattenEncryptAtRestOptions(c.SSEDescription)); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %s", err)
 	}
 
@@ -471,7 +471,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
-			Refresh:    daxClusterStateRefreshFunc(conn, d.Id(), "available", pending),
+			Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
@@ -486,7 +486,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceClusterRead(d, meta)
 }
 
-func setDaxClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
+func setClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
 	sortedNodes := make([]*dax.Node, len(c.Nodes))
 	copy(sortedNodes, c.Nodes)
 	sort.Sort(byNodeId(sortedNodes))
@@ -544,7 +544,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
-		Refresh:    daxClusterStateRefreshFunc(conn, d.Id(), "", []string{}),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "", []string{}),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -558,7 +558,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pending []string) resource.StateRefreshFunc {
+func clusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pending []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(clusterID)},
@@ -569,7 +569,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 				return nil, "", nil
 			}
 
-			log.Printf("[ERROR] daxClusterStateRefreshFunc: %s", err)
+			log.Printf("[ERROR] clusterStateRefreshFunc: %s", err)
 			return nil, "", err
 		}
 

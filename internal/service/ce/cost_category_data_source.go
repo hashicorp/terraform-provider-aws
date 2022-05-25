@@ -105,7 +105,7 @@ func DataSourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							Set: costExplorerCostCategorySplitChargesParameter,
+							Set: costCategorySplitChargesParameter,
 						},
 						"source": {
 							Type:     schema.TypeString,
@@ -122,7 +122,7 @@ func DataSourceCostCategory() *schema.Resource {
 						},
 					},
 				},
-				Set: costExplorerCostCategorySplitCharges,
+				Set: costCategorySplitCharges,
 			},
 		},
 	}

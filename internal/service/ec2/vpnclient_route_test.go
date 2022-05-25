@@ -28,7 +28,7 @@ func testAccClientVPNRoute_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnRouteConfigBasic(rName),
+				Config: testAccClientVPNRouteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
@@ -60,7 +60,7 @@ func testAccClientVPNRoute_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnRouteConfigBasic(rName),
+				Config: testAccClientVPNRouteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
@@ -83,7 +83,7 @@ func testAccClientVPNRoute_description(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnRouteConfigDescription(rName),
+				Config: testAccClientVPNRouteConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
@@ -159,9 +159,9 @@ func testAccCheckClientVPNRouteExists(name string, v *ec2.ClientVpnRoute) resour
 	}
 }
 
-func testAccEc2ClientVpnRouteConfigBase(rName string, subnetCount int) string {
+func testAccClientVPNRouteConfig_base(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
-		testAccEc2ClientVpnEndpointConfig(rName),
+		testAccClientVPNEndpointConfig_basic(rName),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -186,8 +186,8 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount))
 }
 
-func testAccEc2ClientVpnRouteConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnRouteConfigBase(rName, 1), `
+func testAccClientVPNRouteConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNRouteConfig_base(rName, 1), `
 resource "aws_ec2_client_vpn_route" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_network_association.test.client_vpn_endpoint_id
   destination_cidr_block = "0.0.0.0/0"
@@ -201,8 +201,8 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 `)
 }
 
-func testAccEc2ClientVpnRouteConfigDescription(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnRouteConfigBase(rName, 1), `
+func testAccClientVPNRouteConfig_description(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNRouteConfig_base(rName, 1), `
 resource "aws_ec2_client_vpn_route" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_network_association.test.client_vpn_endpoint_id
   destination_cidr_block = "0.0.0.0/0"

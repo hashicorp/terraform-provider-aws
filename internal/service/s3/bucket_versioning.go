@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -114,9 +115,9 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 			input.MFA = aws.String(v.(string))
 		}
 
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.PutBucketVersioningWithContext(ctx, input)
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error creating S3 bucket versioning for %s: %w", bucket, err))

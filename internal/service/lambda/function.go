@@ -27,7 +27,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
-const awsMutexLambdaKey = `aws_lambda_function`
+const keyMutex = `aws_lambda_function`
 
 const FunctionVersionLatest = "$LATEST"
 
@@ -434,8 +434,8 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		// Grab an exclusive lock so that we're only reading one function into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
+		conns.GlobalMutexKV.Lock(keyMutex)
+		defer conns.GlobalMutexKV.Unlock(keyMutex)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("unable to load %q: %w", filename.(string), err)
@@ -883,7 +883,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := functionInvokeArn(*function.FunctionArn, meta)
+	invokeArn := functionInvokeARN(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
@@ -1214,8 +1214,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Grab an exclusive lock so that we're only reading one function into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
+			conns.GlobalMutexKV.Lock(keyMutex)
+			defer conns.GlobalMutexKV.Unlock(keyMutex)
 			file, err := loadFileContent(v.(string))
 			if err != nil {
 				return fmt.Errorf("unable to load %q: %w", v.(string), err)
@@ -1341,7 +1341,7 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	return variables
 }
 
-func functionInvokeArn(functionArn string, meta interface{}) string {
+func functionInvokeARN(functionArn string, meta interface{}) string {
 	return arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",

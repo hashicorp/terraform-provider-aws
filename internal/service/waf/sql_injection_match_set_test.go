@@ -27,7 +27,7 @@ func TestAccWAFSQLInjectionMatchSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSQLInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSQLInjectionMatchSetConfig(rName),
+				Config: testAccSQLInjectionMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -62,7 +62,7 @@ func TestAccWAFSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckSQLInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSQLInjectionMatchSetConfig(rName),
+				Config: testAccSQLInjectionMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -75,7 +75,7 @@ func TestAccWAFSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSQLInjectionMatchSetChangeNameConfig(rNameNew),
+				Config: testAccSQLInjectionMatchSetConfig_changeName(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameNew),
@@ -98,7 +98,7 @@ func TestAccWAFSQLInjectionMatchSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSQLInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSQLInjectionMatchSetConfig(rName),
+				Config: testAccSQLInjectionMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(resourceName, &v),
 					testAccCheckSQLInjectionMatchSetDisappears(&v),
@@ -121,7 +121,7 @@ func TestAccWAFSQLInjectionMatchSet_changeTuples(t *testing.T) {
 		CheckDestroy:      testAccCheckSQLInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSQLInjectionMatchSetConfig(rName),
+				Config: testAccSQLInjectionMatchSetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -278,7 +278,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSQLInjectionMatchSetConfig(name string) string {
+func testAccSQLInjectionMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_sql_injection_match_set" "test" {
   name = "%s"
@@ -294,7 +294,7 @@ resource "aws_waf_sql_injection_match_set" "test" {
 `, name)
 }
 
-func testAccSQLInjectionMatchSetChangeNameConfig(name string) string {
+func testAccSQLInjectionMatchSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_sql_injection_match_set" "test" {
   name = "%s"

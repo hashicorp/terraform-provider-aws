@@ -26,7 +26,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig(rInt),
+				Config: testAccParameterGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 				),
@@ -52,7 +52,7 @@ func TestAccRedshiftParameterGroup_withParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig(rInt),
+				Config: testAccParameterGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -96,7 +96,7 @@ func TestAccRedshiftParameterGroup_withoutParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupOnlyConfig(rInt),
+				Config: testAccParameterGroupConfig_only(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -128,7 +128,7 @@ func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupWithTagsConfig(rInt, "aaa"),
+				Config: testAccParameterGroupConfig_tags(rInt, "aaa"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -144,7 +144,7 @@ func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupWithTagsConfig(rInt, "bbb"),
+				Config: testAccParameterGroupConfig_tags(rInt, "bbb"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -153,7 +153,7 @@ func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccParameterGroupWithTagsUpdateConfig(rInt),
+				Config: testAccParameterGroupConfig_tagsUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -233,7 +233,7 @@ func testAccCheckParameterGroupExists(n string, v *redshift.ClusterParameterGrou
 	}
 }
 
-func testAccParameterGroupOnlyConfig(rInt int) string {
+func testAccParameterGroupConfig_only(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
   name        = "test-terraform-%d"
@@ -243,7 +243,7 @@ resource "aws_redshift_parameter_group" "test" {
 `, rInt)
 }
 
-func testAccParameterGroupConfig(rInt int) string {
+func testAccParameterGroupConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
   name   = "test-terraform-%d"
@@ -267,7 +267,7 @@ resource "aws_redshift_parameter_group" "test" {
 `, rInt)
 }
 
-func testAccParameterGroupWithTagsConfig(rInt int, rString string) string {
+func testAccParameterGroupConfig_tags(rInt int, rString string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
   name        = "test-terraform-%[1]d"
@@ -283,7 +283,7 @@ resource "aws_redshift_parameter_group" "test" {
 `, rInt, rString)
 }
 
-func testAccParameterGroupWithTagsUpdateConfig(rInt int) string {
+func testAccParameterGroupConfig_tagsUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
   name        = "test-terraform-%[1]d"

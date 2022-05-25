@@ -27,7 +27,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) 
 		CheckDestroy:      testAccCheckNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceLifecycleConfigurationConfig_Basic(rName),
+				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(resourceName, &lifecycleConfig),
 
@@ -58,7 +58,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T)
 		CheckDestroy:      testAccCheckNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceLifecycleConfigurationConfig_Basic(rName),
+				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(resourceName, &lifecycleConfig),
 
@@ -66,7 +66,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T)
 				),
 			},
 			{
-				Config: testAccNotebookInstanceLifecycleConfigurationConfig_Update(rName),
+				Config: testAccNotebookInstanceLifecycleConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(resourceName, &lifecycleConfig),
 
@@ -138,7 +138,7 @@ func testAccCheckNotebookInstanceLifecycleConfigurationDestroy(s *terraform.Stat
 	return nil
 }
 
-func testAccNotebookInstanceLifecycleConfigurationConfig_Basic(rName string) string {
+func testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name = %q
@@ -146,7 +146,7 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
 `, rName)
 }
 
-func testAccNotebookInstanceLifecycleConfigurationConfig_Update(rName string) string {
+func testAccNotebookInstanceLifecycleConfigurationConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name      = %q

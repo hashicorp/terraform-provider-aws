@@ -112,7 +112,7 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 		VpcId:         aws.String(vpcID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return nil
 	}
 

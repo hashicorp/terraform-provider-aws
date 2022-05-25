@@ -3,6 +3,7 @@ package route53resolver
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -18,6 +19,12 @@ func DataSourceRules() *schema.Resource {
 		Read: dataSourceRulesRead,
 
 		Schema: map[string]*schema.Schema{
+			"name_regex": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsValidRegExp,
+			},
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,6 +79,9 @@ func dataSourceRulesRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Listing Route53 Resolver rules: %s", req)
 	err := conn.ListResolverRulesPages(req, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
 		for _, rule := range page.ResolverRules {
+			if v, ok := d.GetOk("name_regex"); ok && !regexp.MustCompile(v.(string)).MatchString(aws.StringValue(rule.Name)) {
+				continue
+			}
 			if v, ok := d.GetOk("owner_id"); ok && aws.StringValue(rule.OwnerId) != v.(string) {
 				continue
 			}

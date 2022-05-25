@@ -28,7 +28,7 @@ func TestAccWAFRegionalXSSMatchSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXSSMatchSetConfig(rName),
+				Config: testAccXSSMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -69,7 +69,7 @@ func TestAccWAFRegionalXSSMatchSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXSSMatchSetConfig(rName1),
+				Config: testAccXSSMatchSetConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -82,7 +82,7 @@ func TestAccWAFRegionalXSSMatchSet_changeNameForceNew(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccXSSMatchSetChangeNameConfig(rName2),
+				Config: testAccXSSMatchSetConfig_changeName(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -105,7 +105,7 @@ func TestAccWAFRegionalXSSMatchSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXSSMatchSetConfig(rName),
+				Config: testAccXSSMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafregional.ResourceXSSMatchSet(), resourceName),
@@ -128,7 +128,7 @@ func TestAccWAFRegionalXSSMatchSet_changeTuples(t *testing.T) {
 		CheckDestroy:      testAccCheckXSSMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXSSMatchSetConfig(rName),
+				Config: testAccXSSMatchSetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckXSSMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -262,7 +262,7 @@ func testAccCheckXSSMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccXSSMatchSetConfig(rName string) string {
+func testAccXSSMatchSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "test" {
   name = %[1]q
@@ -286,7 +286,7 @@ resource "aws_wafregional_xss_match_set" "test" {
 `, rName)
 }
 
-func testAccXSSMatchSetChangeNameConfig(rName string) string {
+func testAccXSSMatchSetConfig_changeName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "test" {
   name = %[1]q

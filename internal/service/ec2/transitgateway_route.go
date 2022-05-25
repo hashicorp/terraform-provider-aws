@@ -136,7 +136,7 @@ func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{})
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound, ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound, errCodeInvalidRouteTableIDNotFound) {
 		return nil
 	}
 

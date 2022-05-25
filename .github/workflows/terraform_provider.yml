@@ -10,7 +10,6 @@ on:
       - .github/workflows/terraform_provider.yml
       - .go-version
       - .golangci.yml
-      - .semgrep.yml
       - internal/**
       - providerlint/**
       - docs/index.md
@@ -219,7 +218,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v19
+      uses: tj-actions/changed-files@v20.2
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
@@ -227,7 +226,7 @@ jobs:
           if [ "${file}" = "" ]; then
             continue
           fi
-          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.* ]]; then
+          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.*|/ec2/generate/.* ]]; then
             echo "Skipping changed file: ${file}"
             continue
           fi
@@ -241,7 +240,7 @@ jobs:
             continue
           fi
           echo -n "Finding dependents for ${pkg}? "
-          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate|/ec2/generate/ ]]; then
             echo "No"
             continue
           fi
@@ -253,7 +252,7 @@ jobs:
             if [[ "${file}" != *.go ]]; then
               continue
             fi
-            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate|/ec2/generate/ ]]; then
               continue
             fi
             c=$((c+1))
@@ -335,15 +334,6 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/pavius/impi/cmd/impi
     - run: impi --local . --scheme stdThirdPartyLocal ./...
-
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-       fetch-depth: 0
-    - name: semgrep
-      uses: returntocorp/semgrep-action@v1
 
   tfproviderdocs:
     needs: [terraform_providers_schema]

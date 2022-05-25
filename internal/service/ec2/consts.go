@@ -1,5 +1,9 @@
 package ec2
 
+import (
+	"github.com/aws/aws-sdk-go/service/ec2"
+)
+
 const (
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreditSpecificationRequest.html#API_CreditSpecificationRequest_Contents
 	CPUCreditsStandard  = "standard"
@@ -14,18 +18,41 @@ func CPUCredits_Values() []string {
 }
 
 const (
+	// The AWS SDK constant ec2.FleetOnDemandAllocationStrategyLowestPrice is incorrect.
+	FleetOnDemandAllocationStrategyLowestPrice = "lowestPrice"
+)
+
+func FleetOnDemandAllocationStrategy_Values() []string {
+	return append(
+		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
+		FleetOnDemandAllocationStrategyLowestPrice,
+	)
+}
+
+const (
+	// The AWS SDK constant ec2.SpotAllocationStrategyLowestPrice is incorrect.
+	SpotAllocationStrategyLowestPrice = "lowestPrice"
+)
+
+func SpotAllocationStrategy_Values() []string {
+	return append(
+		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
+		SpotAllocationStrategyLowestPrice,
+	)
+}
+
+const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
-	VpcEndpointStateAvailable         = "available"
-	VpcEndpointStateDeleted           = "deleted"
-	VpcEndpointStateDeleting          = "deleting"
-	VpcEndpointStateFailed            = "failed"
-	VpcEndpointStatePending           = "pending"
-	VpcEndpointStatePendingAcceptance = "pendingAcceptance"
-	VpcEndpointStateRejected          = "rejected"
+	vpcEndpointStateAvailable         = "available"
+	vpcEndpointStateDeleted           = "deleted"
+	vpcEndpointStateDeleting          = "deleting"
+	vpcEndpointStateFailed            = "failed"
+	vpcEndpointStatePending           = "pending"
+	vpcEndpointStatePendingAcceptance = "pendingAcceptance"
 )
 
 const (
-	VpnStateModifying = "modifying"
+	vpnStateModifying = "modifying"
 )
 
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
@@ -59,116 +86,116 @@ const (
 )
 
 const (
-	VpnTunnelOptionsDPDTimeoutActionClear   = "clear"
-	VpnTunnelOptionsDPDTimeoutActionNone    = "none"
-	VpnTunnelOptionsDPDTimeoutActionRestart = "restart"
+	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
+	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
+	vpnTunnelOptionsDPDTimeoutActionRestart = "restart"
 )
 
-func VpnTunnelOptionsDPDTimeoutAction_Values() []string {
+func vpnTunnelOptionsDPDTimeoutAction_Values() []string {
 	return []string{
-		VpnTunnelOptionsDPDTimeoutActionClear,
-		VpnTunnelOptionsDPDTimeoutActionNone,
-		VpnTunnelOptionsDPDTimeoutActionRestart,
+		vpnTunnelOptionsDPDTimeoutActionClear,
+		vpnTunnelOptionsDPDTimeoutActionNone,
+		vpnTunnelOptionsDPDTimeoutActionRestart,
 	}
 }
 
 const (
-	VpnTunnelOptionsIKEVersion1 = "ikev1"
-	VpnTunnelOptionsIKEVersion2 = "ikev2"
+	vpnTunnelOptionsIKEVersion1 = "ikev1"
+	vpnTunnelOptionsIKEVersion2 = "ikev2"
 )
 
-func VpnTunnelOptionsIKEVersion_Values() []string {
+func vpnTunnelOptionsIKEVersion_Values() []string {
 	return []string{
-		VpnTunnelOptionsIKEVersion1,
-		VpnTunnelOptionsIKEVersion2,
+		vpnTunnelOptionsIKEVersion1,
+		vpnTunnelOptionsIKEVersion2,
 	}
 }
 
 const (
-	VpnTunnelOptionsPhase1EncryptionAlgorithmAES128        = "AES128"
-	VpnTunnelOptionsPhase1EncryptionAlgorithmAES256        = "AES256"
-	VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"
-	VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
+	vpnTunnelOptionsPhase1EncryptionAlgorithmAES128        = "AES128"
+	vpnTunnelOptionsPhase1EncryptionAlgorithmAES256        = "AES256"
+	vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"
+	vpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
 )
 
-func VpnTunnelOptionsPhase1EncryptionAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase1EncryptionAlgorithm_Values() []string {
 	return []string{
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
 	}
 }
 
 const (
-	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1     = "SHA1"
-	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256 = "SHA2-256"
-	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384 = "SHA2-384"
-	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512 = "SHA2-512"
+	vpnTunnelOptionsPhase1IntegrityAlgorithmSHA1     = "SHA1"
+	vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256 = "SHA2-256"
+	vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384 = "SHA2-384"
+	vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512 = "SHA2-512"
 )
 
-func VpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
 	return []string{
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
 	}
 }
 
 const (
-	VpnTunnelOptionsPhase2EncryptionAlgorithmAES128        = "AES128"
-	VpnTunnelOptionsPhase2EncryptionAlgorithmAES256        = "AES256"
-	VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"
-	VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
+	vpnTunnelOptionsPhase2EncryptionAlgorithmAES128        = "AES128"
+	vpnTunnelOptionsPhase2EncryptionAlgorithmAES256        = "AES256"
+	vpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"
+	vpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
 )
 
-func VpnTunnelOptionsPhase2EncryptionAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase2EncryptionAlgorithm_Values() []string {
 	return []string{
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
 	}
 }
 
 const (
-	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1     = "SHA1"
-	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256 = "SHA2-256"
-	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384 = "SHA2-384"
-	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512 = "SHA2-512"
+	vpnTunnelOptionsPhase2IntegrityAlgorithmSHA1     = "SHA1"
+	vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256 = "SHA2-256"
+	vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384 = "SHA2-384"
+	vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512 = "SHA2-512"
 )
 
-func VpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
+func vpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
 	return []string{
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
 	}
 }
 
 const (
-	VpnTunnelOptionsStartupActionAdd   = "add"
-	VpnTunnelOptionsStartupActionStart = "start"
+	vpnTunnelOptionsStartupActionAdd   = "add"
+	vpnTunnelOptionsStartupActionStart = "start"
 )
 
-func VpnTunnelOptionsStartupAction_Values() []string {
+func vpnTunnelOptionsStartupAction_Values() []string {
 	return []string{
-		VpnTunnelOptionsStartupActionAdd,
-		VpnTunnelOptionsStartupActionStart,
+		vpnTunnelOptionsStartupActionAdd,
+		vpnTunnelOptionsStartupActionStart,
 	}
 }
 
 const (
-	VpnConnectionTypeIpsec1        = "ipsec.1"
-	VpnConnectionTypeIpsec1_AES256 = "ipsec.1-aes256" // https://github.com/hashicorp/terraform-provider-aws/issues/23105.
+	vpnConnectionTypeIPsec1        = "ipsec.1"
+	vpnConnectionTypeIPsec1_AES256 = "ipsec.1-aes256" // https://github.com/hashicorp/terraform-provider-aws/issues/23105.
 )
 
-func VpnConnectionType_Values() []string {
+func vpnConnectionType_Values() []string {
 	return []string{
-		VpnConnectionTypeIpsec1,
-		VpnConnectionTypeIpsec1_AES256,
+		vpnConnectionTypeIPsec1,
+		vpnConnectionTypeIPsec1_AES256,
 	}
 }
 
@@ -188,3 +215,13 @@ const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
 )
+
+func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
+	for i, v := range slice {
+		if v == s {
+			return append(slice[:i], slice[i+1:]...)
+		}
+	}
+
+	return slice
+}

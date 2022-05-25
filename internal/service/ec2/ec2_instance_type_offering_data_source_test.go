@@ -20,7 +20,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingFilterDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
 				),
@@ -39,7 +39,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingLocationTypeDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
 				),
@@ -58,7 +58,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingPreferredInstanceTypesDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_type", "t3.micro"),
 				),
@@ -85,7 +85,7 @@ func testAccPreCheckInstanceTypeOffering(t *testing.T) {
 	}
 }
 
-func testAccInstanceTypeOfferingFilterDataSourceConfig() string {
+func testAccInstanceTypeOfferingDataSourceConfig_filter() string {
 	return `
 # Rather than hardcode an instance type in the testing,
 # use the first result from all available offerings.
@@ -100,7 +100,7 @@ data "aws_ec2_instance_type_offering" "test" {
 `
 }
 
-func testAccInstanceTypeOfferingLocationTypeDataSourceConfig() string {
+func testAccInstanceTypeOfferingDataSourceConfig_location() string {
 	return acctest.ConfigAvailableAZsNoOptIn() + `
 # Rather than hardcode an instance type in the testing,
 # use the first result from all available offerings.
@@ -129,7 +129,7 @@ data "aws_ec2_instance_type_offering" "test" {
 `
 }
 
-func testAccInstanceTypeOfferingPreferredInstanceTypesDataSourceConfig() string {
+func testAccInstanceTypeOfferingDataSourceConfig_preferreds() string {
 	return `
 data "aws_ec2_instance_type_offering" "test" {
   filter {

@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAWSClientPartitionHostname(t *testing.T) {
+func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:aws-in-func-name
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -40,7 +40,7 @@ func TestAWSClientPartitionHostname(t *testing.T) {
 	}
 }
 
-func TestAWSClientRegionalHostname(t *testing.T) {
+func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:aws-in-func-name
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
