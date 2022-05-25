@@ -35,8 +35,8 @@ The following arguments are supported:
 
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.
-* `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
   If you do not provide a name, Amazon Redshift will create a default database called `dev`.
+* `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
 * `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user.
