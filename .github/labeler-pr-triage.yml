@@ -765,6 +765,9 @@ service/pinpointemail:
 service/pinpointsmsvoice:
   - 'internal/service/pinpointsmsvoice/**/*'
   - 'website/**/pinpointsmsvoice_*'
+service/pinpointsmsvoicev2:
+  - 'internal/service/pinpointsmsvoicev2/**/*'
+  - 'website/**/pinpointsmsvoicev2_*'
 service/polly:
   - 'internal/service/polly/**/*'
   - 'website/**/polly_*'

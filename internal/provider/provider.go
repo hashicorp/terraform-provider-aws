@@ -132,6 +132,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -1723,6 +1724,9 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_event_stream":              pinpoint.ResourceEventStream(),
 			"aws_pinpoint_gcm_channel":               pinpoint.ResourceGCMChannel(),
 			"aws_pinpoint_sms_channel":               pinpoint.ResourceSMSChannel(),
+
+			"aws_pinpointsmsvoicev2_opt_out_list": pinpointsmsvoicev2.ResourceOptOutList(),
+			"aws_pinpointsmsvoicev2_phone_number": pinpointsmsvoicev2.ResourcePhoneNumber(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 			"aws_qldb_stream": qldb.ResourceStream(),

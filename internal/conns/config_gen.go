@@ -222,6 +222,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pinpointemail"
 	"github.com/aws/aws-sdk-go/service/pinpointsmsvoice"
+	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"github.com/aws/aws-sdk-go/service/polly"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
@@ -515,6 +516,7 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		PinpointConn:                     pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Pinpoint])})),
 		PinpointEmailConn:                pinpointemail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.PinpointEmail])})),
 		PinpointSMSVoiceConn:             pinpointsmsvoice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.PinpointSMSVoice])})),
+		PinpointSMSVoiceV2Conn:           pinpointsmsvoicev2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.PinpointSMSVoiceV2])})),
 		PollyConn:                        polly.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Polly])})),
 		PricingConn:                      pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Pricing])})),
 		ProtonConn:                       proton.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Proton])})),

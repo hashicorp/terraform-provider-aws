@@ -220,6 +220,7 @@ Personalize Runtime
 Pinpoint
 Pinpoint Email
 Pinpoint SMS and Voice
+Pinpoint SMS and Voice V2
 Polly
 Pricing Calculator
 Proton

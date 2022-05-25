@@ -225,6 +225,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pinpointemail"
 	"github.com/aws/aws-sdk-go/service/pinpointsmsvoice"
+	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"github.com/aws/aws-sdk-go/service/polly"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
@@ -537,6 +538,7 @@ type AWSClient struct {
 	PinpointConn                     *pinpoint.Pinpoint
 	PinpointEmailConn                *pinpointemail.PinpointEmail
 	PinpointSMSVoiceConn             *pinpointsmsvoice.PinpointSMSVoice
+	PinpointSMSVoiceV2Conn           *pinpointsmsvoicev2.PinpointSMSVoiceV2
 	PollyConn                        *polly.Polly
 	PricingConn                      *pricing.Pricing
 	ProtonConn                       *proton.Proton

@@ -218,6 +218,7 @@ const (
 	Pinpoint                     = "pinpoint"
 	PinpointEmail                = "pinpointemail"
 	PinpointSMSVoice             = "pinpointsmsvoice"
+	PinpointSMSVoiceV2           = "pinpointsmsvoicev2"
 	Polly                        = "polly"
 	Pricing                      = "pricing"
 	Proton                       = "proton"

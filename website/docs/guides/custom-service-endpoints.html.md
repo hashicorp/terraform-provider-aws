@@ -286,6 +286,7 @@ provider "aws" {
   <li><code>pinpoint</code></li>
   <li><code>pinpointemail</code></li>
   <li><code>pinpointsmsvoice</code></li>
+  <li><code>pinpointsmsvoicev2</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>proton</code></li>
