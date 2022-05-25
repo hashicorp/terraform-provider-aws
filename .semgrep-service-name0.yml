@@ -279,7 +279,6 @@ rules:
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/codeartifact
-        - internal/service/codebuild
         - internal/service/codecommit
         - internal/service/codepipeline
         - internal/service/codestarconnections
