@@ -10,12 +10,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
-	input := &redshift.DescribeClustersInput{
-		ClusterIdentifier: aws.String(id),
-	}
+func findClusters(conn *redshift.Redshift, input *redshift.DescribeClustersInput) ([]*redshift.Cluster, error) {
+	var output []*redshift.Cluster
 
-	output, err := conn.DescribeClusters(input)
+	err := conn.DescribeClustersPages(input, func(page *redshift.DescribeClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Clusters {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -28,15 +38,46 @@ func FindClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, err
 		return nil, err
 	}
 
-	if output == nil || len(output.Clusters) == 0 || output.Clusters[0] == nil {
+	return output, nil
+}
+
+func findCluster(conn *redshift.Redshift, input *redshift.DescribeClustersInput) (*redshift.Cluster, error) {
+	output, err := findClusters(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.Clusters); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.Clusters[0], nil
+	return output[0], nil
+}
+
+func FindClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
+	input := &redshift.DescribeClustersInput{
+		ClusterIdentifier: aws.String(id),
+	}
+
+	output, err := findCluster(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ClusterIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
