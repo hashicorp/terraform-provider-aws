@@ -30,7 +30,7 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName1),
+				Config: testAccGroupConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName1),
@@ -38,7 +38,7 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfig(rName2),
+				Config: testAccGroupConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName2),
@@ -66,14 +66,14 @@ func TestAccQuickSightGroup_withDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithDescriptionConfig(rName, "Description 1"),
+				Config: testAccGroupConfig_description(rName, "Description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Description 1"),
 				),
 			},
 			{
-				Config: testAccGroupWithDescriptionConfig(rName, "Description 2"),
+				Config: testAccGroupConfig_description(rName, "Description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Description 2"),
@@ -100,7 +100,7 @@ func TestAccQuickSightGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckGroupDisappears(&group),
@@ -203,7 +203,7 @@ func testAccCheckGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
 	}
 }
 
-func testAccGroupConfig(rName string) string {
+func testAccGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_group" "default" {
   group_name = %[1]q
@@ -211,7 +211,7 @@ resource "aws_quicksight_group" "default" {
 `, rName)
 }
 
-func testAccGroupWithDescriptionConfig(rName, description string) string {
+func testAccGroupConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
