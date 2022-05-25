@@ -22,7 +22,7 @@ func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrefixListDataSourceConfig,
+				Config: testAccVPCPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_id"),
 					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_name"),
@@ -39,7 +39,7 @@ func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrefixListFilterDataSourceConfig,
+				Config: testAccVPCPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_id"),
 					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_name"),
@@ -56,7 +56,7 @@ func TestAccVPCPrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPrefixListDataSourceConfig_nameDoesNotOverrideFilter,
+				Config:      testAccVPCPrefixListDataSourceConfig_nameDoesNotOverrideFilter,
 				ExpectError: regexp.MustCompile(`no matching prefix list found`),
 			},
 		},
@@ -120,7 +120,7 @@ func testAccPrefixListCheckDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-const testAccPrefixListDataSourceConfig = `
+const testAccVPCPrefixListDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "s3_by_id" {
@@ -132,7 +132,7 @@ data "aws_prefix_list" "s3_by_name" {
 }
 `
 
-const testAccPrefixListFilterDataSourceConfig = `
+const testAccVPCPrefixListDataSourceConfig_filter = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "s3_by_name" {
@@ -150,7 +150,7 @@ data "aws_prefix_list" "s3_by_id" {
 }
 `
 
-const testAccPrefixListDataSourceConfig_nameDoesNotOverrideFilter = `
+const testAccVPCPrefixListDataSourceConfig_nameDoesNotOverrideFilter = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "test" {

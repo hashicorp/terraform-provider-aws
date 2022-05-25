@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVPCIpam() *schema.Resource {
+func ResourceIPAM() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceVPCIpamCreate,
-		Read:          resourceVPCIpamRead,
-		Update:        resourceVPCIpamUpdate,
-		Delete:        resourceVPCIpamDelete,
+		Create:        resourceIPAMCreate,
+		Read:          resourceIPAMRead,
+		Update:        resourceIPAMUpdate,
+		Delete:        resourceIPAMDelete,
 		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -71,15 +71,14 @@ func ResourceVPCIpam() *schema.Resource {
 }
 
 const (
-	IpamStatusAvailable   = "Available"
-	InvalidIpamIdNotFound = "InvalidIpamId.NotFound"
-	IpamCreateTimeout     = 3 * time.Minute
-	IpamCreateDeley       = 5 * time.Second
-	IpamDeleteTimeout     = 3 * time.Minute
-	IpamDeleteDelay       = 5 * time.Second
+	invalidIPAMIDNotFound = "InvalidIpamId.NotFound"
+	ipamCreateTimeout     = 3 * time.Minute
+	ipamCreateDelay       = 5 * time.Second
+	IPAMDeleteTimeout     = 3 * time.Minute
+	ipamDeleteDelay       = 5 * time.Second
 )
 
-func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	current_region := meta.(*conns.AWSClient).Region
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -87,7 +86,7 @@ func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(resource.UniqueId()),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam"),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -95,10 +94,10 @@ func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	operatingRegions := d.Get("operating_regions").(*schema.Set).List()
-	if !expandIpamOperatingRegionsContainsCurrentRegion(operatingRegions, current_region) {
+	if !expandIPAMOperatingRegionsContainsCurrentRegion(operatingRegions, current_region) {
 		return fmt.Errorf("Must include (%s) as a operating_region", current_region)
 	}
-	input.OperatingRegions = expandIpamOperatingRegions(operatingRegions)
+	input.OperatingRegions = expandIPAMOperatingRegions(operatingRegions)
 
 	log.Printf("[DEBUG] Creating IPAM: %s", input)
 	output, err := conn.CreateIpam(input)
@@ -108,21 +107,21 @@ func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.Ipam.IpamId))
 	log.Printf("[INFO] IPAM ID: %s", d.Id())
 
-	if _, err = WaitIpamAvailable(conn, d.Id(), IpamCreateTimeout); err != nil {
+	if _, err = WaitIPAMAvailable(conn, d.Id(), ipamCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM (%s) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceVPCIpamRead(d, meta)
+	return resourceIPAMRead(d, meta)
 }
 
-func resourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ipam, err := findIpamById(conn, d.Id())
+	ipam, err := findIPAMById(conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
 		return err
 	}
 
@@ -134,7 +133,7 @@ func resourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", ipam.IpamArn)
 	d.Set("description", ipam.Description)
-	d.Set("operating_regions", flattenIpamOperatingRegions(ipam.OperatingRegions))
+	d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions))
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
@@ -153,7 +152,7 @@ func resourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -184,8 +183,8 @@ func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			os := o.(*schema.Set)
 			ns := n.(*schema.Set)
-			operatingRegionUpdateAdd := expandIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
-			operatingRegionUpdateRemove := expandIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
+			operatingRegionUpdateAdd := expandIPAMOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
+			operatingRegionUpdateRemove := expandIPAMOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
 
 			if len(operatingRegionUpdateAdd) != 0 {
 				input.AddOperatingRegions = operatingRegionUpdateAdd
@@ -206,7 +205,7 @@ func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteIpamInput{
@@ -223,8 +222,8 @@ func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting IPAM: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = WaiterIpamDeleted(conn, d.Id(), IpamDeleteTimeout); err != nil {
-		if tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
+	if _, err = WaiterIPAMDeleted(conn, d.Id(), IPAMDeleteTimeout); err != nil {
+		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for IPAM (%s) to be deleted: %w", d.Id(), err)
@@ -233,7 +232,7 @@ func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func findIpamById(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
+func findIPAMById(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
 	input := &ec2.DescribeIpamsInput{
 		IpamIds: aws.StringSlice([]string{id}),
 	}
@@ -251,13 +250,13 @@ func findIpamById(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
 	return output.Ipams[0], nil
 }
 
-func WaitIpamAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
+func WaitIPAMAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamStateCreateInProgress},
 		Target:  []string{ec2.IpamStateCreateComplete},
-		Refresh: statusIpamStatus(conn, ipamId),
+		Refresh: statusIPAMStatus(conn, ipamId),
 		Timeout: timeout,
-		Delay:   IpamCreateDeley,
+		Delay:   ipamCreateDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -269,13 +268,13 @@ func WaitIpamAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 	return nil, err
 }
 
-func WaiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
+func WaiterIPAMDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
-		Target:  []string{InvalidIpamIdNotFound},
-		Refresh: statusIpamStatus(conn, ipamId),
+		Target:  []string{invalidIPAMIDNotFound},
+		Refresh: statusIPAMStatus(conn, ipamId),
 		Timeout: timeout,
-		Delay:   IpamDeleteDelay,
+		Delay:   ipamDeleteDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -287,13 +286,13 @@ func WaiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 	return nil, err
 }
 
-func statusIpamStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
+func statusIPAMStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		output, err := findIpamById(conn, ipamId)
+		output, err := findIPAMById(conn, ipamId)
 
-		if tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
-			return output, InvalidIpamIdNotFound, nil
+		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
+			return output, invalidIPAMIDNotFound, nil
 		}
 
 		// there was an unhandled error in the Finder
@@ -305,70 +304,70 @@ func statusIpamStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
 	}
 }
 
-func expandIpamOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
+func expandIPAMOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
 	regions := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regions = append(regions, expandIpamOperatingRegion(region))
+		regions = append(regions, expandIPAMOperatingRegion(region))
 	}
 
 	return regions
 }
 
-func expandIpamOperatingRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
+func expandIPAMOperatingRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
 	region := &ec2.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return region
 }
 
-func flattenIpamOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
+func flattenIPAMOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
 	regions := []interface{}{}
 	for _, operatingRegion := range operatingRegions {
-		regions = append(regions, flattenIpamOperatingRegion(operatingRegion))
+		regions = append(regions, flattenIPAMOperatingRegion(operatingRegion))
 	}
 	return regions
 }
 
-func flattenIpamOperatingRegion(operatingRegion *ec2.IpamOperatingRegion) map[string]interface{} {
+func flattenIPAMOperatingRegion(operatingRegion *ec2.IpamOperatingRegion) map[string]interface{} {
 	region := make(map[string]interface{})
 	region["region_name"] = aws.StringValue(operatingRegion.RegionName)
 	return region
 }
 
-func expandIpamOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
 	regionUpdates := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regionUpdates = append(regionUpdates, expandIpamOperatingRegionsUpdateAddRegion(region))
+		regionUpdates = append(regionUpdates, expandIPAMOperatingRegionsUpdateAddRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIpamOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
 	regionUpdate := &ec2.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandIpamOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []*ec2.RemoveIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []*ec2.RemoveIpamOperatingRegion {
 	regionUpdates := make([]*ec2.RemoveIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regionUpdates = append(regionUpdates, expandIpamOperatingRegionsUpdateDeleteRegion(region))
+		regionUpdates = append(regionUpdates, expandIPAMOperatingRegionsUpdateDeleteRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIpamOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) *ec2.RemoveIpamOperatingRegion {
+func expandIPAMOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) *ec2.RemoveIpamOperatingRegion {
 	regionUpdate := &ec2.RemoveIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandIpamOperatingRegionsContainsCurrentRegion(operatingRegions []interface{}, current_region string) bool {
+func expandIPAMOperatingRegionsContainsCurrentRegion(operatingRegions []interface{}, current_region string) bool {
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
 		if region["region_name"].(string) == current_region {

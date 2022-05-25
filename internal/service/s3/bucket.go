@@ -1472,11 +1472,11 @@ type S3Website struct {
 }
 
 func WebsiteEndpoint(client *conns.AWSClient, bucket string, region string) *S3Website {
-	domain := WebsiteDomainUrl(client, region)
+	domain := WebsiteDomainURL(client, region)
 	return &S3Website{Endpoint: fmt.Sprintf("%s.%s", bucket, domain), Domain: domain}
 }
 
-func WebsiteDomainUrl(client *conns.AWSClient, region string) string {
+func WebsiteDomainURL(client *conns.AWSClient, region string) string {
 	region = normalizeRegion(region)
 
 	// Different regions have different syntax for website endpoints
@@ -2782,13 +2782,13 @@ func flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteria
 	m := make(map[string]interface{})
 
 	if ssc.SseKmsEncryptedObjects != nil {
-		m["sse_kms_encrypted_objects"] = flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteriaSseKmsEncryptedObjects(ssc.SseKmsEncryptedObjects)
+		m["sse_kms_encrypted_objects"] = flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteriaSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteriaSseKmsEncryptedObjects(objs *s3.SseKmsEncryptedObjects) []interface{} {
+func flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteriaSSEKMSEncryptedObjects(objs *s3.SseKmsEncryptedObjects) []interface{} {
 	if objs == nil {
 		return []interface{}{}
 	}

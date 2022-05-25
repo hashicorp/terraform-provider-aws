@@ -546,7 +546,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
-		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
 			err = nil
 		}
 
@@ -565,7 +565,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("credit_specification", nil)
 	}
 
-	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
+	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
 		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
@@ -577,7 +577,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("maintenance_options", nil)
 	}
 
-	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 

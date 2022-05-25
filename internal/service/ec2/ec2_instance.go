@@ -765,8 +765,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error collecting instance settings: %w", err)
 	}
 
-	tagSpecifications := ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
-	tagSpecifications = append(tagSpecifications, ec2TagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
+	tagSpecifications := tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
+	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
@@ -808,12 +808,12 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
 			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
 				return true, err
 			}
 
 			// IAM roles can also take time to propagate in AWS:
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, " has no associated IAM Roles") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
 				return true, err
 			}
 
@@ -933,7 +933,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("hibernation", v.Configured)
 	}
 
-	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
+	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
 		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
@@ -945,7 +945,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("maintenance_options", nil)
 	}
 
-	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
@@ -1173,7 +1173,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
-		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
 			err = nil
 		}
 
@@ -1761,7 +1761,7 @@ func disableInstanceAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 		InstanceId: aws.String(id),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeUnsupportedOperation, "not supported for spot instances") {
+	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
 		return nil
 	}
@@ -1795,7 +1795,7 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 				InstanceIds: aws.StringSlice([]string{id}),
 			})
 		},
-		ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
+		errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
 	)
 
 	if err != nil {
@@ -1989,7 +1989,7 @@ func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instanc
 		aws.StringValue(bd.DeviceName) == aws.StringValue(instance.RootDeviceName)
 }
 
-func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) {
+func fetchLaunchTemplateAMI(specs []interface{}, conn *ec2.EC2) (string, error) {
 	if len(specs) < 1 {
 		return "", errors.New("Cannot fetch AMI for blank launch template.")
 	}
@@ -2294,7 +2294,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			var amiID string
 			if v, ok := d.GetOk("launch_template"); ok {
 				var err error
-				amiID, err = fetchLaunchTemplateAmi(v.([]interface{}), conn)
+				amiID, err = fetchLaunchTemplateAMI(v.([]interface{}), conn)
 				if err != nil {
 					return nil, err
 				}
@@ -2336,7 +2336,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 	}
 
 	resp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: ec2AttributeFiltersFromMultimap(map[string][]string{
+		Filters: attributeFiltersFromMultimap(map[string][]string{
 			"resource-id": volumeIds,
 		}),
 	})
@@ -2344,7 +2344,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 		return nil, fmt.Errorf("error getting tags for volumes (%s): %s", volumeIds, err)
 	}
 
-	return ec2TagsFromTagDescriptions(resp.Tags), nil
+	return tagsFromTagDescriptions(resp.Tags), nil
 }
 
 // Determine whether we're referring to security groups with
@@ -2496,8 +2496,8 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
-		EnclaveOptions:        expandEc2EnclaveOptions(d.Get("enclave_options").([]interface{})),
+		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
@@ -2509,7 +2509,7 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok {
-		opts.LaunchTemplate = expandEc2LaunchTemplateSpecification(v.([]interface{}))
+		opts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 	}
 
 	instanceType := d.Get("instance_type").(string)
@@ -2706,7 +2706,7 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 		InstanceIds: aws.StringSlice([]string{id}),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil
 	}
 
@@ -2805,7 +2805,7 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
+func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2835,7 +2835,7 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 	return opts
 }
 
-func expandEc2EnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
+func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2862,7 +2862,7 @@ func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddres
 	return specs
 }
 
-func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
+func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
 	if opts == nil {
 		return nil
 	}
@@ -2877,7 +2877,7 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 	return []interface{}{m}
 }
 
-func flattenEc2EnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
+func flattenEnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 	if opts == nil {
 		return nil
 	}
@@ -3071,7 +3071,7 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 	return tfMap
 }
 
-func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
 	if len(specs) < 1 {
 		return nil
 	}

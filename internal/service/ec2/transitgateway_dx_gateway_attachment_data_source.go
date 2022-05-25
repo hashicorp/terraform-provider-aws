@@ -52,7 +52,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(d *schema.ResourceData, met
 		input.Filters = append(input.Filters, BuildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
-		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+		input.Filters = append(input.Filters, tagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
 	// to preserve original functionality
 	if dxGatewayIdOk {

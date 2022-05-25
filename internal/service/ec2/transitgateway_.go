@@ -149,7 +149,7 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 			MulticastSupport:             aws.String(d.Get("multicast_support").(string)),
 			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
@@ -299,9 +299,9 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		return conn.DeleteTransitGateway(&ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})
-	}, ErrCodeIncorrectState)
+	}, errCodeIncorrectState)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayIDNotFound) {
 		return nil
 	}
 

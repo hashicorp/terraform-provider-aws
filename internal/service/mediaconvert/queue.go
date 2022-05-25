@@ -122,7 +122,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateQueue(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Media Convert Queue: %s", err)
+		return fmt.Errorf("Error creating Media Convert Queue: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Queue.Name))
@@ -133,7 +133,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %w", err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -144,13 +144,13 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetQueue(getOpts)
-	if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Queue: %s", err)
+		return fmt.Errorf("Error getting Media Convert Queue: %w", err)
 	}
 
 	d.Set("arn", resp.Queue.Arn)
@@ -160,13 +160,13 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", resp.Queue.Status)
 
 	if err := d.Set("reservation_plan_settings", flattenReservationPlan(resp.Queue.ReservationPlan)); err != nil {
-		return fmt.Errorf("Error setting Media Convert Queue reservation_plan_settings: %s", err)
+		return fmt.Errorf("error setting Media Convert Queue reservation_plan_settings: %w", err)
 	}
 
 	tags, err := ListTags(conn, aws.StringValue(resp.Queue.Arn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -186,7 +186,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %w", err)
 	}
 
 	if d.HasChanges("description", "reservation_plan_settings", "status") {
@@ -206,20 +206,15 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err = conn.UpdateQueue(updateOpts)
-		if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("Error updating Media Convert Queue: %s", err)
+			return fmt.Errorf("Error updating Media Convert Queue (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -229,7 +224,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %w", err)
 	}
 
 	delOpts := &mediaconvert.DeleteQueueInput{
@@ -241,7 +236,7 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Media Convert Queue: %s", err)
+		return fmt.Errorf("Error deleting Media Convert Queue (%s): %w", d.Id(), err)
 	}
 
 	return nil

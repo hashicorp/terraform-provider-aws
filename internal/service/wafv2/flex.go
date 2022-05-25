@@ -291,7 +291,7 @@ func expandStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["ip_set_reference_statement"]; ok {
-		statement.IPSetReferenceStatement = expandIpSetReferenceStatement(v.([]interface{}))
+		statement.IPSetReferenceStatement = expandIPSetReferenceStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["geo_match_statement"]; ok {
@@ -319,11 +319,11 @@ func expandStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["sqli_match_statement"]; ok {
-		statement.SqliMatchStatement = expandSqliMatchStatement(v.([]interface{}))
+		statement.SqliMatchStatement = expandSQLiMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["xss_match_statement"]; ok {
-		statement.XssMatchStatement = expandXssMatchStatement(v.([]interface{}))
+		statement.XssMatchStatement = expandXSSMatchStatement(v.([]interface{}))
 	}
 
 	return statement
@@ -474,7 +474,7 @@ func expandTextTransformation(m map[string]interface{}) *wafv2.TextTransformatio
 	}
 }
 
-func expandIpSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceStatement {
+func expandIPSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -585,7 +585,7 @@ func expandSizeConstraintStatement(l []interface{}) *wafv2.SizeConstraintStateme
 	}
 }
 
-func expandSqliMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
+func expandSQLiMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -598,7 +598,7 @@ func expandSqliMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
 	}
 }
 
-func expandXssMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
+func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -807,7 +807,7 @@ func flattenStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.IPSetReferenceStatement != nil {
-		m["ip_set_reference_statement"] = flattenIpSetReferenceStatement(s.IPSetReferenceStatement)
+		m["ip_set_reference_statement"] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
 	}
 
 	if s.GeoMatchStatement != nil {
@@ -835,11 +835,11 @@ func flattenStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.SqliMatchStatement != nil {
-		m["sqli_match_statement"] = flattenSqliMatchStatement(s.SqliMatchStatement)
+		m["sqli_match_statement"] = flattenSQLiMatchStatement(s.SqliMatchStatement)
 	}
 
 	if s.XssMatchStatement != nil {
-		m["xss_match_statement"] = flattenXssMatchStatement(s.XssMatchStatement)
+		m["xss_match_statement"] = flattenXSSMatchStatement(s.XssMatchStatement)
 	}
 
 	return m
@@ -972,7 +972,7 @@ func flattenTextTransformations(l []*wafv2.TextTransformation) []interface{} {
 	return out
 }
 
-func flattenIpSetReferenceStatement(i *wafv2.IPSetReferenceStatement) interface{} {
+func flattenIPSetReferenceStatement(i *wafv2.IPSetReferenceStatement) interface{} {
 	if i == nil {
 		return []interface{}{}
 	}
@@ -1064,7 +1064,7 @@ func flattenSizeConstraintStatement(s *wafv2.SizeConstraintStatement) interface{
 	return []interface{}{m}
 }
 
-func flattenSqliMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
+func flattenSQLiMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
@@ -1077,7 +1077,7 @@ func flattenSqliMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
 	return []interface{}{m}
 }
 
-func flattenXssMatchStatement(s *wafv2.XssMatchStatement) interface{} {
+func flattenXSSMatchStatement(s *wafv2.XssMatchStatement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}

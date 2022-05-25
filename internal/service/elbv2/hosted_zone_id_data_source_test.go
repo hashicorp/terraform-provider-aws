@@ -9,7 +9,7 @@ import (
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
-func TestAccLBHostedZoneIDDataSource_basic(t *testing.T) {
+func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),

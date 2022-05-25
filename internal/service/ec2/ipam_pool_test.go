@@ -21,12 +21,12 @@ func TestAccIPAMPool_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamPoolDestroy,
+		CheckDestroy:      testAccCheckIPAMPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamPool,
+				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIpamPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "false"),
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
@@ -40,7 +40,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamPoolUpdates,
+				Config: testAccIPAMPoolConfig_updates,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "true"),
@@ -63,10 +63,10 @@ func TestAccIPAMPool_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamPoolDestroy,
+		CheckDestroy:      testAccCheckIPAMPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamPoolTagsConfig("key1", "value1"),
+				Config: testAccIPAMPoolConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -78,7 +78,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamPoolTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccIPAMPoolConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -86,7 +86,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCIpamPoolTagsConfig("key2", "value2"),
+				Config: testAccIPAMPoolConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -104,12 +104,12 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamPoolDestroy,
+		CheckDestroy:      testAccCheckIPAMPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamPool_ipv6,
+				Config: testAccIPAMPoolConfig_ipv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIpamPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "false"),
 					resource.TestCheckResourceAttr(resourceName, "state", "create-complete"),
@@ -125,7 +125,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolExists(n string, pool *ec2.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccCheckVPCIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCh
 
 		id := rs.Primary.ID
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		found_pool, err := tfec2.FindIpamPoolById(conn, id)
+		found_pool, err := tfec2.FindIPAMPoolById(conn, id)
 
 		if err != nil {
 			return err
@@ -145,7 +145,7 @@ func testAccCheckVPCIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCh
 	}
 }
 
-func testAccCheckVPCIpamPoolDestroy(s *terraform.State) error {
+func testAccCheckIPAMPoolDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -155,7 +155,7 @@ func testAccCheckVPCIpamPoolDestroy(s *terraform.State) error {
 
 		id := rs.Primary.ID
 
-		if _, err := tfec2.WaitIpamPoolDeleted(conn, id, tfec2.IpamPoolDeleteTimeout); err != nil {
+		if _, err := tfec2.WaitIPAMPoolDeleted(conn, id, tfec2.IPAMPoolDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -166,7 +166,7 @@ func testAccCheckVPCIpamPoolDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccVPCIpamPoolBase = `
+const testAccIPAMPoolConfig_base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -177,14 +177,14 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-const testAccVPCIpamPool = testAccVPCIpamPoolBase + `
+const testAccIPAMPoolConfig_basic = testAccIPAMPoolConfig_base + `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
 }
 `
 
-const testAccVPCIpamPoolUpdates = testAccVPCIpamPoolBase + `
+const testAccIPAMPoolConfig_updates = testAccIPAMPoolConfig_base + `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
   ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
@@ -199,7 +199,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-const testAccVPCIpamPool_ipv6 = testAccVPCIpamPoolBase + `
+const testAccIPAMPoolConfig_ipv6 = testAccIPAMPoolConfig_base + `
 resource "aws_vpc_ipam_pool" "test" {
   address_family        = "ipv6"
   ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
@@ -209,8 +209,8 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-func testAccVPCIpamPoolTagsConfig(tagKey1, tagValue1 string) string {
-	return testAccVPCIpamPoolBase + fmt.Sprintf(`
+func testAccIPAMPoolConfig_tags(tagKey1, tagValue1 string) string {
+	return testAccIPAMPoolConfig_base + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
@@ -221,8 +221,8 @@ resource "aws_vpc_ipam_pool" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccVPCIpamPoolTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccVPCIpamPoolBase + fmt.Sprintf(`
+func testAccIPAMPoolConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccIPAMPoolConfig_base + fmt.Sprintf(`
 
 
 resource "aws_vpc_ipam_pool" "test" {

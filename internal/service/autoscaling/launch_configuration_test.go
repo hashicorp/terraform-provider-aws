@@ -202,7 +202,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 				Config: testAccLaunchConfigurationWithRootBlockDeviceCopiedAMIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					testAccCheckAmiExists(amiCopyResourceName, &ami),
+					testAccCheckAMIExists(amiCopyResourceName, &ami),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMI(), amiCopyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -677,7 +677,7 @@ func testAccCheckLaunchConfigurationExists(n string, v *autoscaling.LaunchConfig
 	}
 }
 
-func testAccCheckAmiExists(n string, v *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

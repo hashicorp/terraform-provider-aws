@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
@@ -35,10 +35,8 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 			{
 				Config: testAccProxyProtocolPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
-					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
+					resource.TestCheckResourceAttr("aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
+					resource.TestCheckResourceAttr("aws_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
 					resource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
 					resource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "587"),
 				),
@@ -62,7 +60,7 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 		_, err := conn.DescribeLoadBalancers(req)
 		if err != nil {
 			// Verify the error is what we want
-			if tfelb.IsNotFound(err) {
+			if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
 				continue
 			}
 			return err

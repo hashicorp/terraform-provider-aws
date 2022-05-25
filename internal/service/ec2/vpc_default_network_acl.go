@@ -106,7 +106,7 @@ func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(naclID)
 
 	// Revoke all default and pre-existing rules on the default network ACL.
-	if err := deleteNetworkAclEntries(conn, d.Id(), nacl.Entries); err != nil {
+	if err := deleteNetworkACLEntries(conn, d.Id(), nacl.Entries); err != nil {
 		return err
 	}
 

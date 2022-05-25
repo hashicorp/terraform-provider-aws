@@ -113,7 +113,7 @@ func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfiguration_Config_KmsKeyId(rName),
+				Config: testAccEndpointConfigurationConfig_kmsKeyId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
@@ -492,7 +492,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName)
 }
 
-func testAccEndpointConfiguration_Config_KmsKeyId(rName string) string {
+func testAccEndpointConfigurationConfig_kmsKeyId(rName string) string {
 	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name        = %[1]q

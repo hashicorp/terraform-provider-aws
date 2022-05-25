@@ -176,7 +176,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		getPolicyResponse, err = conn.GetPolicy(input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -186,7 +186,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM policy %s: %w", d.Id(), err)
 	}
 
-	if getPolicyResponse == nil || getPolicyResponse.Policy == nil {
+	if !d.IsNewResource() && (getPolicyResponse == nil || getPolicyResponse.Policy == nil) {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -239,8 +239,8 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		getPolicyVersionResponse, err = conn.GetPolicyVersion(getPolicyVersionRequest)
 	}
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Policy (%s) version (%s) not found, removing from state", d.Id(), aws.StringValue(policy.DefaultVersionId))
 		d.SetId("")
 		return nil
 	}

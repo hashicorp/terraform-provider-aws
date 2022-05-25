@@ -175,7 +175,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("destination_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationOptions = expandEc2DestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("iam_role_arn"); ok {
@@ -199,7 +199,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
 	log.Printf("[DEBUG] Creating Flow Log: %s", input)
@@ -244,7 +244,7 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 	if fl.DestinationOptions != nil {
-		if err := d.Set("destination_options", []interface{}{flattenEc2DestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
+		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return fmt.Errorf("error setting destination_options: %w", err)
 		}
 	} else {
@@ -306,7 +306,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFlowLogIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidFlowLogIdNotFound) {
 		return nil
 	}
 
@@ -317,7 +317,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandEc2DestinationOptionsRequest(tfMap map[string]interface{}) *ec2.DestinationOptionsRequest {
+func expandDestinationOptionsRequest(tfMap map[string]interface{}) *ec2.DestinationOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -339,7 +339,7 @@ func expandEc2DestinationOptionsRequest(tfMap map[string]interface{}) *ec2.Desti
 	return apiObject
 }
 
-func flattenEc2DestinationOptionsResponse(apiObject *ec2.DestinationOptionsResponse) map[string]interface{} {
+func flattenDestinationOptionsResponse(apiObject *ec2.DestinationOptionsResponse) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FileFormat; v != nil {

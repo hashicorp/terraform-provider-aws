@@ -21,7 +21,7 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -46,7 +46,7 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceTagsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -68,7 +68,7 @@ func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceAzUserDataConfig(rName),
+				Config: testAccInstanceDataSourceConfig_azUser(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -92,7 +92,7 @@ func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGp2IopsDeviceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_gp2IOPSDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -118,7 +118,7 @@ func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGp3ThroughputDeviceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_gp3ThroughputDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -144,7 +144,7 @@ func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceBlockDevicesConfig(rName),
+				Config: testAccInstanceDataSourceConfig_blockDevices(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -171,7 +171,7 @@ func TestAccEC2InstanceDataSource_EBSBlockDevice_kmsKeyID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceEbsBlockDeviceKmsKeyIdConfig(rName),
+				Config: testAccInstanceDataSourceConfig_ebsKMSKeyID(rName),
 			},
 		},
 	})
@@ -187,7 +187,7 @@ func TestAccEC2InstanceDataSource_RootBlockDevice_kmsKeyID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceRootBlockDeviceKmsKeyIdConfig(rName),
+				Config: testAccInstanceDataSourceConfig_rootBlockDeviceKMSKeyID(rName),
 			},
 		},
 	})
@@ -204,7 +204,7 @@ func TestAccEC2InstanceDataSource_rootInstanceStore(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceRootInstanceStoreConfig(rName),
+				Config: testAccInstanceDataSourceConfig_rootStore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -228,7 +228,7 @@ func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourcePrivateIPConfig(rName),
+				Config: testAccInstanceDataSourceConfig_privateIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -250,7 +250,7 @@ func TestAccEC2InstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceSecondaryPrivateIPsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -272,7 +272,7 @@ func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceIpv6AddressesConfig(rName),
+				Config: testAccInstanceDataSourceConfig_ipv6Addresses(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -299,7 +299,7 @@ func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceKeyPairConfig(rName, publicKey),
+				Config: testAccInstanceDataSourceConfig_keyPair(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -322,7 +322,7 @@ func TestAccEC2InstanceDataSource_vpc(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceVPCConfig(rName),
+				Config: testAccInstanceDataSourceConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -346,7 +346,7 @@ func TestAccEC2InstanceDataSource_placementGroup(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourcePlacementGroupConfig(rName),
+				Config: testAccInstanceDataSourceConfig_placementGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
 				),
@@ -366,7 +366,7 @@ func TestAccEC2InstanceDataSource_securityGroups(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceSecurityGroupsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -390,7 +390,7 @@ func TestAccEC2InstanceDataSource_vpcSecurityGroups(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceVPCSecurityGroupsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_vpcSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -417,14 +417,14 @@ func TestAccEC2InstanceDataSource_GetPasswordData_trueToFalse(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, true),
+				Config: testAccInstanceDataSourceConfig_getPassword(rName, publicKey, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "true"),
 					resource.TestCheckResourceAttrSet(datasourceName, "password_data"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, false),
+				Config: testAccInstanceDataSourceConfig_getPassword(rName, publicKey, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "password_data"),
@@ -449,14 +449,14 @@ func TestAccEC2InstanceDataSource_GetPasswordData_falseToTrue(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, false),
+				Config: testAccInstanceDataSourceConfig_getPassword(rName, publicKey, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "password_data"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, true),
+				Config: testAccInstanceDataSourceConfig_getPassword(rName, publicKey, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "true"),
 					resource.TestCheckResourceAttrSet(datasourceName, "password_data"),
@@ -476,21 +476,21 @@ func TestAccEC2InstanceDataSource_getUserData(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGetUserDataConfig(rName, true),
+				Config: testAccInstanceDataSourceConfig_getUser(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceGetUserDataConfig(rName, false),
+				Config: testAccInstanceDataSourceConfig_getUser(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceGetUserDataConfig(rName, true),
+				Config: testAccInstanceDataSourceConfig_getUser(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
@@ -511,7 +511,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName, true),
+				Config: testAccInstanceDataSourceConfig_getUserNoUser(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -519,7 +519,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName, false),
+				Config: testAccInstanceDataSourceConfig_getUserNoUser(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -527,7 +527,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName, true),
+				Config: testAccInstanceDataSourceConfig_getUserNoUser(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -548,14 +548,14 @@ func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceAutoRecoveryConfig(rName, "default"),
+				Config: testAccInstanceDataSourceConfig_autoRecovery(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "default"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceAutoRecoveryConfig(rName, "disabled"),
+				Config: testAccInstanceDataSourceConfig_autoRecovery(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "disabled"),
@@ -577,7 +577,7 @@ func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 
-				Config: testAccInstanceDataSourceCreditSpecificationConfig(rName),
+				Config: testAccInstanceDataSourceConfig_creditSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "credit_specification.#", resourceName, "credit_specification.#"),
@@ -599,7 +599,7 @@ func TestAccEC2InstanceDataSource_metadataOptions(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceMetadataOptionsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_metaOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.#", resourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
@@ -623,7 +623,7 @@ func TestAccEC2InstanceDataSource_enclaveOptions(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceEnclaveOptionsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_enclaveOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.#", resourceName, "enclave_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.0.enabled", resourceName, "enclave_options.0.enabled"),
@@ -644,7 +644,7 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceBlockDeviceTagsConfig(rName),
+				Config: testAccInstanceDataSourceConfig_blockDeviceTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 				),
@@ -654,7 +654,7 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 }
 
 // Lookup based on InstanceID
-func testAccInstanceDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -675,7 +675,7 @@ data "aws_instance" "test" {
 }
 
 // Use the tags attribute to filter
-func testAccInstanceDataSourceTagsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_tags(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -697,7 +697,7 @@ data "aws_instance" "test" {
 }
 
 // filter on tag, populate more attributes
-func testAccInstanceDataSourceAzUserDataConfig(rName string) string {
+func testAccInstanceDataSourceConfig_azUser(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -721,7 +721,7 @@ data "aws_instance" "test" {
 }
 
 // GP2IopsDevice
-func testAccInstanceDataSourceGp2IopsDeviceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_gp2IOPSDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -744,7 +744,7 @@ data "aws_instance" "test" {
 }
 
 // GP3ThroughputDevice
-func testAccInstanceDataSourceGp3ThroughputDeviceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_gp3ThroughputDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -768,7 +768,7 @@ data "aws_instance" "test" {
 }
 
 // Block Device
-func testAccInstanceDataSourceBlockDevicesConfig(rName string) string {
+func testAccInstanceDataSourceConfig_blockDevices(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -821,7 +821,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceEbsBlockDeviceKmsKeyIdConfig(rName string) string {
+func testAccInstanceDataSourceConfig_ebsKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -854,7 +854,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceRootBlockDeviceKmsKeyIdConfig(rName string) string {
+func testAccInstanceDataSourceConfig_rootBlockDeviceKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -882,7 +882,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceRootInstanceStoreConfig(rName string) string {
+func testAccInstanceDataSourceConfig_rootStore(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -899,7 +899,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourcePrivateIPConfig(rName string) string {
+func testAccInstanceDataSourceConfig_privateIP(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -921,7 +921,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceSecondaryPrivateIPsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -943,7 +943,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceIpv6AddressesConfig(rName string) string {
+func testAccInstanceDataSourceConfig_ipv6Addresses(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCIPv6Config(rName),
@@ -965,7 +965,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceKeyPairConfig(rName, publicKey string) string {
+func testAccInstanceDataSourceConfig_keyPair(rName, publicKey string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -996,7 +996,7 @@ data "aws_instance" "test" {
 `, rName, publicKey))
 }
 
-func testAccInstanceDataSourceVPCConfig(rName string) string {
+func testAccInstanceDataSourceConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -1021,7 +1021,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourcePlacementGroupConfig(rName string) string {
+func testAccInstanceDataSourceConfig_placementGroup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -1053,7 +1053,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceSecurityGroupsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_securityGroups(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1087,7 +1087,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceVPCSecurityGroupsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_vpcSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
 		testAccInstanceVPCSecurityGroupConfig(rName),
@@ -1110,7 +1110,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey string, val bool) string {
+func testAccInstanceDataSourceConfig_getPassword(rName, publicKey string, val bool) string {
 	return acctest.ConfigCompose(testAccLatestWindowsServer2016CoreAMIConfig(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -1135,7 +1135,7 @@ data "aws_instance" "test" {
 `, rName, publicKey, val))
 }
 
-func testAccInstanceDataSourceGetUserDataConfig(rName string, getUserData bool) string {
+func testAccInstanceDataSourceConfig_getUser(rName string, getUserData bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -1163,7 +1163,7 @@ data "aws_instance" "test" {
 `, rName, getUserData))
 }
 
-func testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName string, getUserData bool) string {
+func testAccInstanceDataSourceConfig_getUserNoUser(rName string, getUserData bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -1185,7 +1185,7 @@ data "aws_instance" "test" {
 `, rName, getUserData))
 }
 
-func testAccInstanceDataSourceAutoRecoveryConfig(rName string, val string) string {
+func testAccInstanceDataSourceConfig_autoRecovery(rName string, val string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -1210,7 +1210,7 @@ data "aws_instance" "test" {
 `, rName, val))
 }
 
-func testAccInstanceDataSourceCreditSpecificationConfig(rName string) string {
+func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
@@ -1235,7 +1235,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceMetadataOptionsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_metaOptions(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -1264,7 +1264,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceEnclaveOptionsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_enclaveOptions(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -1290,7 +1290,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceBlockDeviceTagsConfig(rName string) string {
+func testAccInstanceDataSourceConfig_blockDeviceTags(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),

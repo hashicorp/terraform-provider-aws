@@ -40,6 +40,12 @@ func ResourceCluster() *schema.Resource {
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return verify.SemVerLessThan(new.(string), old.(string))
 			}),
+			customdiff.ComputedIf("broker_node_group_info.0.storage_info", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("broker_node_group_info.0.ebs_volume_size")
+			}),
+			customdiff.ComputedIf("broker_node_group_info.0.ebs_volume_size", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("broker_node_group_info.0.storage_info")
+			}),
 			verify.SetTagsDiff,
 		),
 
@@ -125,9 +131,12 @@ func ResourceCluster() *schema.Resource {
 							},
 						},
 						"ebs_volume_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 16384),
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							Deprecated:    "use 'storage_info' argument instead",
+							ValidateFunc:  validation.IntBetween(1, 16384),
+							ConflictsWith: []string{"broker_node_group_info.0.storage_info"},
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -139,6 +148,55 @@ func ResourceCluster() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
+							},
+						},
+						"storage_info": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							Computed:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"broker_node_group_info.0.ebs_volume_size"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ebs_storage_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"provisioned_throughput": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															// This feature is available for
+															// storage volume larger than 10 GiB and
+															// broker types kafka.m5.4xlarge and larger.
+															"enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															// Minimum and maximum for this varies between broker type
+															// https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html
+															"volume_throughput": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(250, 2375),
+															},
+														},
+													},
+												},
+												"volume_size": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
+													ValidateFunc: validation.IntBetween(1, 16384),
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -583,30 +641,52 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
-	if d.HasChange("broker_node_group_info.0.ebs_volume_size") {
+	if d.HasChanges("broker_node_group_info.0.ebs_volume_size", "broker_node_group_info.0.storage_info") {
 		input := &kafka.UpdateBrokerStorageInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
-			TargetBrokerEBSVolumeInfo: []*kafka.BrokerEBSVolumeInfo{
+		}
+		if d.HasChange("broker_node_group_info.0.storage_info") {
+			// case 1: deprecated ebs_volume_size replaced with storage_info
+			// case 2: regular update of storage_info
+			ebsVolumeInfo := &kafka.BrokerEBSVolumeInfo{
+				KafkaBrokerNodeId: aws.String("All"),
+				VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
+			}
+			if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				ebsVolumeInfo.ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+			}
+			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{ebsVolumeInfo}
+		} else {
+			// case 3: regular update of deprecated ebs_volume_size
+			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
 				{
 					KafkaBrokerNodeId: aws.String("All"),
 					VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.ebs_volume_size").(int))),
 				},
-			},
+			}
 		}
 
 		output, err := conn.UpdateBrokerStorageWithContext(ctx, input)
 
-		if err != nil {
+		// the following error is thrown if previous ebs_volume_size and new storage_info.ebs_storage_info.volume_size have the same value:
+		// BadRequestException: The request does not include any updates to the EBS volumes of the cluster. Verify the request, then try again
+		// ignore this error to allow users to replace deprecated ebs_volume_size with storage_info - Address case 1
+		if err != nil && !tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "The request does not include any updates to the EBS volumes of the cluster") {
 			return diag.Errorf("updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		// when there are no changes, output.ClusterOperationArn is not returned leading to
+		// InvalidParameter: 1 validation error(s) found. - minimum field size of 1, DescribeClusterOperationInput.ClusterOperationArn.
+		// skip the wait if the EBS volume size is unchanged
+		if !tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "The request does not include any updates to the EBS volumes of the cluster") {
+			_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+			if err != nil {
+				return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+			}
 		}
 	}
 
@@ -872,6 +952,10 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 		}
 	}
 
+	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.StorageInfo = expandStorageInfo(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -884,6 +968,56 @@ func expandConnectivityInfo(tfMap map[string]interface{}) *kafka.ConnectivityInf
 
 	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 {
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.StorageInfo{}
+
+	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.EbsStorageInfo = expandEbsStorageInfo(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandEbsStorageInfo(tfMap map[string]interface{}) *kafka.EBSStorageInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.EBSStorageInfo{}
+
+	if v, ok := tfMap["provisioned_throughput"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+		apiObject.VolumeSize = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandProvisionedThroughput(tfMap map[string]interface{}) *kafka.ProvisionedThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.ProvisionedThroughput{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["volume_throughput"].(int); ok && v != 0 {
+		apiObject.VolumeThroughput = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1204,6 +1338,10 @@ func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string
 	}
 
 	if v := apiObject.StorageInfo; v != nil {
+		tfMap["storage_info"] = flattenStorageInfo(v)
+	}
+
+	if v := apiObject.StorageInfo; v != nil {
 		if v := v.EbsStorageInfo; v != nil {
 			if v := v.VolumeSize; v != nil {
 				tfMap["ebs_volume_size"] = aws.Int64Value(v)
@@ -1226,6 +1364,56 @@ func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]inter
 	}
 
 	return tfMap
+}
+
+func flattenStorageInfo(apiObject *kafka.StorageInfo) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EbsStorageInfo; v != nil {
+		tfMap["ebs_storage_info"] = flattenEbsStorageInfo(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenEbsStorageInfo(apiObject *kafka.EBSStorageInfo) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ProvisionedThroughput; v != nil {
+		tfMap["provisioned_throughput"] = flattenProvisionedThroughput(v)
+	}
+
+	if v := apiObject.VolumeSize; v != nil {
+		tfMap["volume_size"] = aws.Int64Value(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenProvisionedThroughput(apiObject *kafka.ProvisionedThroughput) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.VolumeThroughput; v != nil {
+		tfMap["volume_throughput"] = aws.Int64Value(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {

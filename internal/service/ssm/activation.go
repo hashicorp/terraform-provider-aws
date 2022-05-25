@@ -168,7 +168,7 @@ func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error reading SSM activation: %s", err)
 	}
-	if resp.ActivationList == nil || len(resp.ActivationList) == 0 {
+	if !d.IsNewResource() && (resp.ActivationList == nil || len(resp.ActivationList) == 0) {
 		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -62,7 +62,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
-				Default:      "true",
+				Computed:     true,
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"automatic_failover_enabled": {

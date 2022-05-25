@@ -2,6 +2,7 @@ package route53resolver_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -47,6 +48,44 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(ds3ResourceName, "resolver_rule_ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRulesDataSource_nameRegex(t *testing.T) {
+	dsResourceName := "data.aws_route53_resolver_rules.test"
+	rCount := 3
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRulesDataSource_nameRegex(rCount, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", strconv.Itoa(rCount)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
+	dsResourceName := "data.aws_route53_resolver_rules.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRulesDataSource_nonExistentNameRegex,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", "0"),
 				),
 			},
 		},
@@ -100,3 +139,26 @@ data "aws_route53_resolver_rules" "by_invalid_owner_id" {
 }
 `, rName1, rName2)
 }
+
+func testAccRulesDataSource_nameRegex(rCount int, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  count       = %[1]d
+  domain_name = "%[2]s.example.org"
+  name        = "%[2]s-${count.index}-rule"
+  rule_type   = "SYSTEM"
+}
+
+data "aws_route53_resolver_rules" "test" {
+  name_regex = "%[2]s-.*-rule"
+
+  depends_on = [aws_route53_resolver_rule.test]
+}
+`, rCount, rName)
+}
+
+const testAccRulesDataSource_nonExistentNameRegex = `
+data "aws_route53_resolver_rules" "test" {
+  name_regex = "dne-regex"
+}
+`
