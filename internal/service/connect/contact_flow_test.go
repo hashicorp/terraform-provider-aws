@@ -44,7 +44,7 @@ func testAccContactFlow_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Created"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -63,7 +63,7 @@ func testAccContactFlow_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Updated"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -145,7 +145,7 @@ func testAccContactFlow_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Disappear"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
@@ -234,7 +234,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccContactFlowBasicConfig(rName, rName2, label string) string {
+func testAccContactFlowConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccContactFlowBaseConfig(rName),
 		fmt.Sprintf(`

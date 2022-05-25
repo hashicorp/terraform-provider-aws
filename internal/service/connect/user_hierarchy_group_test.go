@@ -45,7 +45,7 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupBasicConfig(rName, rName2),
+				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -68,7 +68,7 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 			},
 			{
 				// Update name
-				Config: testAccUserHierarchyGroupBasicConfig(rName, rName3),
+				Config: testAccUserHierarchyGroupConfig_basic(rName, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -102,7 +102,7 @@ func testAccUserHierarchyGroup_parentGroupId(t *testing.T) {
 		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupParentGroupIdConfig(rName, rName2, rName3),
+				Config: testAccUserHierarchyGroupConfig_parentID(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -139,7 +139,7 @@ func testAccUserHierarchyGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupBasicConfig(rName, rName2),
+				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUserHierarchyGroup(), resourceName),
@@ -253,7 +253,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, rName)
 }
 
-func testAccUserHierarchyGroupBasicConfig(rName, rName2 string) string {
+func testAccUserHierarchyGroupConfig_basic(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyGroupBaseConfig(rName),
 		fmt.Sprintf(`
@@ -272,7 +272,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 `, rName2))
 }
 
-func testAccUserHierarchyGroupParentGroupIdConfig(rName, rName2, rName3 string) string {
+func testAccUserHierarchyGroupConfig_parentID(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyGroupBaseConfig(rName),
 		fmt.Sprintf(`

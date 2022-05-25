@@ -286,7 +286,6 @@ rules:
         - internal/service/codestarnotifications
         - internal/service/cognitoidp
         - internal/service/configservice
-        - internal/service/connect
         - internal/service/datapipeline
         - internal/service/datasync
         - internal/service/dax
