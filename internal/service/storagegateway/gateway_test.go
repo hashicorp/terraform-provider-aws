@@ -71,7 +71,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_typeFilefsxSMB(rName),
+				Config: testAccGatewayConfig_typeFileFSxSMB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
@@ -1008,7 +1008,7 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName))
 }
 
-func testAccGatewayConfig_typeFilefsxSMB(rName string) string {
+func testAccGatewayConfig_typeFileFSxSMB(rName string) string {
 	return acctest.ConfigCompose(testAcc_FileGatewayBase(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
