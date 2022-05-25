@@ -1273,8 +1273,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("detaching Auto Scaling Group (%s) load balancers: %w", d.Id(), err)
 				}
 
-				if err := waitUntilGroupLoadBalancersRemoved(conn, d.Id()); err != nil {
-					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancers being removed: %s", d.Id(), err)
+				if _, err := waitLoadBalancersRemoved(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("waiting for Auto Scaling Group (%s) load balancers removed: %s", d.Id(), err)
 				}
 			}
 		}
@@ -1300,8 +1300,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("attaching Auto Scaling Group (%s) load balancers: %w", d.Id(), err)
 				}
 
-				if err := waitUntilGroupLoadBalancersAdded(conn, d.Id()); err != nil {
-					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancers being added: %s", d.Id(), err)
+				if _, err := waitLoadBalancersAdded(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("waiting for Auto Scaling Group (%s) load balancers added: %s", d.Id(), err)
 				}
 			}
 		}
@@ -1339,8 +1339,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("detaching Auto Scaling Group (%s) target groups: %w", d.Id(), err)
 				}
 
-				if err := waitUntilGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
-					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancer Target Groups being removed: %s", d.Id(), err)
+				if _, err := waitLoadBalancerTargetGroupsRemoved(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 				}
 			}
 
@@ -1367,8 +1367,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("attaching Auto Scaling Group (%s) target groups: %w", d.Id(), err)
 				}
 
-				if err := waitUntilGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
-					return fmt.Errorf("error describing Auto Scaling Group (%s) Load Balancer Target Groups being added: %s", d.Id(), err)
+				if _, err := waitLoadBalancerTargetGroupsAdded(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
 				}
 			}
 		}
@@ -1920,6 +1920,60 @@ func statusInstanceRefresh(conn *autoscaling.AutoScaling, name, id string) resou
 	}
 }
 
+func statusLoadBalancerInStateCount(conn *autoscaling.AutoScaling, name string, states ...string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findLoadBalancerStates(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var count int
+
+		for _, v := range output {
+			for _, state := range states {
+				if aws.StringValue(v.State) == state {
+					count++
+					break
+				}
+			}
+		}
+
+		return output, strconv.Itoa(count), nil
+	}
+}
+
+func statusLoadBalancerTargetGroupInStateCount(conn *autoscaling.AutoScaling, name string, states ...string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findLoadBalancerTargetGroupStates(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var count int
+
+		for _, v := range output {
+			for _, state := range states {
+				if aws.StringValue(v.State) == state {
+					count++
+					break
+				}
+			}
+		}
+
+		return output, strconv.Itoa(count), nil
+	}
+}
+
 func statusWarmPool(conn *autoscaling.AutoScaling, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findWarmPool(conn, name)
@@ -1962,6 +2016,70 @@ func waitGroupDrained(conn *autoscaling.AutoScaling, name string, timeout time.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*autoscaling.Group); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLoadBalancersAdded(conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerState, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"0"},
+		Refresh: statusLoadBalancerInStateCount(conn, name, LoadBalancerStateAdding),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.([]*autoscaling.LoadBalancerState); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLoadBalancersRemoved(conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerState, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"0"},
+		Refresh: statusLoadBalancerInStateCount(conn, name, LoadBalancerStateRemoving),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.([]*autoscaling.LoadBalancerState); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerTargetGroupState, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"0"},
+		Refresh: statusLoadBalancerTargetGroupInStateCount(conn, name, LoadBalancerTargetGroupStateAdding),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.([]*autoscaling.LoadBalancerTargetGroupState); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerTargetGroupState, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"0"},
+		Refresh: statusLoadBalancerTargetGroupInStateCount(conn, name, LoadBalancerTargetGroupStateRemoving),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.([]*autoscaling.LoadBalancerTargetGroupState); ok {
 		return output, err
 	}
 
@@ -2034,78 +2152,6 @@ func waitWarmPoolDrained(conn *autoscaling.AutoScaling, name string, timeout tim
 	}
 
 	return nil, err
-}
-
-func waitUntilGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
-	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	var tgRemoving bool
-
-	for {
-		output, err := conn.DescribeLoadBalancerTargetGroups(input)
-
-		if err != nil {
-			return err
-		}
-
-		for _, tg := range output.LoadBalancerTargetGroups {
-			if aws.StringValue(tg.State) == "Removing" {
-				tgRemoving = true
-				break
-			}
-		}
-
-		if tgRemoving {
-			tgRemoving = false
-			input.NextToken = nil
-			continue
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
-
-func waitUntilGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
-	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	var tgAdding bool
-
-	for {
-		output, err := conn.DescribeLoadBalancerTargetGroups(input)
-
-		if err != nil {
-			return err
-		}
-
-		for _, tg := range output.LoadBalancerTargetGroups {
-			if aws.StringValue(tg.State) == "Adding" {
-				tgAdding = true
-				break
-			}
-		}
-
-		if tgAdding {
-			tgAdding = false
-			input.NextToken = nil
-			continue
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
 }
 
 // TODO: make this a finder
@@ -3250,78 +3296,6 @@ func flattenWarmPoolInstanceReusePolicy(apiObject *autoscaling.InstanceReusePoli
 	}
 
 	return tfMap
-}
-
-func waitUntilGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {
-	input := &autoscaling.DescribeLoadBalancersInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	var lbAdding bool
-
-	for {
-		output, err := conn.DescribeLoadBalancers(input)
-
-		if err != nil {
-			return err
-		}
-
-		for _, tg := range output.LoadBalancers {
-			if aws.StringValue(tg.State) == "Adding" {
-				lbAdding = true
-				break
-			}
-		}
-
-		if lbAdding {
-			lbAdding = false
-			input.NextToken = nil
-			continue
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
-
-func waitUntilGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName string) error {
-	input := &autoscaling.DescribeLoadBalancersInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	var lbRemoving bool
-
-	for {
-		output, err := conn.DescribeLoadBalancers(input)
-
-		if err != nil {
-			return err
-		}
-
-		for _, tg := range output.LoadBalancers {
-			if aws.StringValue(tg.State) == "Removing" {
-				lbRemoving = true
-				break
-			}
-		}
-
-		if lbRemoving {
-			lbRemoving = false
-			input.NextToken = nil
-			continue
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
 }
 
 func CreateGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
