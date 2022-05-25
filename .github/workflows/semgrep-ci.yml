@@ -39,7 +39,7 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name2.yml
+    - run: semgrep -c .semgrep-service-name2.yml --error --severity WARNING --severity ERROR
   naming_semgrep3:
     name: Semgrep Naming Scan Q-Z
     runs-on: ubuntu-latest
