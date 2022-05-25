@@ -1110,102 +1110,118 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
-	shouldWaitForCapacity := false
-	shouldRefreshInstances := false
 
-	input := &autoscaling.UpdateAutoScalingGroupInput{
-		AutoScalingGroupName: aws.String(d.Id()),
-	}
+	var shouldWaitForCapacity bool
+	var shouldRefreshInstances bool
 
-	input.NewInstancesProtectedFromScaleIn = aws.Bool(d.Get("protect_from_scale_in").(bool))
-
-	if d.HasChange("default_cooldown") {
-		input.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
-	}
-
-	if d.HasChange("capacity_rebalance") {
-		// If the capacity rebalance field is set to null, we need to explicitly set
-		// it back to "false", or the API won't reset it for us.
-		if v, ok := d.GetOk("capacity_rebalance"); ok {
-			input.CapacityRebalance = aws.Bool(v.(bool))
-		} else {
-			input.CapacityRebalance = aws.Bool(false)
+	if d.HasChangesExcept(
+		"enabled_metrics",
+		"load_balancers",
+		"suspended_processes",
+		"tag",
+		"tags",
+		"target_group_arns",
+		"warm_pool",
+	) {
+		input := &autoscaling.UpdateAutoScalingGroupInput{
+			AutoScalingGroupName:             aws.String(d.Id()),
+			NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 		}
-	}
 
-	if d.HasChange("desired_capacity") {
-		input.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
-		shouldWaitForCapacity = true
-	}
-
-	if d.HasChange("launch_configuration") {
-		if v, ok := d.GetOk("launch_configuration"); ok {
-			input.LaunchConfigurationName = aws.String(v.(string))
+		if d.HasChange("availability_zones") {
+			if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+				input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
+			}
 		}
-		shouldRefreshInstances = true
-	}
 
-	if d.HasChange("launch_template") {
-		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange("capacity_rebalance") {
+			// If the capacity rebalance field is set to null, we need to explicitly set
+			// it back to "false", or the API won't reset it for us.
+			if v, ok := d.GetOk("capacity_rebalance"); ok {
+				input.CapacityRebalance = aws.Bool(v.(bool))
+			} else {
+				input.CapacityRebalance = aws.Bool(false)
+			}
 		}
-		shouldRefreshInstances = true
-	}
 
-	if d.HasChange("mixed_instances_policy") {
-		input.MixedInstancesPolicy = expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
-		shouldRefreshInstances = true
-	}
-
-	if d.HasChange("min_size") {
-		input.MinSize = aws.Int64(int64(d.Get("min_size").(int)))
-		shouldWaitForCapacity = true
-	}
-
-	if d.HasChange("max_size") {
-		input.MaxSize = aws.Int64(int64(d.Get("max_size").(int)))
-	}
-
-	if d.HasChange("max_instance_lifetime") {
-		input.MaxInstanceLifetime = aws.Int64(int64(d.Get("max_instance_lifetime").(int)))
-	}
-
-	if d.HasChange("health_check_grace_period") {
-		input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
-	}
-
-	if d.HasChange("health_check_type") {
-		input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
-		input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
-	}
-
-	if d.HasChange("vpc_zone_identifier") {
-		input.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
-	}
-
-	if d.HasChange("availability_zones") {
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
+		if d.HasChange("default_cooldown") {
+			input.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
 		}
-	}
 
-	if d.HasChange("placement_group") {
-		input.PlacementGroup = aws.String(d.Get("placement_group").(string))
-	}
-
-	if d.HasChange("termination_policies") {
-		// If the termination policy is set to null, we need to explicitly set
-		// it back to "Default", or the API won't reset it for us.
-		if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-			input.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
-		} else {
-			log.Printf("[DEBUG] Explicitly setting null termination policy to 'Default'")
-			input.TerminationPolicies = aws.StringSlice([]string{DefaultTerminationPolicy})
+		if d.HasChange("desired_capacity") {
+			input.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
+			shouldWaitForCapacity = true
 		}
-	}
 
-	if d.HasChange("service_linked_role_arn") {
-		input.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
+		if d.HasChange("health_check_grace_period") {
+			input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
+		}
+
+		if d.HasChange("health_check_type") {
+			input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
+			input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
+		}
+
+		if d.HasChange("launch_configuration") {
+			if v, ok := d.GetOk("launch_configuration"); ok {
+				input.LaunchConfigurationName = aws.String(v.(string))
+			}
+			shouldRefreshInstances = true
+		}
+
+		if d.HasChange("launch_template") {
+			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+			}
+			shouldRefreshInstances = true
+		}
+
+		if d.HasChange("max_instance_lifetime") {
+			input.MaxInstanceLifetime = aws.Int64(int64(d.Get("max_instance_lifetime").(int)))
+		}
+
+		if d.HasChange("max_size") {
+			input.MaxSize = aws.Int64(int64(d.Get("max_size").(int)))
+		}
+
+		if d.HasChange("min_size") {
+			input.MinSize = aws.Int64(int64(d.Get("min_size").(int)))
+			shouldWaitForCapacity = true
+		}
+
+		if d.HasChange("mixed_instances_policy") {
+			input.MixedInstancesPolicy = expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
+			shouldRefreshInstances = true
+		}
+
+		if d.HasChange("placement_group") {
+			input.PlacementGroup = aws.String(d.Get("placement_group").(string))
+		}
+
+		if d.HasChange("service_linked_role_arn") {
+			input.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
+		}
+
+		if d.HasChange("termination_policies") {
+			// If the termination policy is set to null, we need to explicitly set
+			// it back to "Default", or the API won't reset it for us.
+			if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
+				input.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
+			} else {
+				input.TerminationPolicies = aws.StringSlice([]string{DefaultTerminationPolicy})
+			}
+		}
+
+		if d.HasChange("vpc_zone_identifier") {
+			input.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
+		}
+
+		log.Printf("[DEBUG] Updating Auto Scaling Group: %s", input)
+		_, err := conn.UpdateAutoScalingGroup(input)
+
+		if err != nil {
+			return fmt.Errorf("updating Auto Scaling Group (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChanges("tag", "tags") {
@@ -1223,13 +1239,6 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err := UpdateTags(conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
-	}
-
-	log.Printf("[DEBUG] Updating Auto Scaling Group: %s", input)
-	_, err := conn.UpdateAutoScalingGroup(input)
-
-	if err != nil {
-		return fmt.Errorf("updating Auto Scaling Group (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("load_balancers") {
