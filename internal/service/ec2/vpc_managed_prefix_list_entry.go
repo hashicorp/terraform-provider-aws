@@ -69,7 +69,9 @@ func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface
 		PrefixListId:   aws.String(plID),
 	}
 
-	_, err = conn.ModifyManagedPrefixList(input)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.ModifyManagedPrefixList(input)
+	}, "IncorrectState")
 
 	if err != nil {
 		return fmt.Errorf("error creating EC2 Managed Prefix List Entry (%s): %w", id, err)
