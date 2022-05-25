@@ -328,7 +328,6 @@ rules:
         - internal/service/rds
         - internal/service/resourcegroups
         - internal/service/resourcegroupstaggingapi
-        - internal/service/route53
         - internal/service/route53domains
         - internal/service/route53recoverycontrolconfig
         - internal/service/route53recoveryreadiness
