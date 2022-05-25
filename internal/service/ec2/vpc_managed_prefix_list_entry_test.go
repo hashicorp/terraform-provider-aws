@@ -303,13 +303,13 @@ resource "aws_ec2_managed_prefix_list_entry" "test1" {
 
 resource "aws_ec2_managed_prefix_list_entry" "test2" {
   cidr           = "10.0.1.0/24"
-  description    = "description 2"  
+  description    = "description 2"
   prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 
 resource "aws_ec2_managed_prefix_list_entry" "test3" {
   cidr           = "10.0.2.0/24"
-  description    = "description 3"  
+  description    = "description 3"
   prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
