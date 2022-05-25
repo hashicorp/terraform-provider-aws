@@ -85,7 +85,7 @@ func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUploadBufferDiskIDConfig(rName),
+				Config: testAccUploadBufferConfig_diskID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadBufferExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
@@ -118,7 +118,7 @@ func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUploadBufferDiskPathConfig(rName),
+				Config: testAccUploadBufferConfig_diskPath(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadBufferExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "disk_id", regexp.MustCompile(`.+`)),
@@ -163,8 +163,8 @@ func testAccCheckUploadBufferExists(resourceName string) resource.TestCheckFunc 
 	}
 }
 
-func testAccUploadBufferDiskIDConfig(rName string) string {
-	return testAccGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
+func testAccUploadBufferConfig_diskID(rName string) string {
+	return testAccGatewayConfig_typeStored(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -194,8 +194,8 @@ resource "aws_storagegateway_upload_buffer" "test" {
 `, rName)
 }
 
-func testAccUploadBufferDiskPathConfig(rName string) string {
-	return testAccGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+func testAccUploadBufferConfig_diskPath(rName string) string {
+	return testAccGatewayConfig_typeCached(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

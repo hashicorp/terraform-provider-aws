@@ -348,7 +348,6 @@ rules:
         - internal/service/simpledb
         - internal/service/ssm
         - internal/service/ssoadmin
-        - internal/service/storagegateway
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
