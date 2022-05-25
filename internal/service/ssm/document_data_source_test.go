@@ -20,7 +20,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDocumentDataSourceConfig(name, "JSON"),
+				Config: testAccDocumentDataSourceConfig_basic(name, "JSON"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_document.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_document.test", "name"),
@@ -31,7 +31,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckDocumentDataSourceConfig(name, "YAML"),
+				Config: testAccDocumentDataSourceConfig_basic(name, "YAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_document.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_document.test", "name"),
@@ -64,7 +64,7 @@ func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentDataSourceConfig(name, documentFormat string) string {
+func testAccDocumentDataSourceConfig_basic(name, documentFormat string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
   name          = "%s"
