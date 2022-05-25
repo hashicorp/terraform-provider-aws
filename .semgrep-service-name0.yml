@@ -308,7 +308,6 @@ rules:
         - internal/service/emrcontainers
         - internal/service/events
         - internal/service/firehose
-        - internal/service/fsx
         - internal/service/glacier
         - internal/service/globalaccelerator
         - internal/service/grafana

@@ -29,7 +29,7 @@ func TestAccFSxOntapStorageVirtualMachine_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`storage-virtual-machine/fs-.+`)),
@@ -68,7 +68,7 @@ func TestAccFSxOntapStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) 
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineRootVolumeSecurityStyleConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_rootVolumeSecurityStyle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`storage-virtual-machine/fs-.+`)),
@@ -107,7 +107,7 @@ func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName, pass1),
+				Config: testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName, pass1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "svm_admin_password", pass1),
@@ -120,7 +120,7 @@ func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"svm_admin_password"},
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName, pass2),
+				Config: testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName, pass2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
 					testAccCheckOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
@@ -143,7 +143,7 @@ func TestAccFSxOntapStorageVirtualMachine_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOntapStorageVirtualMachine(), resourceName),
@@ -167,7 +167,7 @@ func TestAccFSxOntapStorageVirtualMachine_name(t *testing.T) {
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -179,7 +179,7 @@ func TestAccFSxOntapStorageVirtualMachine_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName2),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
 					testAccCheckOntapStorageVirtualMachineRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
@@ -202,7 +202,7 @@ func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineTags1Config(rName, "key1", "value1"),
+				Config: testAccONTAPStorageVirtualMachineConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -215,7 +215,7 @@ func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccONTAPStorageVirtualMachineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
 					testAccCheckOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
@@ -225,7 +225,7 @@ func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineTags1Config(rName, "key2", "value2"),
+				Config: testAccONTAPStorageVirtualMachineConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine3),
 					testAccCheckOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine2, &storageVirtualMachine3),
@@ -253,7 +253,7 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 		CheckDestroy:      testAccCheckOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineConfig_ontapStorageVirutalMachineSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
+				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
@@ -404,7 +404,7 @@ resource "aws_directory_service_directory" "test" {
 `, rName, domainName, domainPassword))
 }
 
-func testAccOntapStorageVirtualMachineBasicConfig(rName string) string {
+func testAccONTAPStorageVirtualMachineConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -413,7 +413,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName))
 }
 
-func testAccOntapStorageVirtualMachineRootVolumeSecurityStyleConfig(rName string) string {
+func testAccONTAPStorageVirtualMachineConfig_rootVolumeSecurityStyle(rName string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id             = aws_fsx_ontap_file_system.test.id
@@ -423,7 +423,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName))
 }
 
-func testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName string, pass string) string {
+func testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName string, pass string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id     = aws_fsx_ontap_file_system.test.id
@@ -433,7 +433,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, pass))
 }
 
-func testAccOntapStorageVirtualMachineTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccONTAPStorageVirtualMachineConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -446,7 +446,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccOntapStorageVirtualMachineTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccONTAPStorageVirtualMachineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -460,7 +460,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccOntapStorageVirtualMachineConfig_ontapStorageVirutalMachineSelfManagedActiveDirectory(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
+func testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
