@@ -519,6 +519,36 @@ func TestAccEC2AMI_boot(t *testing.T) {
 	})
 }
 
+func TestAccEC2AMI_tpmSupport(t *testing.T) {
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAmiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAmiConfigTpmSupport(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAmiExists(resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "tpm_support", "v2.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAmiDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -790,6 +820,26 @@ resource "aws_ami" "test" {
   root_device_name    = "/dev/sda1"
   virtualization_type = "hvm"
   boot_mode           = "uefi"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
+}
+
+func testAccAmiConfigTpmSupport(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAmiConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+  boot_mode           = "uefi"
+  tpm_support         = "v2.0"
 
   ebs_block_device {
     device_name = "/dev/sda1"

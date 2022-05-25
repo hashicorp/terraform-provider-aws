@@ -218,6 +218,10 @@ func ResourceAMIFromInstance() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
