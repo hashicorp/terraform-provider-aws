@@ -18,7 +18,7 @@ package {{ .ServicePackage }}_test
 // need to do. If something doesn't make sense for your situation, get rid of
 // it.
 //
-// Remember to register this new resource in the provider
+// Remember to register this new data source in the provider
 // (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
 // know about it.{{- end }}
 
@@ -54,7 +54,7 @@ import (
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
+// follows. Improve this data source's maintainability by following this
 // outline.
 //
 // 1. Package declaration (add "_test" since this is a test file)
@@ -75,7 +75,7 @@ import (
 // Unlike acceptance tests, unit tests do not access AWS and are focused on a
 // function (or method). Because of this, they are quick and cheap to run.
 //
-// In designing a resource's implementation, isolate complex bits from AWS bits
+// In designing a data source's implementation, isolate complex bits from AWS bits
 // so that they can be tested through a unit test. We encourage more unit tests
 // in the provider.
 //
@@ -83,7 +83,7 @@ import (
 // expanders, don't need unit testing. However, if they are complex or
 // intricate, they should be unit tested.
 {{- end }}
-func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
+func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -112,7 +112,7 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tf{{ .ServicePackage }}.FunctionFromResource(testCase.Input)
+			got, err := tf{{ .ServicePackage }}.FunctionFromDataSource(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -132,13 +132,13 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
+// standard functionality of the data source as possible, and test importing, if
 // applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
+// data source name.
 //
 // Acceptance test access AWS and cost money to run.
 {{- end }}
-func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
+func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
     {{- if .IncludeComments }}
     // TIP: This is a long-running test guard for tests that run longer than
     // 300s (5 min) generally.
@@ -147,9 +147,9 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var {{ .ResourceLower }} {{ .ServicePackage }}.Describe{{ .Resource }}Response
+	var {{ .DataSourceLower }} {{ .ServicePackage }}.Describe{{ .DataSource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceLower }}.test"
+	dataSourceName := "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -159,150 +159,35 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
+		CheckDestroy: testAccCheck{{ .DataSource }}Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{{ .Resource }}Config_basic(rName),
+				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(resourceName, &{{ .ResourceLower }}),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					testAccCheck{{ .DataSource }}Exists(dataSourceName, &{{ .DataSourceLower }}),
+					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "user.*", map[string]string{
 						"console_access": "false",
 						"groups.#":       "0",
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "{{ .ServicePackage }}", regexp.MustCompile(`{{ .ResourceLower }}:+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexp.MustCompile(`{{ .DataSourceLower }}:+.`)),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
 }
 
-func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var {{ .ResourceLower }} {{ .ServicePackage }}.Describe{{ .Resource }}Response
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceLower }}.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
-			testAccPreCheck(t)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(resourceName, &{{ .ResourceLower }}),
-					acctest.CheckResourceDisappears(acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCheck{{ .Resource }}Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceLower }}" {
-			continue
-		}
-
-		input := &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-			{{ .Resource }}Id: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.Describe{{ .Resource }}(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, {{ .ServicePackage }}.ErrCodeNotFoundException) {
-				return nil
-			}
-			return err
-		}
-
-		return fmt.Errorf("Expected {{ .Service }} {{ .Resource }} to be destroyed, %s found", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No {{ .Service }} {{ .Resource }} is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
-		resp, err := conn.Describe{{ .Resource }}(&{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-			{{ .Resource }}Id: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error describing {{ .Service }} {{ .Resource }}: %s", err.Error())
-		}
-
-		*{{ .ResourceLower }} = *resp
-
-		return nil
-	}
-}
-
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
-
-	input := &{{ .ServicePackage }}.List{{ .Resource }}sInput{}
-
-	_, err := conn.List{{ .Resource }}s(input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.{{ .Resource }}Id), aws.StringValue(after.{{ .Resource }}Id); before != after {
-			return fmt.Errorf("{{ .Service }} {{ .Resource }} (%s/%s) recreated", before, after)
-		}
-
-		return nil
-	}
-}
-
-func testAcc{{ .Resource }}Config_basic(rName, version string) string {
+func testAcc{{ .DataSource }}DataSourceConfig_basic(rName, version string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+data "aws_security_group" "test" {
   name = %[1]q
 }
 
-resource "aws_{{ .ServicePackage }}_{{ .ResourceLower }}" "test" {
-  {{ .ResourceLower }}_name             = %[1]q
+data "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}" "test" {
+  {{ .DataSourceLower }}_name             = %[1]q
   engine_type             = "Active{{ .Service }}"
   engine_version          = %[2]q
   host_instance_type      = "{{ .ServicePackage }}.t2.micro"
