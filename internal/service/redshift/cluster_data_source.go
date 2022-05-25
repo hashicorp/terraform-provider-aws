@@ -199,7 +199,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_identifier").(string)
-	rsc, err := FindClusterByID(conn, d.Id())
+	rsc, err := FindClusterByID(conn, clusterID)
 
 	if err != nil {
 		return fmt.Errorf("reading Redshift Cluster (%s): %w", clusterID, err)
