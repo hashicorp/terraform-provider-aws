@@ -1735,6 +1735,78 @@ func FindGroupByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.G
 	return output, nil
 }
 
+func findLoadBalancerStates(conn *autoscaling.AutoScaling, name string) ([]*autoscaling.LoadBalancerState, error) {
+	input := &autoscaling.DescribeLoadBalancersInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+	var output []*autoscaling.LoadBalancerState
+
+	err := describeLoadBalancersPages(conn, input, func(page *autoscaling.DescribeLoadBalancersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LoadBalancers {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findLoadBalancerTargetGroupStates(conn *autoscaling.AutoScaling, name string) ([]*autoscaling.LoadBalancerTargetGroupState, error) {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+	var output []*autoscaling.LoadBalancerTargetGroupState
+
+	err := describeLoadBalancerTargetGroupsPages(conn, input, func(page *autoscaling.DescribeLoadBalancerTargetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LoadBalancerTargetGroups {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
 	input := &autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(name),
