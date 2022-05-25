@@ -279,7 +279,6 @@ rules:
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/codeartifact
-        - internal/service/codebuild
         - internal/service/codecommit
         - internal/service/codepipeline
         - internal/service/codestarconnections
@@ -328,7 +327,6 @@ rules:
         - internal/service/rds
         - internal/service/resourcegroups
         - internal/service/resourcegroupstaggingapi
-        - internal/service/route53
         - internal/service/route53domains
         - internal/service/route53recoverycontrolconfig
         - internal/service/route53recoveryreadiness
