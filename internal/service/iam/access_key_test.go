@@ -261,7 +261,7 @@ resource "aws_iam_access_key" "test" {
 `, rName, status)
 }
 
-func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
+func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
 	cases := []struct {
 		Region   string
 		Input    string

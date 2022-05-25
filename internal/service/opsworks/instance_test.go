@@ -27,7 +27,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceCreateConfig(rName),
+				Config: testAccInstanceConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
@@ -50,7 +50,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
 			},
 			{
-				Config: testAccInstanceUpdateConfig(rName),
+				Config: testAccInstanceConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
@@ -77,7 +77,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceCreateConfig(rName),
+				Config: testAccInstanceConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
@@ -90,7 +90,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"state"},
 			},
 			{
-				Config: testAccInstanceUpdateHostNameConfig(rName),
+				Config: testAccInstanceConfig_updateHostName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc2"),
@@ -203,9 +203,9 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccInstanceUpdateHostNameConfig(rName string) string {
+func testAccInstanceConfig_updateHostName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%[1]s-web"
@@ -259,9 +259,9 @@ resource "aws_opsworks_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceCreateConfig(rName string) string {
+func testAccInstanceConfig_create(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%[1]s-web"
@@ -315,9 +315,9 @@ resource "aws_opsworks_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceUpdateConfig(rName string) string {
+func testAccInstanceConfig_update(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%[1]s-web"

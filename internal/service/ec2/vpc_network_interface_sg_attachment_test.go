@@ -215,7 +215,7 @@ resource "aws_network_interface_sg_attachment" "test" {
 
 func testAccVPCNetworkInterfaceSGAttachmentConfig_viaInstance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

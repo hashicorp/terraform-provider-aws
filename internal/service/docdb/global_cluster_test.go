@@ -201,7 +201,7 @@ func TestAccDocDBGlobalCluster_EngineVersion(t *testing.T) {
 	})
 }
 
-func TestAccDocDBGlobalCluster_SourceDbClusterIdentifier(t *testing.T) {
+func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 	var globalCluster1 docdb.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	clusterResourceName := "aws_docdb_cluster.test"
@@ -230,7 +230,7 @@ func TestAccDocDBGlobalCluster_SourceDbClusterIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccDocDBGlobalCluster_SourceDbClusterIdentifier_StorageEncrypted(t *testing.T) {
+func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testing.T) {
 	var globalCluster1 docdb.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	clusterResourceName := "aws_docdb_cluster.test"

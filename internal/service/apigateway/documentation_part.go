@@ -77,7 +77,7 @@ func resourceDocumentationPartCreate(d *schema.ResourceData, meta interface{}) e
 
 	apiId := d.Get("rest_api_id").(string)
 	out, err := conn.CreateDocumentationPart(&apigateway.CreateDocumentationPartInput{
-		Location:   expandApiGatewayDocumentationPartLocation(d.Get("location").([]interface{})),
+		Location:   expandDocumentationPartLocation(d.Get("location").([]interface{})),
 		Properties: aws.String(d.Get("properties").(string)),
 		RestApiId:  aws.String(apiId),
 	})
@@ -113,7 +113,7 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("rest_api_id", apiId)
-	d.Set("location", flattenApiGatewayDocumentationPartLocation(docPart.Location))
+	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
 	d.Set("properties", docPart.Properties)
 
 	return nil
@@ -171,7 +171,7 @@ func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) e
 	return err
 }
 
-func expandApiGatewayDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {
+func expandDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {
 	if len(l) == 0 {
 		return nil
 	}
@@ -194,7 +194,7 @@ func expandApiGatewayDocumentationPartLocation(l []interface{}) *apigateway.Docu
 	return out
 }
 
-func flattenApiGatewayDocumentationPartLocation(l *apigateway.DocumentationPartLocation) []interface{} {
+func flattenDocumentationPartLocation(l *apigateway.DocumentationPartLocation) []interface{} {
 	if l == nil {
 		return []interface{}{}
 	}

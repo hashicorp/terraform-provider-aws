@@ -27,7 +27,7 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig(rName),
+				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -53,7 +53,7 @@ func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackCreationFailureConfig(rName, cloudformation.OnFailureDoNothing),
+				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDoNothing),
 				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
@@ -70,7 +70,7 @@ func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackCreationFailureConfig(rName, cloudformation.OnFailureDelete),
+				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDelete),
 				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
@@ -87,7 +87,7 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackCreationFailureConfig(rName, cloudformation.OnFailureRollback),
+				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureRollback),
 				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
@@ -109,13 +109,13 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_withParams(rName, vpcCidrInitial),
+				Config: testAccStackConfig_params(rName, vpcCidrInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
-				Config:      testAccStackConfig_withParams(rName, vpcCidrInvalid),
+				Config:      testAccStackConfig_params(rName, vpcCidrInvalid),
 				ExpectError: regexp.MustCompile(`failed to update CloudFormation stack \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
 			},
 		},
@@ -134,7 +134,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig(rName),
+				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
@@ -211,7 +211,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_allAttributesWithBodies(rName),
+				Config: testAccStackConfig_allAttributesBodies(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -235,7 +235,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "policy_body"},
 			},
 			{
-				Config: testAccStackConfig_allAttributesWithBodies_modified(rName),
+				Config: testAccStackConfig_allAttributesBodiesModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -272,7 +272,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_withParams(rName, vpcCidrInitial),
+				Config: testAccStackConfig_params(rName, vpcCidrInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -286,7 +286,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"on_failure", "parameters"},
 			},
 			{
-				Config: testAccStackConfig_withParams(rName, vpcCidrUpdated),
+				Config: testAccStackConfig_params(rName, vpcCidrUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -310,7 +310,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack.json", "11.0.0.0/16"),
+				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
@@ -322,7 +322,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
 			},
 			{
-				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
+				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
@@ -343,7 +343,7 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_templateURL_withParams_withYAML(rName, "tf-cf-stack.test", "13.0.0.0/16"),
+				Config: testAccStackConfig_templateURLParamsYAML(rName, "tf-cf-stack.test", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
@@ -371,7 +371,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack-1.json", "11.0.0.0/16"),
+				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack-1.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
@@ -383,7 +383,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
 			},
 			{
-				Config: testAccStackConfig_templateURL_withParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
+				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
@@ -404,14 +404,14 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_withTransform(rName),
+				Config: testAccStackConfig_transform(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
 			},
 			{
 				PlanOnly: true,
-				Config:   testAccStackConfig_withTransform(rName),
+				Config:   testAccStackConfig_transform(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stack),
 				),
@@ -520,7 +520,7 @@ func testAccCheckStackDisappears(stack *cloudformation.Stack) resource.TestCheck
 	}
 }
 
-func testAccStackConfig(rName string) string {
+func testAccStackConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
@@ -554,7 +554,7 @@ STACK
 `, rName)
 }
 
-func testAccStackCreationFailureConfig(rName, onFailure string) string {
+func testAccStackConfig_creationFailure(rName, onFailure string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name       = %[1]q
@@ -776,21 +776,21 @@ var policyBody = `
 }
 `
 
-func testAccStackConfig_allAttributesWithBodies(rName string) string {
+func testAccStackConfig_allAttributesBodies(rName string) string {
 	return fmt.Sprintf(
 		testAccStackConfig_allAttributesWithBodies_tpl,
 		rName,
 		policyBody)
 }
 
-func testAccStackConfig_allAttributesWithBodies_modified(rName string) string {
+func testAccStackConfig_allAttributesBodiesModified(rName string) string {
 	return fmt.Sprintf(
 		testAccStackConfig_allAttributesWithBodies_tpl,
 		rName,
 		policyBody)
 }
 
-func testAccStackConfig_withParams(rName, cidr string) string {
+func testAccStackConfig_params(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
@@ -825,7 +825,7 @@ STACK
 `, rName, cidr)
 }
 
-func testAccStackConfig_templateURL_withParams(rName, bucketKey, vpcCidr string) string {
+func testAccStackConfig_templateURLParams(rName, bucketKey, vpcCidr string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -890,7 +890,7 @@ resource "aws_cloudformation_stack" "test" {
 `, rName, bucketKey, vpcCidr)
 }
 
-func testAccStackConfig_templateURL_withParams_withYAML(rName, bucketKey, vpcCidr string) string {
+func testAccStackConfig_templateURLParamsYAML(rName, bucketKey, vpcCidr string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -955,7 +955,7 @@ resource "aws_cloudformation_stack" "test" {
 `, rName, bucketKey, vpcCidr)
 }
 
-func testAccStackConfig_withTransform(rName string) string {
+func testAccStackConfig_transform(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q

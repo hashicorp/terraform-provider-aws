@@ -2,7 +2,7 @@ package route53
 
 const (
 	trafficPolicyDocEndpointValue      = "value"
-	trafficPolicyDocEndpointCloudfront = "cloudfront"
+	trafficPolicyDocEndpointCloudFront = "cloudfront"
 	trafficPolicyDocEndpointElastic    = "elastic-load-balancer"
 	trafficPolicyDocEndpointS3         = "s3-website"
 )
@@ -11,7 +11,7 @@ const (
 func TrafficPolicyDocEndpointType_values() []string {
 	return []string{
 		trafficPolicyDocEndpointValue,
-		trafficPolicyDocEndpointCloudfront,
+		trafficPolicyDocEndpointCloudFront,
 		trafficPolicyDocEndpointElastic,
 		trafficPolicyDocEndpointS3,
 	}

@@ -526,7 +526,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("ecs_service"); ok {
-		input.EcsServices = expandCodeDeployEcsServices(attr.([]interface{}))
+		input.EcsServices = expandECSServices(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("trigger_configuration"); ok {
@@ -646,7 +646,7 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting ec2_tag_filter: %w", err)
 	}
 
-	if err := d.Set("ecs_service", flattenCodeDeployEcsServices(group.EcsServices)); err != nil {
+	if err := d.Set("ecs_service", flattenECSServices(group.EcsServices)); err != nil {
 		return fmt.Errorf("error setting ecs_service: %w", err)
 	}
 
@@ -751,7 +751,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.HasChange("ecs_service") {
-			input.EcsServices = expandCodeDeployEcsServices(d.Get("ecs_service").([]interface{}))
+			input.EcsServices = expandECSServices(d.Get("ecs_service").([]interface{}))
 		}
 
 		if d.HasChange("trigger_configuration") {
@@ -956,7 +956,7 @@ func BuildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 	return result
 }
 
-func expandCodeDeployEcsServices(l []interface{}) []*codedeploy.ECSService {
+func expandECSServices(l []interface{}) []*codedeploy.ECSService {
 	ecsServices := make([]*codedeploy.ECSService, 0)
 
 	for _, mRaw := range l {
@@ -977,7 +977,7 @@ func expandCodeDeployEcsServices(l []interface{}) []*codedeploy.ECSService {
 	return ecsServices
 }
 
-func expandCodeDeployElbInfo(l []interface{}) []*codedeploy.ELBInfo {
+func expandELBInfo(l []interface{}) []*codedeploy.ELBInfo {
 	elbInfos := []*codedeploy.ELBInfo{}
 
 	for _, mRaw := range l {
@@ -997,7 +997,7 @@ func expandCodeDeployElbInfo(l []interface{}) []*codedeploy.ELBInfo {
 	return elbInfos
 }
 
-func expandCodeDeployTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupInfo {
+func expandTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupInfo {
 	targetGroupInfos := []*codedeploy.TargetGroupInfo{}
 
 	for _, mRaw := range l {
@@ -1017,7 +1017,7 @@ func expandCodeDeployTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupI
 	return targetGroupInfos
 }
 
-func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGroupPairInfo {
+func expandTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGroupPairInfo {
 	targetGroupPairInfos := []*codedeploy.TargetGroupPairInfo{}
 
 	for _, mRaw := range l {
@@ -1028,9 +1028,9 @@ func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGr
 		m := mRaw.(map[string]interface{})
 
 		targetGroupPairInfo := &codedeploy.TargetGroupPairInfo{
-			ProdTrafficRoute: expandCodeDeployTrafficRoute(m["prod_traffic_route"].([]interface{})),
-			TargetGroups:     expandCodeDeployTargetGroupInfo(m["target_group"].([]interface{})),
-			TestTrafficRoute: expandCodeDeployTrafficRoute(m["test_traffic_route"].([]interface{})),
+			ProdTrafficRoute: expandTrafficRoute(m["prod_traffic_route"].([]interface{})),
+			TargetGroups:     expandTargetGroupInfo(m["target_group"].([]interface{})),
+			TestTrafficRoute: expandTrafficRoute(m["test_traffic_route"].([]interface{})),
 		}
 
 		targetGroupPairInfos = append(targetGroupPairInfos, targetGroupPairInfo)
@@ -1039,7 +1039,7 @@ func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGr
 	return targetGroupPairInfos
 }
 
-func expandCodeDeployTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
+func expandTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1084,15 +1084,15 @@ func ExpandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	lbInfo := list[0].(map[string]interface{})
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.ElbInfoList = expandCodeDeployElbInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.ElbInfoList = expandELBInfo(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.TargetGroupInfoList = expandCodeDeployTargetGroupInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.TargetGroupInfoList = expandTargetGroupInfo(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_pair_info"]; ok && len(attr.([]interface{})) > 0 {
-		loadBalancerInfo.TargetGroupPairInfoList = expandCodeDeployTargetGroupPairInfo(attr.([]interface{}))
+		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfo(attr.([]interface{}))
 	}
 
 	return loadBalancerInfo
@@ -1273,7 +1273,7 @@ func AlarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 	return result
 }
 
-func flattenCodeDeployEcsServices(ecsServices []*codedeploy.ECSService) []interface{} {
+func flattenECSServices(ecsServices []*codedeploy.ECSService) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, ecsService := range ecsServices {
@@ -1292,7 +1292,7 @@ func flattenCodeDeployEcsServices(ecsServices []*codedeploy.ECSService) []interf
 	return l
 }
 
-func flattenCodeDeployElbInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
+func flattenELBInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, elbInfo := range elbInfos {
@@ -1310,7 +1310,7 @@ func flattenCodeDeployElbInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
 	return l
 }
 
-func flattenCodeDeployTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroupInfo) []interface{} {
+func flattenTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroupInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupInfo := range targetGroupInfos {
@@ -1328,7 +1328,7 @@ func flattenCodeDeployTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroup
 	return l
 }
 
-func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.TargetGroupPairInfo) []interface{} {
+func flattenTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.TargetGroupPairInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupPairInfo := range targetGroupPairInfos {
@@ -1337,9 +1337,9 @@ func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.Tar
 		}
 
 		m := map[string]interface{}{
-			"prod_traffic_route": flattenCodeDeployTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
-			"target_group":       flattenCodeDeployTargetGroupInfo(targetGroupPairInfo.TargetGroups),
-			"test_traffic_route": flattenCodeDeployTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
+			"prod_traffic_route": flattenTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
+			"target_group":       flattenTargetGroupInfo(targetGroupPairInfo.TargetGroups),
+			"test_traffic_route": flattenTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
 		}
 
 		l = append(l, m)
@@ -1348,7 +1348,7 @@ func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.Tar
 	return l
 }
 
-func flattenCodeDeployTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []interface{} {
+func flattenTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []interface{} {
 	if trafficRoute == nil {
 		return []interface{}{}
 	}
@@ -1386,9 +1386,9 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 	}
 
 	m := map[string]interface{}{
-		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployElbInfo(loadBalancerInfo.ElbInfoList)),
-		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
-		"target_group_pair_info": flattenCodeDeployTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
+		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenELBInfo(loadBalancerInfo.ElbInfoList)),
+		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
+		"target_group_pair_info": flattenTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
 	return []interface{}{m}

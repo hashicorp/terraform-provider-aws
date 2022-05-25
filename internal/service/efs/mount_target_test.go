@@ -71,7 +71,7 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpnGatewayDestroy,
+		CheckDestroy:      testAccCheckVPNGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig(ct),
@@ -408,7 +408,7 @@ resource "aws_efs_mount_target" "test" {
 `, rName)
 }
 
-func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
+func testAccCheckVPNGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

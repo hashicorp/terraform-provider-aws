@@ -180,7 +180,7 @@ func testAccCheckAutocalingAlbAttachmentExists(asgname string, targetGroupCount 
 }
 
 func testAccAttachment_alb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -286,7 +286,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAttachment_elb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 

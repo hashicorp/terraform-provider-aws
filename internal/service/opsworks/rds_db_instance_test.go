@@ -30,7 +30,7 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRDSDBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSDBInstance(rName, "foo", "barbarbarbar"),
+				Config: testAccRDSDBInstanceConfig_basic(rName, "foo", "barbarbarbar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
@@ -38,7 +38,7 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRDSDBInstance(rName, "bar", "barbarbarbar"),
+				Config: testAccRDSDBInstanceConfig_basic(rName, "bar", "barbarbarbar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
@@ -46,7 +46,7 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRDSDBInstance(rName, "bar", "foofoofoofoofoo"),
+				Config: testAccRDSDBInstanceConfig_basic(rName, "bar", "foofoofoofoofoo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
@@ -54,7 +54,7 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRDSDBInstanceForceNew(rName),
+				Config: testAccRDSDBInstanceConfig_forceNew(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
@@ -141,9 +141,9 @@ func testAccCheckRDSDBDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRDSDBInstance(rName, userName, password string) string {
+func testAccRDSDBInstanceConfig_basic(rName, userName, password string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccDBInstanceBasicConfig(),
 		fmt.Sprintf(`
 resource "aws_opsworks_rds_db_instance" "test" {
@@ -156,9 +156,9 @@ resource "aws_opsworks_rds_db_instance" "test" {
 `, userName, password))
 }
 
-func testAccRDSDBInstanceForceNew(rName string) string {
+func testAccRDSDBInstanceConfig_forceNew(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccDBInstanceConfig_orderableClassMySQL(),
 		`
 resource "aws_opsworks_rds_db_instance" "test" {

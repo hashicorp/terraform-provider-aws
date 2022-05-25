@@ -457,7 +457,7 @@ func testAccCheckFlowExists(resourceName string, flow *appflow.FlowDefinition) r
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
-		resp, err := tfappflow.FindFlowByArn(context.Background(), conn, rs.Primary.ID)
+		resp, err := tfappflow.FindFlowByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -481,7 +481,7 @@ func testAccCheckFlowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfappflow.FindFlowByArn(context.Background(), conn, rs.Primary.ID)
+		_, err := tfappflow.FindFlowByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

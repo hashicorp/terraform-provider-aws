@@ -2747,7 +2747,7 @@ func testAccPreCheckFleet(t *testing.T) {
 }
 
 func testAccFleetConfig_BaseLaunchTemplate(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -2776,7 +2776,7 @@ resource "aws_ec2_fleet" "test" {
 
 func testAccFleetConfig_multipleNetworkInterfaces(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2917,7 +2917,7 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateID(rName, launchTemplateResourceName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -2951,7 +2951,7 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateName(rName, launchTemplateResourceName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -2985,7 +2985,7 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateVersion(rName, instanceType string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = %[2]q

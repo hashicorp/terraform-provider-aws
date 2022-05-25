@@ -135,7 +135,7 @@ func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
 
 func testAccLaunchTemplateDataSourceConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`

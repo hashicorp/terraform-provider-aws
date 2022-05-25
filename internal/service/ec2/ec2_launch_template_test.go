@@ -2982,7 +2982,7 @@ resource "aws_launch_template" "test" {
 
 func testAccLaunchTemplateConfig_blockDeviceMappingsEBS(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3019,7 +3019,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccLaunchTemplateConfig_blockDeviceMappingsEBSDeleteOnTermination(rName string, deleteOnTermination bool) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3057,7 +3057,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccLaunchTemplateConfig_blockDeviceMappingsEBSGP3(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3652,7 +3652,7 @@ resource "aws_launch_template" "test" {
 
 func testAccLaunchTemplateConfig_asgBasic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3679,7 +3679,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccLaunchTemplateConfig_asgUpdate(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.nano", "t2.nano"),
 		fmt.Sprintf(`
@@ -3706,7 +3706,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccLaunchTemplateConfig_instanceMarketOptionsBasic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3741,7 +3741,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccLaunchTemplateConfig_instanceMarketOptionsUpdate(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`

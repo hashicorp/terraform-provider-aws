@@ -135,7 +135,7 @@ func TestAccRedshiftSubnetGroup_updateSubnetIDs(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: testAccSubnetGroupConfig_updateSubnetIDs(rInt),
+				Config: testAccSubnetGroupConfig_updateIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -406,7 +406,7 @@ resource "aws_redshift_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccSubnetGroupConfig_updateSubnetIDs(rInt int) string {
+func testAccSubnetGroupConfig_updateIDs(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

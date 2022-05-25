@@ -70,7 +70,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName),
+				Config: testAccLaunchConfigurationDataSourceConfig_ebsNoDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "image_id"),
@@ -107,7 +107,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 }
 
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name                        = %[1]q
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -145,7 +145,7 @@ data "aws_launch_configuration" "test" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
@@ -170,7 +170,7 @@ data "aws_launch_configuration" "foo" {
 
 func testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -189,9 +189,9 @@ data "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string {
+func testAccLaunchConfigurationDataSourceConfig_ebsNoDevice(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q

@@ -376,7 +376,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		var err error
 
-		globalCluster, err = findGlobalClusterByArn(ctx, conn, dbClusterIdentifier)
+		globalCluster, err = findGlobalClusterByARN(ctx, conn, dbClusterIdentifier)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -390,7 +390,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = findGlobalClusterByArn(ctx, conn, dbClusterIdentifier)
+		_, err = findGlobalClusterByARN(ctx, conn, dbClusterIdentifier)
 	}
 
 	if err != nil {
@@ -417,7 +417,7 @@ func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.Re
 		return err
 	}
 	for _, clusterMember := range globalCluster.GlobalClusterMembers {
-		err := waitForClusterUpdate(conn, findGlobalClusterIdByArn(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
+		err := waitForClusterUpdate(conn, findGlobalClusterIDByARN(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return err
 		}

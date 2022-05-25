@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const docdbClusterParameterGroupMaxParamsBulkEdit = 20
+const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
 
@@ -216,10 +216,10 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 			// we've got them all.
 			for parameters != nil {
 				var paramsToModify []*docdb.Parameter
-				if len(parameters) <= docdbClusterParameterGroupMaxParamsBulkEdit {
+				if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
 					paramsToModify, parameters = parameters[:], nil
 				} else {
-					paramsToModify, parameters = parameters[:docdbClusterParameterGroupMaxParamsBulkEdit], parameters[docdbClusterParameterGroupMaxParamsBulkEdit:]
+					paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
 				}
 				parameterGroupName := d.Id()
 				modifyOpts := docdb.ModifyDBClusterParameterGroupInput{

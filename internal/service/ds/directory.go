@@ -195,7 +195,7 @@ func ResourceDirectory() *schema.Resource {
 	}
 }
 
-func buildVpcSettings(d *schema.ResourceData) (vpcSettings *directoryservice.DirectoryVpcSettings, err error) {
+func buildVPCSettings(d *schema.ResourceData) (vpcSettings *directoryservice.DirectoryVpcSettings, err error) {
 	v, ok := d.GetOk("vpc_settings")
 	if !ok {
 		return nil, fmt.Errorf("vpc_settings is required for type = SimpleAD or MicrosoftAD")
@@ -304,7 +304,7 @@ func createSimple(conn *directoryservice.DirectoryService, d *schema.ResourceDat
 		input.ShortName = aws.String(v.(string))
 	}
 
-	input.VpcSettings, err = buildVpcSettings(d)
+	input.VpcSettings, err = buildVPCSettings(d)
 	if err != nil {
 		return "", err
 	}
@@ -339,7 +339,7 @@ func createActive(conn *directoryservice.DirectoryService, d *schema.ResourceDat
 		input.Edition = aws.String(v.(string))
 	}
 
-	input.VpcSettings, err = buildVpcSettings(d)
+	input.VpcSettings, err = buildVPCSettings(d)
 	if err != nil {
 		return "", err
 	}
