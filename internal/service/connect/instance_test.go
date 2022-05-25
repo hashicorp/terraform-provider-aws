@@ -128,7 +128,7 @@ func testAccInstance_saml(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_sAML(rName),
+				Config: testAccInstanceConfig_saml(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeSaml),
 					testAccCheckInstanceExists(resourceName, &v),
@@ -285,7 +285,7 @@ resource "aws_connect_instance" "test" {
 `, rName, domain)
 }
 
-func testAccInstanceConfig_sAML(rName string) string {
+func testAccInstanceConfig_saml(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "SAML"

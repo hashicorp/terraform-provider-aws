@@ -65,7 +65,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureConfig_basicTwoLevels(rName, levelOneName, levelTwoName),
+				Config: testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -87,7 +87,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureConfig_basicThreeLevels(rName, levelOneName, levelTwoName, levelThreeName),
+				Config: testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -113,7 +113,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureConfig_basicFourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName),
+				Config: testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -143,7 +143,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureConfig_basicFiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName),
+				Config: testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -307,7 +307,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName))
 }
 
-func testAccUserHierarchyStructureConfig_basicTwoLevels(rName, levelOneName, levelTwoName string) string {
+func testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyStructureBaseConfig(rName),
 		fmt.Sprintf(`
@@ -327,7 +327,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName, levelTwoName))
 }
 
-func testAccUserHierarchyStructureConfig_basicThreeLevels(rName, levelOneName, levelTwoName, levelThreeName string) string {
+func testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyStructureBaseConfig(rName),
 		fmt.Sprintf(`
@@ -351,7 +351,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName, levelTwoName, levelThreeName))
 }
 
-func testAccUserHierarchyStructureConfig_basicFourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName string) string {
+func testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyStructureBaseConfig(rName),
 		fmt.Sprintf(`
@@ -379,7 +379,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName, levelTwoName, levelThreeName, levelFourName))
 }
 
-func testAccUserHierarchyStructureConfig_basicFiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName string) string {
+func testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyStructureBaseConfig(rName),
 		fmt.Sprintf(`
