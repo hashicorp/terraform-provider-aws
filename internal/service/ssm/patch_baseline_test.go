@@ -291,7 +291,7 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineConfig_basicApprovedesNonSec(name),
+				Config: testAccPatchBaselineConfig_basicApprovedPatchesNonSec(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "true"),
@@ -318,7 +318,7 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineConfig_basicRejectesAction(name),
+				Config: testAccPatchBaselineConfig_basicRejectPatchesAction(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
 					resource.TestCheckResourceAttr(resourceName, "rejected_patches_action", "ALLOW_AS_DEPENDENCY"),
@@ -624,7 +624,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineConfig_basicApprovedesNonSec(rName string) string {
+func testAccPatchBaselineConfig_basicApprovedPatchesNonSec(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                                 = %q
@@ -637,7 +637,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineConfig_basicRejectesAction(rName string) string {
+func testAccPatchBaselineConfig_basicRejectPatchesAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "patch-baseline-%s"
