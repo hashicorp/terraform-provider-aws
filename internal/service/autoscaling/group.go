@@ -235,11 +235,6 @@ func ResourceGroup() *schema.Resource {
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 
-			"context": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"capacity_rebalance": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -737,10 +732,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
-	if v, ok := d.GetOk("context"); ok {
-		createOpts.Context = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
 		createOpts.CapacityRebalance = aws.Bool(v.(bool))
 	}
@@ -883,7 +874,6 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", g.AutoScalingGroupARN)
-	d.Set("context", g.Context)
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("desired_capacity", g.DesiredCapacity)
@@ -1070,10 +1060,6 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("default_cooldown") {
 		opts.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
-	}
-
-	if d.HasChange("context") {
-		opts.Context = aws.String(d.Get("context").(string))
 	}
 
 	if d.HasChange("capacity_rebalance") {

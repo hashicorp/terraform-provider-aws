@@ -347,7 +347,6 @@ The following arguments are supported:
 * `min_size` - (Required) The minimum size of the Auto Scaling Group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `availability_zones` - (Optional) A list of one or more availability zones for the group. Used for EC2-Classic, attaching a network interface via id from a launch template and default subnets when not specified with `vpc_zone_identifier` argument. Conflicts with `vpc_zone_identifier`.
-* `context` - (Optional) Reserved.
 * `capacity_rebalance` - (Optional) Indicates whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
