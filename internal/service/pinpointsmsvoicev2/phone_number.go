@@ -3,13 +3,11 @@ package pinpointsmsvoicev2
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -31,10 +29,6 @@ func ResourcePhoneNumber() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_two_way_channel": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,11 +70,6 @@ func ResourcePhoneNumber() *schema.Resource {
 			"phone_number": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 			},
 			"registration_id": {
 				Type:     schema.TypeString,
@@ -128,10 +117,6 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("opt_out_list_name"); ok {
 		in.OptOutListName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("pool_id"); ok {
-		in.PoolId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("registration_id"); ok {
@@ -189,7 +174,6 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", out.PhoneNumberArn)
-	d.Set("arn_two_way_channel", out.TwoWayChannelArn)
 	d.Set("deletion_protection_enabled", out.DeletionProtectionEnabled)
 	d.Set("iso_country_code", out.IsoCountryCode)
 	d.Set("message_type", out.MessageType)
@@ -197,7 +181,6 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("number_type", out.NumberType)
 	d.Set("opt_out_list_name", out.OptOutListName)
 	d.Set("phone_number", out.PhoneNumber)
-	d.Set("pool_id", out.PoolId)
 	d.Set("self_managed_opt_outs_enabled", out.SelfManagedOptOutsEnabled)
 	d.Set("two_way_channel_arn", out.TwoWayChannelArn)
 	d.Set("two_way_channel_enabled", out.TwoWayEnabled)
@@ -303,105 +286,4 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return nil
-}
-
-func waitPhoneNumberCreated(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string, timeout time.Duration) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{pinpointsmsvoicev2.NumberStatusActive},
-		Refresh:                   statusPhoneNumber(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*pinpointsmsvoicev2.PhoneNumberInformation); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitPhoneNumberUpdated(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string, timeout time.Duration) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{pinpointsmsvoicev2.NumberStatusActive},
-		Refresh:                   statusPhoneNumber(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*pinpointsmsvoicev2.PhoneNumberInformation); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string, timeout time.Duration) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{},
-		Refresh: statusPhoneNumber(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*pinpointsmsvoicev2.PhoneNumberInformation); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findPhoneNumberByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, aws.ToString(out.Status), nil
-	}
-}
-
-func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.PinpointSMSVoiceV2, id string) (*pinpointsmsvoicev2.PhoneNumberInformation, error) {
-	in := &pinpointsmsvoicev2.DescribePhoneNumbersInput{
-		PhoneNumberIds: aws.StringSlice([]string{id}),
-	}
-
-	out, err := conn.DescribePhoneNumbersWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, pinpointsmsvoicev2.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.PhoneNumbers == nil || len(out.PhoneNumbers) != 1 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.PhoneNumbers[0], nil
-}
-
-func checkUpdateAfterCreateNeeded(d *schema.ResourceData, schemaKeys []string) bool {
-	for _, schemaKey := range schemaKeys {
-		if _, ok := d.GetOk(schemaKey); ok {
-			return true
-		}
-	}
-
-	return false
 }
