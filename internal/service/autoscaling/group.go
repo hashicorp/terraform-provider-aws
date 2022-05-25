@@ -1087,7 +1087,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
 		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
-			return fmt.Errorf("error setting tag: %w", err)
+			return fmt.Errorf("setting tag: %w", err)
 		}
 	}
 
@@ -1237,12 +1237,11 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		newTags := Tags(nTag.Merge(nTags))
 
 		if err := UpdateTags(conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
-			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("load_balancers") {
-
 		o, n := d.GetChange("load_balancers")
 		if o == nil {
 			o = new(schema.Set)
@@ -1250,17 +1249,14 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if n == nil {
 			n = new(schema.Set)
 		}
-
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		add := flex.ExpandStringSet(ns.Difference(os))
 
-		if len(remove) > 0 {
-			// API only supports removing 10 at a time
-			var batches [][]*string
-
+		if remove := flex.ExpandStringSet(os.Difference(ns)); len(remove) > 0 {
+			// API only supports removing 10 at a time.
 			batchSize := 10
+
+			var batches [][]*string
 
 			for batchSize < len(remove) {
 				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
@@ -1274,7 +1270,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 
 				if err != nil {
-					return fmt.Errorf("error detaching Auto Scaling Group (%s) Load Balancers: %s", d.Id(), err)
+					return fmt.Errorf("detaching Auto Scaling Group (%s) load balancers: %w", d.Id(), err)
 				}
 
 				if err := waitUntilGroupLoadBalancersRemoved(conn, d.Id()); err != nil {
@@ -1283,8 +1279,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if len(add) > 0 {
-			// API only supports adding 10 at a time
+		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {
+			// API only supports adding 10 at a time.
 			batchSize := 10
 
 			var batches [][]*string
@@ -1301,7 +1297,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 
 				if err != nil {
-					return fmt.Errorf("error attaching Auto Scaling Group (%s) Load Balancers: %s", d.Id(), err)
+					return fmt.Errorf("attaching Auto Scaling Group (%s) load balancers: %w", d.Id(), err)
 				}
 
 				if err := waitUntilGroupLoadBalancersAdded(conn, d.Id()); err != nil {
@@ -1312,7 +1308,6 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("target_group_arns") {
-
 		o, n := d.GetChange("target_group_arns")
 		if o == nil {
 			o = new(schema.Set)
@@ -1320,17 +1315,14 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if n == nil {
 			n = new(schema.Set)
 		}
-
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		add := flex.ExpandStringSet(ns.Difference(os))
 
-		if len(remove) > 0 {
-			// AWS API only supports adding/removing 10 at a time
-			var batches [][]*string
-
+		if remove := flex.ExpandStringSet(os.Difference(ns)); len(remove) > 0 {
+			// AWS API only supports adding/removing 10 at a time.
 			batchSize := 10
+
+			var batches [][]*string
 
 			for batchSize < len(remove) {
 				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
@@ -1342,8 +1334,9 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					AutoScalingGroupName: aws.String(d.Id()),
 					TargetGroupARNs:      batch,
 				})
+
 				if err != nil {
-					return fmt.Errorf("Error updating Load Balancers Target Groups for Auto Scaling Group (%s), error: %s", d.Id(), err)
+					return fmt.Errorf("detaching Auto Scaling Group (%s) target groups: %w", d.Id(), err)
 				}
 
 				if err := waitUntilGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
@@ -1353,7 +1346,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		}
 
-		if len(add) > 0 {
+		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {
+			// AWS API only supports adding/removing 10 at a time.
 			batchSize := 10
 
 			var batches [][]*string
@@ -1370,7 +1364,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 
 				if err != nil {
-					return fmt.Errorf("Error updating Load Balancers Target Groups for Auto Scaling Group (%s), error: %s", d.Id(), err)
+					return fmt.Errorf("attaching Auto Scaling Group (%s) target groups: %w", d.Id(), err)
 				}
 
 				if err := waitUntilGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
