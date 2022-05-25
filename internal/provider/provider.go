@@ -808,6 +808,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_cluster":           redshift.DataSourceCluster(),
 			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
 			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
+			"aws_redshift_subnet_group":      redshift.DataSourceSubnetGroup(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 

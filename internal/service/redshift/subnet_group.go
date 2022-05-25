@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -31,7 +32,11 @@ func ResourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Managed by Terraform",
+			},
 			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -42,20 +47,12 @@ func ResourceSubnetGroup() *schema.Resource {
 					validation.StringNotInSlice([]string{"default"}, false),
 				),
 			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -97,30 +94,22 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := redshift.DescribeClusterSubnetGroupsInput{
-		ClusterSubnetGroupName: aws.String(d.Id()),
-	}
+	subnetgroup, err := FindSubnetGroupByName(conn, d.Id())
 
-	describeResp, err := conn.DescribeClusterSubnetGroups(&describeOpts)
-	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
-			log.Printf("[INFO] Redshift Subnet Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if !d.IsNewResource() && len(describeResp.ClusterSubnetGroups) == 0 {
-		log.Printf("[INFO] Redshift Subnet Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Redshift Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("error reading Redshift Subnet Group (%s): %w", d.Id(), err)
+	}
+
 	d.Set("name", d.Id())
-	d.Set("description", describeResp.ClusterSubnetGroups[0].Description)
-	d.Set("subnet_ids", subnetIdsToSlice(describeResp.ClusterSubnetGroups[0].Subnets))
-	tags := KeyValueTags(describeResp.ClusterSubnetGroups[0].Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	d.Set("description", subnetgroup.Description)
+	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
+	tags := KeyValueTags(subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -187,7 +176,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteClusterSubnetGroup(&redshift.DeleteClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrCodeEquals(err, "ClusterSubnetGroupNotFoundFault") {
+	if err != nil && tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
 		return nil
 	}
 
