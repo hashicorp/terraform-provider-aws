@@ -8,18 +8,11 @@ on:
   pull_request:
     paths:
       - internal/**
+      - .github/workflows/semgrep-ci.yml
       - .semgrep.yml
       - .semgrep-service-name*yml
 
 jobs:
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-       fetch-depth: 0
-    - name: semgrep
-      uses: returntocorp/semgrep-action@v1
   naming_semgrep0:
     name: Semgrep Naming Scan A-C,EC2
     runs-on: ubuntu-latest
