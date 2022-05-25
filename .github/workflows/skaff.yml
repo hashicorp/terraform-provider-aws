@@ -12,7 +12,7 @@ on:
 
 jobs:
   compile_skaff:
-    name: Compile compile_skaff
+    name: Compile skaff
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
