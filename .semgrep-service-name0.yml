@@ -327,7 +327,6 @@ rules:
         - internal/service/meta
         - internal/service/networkfirewall
         - internal/service/networkmanager
-        - internal/service/opsworks
         - internal/service/organizations
         - internal/service/outposts
         - internal/service/ram
