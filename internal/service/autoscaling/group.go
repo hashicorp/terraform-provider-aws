@@ -1374,28 +1374,32 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if instanceRefreshRaw, ok := d.GetOk("instance_refresh"); ok {
-		instanceRefresh := instanceRefreshRaw.([]interface{})
+	if v, ok := d.GetOk("instance_refresh"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+
 		if !shouldRefreshInstances {
-			if len(instanceRefresh) > 0 && instanceRefresh[0] != nil {
-				m := instanceRefresh[0].(map[string]interface{})
-				attrsSet := m["triggers"].(*schema.Set)
-				attrs := attrsSet.List()
-				strs := make([]string, len(attrs))
-				for i, a := range attrs {
-					strs[i] = a.(string)
+			if v, ok := tfMap["triggers"].(*schema.Set); ok && v.Len() > 0 {
+				var triggers []string
+
+				for _, v := range v.List() {
+					if v := v.(string); v != "" {
+						triggers = append(triggers, v)
+					}
 				}
-				if attrsSet.Contains("tag") && !attrsSet.Contains("tags") {
-					strs = append(strs, "tags") // nozero
-				} else if !attrsSet.Contains("tag") && attrsSet.Contains("tags") {
-					strs = append(strs, "tag") // nozero
+
+				if v.Contains("tag") && !v.Contains("tags") {
+					triggers = append(triggers, "tags") // nozero
+				} else if !v.Contains("tag") && v.Contains("tags") {
+					triggers = append(triggers, "tag") // nozero
 				}
-				shouldRefreshInstances = d.HasChanges(strs...)
+
+				shouldRefreshInstances = d.HasChanges(triggers...)
 			}
 		}
+
 		if shouldRefreshInstances {
-			if err := GroupRefreshInstances(conn, d.Id(), instanceRefresh); err != nil {
-				return fmt.Errorf("failed to start instance refresh of Auto Scaling Group %s: %w", d.Id(), err)
+			if err := startInstanceRefresh(conn, expandStartInstanceRefreshInput(d.Id(), tfMap)); err != nil {
+				return err
 			}
 		}
 	}
@@ -3311,86 +3315,6 @@ func flattenWarmPoolInstanceReusePolicy(apiObject *autoscaling.InstanceReusePoli
 	return tfMap
 }
 
-func CreateGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	return &autoscaling.StartInstanceRefreshInput{
-		AutoScalingGroupName: aws.String(asgName),
-		Strategy:             aws.String(m["strategy"].(string)),
-		Preferences:          expandGroupInstanceRefreshPreferences(m["preferences"].([]interface{})),
-	}
-}
-
-func expandGroupInstanceRefreshPreferences(l []interface{}) *autoscaling.RefreshPreferences {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	refreshPreferences := &autoscaling.RefreshPreferences{}
-
-	if v, ok := m["checkpoint_delay"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			refreshPreferences.CheckpointDelay = aws.Int64(v)
-		}
-	}
-
-	if l, ok := m["checkpoint_percentages"].([]interface{}); ok && len(l) > 0 {
-		p := make([]*int64, len(l))
-		for i, v := range l {
-			p[i] = aws.Int64(int64(v.(int)))
-		}
-		refreshPreferences.CheckpointPercentages = p
-	}
-
-	if v, ok := m["instance_warmup"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			refreshPreferences.InstanceWarmup = aws.Int64(v)
-		}
-	}
-
-	if v, ok := m["min_healthy_percentage"]; ok {
-		refreshPreferences.MinHealthyPercentage = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["skip_matching"]; ok {
-		refreshPreferences.SkipMatching = aws.Bool(v.(bool))
-	}
-
-	return refreshPreferences
-}
-
-func GroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
-	input := CreateGroupInstanceRefreshInput(asgName, refreshConfig)
-	err := resource.Retry(instanceRefreshStartedTimeout, func() *resource.RetryError {
-		_, err := conn.StartInstanceRefresh(input)
-		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {
-			cancelErr := cancelInstanceRefresh(conn, asgName)
-			if cancelErr != nil {
-				return resource.NonRetryableError(cancelErr)
-			}
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.StartInstanceRefresh(input)
-	}
-	if err != nil {
-		return fmt.Errorf("error starting Instance Refresh: %w", err)
-	}
-
-	return nil
-}
-
 func cancelInstanceRefresh(conn *autoscaling.AutoScaling, name string) error {
 	input := &autoscaling.CancelInstanceRefreshInput{
 		AutoScalingGroupName: aws.String(name),
@@ -3410,6 +3334,32 @@ func cancelInstanceRefresh(conn *autoscaling.AutoScaling, name string) error {
 
 	if err != nil {
 		return fmt.Errorf("waiting for Auto Scaling Group (%s) instance refresh cancel: %w", name, err)
+	}
+
+	return nil
+}
+
+func startInstanceRefresh(conn *autoscaling.AutoScaling, input *autoscaling.StartInstanceRefreshInput) error {
+	name := aws.StringValue(input.AutoScalingGroupName)
+
+	_, err := tfresource.RetryWhen(instanceRefreshStartedTimeout,
+		func() (interface{}, error) {
+			return conn.StartInstanceRefresh(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {
+				if err := cancelInstanceRefresh(conn, name); err != nil {
+					return false, err
+				}
+
+				return true, err
+			}
+
+			return false, err
+		})
+
+	if err != nil {
+		return fmt.Errorf("starting Auto Scaling Group (%s) instance refresh: %w", name, err)
 	}
 
 	return nil
