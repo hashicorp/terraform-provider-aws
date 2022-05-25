@@ -22,7 +22,7 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 		CheckDestroy:      testAccCheckInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInfrastructureConfigurations_filter(rName),
+				Config: testAccInfrastructureConfigurationsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +34,7 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 	})
 }
 
-func testAccConfigInfrastructureConfigurations_filter(rName string) string {
+func testAccInfrastructureConfigurationsDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = %[1]q
