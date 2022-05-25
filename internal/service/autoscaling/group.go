@@ -1811,8 +1811,21 @@ func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.Desc
 	input := &autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(name),
 	}
+	var output *autoscaling.DescribeWarmPoolOutput
 
-	output, err := conn.DescribeWarmPool(input)
+	err := describeWarmPoolPages(conn, input, func(page *autoscaling.DescribeWarmPoolOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		if output == nil {
+			output = page
+		} else {
+			output.Instances = append(output.Instances, page.Instances...)
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil, &resource.NotFoundError{
