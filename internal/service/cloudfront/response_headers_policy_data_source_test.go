@@ -151,6 +151,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
   }
 
   server_timing_headers_config {
+    enabled       = true
     sampling_rate = 10
   }
 }

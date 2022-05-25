@@ -2,6 +2,7 @@ package cloudfront
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -254,6 +255,10 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"sampling_rate": {
 							Type:     schema.TypeFloat,
 							Computed: true,
