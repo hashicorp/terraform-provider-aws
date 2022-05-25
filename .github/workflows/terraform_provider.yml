@@ -399,4 +399,3 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: Try building
         run: go build -tags=sweep
-
