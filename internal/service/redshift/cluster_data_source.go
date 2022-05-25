@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -318,7 +319,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("bucket_name", loggingStatus.BucketName)
 		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
-		d.Set("log_exports", loggingStatus.LogExports)
+		d.Set("log_exports", flex.FlattenStringSet(loggingStatus.LogExports))
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
 	}
 
