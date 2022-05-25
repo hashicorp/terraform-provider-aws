@@ -138,7 +138,7 @@ data "aws_redshift_cluster" "test" {
 }
 
 func testAccClusterDataSourceConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVpcWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
