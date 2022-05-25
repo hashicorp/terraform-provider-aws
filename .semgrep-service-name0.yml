@@ -339,7 +339,6 @@ rules:
         - internal/service/s3control
         - internal/service/s3outposts
         - internal/service/schemas
-        - internal/service/secretsmanager
         - internal/service/servicecatalog
         - internal/service/servicequotas
         - internal/service/ssm
