@@ -528,12 +528,12 @@ func TestAccEC2AMI_tpmSupport(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAmiDestroy,
+		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAmiConfigTpmSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "tpm_support", "v2.0"),
 				),
 			},
@@ -831,7 +831,7 @@ resource "aws_ami" "test" {
 
 func testAccAmiConfigTpmSupport(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
