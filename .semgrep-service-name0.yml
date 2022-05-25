@@ -343,7 +343,6 @@ rules:
         - internal/service/servicecatalog
         - internal/service/servicediscovery
         - internal/service/servicequotas
-        - internal/service/simpledb
         - internal/service/ssm
         - internal/service/ssoadmin
     patterns:
