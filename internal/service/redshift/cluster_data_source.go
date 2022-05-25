@@ -2,7 +2,6 @@ package redshift
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -199,18 +198,23 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster := d.Get("cluster_identifier").(string)
-
-	log.Printf("[INFO] Reading Redshift Cluster Information: %s", cluster)
-
+	clusterID := d.Get("cluster_identifier").(string)
 	rsc, err := FindClusterByID(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("Error describing Redshift Cluster: %s, error: %w", cluster, err)
+		return fmt.Errorf("reading Redshift Cluster (%s): %w", clusterID, err)
 	}
 
-	d.SetId(cluster)
+	d.SetId(clusterID)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   redshift.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
@@ -218,12 +222,12 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
+		return err
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
-		return fmt.Errorf("error setting cluster_nodes: %w", err)
+		return fmt.Errorf("setting cluster_nodes: %w", err)
 	}
 
 	if len(rsc.ClusterParameterGroups) > 0 {
@@ -235,18 +239,16 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	var csg []string
 	for _, g := range rsc.ClusterSecurityGroups {
-		csg = append(csg, *g.ClusterSecurityGroupName)
+		csg = append(csg, aws.StringValue(g.ClusterSecurityGroupName))
 	}
-	if err := d.Set("cluster_security_groups", csg); err != nil {
-		return fmt.Errorf("Error saving Cluster Security Group Names to state for Redshift Cluster (%s): %w", cluster, err)
-	}
+	d.Set("cluster_security_groups", csg)
 
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 
 	if len(rsc.ClusterNodes) > 1 {
-		d.Set("cluster_type", "multi-node")
+		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
-		d.Set("cluster_type", "single-node")
+		d.Set("cluster_type", clusterTypeSingleNode)
 	}
 
 	d.Set("cluster_version", rsc.ClusterVersion)
@@ -266,11 +268,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	var iamRoles []string
 	for _, i := range rsc.IamRoles {
-		iamRoles = append(iamRoles, *i.IamRoleArn)
+		iamRoles = append(iamRoles, aws.StringValue(i.IamRoleArn))
 	}
-	if err := d.Set("iam_roles", iamRoles); err != nil {
-		return fmt.Errorf("Error saving IAM Roles to state for Redshift Cluster (%s): %w", cluster, err)
-	}
+	d.Set("iam_roles", iamRoles)
 
 	d.Set("kms_key_id", rsc.KmsKeyId)
 	d.Set("master_username", rsc.MasterUsername)
@@ -284,35 +284,23 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 
 	if err := d.Set("tags", KeyValueTags(rsc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	d.Set("vpc_id", rsc.VpcId)
 
 	var vpcg []string
 	for _, g := range rsc.VpcSecurityGroups {
-		vpcg = append(vpcg, *g.VpcSecurityGroupId)
+		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
 	}
-	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
-		return fmt.Errorf("Error saving VPC Security Group IDs to state for Redshift Cluster (%s): %w", cluster, err)
-	}
+	d.Set("vpc_security_group_ids", vpcg)
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-
-	log.Printf("[INFO] Reading Redshift Cluster Logging Status: %s", cluster)
-	loggingStatus, loggingErr := conn.DescribeLoggingStatus(&redshift.DescribeLoggingStatusInput{
-		ClusterIdentifier: aws.String(cluster),
+	loggingStatus, err := conn.DescribeLoggingStatus(&redshift.DescribeLoggingStatusInput{
+		ClusterIdentifier: aws.String(clusterID),
 	})
 
-	if loggingErr != nil {
-		return loggingErr
+	if err != nil {
+		return fmt.Errorf("reading Redshift Cluster (%s) logging status: %w", d.Id(), err)
 	}
 
 	if loggingStatus != nil && aws.BoolValue(loggingStatus.LoggingEnabled) {

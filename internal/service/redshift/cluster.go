@@ -597,7 +597,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
+		Service:   redshift.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
@@ -610,7 +610,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
+		return err
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
