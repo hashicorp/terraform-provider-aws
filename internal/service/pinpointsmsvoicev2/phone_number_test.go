@@ -2,10 +2,10 @@ package pinpointsmsvoicev2_test
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
