@@ -827,7 +827,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	createInput := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
-		MixedInstancesPolicy:             expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{})),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 	}
 	updateInput := &autoscaling.UpdateAutoScalingGroupInput{
@@ -893,6 +892,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("max_instance_lifetime"); ok {
 		createInput.MaxInstanceLifetime = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		createInput.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok {
@@ -1188,7 +1191,9 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("mixed_instances_policy") {
-			input.MixedInstancesPolicy = expandMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
+			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+			}
 			shouldRefreshInstances = true
 		}
 
@@ -2169,97 +2174,108 @@ func waitWarmPoolDrained(conn *autoscaling.AutoScaling, name string, timeout tim
 	return nil, err
 }
 
-func expandInstancesDistribution(l []interface{}) *autoscaling.InstancesDistribution {
-	if len(l) == 0 || l[0] == nil {
+func expandInstancesDistribution(tfMap map[string]interface{}) *autoscaling.InstancesDistribution {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &autoscaling.InstancesDistribution{}
 
-	instancesDistribution := &autoscaling.InstancesDistribution{}
-
-	if v, ok := m["on_demand_allocation_strategy"]; ok && v.(string) != "" {
-		instancesDistribution.OnDemandAllocationStrategy = aws.String(v.(string))
+	if v, ok := tfMap["on_demand_allocation_strategy"].(string); ok && v != "" {
+		apiObject.OnDemandAllocationStrategy = aws.String(v)
 	}
 
-	if v, ok := m["on_demand_base_capacity"]; ok {
-		instancesDistribution.OnDemandBaseCapacity = aws.Int64(int64(v.(int)))
+	if v, ok := tfMap["on_demand_base_capacity"].(int); ok {
+		apiObject.OnDemandBaseCapacity = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["on_demand_percentage_above_base_capacity"]; ok {
-		instancesDistribution.OnDemandPercentageAboveBaseCapacity = aws.Int64(int64(v.(int)))
+	if v, ok := tfMap["on_demand_percentage_above_base_capacity"].(int); ok {
+		apiObject.OnDemandPercentageAboveBaseCapacity = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["spot_allocation_strategy"]; ok && v.(string) != "" {
-		instancesDistribution.SpotAllocationStrategy = aws.String(v.(string))
+	if v, ok := tfMap["spot_allocation_strategy"].(string); ok && v != "" {
+		apiObject.SpotAllocationStrategy = aws.String(v)
 	}
 
-	if v, ok := m["spot_instance_pools"]; ok && v.(int) != 0 {
-		instancesDistribution.SpotInstancePools = aws.Int64(int64(v.(int)))
+	if v, ok := tfMap["spot_instance_pools"].(int); ok && v != 0 {
+		apiObject.SpotInstancePools = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["spot_max_price"]; ok {
-		instancesDistribution.SpotMaxPrice = aws.String(v.(string))
+	if v, ok := tfMap["spot_max_price"].(string); ok {
+		apiObject.SpotMaxPrice = aws.String(v)
 	}
 
-	return instancesDistribution
+	return apiObject
 }
 
-func expandMixedInstancesLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
-	if len(l) == 0 || l[0] == nil {
+func expandLaunchTemplate(tfMap map[string]interface{}) *autoscaling.LaunchTemplate {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &autoscaling.LaunchTemplate{}
 
-	launchTemplate := &autoscaling.LaunchTemplate{
-		LaunchTemplateSpecification: expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
+	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := m["override"]; ok {
-		launchTemplate.Overrides = expandLaunchTemplateOverrides(v.([]interface{}))
+	if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Overrides = expandLaunchTemplateOverrideses(v)
 	}
 
-	return launchTemplate
+	return apiObject
 }
 
-func expandLaunchTemplateOverrides(l []interface{}) []*autoscaling.LaunchTemplateOverrides {
-	if len(l) == 0 {
+func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.LaunchTemplateOverrides {
+	if tfMap == nil {
 		return nil
 	}
 
-	launchTemplateOverrides := make([]*autoscaling.LaunchTemplateOverrides, len(l))
-	for i, m := range l {
-		if m == nil {
-			launchTemplateOverrides[i] = &autoscaling.LaunchTemplateOverrides{}
+	apiObject := &autoscaling.LaunchTemplateOverrides{}
+
+	if v, ok := tfMap["instance_requirements"].([]interface{}); ok && len(v) > 0 {
+		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["weighted_capacity"].(string); ok && v != "" {
+		apiObject.WeightedCapacity = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateOverrideses(tfList []interface{}) []*autoscaling.LaunchTemplateOverrides {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*autoscaling.LaunchTemplateOverrides
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		launchTemplateOverrides[i] = expandLaunchTemplateOverride(m.(map[string]interface{}))
-	}
-	return launchTemplateOverrides
-}
+		apiObject := expandLaunchTemplateOverrides(tfMap)
 
-func expandLaunchTemplateOverride(m map[string]interface{}) *autoscaling.LaunchTemplateOverrides {
-	launchTemplateOverrides := &autoscaling.LaunchTemplateOverrides{}
+		if apiObject == nil {
+			continue
+		}
 
-	if v, ok := m["instance_requirements"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		launchTemplateOverrides.InstanceRequirements = expandInstanceRequirements(v.([]interface{})[0].(map[string]interface{}))
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if v, ok := m["instance_type"]; ok && v.(string) != "" {
-		launchTemplateOverrides.InstanceType = aws.String(v.(string))
-	}
-
-	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
-		launchTemplateOverrides.LaunchTemplateSpecification = expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
-	}
-
-	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
-		launchTemplateOverrides.WeightedCapacity = aws.String(v.(string))
-	}
-
-	return launchTemplateOverrides
+	return apiObjects
 }
 
 func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.InstanceRequirements {
@@ -2516,49 +2532,27 @@ func expandVCpuCountRequest(tfMap map[string]interface{}) *autoscaling.VCpuCount
 	return apiObject
 }
 
-func expandMixedInstancesLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
-	launchTemplateSpecification := &autoscaling.LaunchTemplateSpecification{}
-
-	if len(l) == 0 || l[0] == nil {
-		return launchTemplateSpecification
+func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
+	if tfMap == nil {
+		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["launch_template_id"]; ok && v.(string) != "" {
-		launchTemplateSpecification.LaunchTemplateId = aws.String(v.(string))
-	}
+	apiObject := &autoscaling.LaunchTemplateSpecification{}
 
 	// API returns both ID and name, which Terraform saves to state. Next update returns:
 	// ValidationError: Valid requests must contain either launchTemplateId or LaunchTemplateName
 	// Prefer the ID if we have both.
-	if v, ok := m["launch_template_name"]; ok && v.(string) != "" && launchTemplateSpecification.LaunchTemplateId == nil {
-		launchTemplateSpecification.LaunchTemplateName = aws.String(v.(string))
+	if v, ok := tfMap["launch_template_id"]; ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v.(string))
+	} else if v, ok := tfMap["launch_template_name"]; ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
-	if v, ok := m["version"]; ok && v.(string) != "" {
-		launchTemplateSpecification.Version = aws.String(v.(string))
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
 	}
 
-	return launchTemplateSpecification
-}
-
-func expandMixedInstancesPolicy(l []interface{}) *autoscaling.MixedInstancesPolicy {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	mixedInstancesPolicy := &autoscaling.MixedInstancesPolicy{
-		LaunchTemplate: expandMixedInstancesLaunchTemplate(m["launch_template"].([]interface{})),
-	}
-
-	if v, ok := m["instances_distribution"]; ok {
-		mixedInstancesPolicy.InstancesDistribution = expandInstancesDistribution(v.([]interface{}))
-	}
-
-	return mixedInstancesPolicy
+	return apiObject
 }
 
 func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
@@ -2578,6 +2572,24 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.MixedInstancesPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.MixedInstancesPolicy{}
+
+	if v, ok := tfMap["instances_distribution"].([]interface{}); ok && len(v) > 0 {
+		apiObject.InstancesDistribution = expandInstancesDistribution(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
+		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
