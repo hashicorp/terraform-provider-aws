@@ -360,27 +360,27 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 
 func testAccClusterInstanceConfigPerf(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-	resource "aws_kms_key" "test" {
-		description = "Terraform acc test %[1]s"
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test %[1]s"
 	  
-		policy = <<POLICY
-	  {
-		"Version": "2012-10-17",
-		"Id": "kms-tf-1",
-		"Statement": [
-		  {
-			"Sid": "Enable IAM User Permissions",
-			"Effect": "Allow",
-			"Principal": {
-			  "AWS": "*"
-			},
-			"Action": "kms:*",
-			"Resource": "*"
-		  }
-		]
-	  }
-	  POLICY
-	  }
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+  	  "Sid": "Enable IAM User Permissions",
+	  "Effect": "Allow",
+	  "Principal": {
+	    "AWS": "*"
+	  },
+	  "Action": "kms:*",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
+}
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = %[1]q
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
@@ -395,12 +395,12 @@ data "aws_docdb_orderable_db_instance" "test" {
 }
 
 resource "aws_docdb_cluster_instance" "test" {
-  identifier         = %[1]q
-  cluster_identifier = aws_docdb_cluster.default.id
-  instance_class     = data.aws_docdb_orderable_db_instance.test.instance_class
-  promotion_tier     = "3"
-  enable_performance_insights = true
-  performance_insights_kms_key_id = aws_kms_key.test.arn
+  identifier         				= %[1]q
+  cluster_identifier 				= aws_docdb_cluster.default.id
+  instance_class     				= data.aws_docdb_orderable_db_instance.test.instance_class
+  promotion_tier     				= "3"
+  enable_performance_insights 		= true
+  performance_insights_kms_key_id 	= aws_kms_key.test.arn
 }
 `, rName))
 }

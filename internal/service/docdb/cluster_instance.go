@@ -330,12 +330,16 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("dbi_resource_id", db.DbiResourceId)
+	//Commented the below code as aws api does not expose these values and should be uncommented
+	//as soon as the vlues are available in the DescribeDBClusters output
 	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	//Commented the below code as aws api does not expose these values and should be uncommented
+	//as soon as the vlues are available in the DescribeDBClusters output
 	//d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
