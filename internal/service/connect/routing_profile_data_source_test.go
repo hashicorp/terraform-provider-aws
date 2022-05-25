@@ -19,9 +19,9 @@ func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	datasourceName := "data.aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileDataSourceConfig_RoutingProfileID(rName, rName2, rName3, rName4),
@@ -71,9 +71,9 @@ func TestAccConnectRoutingProfileDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileDataSourceConfig_Name(rName, rName2, rName3, rName4),

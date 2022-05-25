@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccPullThroughCacheRule_basic(t *testing.T) {
+func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
@@ -44,7 +44,7 @@ func TestAccPullThroughCacheRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccPullThroughCacheRule_disappears(t *testing.T) {
+func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
@@ -66,7 +66,7 @@ func TestAccPullThroughCacheRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
+func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 

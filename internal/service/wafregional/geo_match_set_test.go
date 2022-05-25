@@ -28,7 +28,7 @@ func TestAccWAFRegionalGeoMatchSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGeoMatchSetConfig(geoMatchSet),
+				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -67,7 +67,7 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGeoMatchSetConfig(geoMatchSet),
+				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
@@ -77,7 +77,7 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGeoMatchSetChangeNameConfig(geoMatchSetNewName),
+				Config: testAccGeoMatchSetConfig_changeName(geoMatchSetNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(resourceName, &after),
 					testAccCheckGeoMatchSetIdDiffers(&before, &after),
@@ -108,7 +108,7 @@ func TestAccWAFRegionalGeoMatchSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGeoMatchSetConfig(geoMatchSet),
+				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(resourceName, &v),
 					testAccCheckGeoMatchSetDisappears(&v),
@@ -131,7 +131,7 @@ func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 		CheckDestroy:      testAccCheckGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGeoMatchSetConfig(setName),
+				Config: testAccGeoMatchSetConfig_basic(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
@@ -314,7 +314,7 @@ func testAccCheckGeoMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGeoMatchSetConfig(name string) string {
+func testAccGeoMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
   name = "%s"
@@ -332,7 +332,7 @@ resource "aws_wafregional_geo_match_set" "test" {
 `, name)
 }
 
-func testAccGeoMatchSetChangeNameConfig(name string) string {
+func testAccGeoMatchSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
   name = "%s"

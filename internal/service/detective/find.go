@@ -51,7 +51,7 @@ func FindGraphByARN(conn *detective.Detective, ctx context.Context, arn string) 
 	return result, nil
 }
 
-func FindInvitationByGraphArn(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
+func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
 	input := &detective.ListInvitationsInput{}
 
 	var result *string
@@ -85,7 +85,7 @@ func FindInvitationByGraphArn(ctx context.Context, conn *detective.Detective, gr
 	return result, nil
 }
 
-func FindMemberByGraphArnAndAccountID(ctx context.Context, conn *detective.Detective, graphARN string, accountID string) (*detective.MemberDetail, error) {
+func FindMemberByGraphARNAndAccountID(ctx context.Context, conn *detective.Detective, graphARN string, accountID string) (*detective.MemberDetail, error) {
 	input := &detective.ListMembersInput{
 		GraphArn: aws.String(graphARN),
 	}

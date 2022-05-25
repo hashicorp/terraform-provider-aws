@@ -94,7 +94,7 @@ func testAccCheckLambdaFunctionAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByARNWithContext(context.Background(), conn, instanceID, functionArn)
 
 		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			continue
@@ -130,7 +130,7 @@ func testAccCheckLambdaFunctionAssociationExists(resourceName string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByARNWithContext(context.Background(), conn, instanceID, functionArn)
 
 		if err != nil {
 			return fmt.Errorf("error finding Connect Lambda Function Association by Function Arn (%s): %w", functionArn, err)

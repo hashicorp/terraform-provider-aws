@@ -26,12 +26,12 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2),
+				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
@@ -60,12 +60,12 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfig_allowedPrincipals(rName1, rName2),
+				Config: testAccVPCEndpointServiceConfig_allowedPrincipals(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
@@ -81,9 +81,9 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceConfig_allowedPrincipalsUpdated(rName1, rName2),
+				Config: testAccVPCEndpointServiceConfig_allowedPrincipalsUpdated(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "true"),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
@@ -105,12 +105,12 @@ func TestAccVPCEndpointService_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2),
+				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -125,15 +125,15 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckELBv2GatewayLoadBalancer(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfig_GatewayLoadBalancerArns(rName, 1),
+				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "1"),
 				),
 			},
@@ -143,9 +143,9 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceConfig_GatewayLoadBalancerArns(rName, 2),
+				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "2"),
 				),
 			},
@@ -163,12 +163,12 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfigTags1(rName1, rName2, "key1", "value1"),
+				Config: testAccVPCEndpointServiceConfig_tags1(rName1, rName2, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -179,18 +179,18 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceConfigTags2(rName1, rName2, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCEndpointServiceConfig_tags2(rName1, rName2, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVpcEndpointServiceConfigTags1(rName1, rName2, "key2", "value2"),
+				Config: testAccVPCEndpointServiceConfig_tags1(rName1, rName2, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -209,12 +209,12 @@ func TestAccVPCEndpointService_PrivateDNS_name(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, "example.com"),
+				Config: testAccVPCEndpointServiceConfig_privateDNSName(rName1, rName2, "example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
@@ -226,9 +226,9 @@ func TestAccVPCEndpointService_PrivateDNS_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, "changed.example.com"),
+				Config: testAccVPCEndpointServiceConfig_privateDNSName(rName1, rName2, "changed.example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
@@ -238,7 +238,7 @@ func TestAccVPCEndpointService_PrivateDNS_name(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcEndpointServiceDestroy(s *terraform.State) error {
+func testAccCheckVPCEndpointServiceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -266,7 +266,7 @@ func testAccCheckVpcEndpointServiceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVpcEndpointServiceExists(n string, svcCfg *ec2.ServiceConfiguration) resource.TestCheckFunc {
+func testAccCheckVPCEndpointServiceExists(n string, svcCfg *ec2.ServiceConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -295,7 +295,7 @@ func testAccCheckVpcEndpointServiceExists(n string, svcCfg *ec2.ServiceConfigura
 	}
 }
 
-func testAccVpcEndpointServiceConfig_base(rName1, rName2 string) string {
+func testAccVPCEndpointServiceConfig_base(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -374,7 +374,7 @@ data "aws_caller_identity" "current" {}
 `, rName1, rName2)
 }
 
-func testAccVpcEndpointServiceConfig_GatewayLoadBalancerArns(rName string, count int) string {
+func testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -414,9 +414,9 @@ resource "aws_vpc_endpoint_service" "test" {
 `, rName, count))
 }
 
-func testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2 string) string {
+func testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
 		`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
@@ -428,9 +428,9 @@ resource "aws_vpc_endpoint_service" "test" {
 `)
 }
 
-func testAccVpcEndpointServiceConfig_allowedPrincipals(rName1, rName2 string) string {
+func testAccVPCEndpointServiceConfig_allowedPrincipals(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
@@ -450,9 +450,9 @@ resource "aws_vpc_endpoint_service" "test" {
 `, rName1))
 }
 
-func testAccVpcEndpointServiceConfig_allowedPrincipalsUpdated(rName1, rName2 string) string {
+func testAccVPCEndpointServiceConfig_allowedPrincipalsUpdated(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
@@ -471,9 +471,9 @@ resource "aws_vpc_endpoint_service" "test" {
 `, rName1))
 }
 
-func testAccVpcEndpointServiceConfigTags1(rName1, rName2, tagKey1, tagValue1 string) string {
+func testAccVPCEndpointServiceConfig_tags1(rName1, rName2, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
@@ -489,9 +489,9 @@ resource "aws_vpc_endpoint_service" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccVpcEndpointServiceConfigTags2(rName1, rName2, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCEndpointServiceConfig_tags2(rName1, rName2, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
@@ -508,9 +508,9 @@ resource "aws_vpc_endpoint_service" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, dnsName string) string {
+func testAccVPCEndpointServiceConfig_privateDNSName(rName1, rName2, dnsName string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false

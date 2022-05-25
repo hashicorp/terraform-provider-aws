@@ -571,7 +571,7 @@ func TestAccSSMParameter_secure(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_DataType_awsEC2Image(t *testing.T) {
+func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 	var param ssm.Parameter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_parameter.test"
@@ -772,7 +772,7 @@ resource "aws_ssm_parameter" "test" {
 
 func testAccParameterDataTypeEC2ImageConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name      = %[1]q

@@ -16,9 +16,9 @@ func TestAccConnectUserHierarchyStructureDataSource_instanceID(t *testing.T) {
 	datasourceName := "data.aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureDataSourceConfig_InstanceID(rName),

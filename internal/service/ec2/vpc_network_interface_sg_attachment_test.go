@@ -27,7 +27,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceSGAttachmentConfig(rName),
+				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", networkInterfaceResourceName, "id"),
@@ -49,7 +49,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceSGAttachmentConfig(rName),
+				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkInterfaceSGAttachment(), resourceName),
@@ -73,7 +73,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceSGAttachmentViaInstanceConfig(rName),
+				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_viaInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
@@ -103,7 +103,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceSGAttachmentMultipleConfig(rName),
+				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName1),
 					resource.TestCheckResourceAttrPair(resourceName1, "network_interface_id", networkInterfaceResourceName, "id"),
@@ -170,7 +170,7 @@ func testAccCheckNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNetworkInterfaceSGAttachmentConfig(rName string) string {
+func testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -213,9 +213,9 @@ resource "aws_network_interface_sg_attachment" "test" {
 `, rName)
 }
 
-func testAccNetworkInterfaceSGAttachmentViaInstanceConfig(rName string) string {
+func testAccVPCNetworkInterfaceSGAttachmentConfig_viaInstance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -264,7 +264,7 @@ resource "aws_network_interface_sg_attachment" "test" {
 `, rName))
 }
 
-func testAccNetworkInterfaceSGAttachmentMultipleConfig(rName string) string {
+func testAccVPCNetworkInterfaceSGAttachmentConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

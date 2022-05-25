@@ -37,7 +37,7 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 3600),
+				Config: testAccTrafficPolicyInstanceConfig_basic(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s.%s", rName, zoneName)),
@@ -66,7 +66,7 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 360),
+				Config: testAccTrafficPolicyInstanceConfig_basic(rName, zoneName, 360),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceTrafficPolicyInstance(), resourceName),
@@ -90,14 +90,14 @@ func TestAccRoute53TrafficPolicyInstance_update(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 3600),
+				Config: testAccTrafficPolicyInstanceConfig_basic(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "3600"),
 				),
 			},
 			{
-				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 7200),
+				Config: testAccTrafficPolicyInstanceConfig_basic(rName, zoneName, 7200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "7200"),
@@ -160,7 +160,7 @@ func testAccCheckTrafficPolicyInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccTrafficPolicyInstanceConfig(rName, zoneName string, ttl int) string {
+func testAccTrafficPolicyInstanceConfig_basic(rName, zoneName string, ttl int) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = %[2]q

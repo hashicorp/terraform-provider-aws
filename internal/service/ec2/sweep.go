@@ -2316,9 +2316,9 @@ func sweepIPAMPoolCIDRs(region string) error {
 				}
 
 				for _, v := range page.IpamPoolCidrs {
-					r := ResourceVPCIpamPoolCidr()
+					r := ResourceIPAMPoolCIDR()
 					d := r.Data(nil)
-					d.SetId(encodeIpamPoolCidrId(aws.StringValue(v.Cidr), poolID))
+					d.SetId(encodeIPAMPoolCIDRId(aws.StringValue(v.Cidr), poolID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -2371,7 +2371,7 @@ func sweepIPAMPools(region string) error {
 		}
 
 		for _, v := range page.IpamPools {
-			r := ResourceVPCIpamPool()
+			r := ResourceIPAMPool()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamPoolId))
 
@@ -2421,7 +2421,7 @@ func sweepIPAMScopes(region string) error {
 				continue
 			}
 
-			r := ResourceVPCIpamScope()
+			r := ResourceIPAMScope()
 			d := r.Data(nil)
 			d.SetId(scopeID)
 
@@ -2464,7 +2464,7 @@ func sweepIPAMs(region string) error {
 		}
 
 		for _, v := range page.Ipams {
-			r := ResourceVPCIpam()
+			r := ResourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamId))
 

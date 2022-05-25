@@ -62,7 +62,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
-				Default:      "true",
+				Computed:     true,
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"automatic_failover_enabled": {
@@ -253,7 +253,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == elasticacheDefaultRedisPort {
+					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
 						return true
 					}
 					return false

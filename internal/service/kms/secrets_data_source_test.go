@@ -27,7 +27,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSKmsSecretsDataSourceKey,
+				Config: testAccSecretsDataSourceConfig_key,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					testAccSecretsEncryptDataSource(&key, plaintext, &encryptedPayload),
@@ -72,7 +72,7 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 			ProviderFactories: acctest.ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccCheckSecretsSecretDataSource(*encryptedPayload),
+					Config: testAccSecretsDataSourceConfig_secret(*encryptedPayload),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", "1"),
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
@@ -85,15 +85,15 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 	}
 }
 
-const testAccCheckAWSKmsSecretsDataSourceKey = `
+const testAccSecretsDataSourceConfig_key = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = "Testing the Terraform AWS KMS Secrets data_source"
 }
 `
 
-func testAccCheckSecretsSecretDataSource(payload string) string {
-	return testAccCheckAWSKmsSecretsDataSourceKey + fmt.Sprintf(`
+func testAccSecretsDataSourceConfig_secret(payload string) string {
+	return testAccSecretsDataSourceConfig_key + fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
     name    = "secret1"

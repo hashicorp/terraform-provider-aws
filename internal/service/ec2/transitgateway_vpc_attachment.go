@@ -105,7 +105,7 @@ func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta inte
 		},
 		SubnetIds:         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 

@@ -22,11 +22,11 @@ func TestAccWAFV2IPSetDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIPSetDataSource_NonExistent(name),
+				Config:      testAccIPSetDataSourceConfig_nonExistent(name),
 				ExpectError: regexp.MustCompile(`WAFv2 IPSet not found`),
 			},
 			{
-				Config: testAccIPSetDataSource_Name(name),
+				Config: testAccIPSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "addresses", resourceName, "addresses"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -42,7 +42,7 @@ func TestAccWAFV2IPSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccIPSetDataSource_Name(name string) string {
+func testAccIPSetDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "%s"
@@ -57,7 +57,7 @@ data "aws_wafv2_ip_set" "test" {
 `, name)
 }
 
-func testAccIPSetDataSource_NonExistent(name string) string {
+func testAccIPSetDataSourceConfig_nonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "%s"

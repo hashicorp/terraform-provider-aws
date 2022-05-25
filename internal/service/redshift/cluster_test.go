@@ -40,6 +40,8 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
 			{
@@ -50,7 +52,55 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_aqua(t *testing.T) {
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_aqua(rName, "enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccClusterConfig_aqua(rName, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "disabled"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_aqua(rName, "enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+				),
 			},
 		},
 	})
@@ -91,7 +141,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyClusterSnapshot(rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithFinalSnapshotConfig(rName),
+				Config: testAccClusterConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 				),
@@ -104,6 +154,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 		},
@@ -139,6 +190,7 @@ func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 		},
@@ -171,6 +223,7 @@ func TestAccRedshiftCluster_enhancedVPCRoutingEnabled(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -212,6 +265,7 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -219,6 +273,14 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "false"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_loggingCloudWatch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.log_destination_type", "cloudwatch"),
 				),
 			},
 		},
@@ -390,7 +452,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigTags1(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -405,10 +467,11 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
-				Config: testAccClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -417,7 +480,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfigTags1(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -504,7 +567,7 @@ func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocati
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 0),
+				Config: testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -537,7 +600,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 0),
+				Config: testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -546,7 +609,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 				),
 			},
 			{
-				Config:      testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 1),
+				Config:      testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 1),
 				ExpectError: regexp.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
 			},
 		},
@@ -639,6 +702,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
+					"apply_immediately",
 				},
 			},
 			{
@@ -662,7 +726,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName),
+				Config:      testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName),
 				ExpectError: regexp.MustCompile("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true"),
 			},
 		},
@@ -681,7 +745,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyClusterSnapshot(rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCreateSnapshotConfig(rName),
+				Config: testAccClusterConfig_createSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
@@ -690,11 +754,11 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 				),
 			},
 			// Apply a configuration without the source cluster to ensure final snapshot creation.
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 			},
 			{
-				Config: testAccClusterRestoreFromSnapshotConfig(rName),
+				Config: testAccClusterConfig_restoreFromSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
@@ -711,6 +775,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 					"master_password",
 					"skip_final_snapshot",
 					"snapshot_identifier",
+					"apply_immediately",
 				},
 			},
 		},
@@ -892,6 +957,24 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
+func testAccClusterConfig_aqua(rName, status string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+  aqua_configuration_status           = %[2]q
+  apply_immediately                   = true
+}
+`, rName, status))
+}
+
 func testAccClusterConfig_encrypted(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -974,7 +1057,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterWithFinalSnapshotConfig(rName string) string {
+func testAccClusterConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1149,6 +1232,29 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
+func testAccClusterConfig_loggingCloudWatch(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+
+  logging {
+    enable               = true
+    log_destination_type = "cloudwatch"
+    log_exports          = ["connectionlog"]
+  }
+
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
 func testAccClusterConfig_snapshotCopyDisabled(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
@@ -1197,7 +1303,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1217,7 +1323,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
@@ -1476,7 +1582,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, regionIndex))
 }
 
-func testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName string, regionIndex int) string {
+func testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName string, regionIndex int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 		fmt.Sprintf(`
@@ -1518,7 +1624,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, enabled))
 }
 
-func testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName string) string {
+func testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
@@ -1537,7 +1643,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterCreateSnapshotConfig(rName string) string {
+func testAccClusterConfig_createSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier        = %[1]q
@@ -1552,7 +1658,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterRestoreFromSnapshotConfig(rName string) string {
+func testAccClusterConfig_restoreFromSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier  = %[1]q

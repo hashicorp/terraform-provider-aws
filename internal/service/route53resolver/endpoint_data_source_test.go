@@ -24,7 +24,7 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEndpointDataSourceConfig_NonExistent,
+				Config:      testAccEndpointDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile("The ID provided could not be found"),
 			},
 			{
@@ -53,7 +53,7 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEndpointDataSourceConfig_NonExistentFilter,
+				Config:      testAccEndpointDataSourceConfig_nonExistentFilter,
 				ExpectError: regexp.MustCompile("Your query returned no results. Please change your search criteria and try again"),
 			},
 			{
@@ -203,13 +203,13 @@ data "aws_route53_resolver_endpoint" "foo" {
 `, direction, name))
 }
 
-const testAccEndpointDataSourceConfig_NonExistent = `
+const testAccEndpointDataSourceConfig_nonExistent = `
 data "aws_route53_resolver_endpoint" "foo" {
   resolver_endpoint_id = "rslvr-in-8g85830108dd4c82b"
 }
 `
 
-const testAccEndpointDataSourceConfig_NonExistentFilter = `
+const testAccEndpointDataSourceConfig_nonExistentFilter = `
 data "aws_route53_resolver_endpoint" "foo" {
   filter {
     name   = "Name"

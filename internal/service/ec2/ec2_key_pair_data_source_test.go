@@ -28,7 +28,7 @@ func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairDataSourceConfig(rName, publicKey),
+				Config: testAccKeyPairDataSourceConfig_basic(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "fingerprint", resourceName, "fingerprint"),
@@ -53,7 +53,7 @@ func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccKeyPairDataSourceConfig(rName, publicKey string) string {
+func testAccKeyPairDataSourceConfig_basic(rName, publicKey string) string {
 	return fmt.Sprintf(`
 data "aws_key_pair" "by_name" {
   key_name = aws_key_pair.test.key_name

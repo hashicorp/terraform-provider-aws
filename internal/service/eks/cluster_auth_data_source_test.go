@@ -20,7 +20,7 @@ func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSEksClusterAuthConfig_basic,
+				Config: testAccClusterAuthDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
@@ -57,7 +57,7 @@ func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAWSEksClusterAuthConfig_basic = `
+const testAccClusterAuthDataSourceConfig_basic = `
 data "aws_eks_cluster_auth" "test" {
   name = "foobar"
 }

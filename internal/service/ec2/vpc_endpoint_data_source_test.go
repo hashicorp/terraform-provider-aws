@@ -141,7 +141,7 @@ func TestAccVPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointDataSourceConfig_gatewayWithRouteTableAndTags(rName),
+				Config: testAccVPCEndpointDataSourceConfig_gatewayRouteTableAndTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
@@ -302,7 +302,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointDataSourceConfig_gatewayWithRouteTableAndTags(rName string) string {
+func testAccVPCEndpointDataSourceConfig_gatewayRouteTableAndTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

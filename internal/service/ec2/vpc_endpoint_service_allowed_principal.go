@@ -39,7 +39,7 @@ func resourceVPCEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, me
 	svcId := d.Get("vpc_endpoint_service_id").(string)
 	arn := d.Get("principal_arn").(string)
 
-	_, err := findResourceVpcEndpointServiceAllowedPrincipals(conn, svcId)
+	_, err := findResourceVPCEndpointServiceAllowedPrincipals(conn, svcId)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func resourceVPCEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, me
 		return fmt.Errorf("Error creating VPC Endpoint Service allowed principal: %s", err.Error())
 	}
 
-	d.SetId(vpcEndpointServiceIdPrincipalArnHash(svcId, arn))
+	d.SetId(vpcEndpointServiceIdPrincipalARNHash(svcId, arn))
 
 	return resourceVPCEndpointServiceAllowedPrincipalRead(d, meta)
 }
@@ -63,7 +63,7 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta
 	svcId := d.Get("vpc_endpoint_service_id").(string)
 	arn := d.Get("principal_arn").(string)
 
-	principals, err := findResourceVpcEndpointServiceAllowedPrincipals(conn, svcId)
+	principals, err := findResourceVPCEndpointServiceAllowedPrincipals(conn, svcId)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
 			log.Printf("[WARN]VPC Endpoint Service (%s) not found, removing VPC Endpoint Service allowed principal (%s) from state", svcId, d.Id())
@@ -109,7 +109,7 @@ func resourceVPCEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, me
 	return nil
 }
 
-func findResourceVpcEndpointServiceAllowedPrincipals(conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
+func findResourceVPCEndpointServiceAllowedPrincipals(conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
 	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
 		ServiceId: aws.String(id),
 	})
@@ -120,6 +120,6 @@ func findResourceVpcEndpointServiceAllowedPrincipals(conn *ec2.EC2, id string) (
 	return resp.AllowedPrincipals, nil
 }
 
-func vpcEndpointServiceIdPrincipalArnHash(svcId, arn string) string {
+func vpcEndpointServiceIdPrincipalARNHash(svcId, arn string) string {
 	return fmt.Sprintf("a-%s%d", svcId, create.StringHashcode(arn))
 }

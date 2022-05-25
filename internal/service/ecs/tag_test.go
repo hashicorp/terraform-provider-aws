@@ -74,7 +74,7 @@ func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfigResourceArnBatchComputeEnvironment(rName),
+				Config: testAccTagConfig_resourceARNBatchComputeEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 				),
@@ -141,7 +141,7 @@ resource "aws_ecs_tag" "test" {
 `, rName, key, value)
 }
 
-func testAccTagConfigResourceArnBatchComputeEnvironment(rName string) string {
+func testAccTagConfig_resourceARNBatchComputeEnvironment(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
