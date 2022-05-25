@@ -323,7 +323,6 @@ rules:
         - internal/service/lambda
         - internal/service/logs
         - internal/service/meta
-        - internal/service/networkfirewall
         - internal/service/networkmanager
         - internal/service/organizations
         - internal/service/ram
