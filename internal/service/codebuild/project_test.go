@@ -652,7 +652,7 @@ func TestAccCodeBuildProject_Logs_cloudWatchLogs(t *testing.T) {
 		CheckDestroy:      testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_logsCloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", ""),
+				Config: testAccProjectConfig_cloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
@@ -661,7 +661,7 @@ func TestAccCodeBuildProject_Logs_cloudWatchLogs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectConfig_logsCloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", "stream-name"),
+				Config: testAccProjectConfig_cloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", "stream-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
@@ -670,7 +670,7 @@ func TestAccCodeBuildProject_Logs_cloudWatchLogs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectConfig_logsCloudWatchLogs(rName, codebuild.LogsConfigStatusTypeDisabled, "", ""),
+				Config: testAccProjectConfig_cloudWatchLogs(rName, codebuild.LogsConfigStatusTypeDisabled, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
@@ -697,7 +697,7 @@ func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 		CheckDestroy:      testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_logsS3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", false),
+				Config: testAccProjectConfig_s3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
@@ -706,7 +706,7 @@ func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectConfig_logsS3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", true),
+				Config: testAccProjectConfig_s3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
@@ -715,7 +715,7 @@ func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectConfig_logsS3Logs(rName, codebuild.LogsConfigStatusTypeDisabled, "", false),
+				Config: testAccProjectConfig_s3Logs(rName, codebuild.LogsConfigStatusTypeDisabled, "", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
@@ -3280,7 +3280,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_logsCloudWatchLogs(rName, status, gName, sName string) string {
+func testAccProjectConfig_cloudWatchLogs(rName, status, gName, sName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3348,7 +3348,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, combineArtifacts, computeTypesAllowed, maximumBuildsAllowed, timeoutInMins))
 }
 
-func testAccProjectConfig_logsS3Logs(rName, status, location string, encryptionDisabled bool) string {
+func testAccProjectConfig_s3Logs(rName, status, location string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
