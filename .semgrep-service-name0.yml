@@ -332,7 +332,6 @@ rules:
         - internal/service/opsworks
         - internal/service/organizations
         - internal/service/outposts
-        - internal/service/pricing
         - internal/service/ram
         - internal/service/rds
         - internal/service/resourcegroups
