@@ -353,7 +353,6 @@ rules:
         - internal/service/servicediscovery
         - internal/service/servicequotas
         - internal/service/ses
-        - internal/service/sfn
         - internal/service/simpledb
         - internal/service/ssm
         - internal/service/ssoadmin
