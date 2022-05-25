@@ -57,7 +57,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_withConstraints(rName, "encryption_context_equals", `foo = "bar"
+				Config: testAccGrantConfig_constraints(rName, "encryption_context_equals", `foo = "bar"
                         baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
@@ -77,7 +77,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
 			},
 			{
-				Config: testAccGrant_withConstraints(rName, "encryption_context_subset", `foo = "bar"
+				Config: testAccGrantConfig_constraints(rName, "encryption_context_subset", `foo = "bar"
 			            baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
@@ -313,7 +313,7 @@ resource "aws_kms_grant" "test" {
 `, rName, operations))
 }
 
-func testAccGrant_withConstraints(rName string, constraintName string, encryptionContext string) string {
+func testAccGrantConfig_constraints(rName string, constraintName string, encryptionContext string) string {
 	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
