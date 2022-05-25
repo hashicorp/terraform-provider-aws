@@ -30,7 +30,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -49,20 +49,20 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
+					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tpm_support", ""),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
-					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
-					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
-					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIConfig_deprecateAt(rName, deprecateAt),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -120,8 +120,8 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 			},
 			{
 				Config: testAccAMIConfig_deprecateAt(rName, deprecateAtUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -161,8 +161,8 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 		},
@@ -185,7 +185,7 @@ func TestAccEC2AMI_description(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIConfig_desc(rName, desc),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -211,8 +211,8 @@ func TestAccEC2AMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -225,7 +225,7 @@ func TestAccEC2AMI_description(t *testing.T) {
 			},
 			{
 				Config: testAccAMIConfig_desc(rName, descUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -251,8 +251,8 @@ func TestAccEC2AMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 		},
@@ -296,7 +296,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIConfig_ephemeralBlockDevices(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -329,8 +329,8 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -359,7 +359,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIConfig_gp3BlockDevice(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -395,8 +395,8 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -531,7 +531,7 @@ func TestAccEC2AMI_tpmSupport(t *testing.T) {
 		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigTpmSupport(rName),
+				Config: testAccAmiConfig_tpmSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "tpm_support", "v2.0"),
@@ -829,7 +829,7 @@ resource "aws_ami" "test" {
 `, rName))
 }
 
-func testAccAmiConfigTpmSupport(rName string) string {
+func testAccAmiConfig_tpmSupport(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
