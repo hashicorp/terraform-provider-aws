@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -661,6 +662,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+		}
 	}
 
 	if d.HasChanges("broker_node_group_info.0.ebs_volume_size", "broker_node_group_info.0.storage_info") {
@@ -710,6 +716,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 			}
 		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("broker_node_group_info.0.connectivity_info") {
@@ -735,6 +746,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("number_of_broker_nodes") {
@@ -756,6 +772,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
 		}
 	}
 
@@ -787,6 +808,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("configuration_info") && !d.HasChange("kafka_version") {
@@ -811,6 +837,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
 		}
 	}
 
@@ -839,6 +870,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
 		}
 	}
 
@@ -878,6 +914,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
 		}
 	}
 
@@ -1698,4 +1739,18 @@ func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
 	}
 
 	return tfMap
+}
+
+func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).KafkaConn
+
+	cluster, err := FindClusterByARN(ctx, conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
+	}
+
+	d.Set("current_version", cluster.CurrentVersion)
+
+	return nil
 }
