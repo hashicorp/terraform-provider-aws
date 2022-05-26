@@ -1364,6 +1364,7 @@ rules:
     message: Do not use "cloudwatchlog" in func name inside logs package
     paths:
       include:
+        - internal/service/logs
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1378,6 +1379,7 @@ rules:
     message: Do not use "cloudwatchlog" in const name inside logs package
     paths:
       include:
+        - internal/service/logs
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1391,6 +1393,7 @@ rules:
     message: Do not use "cloudwatchlog" in var name inside logs package
     paths:
       include:
+        - internal/service/logs
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1404,6 +1407,7 @@ rules:
     message: Do not use "cloudwatchlogs" in func name inside logs package
     paths:
       include:
+        - internal/service/logs
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1418,6 +1422,7 @@ rules:
     message: Do not use "cloudwatchlogs" in const name inside logs package
     paths:
       include:
+        - internal/service/logs
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1431,6 +1436,7 @@ rules:
     message: Do not use "cloudwatchlogs" in var name inside logs package
     paths:
       include:
+        - internal/service/logs
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
