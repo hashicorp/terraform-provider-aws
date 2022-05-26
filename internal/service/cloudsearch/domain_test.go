@@ -436,8 +436,8 @@ resource "aws_cloudsearch_domain" "test" {
   }
 
   index_field {
-    name = "int_test_source"
-    type = "int"
+    name   = "int_test_source"
+    type   = "int"
 
     source_fields = "int_test,int_test_2"
   }
@@ -463,8 +463,8 @@ resource "aws_cloudsearch_domain" "test" {
   }
 
   index_field {
-    name = "int_test_source"
-    type = "int"
+    name   = "int_test_source"
+    type   = "int"
 
     source_fields = "*"
   }
