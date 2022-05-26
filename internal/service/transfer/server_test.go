@@ -150,7 +150,7 @@ func testAccServer_disappears(t *testing.T) {
 	})
 }
 
-func testAccServer_securityPolicy(t *testing.T) {
+func TestAccServer_securityPolicy(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
@@ -178,6 +178,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
+				),
+			},
+			{
+				Config: testAccServerSecurityPolicyConfig("TransferSecurityPolicy-2022-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2022-03"),
 				),
 			},
 		},
