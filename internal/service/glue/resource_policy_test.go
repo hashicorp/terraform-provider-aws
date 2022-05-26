@@ -24,7 +24,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyRequiredConfig("glue:CreateTable"),
+				Config: testAccResourcePolicyConfig_required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 				),
@@ -47,7 +47,7 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyHybridConfig("glue:CreateTable", "TRUE"),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "TRUE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
 				),
@@ -59,13 +59,13 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enable_hybrid"},
 			},
 			{
-				Config: testAccResourcePolicyHybridConfig("glue:CreateTable", "FALSE"),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "FALSE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "FALSE"),
 				),
 			},
 			{
-				Config: testAccResourcePolicyHybridConfig("glue:CreateTable", "TRUE"),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "TRUE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
 				),
@@ -82,7 +82,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyRequiredConfig("glue:CreateTable"),
+				Config: testAccResourcePolicyConfig_required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
@@ -103,13 +103,13 @@ func testAccResourcePolicy_update(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyRequiredConfig("glue:CreateTable"),
+				Config: testAccResourcePolicyConfig_required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 				),
 			},
 			{
-				Config: testAccResourcePolicyRequiredConfig("glue:DeleteTable"),
+				Config: testAccResourcePolicyConfig_required("glue:DeleteTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:DeleteTable"),
 				),
@@ -133,13 +133,13 @@ func testAccResourcePolicy_ignoreEquivalent(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyEquivalentConfig(),
+				Config: testAccResourcePolicyConfig_equivalent(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 				),
 			},
 			{
-				Config:   testAccResourcePolicyEquivalent2Config(),
+				Config:   testAccResourcePolicyConfig_equivalent2(),
 				PlanOnly: true,
 			},
 		},
@@ -216,7 +216,7 @@ func CreateTablePolicy(action string) string {
 }`, action, acctest.Partition(), acctest.Region(), acctest.AccountID())
 }
 
-func testAccResourcePolicyRequiredConfig(action string) string {
+func testAccResourcePolicyConfig_required(action string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -241,7 +241,7 @@ resource "aws_glue_resource_policy" "test" {
 `, action)
 }
 
-func testAccResourcePolicyHybridConfig(action, hybrid string) string {
+func testAccResourcePolicyConfig_hybrid(action, hybrid string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -267,7 +267,7 @@ resource "aws_glue_resource_policy" "test" {
 `, action, hybrid)
 }
 
-func testAccResourcePolicyEquivalentConfig() string {
+func testAccResourcePolicyConfig_equivalent() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -293,7 +293,7 @@ resource "aws_glue_resource_policy" "test" {
 `
 }
 
-func testAccResourcePolicyEquivalent2Config() string {
+func testAccResourcePolicyConfig_equivalent2() string {
 	return `
 data "aws_caller_identity" "current" {}
 

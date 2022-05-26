@@ -28,7 +28,7 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDataSourceConfig(rName, cidr),
+				Config: testAccVPCDataSourceConfig_basic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", vpcResourceName, "arn"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
@@ -72,7 +72,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName),
+				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
 				),
@@ -81,7 +81,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
-func testAccVPCDataSourceConfig(rName, cidr string) string {
+func testAccVPCDataSourceConfig_basic(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = %[2]q
@@ -116,7 +116,7 @@ data "aws_vpc" "by_filter" {
 `, rName, cidr)
 }
 
-func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName string) string {
+func testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

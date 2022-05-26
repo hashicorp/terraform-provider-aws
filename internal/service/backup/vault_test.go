@@ -52,7 +52,7 @@ func TestAccBackupVault_withKMSKey(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultWithKmsKey(rInt),
+				Config: testAccBackupVaultWithKMSKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
@@ -211,7 +211,7 @@ resource "aws_backup_vault" "test" {
 `, randInt)
 }
 
-func testAccBackupVaultWithKmsKey(randInt int) string {
+func testAccBackupVaultWithKMSKey(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Test KMS Key for AWS Backup Vault"

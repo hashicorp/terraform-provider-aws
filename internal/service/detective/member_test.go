@@ -143,7 +143,7 @@ func testAccCheckMemberExists(resourceName string, detectiveSession *detective.M
 			return err
 		}
 
-		resp, err := tfdetective.FindMemberByGraphArnAndAccountID(context.Background(), conn, graphArn, accountId)
+		resp, err := tfdetective.FindMemberByGraphARNAndAccountID(context.Background(), conn, graphArn, accountId)
 		if err != nil {
 			return err
 		}
@@ -171,7 +171,7 @@ func testAccCheckMemberDestroy(s *terraform.State) error {
 			return err
 		}
 
-		resp, err := tfdetective.FindMemberByGraphArnAndAccountID(context.Background(), conn, graphArn, accountId)
+		resp, err := tfdetective.FindMemberByGraphARNAndAccountID(context.Background(), conn, graphArn, accountId)
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			continue
 		}

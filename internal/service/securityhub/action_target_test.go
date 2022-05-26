@@ -23,7 +23,7 @@ func testAccActionTarget_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActionTargetIdentifierConfig("testaction"),
+				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
@@ -51,7 +51,7 @@ func testAccActionTarget_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActionTargetIdentifierConfig("testaction"),
+				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceActionTarget(), resourceName),
@@ -72,7 +72,7 @@ func testAccActionTarget_Description(t *testing.T) {
 		CheckDestroy:      testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActionTargetDescriptionConfig("description1"),
+				Config: testAccActionTargetConfig_description("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -84,7 +84,7 @@ func testAccActionTarget_Description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccActionTargetDescriptionConfig("description2"),
+				Config: testAccActionTargetConfig_description("description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -104,7 +104,7 @@ func testAccActionTarget_Name(t *testing.T) {
 		CheckDestroy:      testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActionTargetNameConfig("name1"),
+				Config: testAccActionTargetConfig_name("name1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
@@ -116,7 +116,7 @@ func testAccActionTarget_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccActionTargetNameConfig("name2"),
+				Config: testAccActionTargetConfig_name("name2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
@@ -179,7 +179,7 @@ func testAccCheckActionTargetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccActionTargetDescriptionConfig(description string) string {
+func testAccActionTargetConfig_description(description string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -192,7 +192,7 @@ resource "aws_securityhub_action_target" "test" {
 `, description)
 }
 
-func testAccActionTargetIdentifierConfig(identifier string) string {
+func testAccActionTargetConfig_identifier(identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -205,7 +205,7 @@ resource "aws_securityhub_action_target" "test" {
 `, identifier)
 }
 
-func testAccActionTargetNameConfig(name string) string {
+func testAccActionTargetConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 

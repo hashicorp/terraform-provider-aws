@@ -119,6 +119,7 @@ interpolation.
 * `tags` - Any tags assigned to the image.
     * `tags.#.key` - The key name of the tag.
     * `tags.#.value` - The value of the tag.
+* `tpm_support` - If the image is configured for NitroTPM support, the value is `v2.0`.
 * `virtualization_type` - The type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
 * `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.

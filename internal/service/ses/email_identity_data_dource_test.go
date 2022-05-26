@@ -21,7 +21,7 @@ func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailIdentityDataSourceConfig(email),
+				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists("aws_ses_email_identity.test"),
 					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
@@ -41,7 +41,7 @@ func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 		CheckDestroy:      testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailIdentityDataSourceConfig(email),
+				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists("aws_ses_email_identity.test"),
 					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
@@ -51,7 +51,7 @@ func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 	})
 }
 
-func testAccEmailIdentityDataSourceConfig(email string) string {
+func testAccEmailIdentityDataDourceConfig_source(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
   email = %q

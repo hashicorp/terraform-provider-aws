@@ -26,7 +26,7 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccManagedPrefixListConfig_Name(rName),
+				Config:       testAccVPCManagedPrefixListConfig_name(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -46,7 +46,7 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccManagedPrefixListUpdatedConfig(rName),
+				Config:       testAccVPCManagedPrefixListConfig_updated(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -68,7 +68,7 @@ func TestAccVPCManagedPrefixList_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListConfig_Name(rName),
+				Config: testAccVPCManagedPrefixListConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceManagedPrefixList(), resourceName),
@@ -90,7 +90,7 @@ func TestAccVPCManagedPrefixList_AddressFamily_ipv6(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccManagedPrefixListConfig_AddressFamily(rName, "IPv6"),
+				Config:       testAccVPCManagedPrefixListConfig_addressFamily(rName, "IPv6"),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -117,7 +117,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccManagedPrefixListConfig_Entry_CIDR1(rName),
+				Config:       testAccVPCManagedPrefixListConfig_entryCIDR1(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -139,7 +139,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccManagedPrefixListConfig_Entry_CIDR2(rName),
+				Config:       testAccVPCManagedPrefixListConfig_entryCIDR2(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -175,7 +175,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccManagedPrefixListConfig_Entry_Description(rName, "description1"),
+				Config:       testAccVPCManagedPrefixListConfig_entryDescription(rName, "description1"),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -197,7 +197,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccManagedPrefixListConfig_Entry_Description(rName, "description2"),
+				Config:       testAccVPCManagedPrefixListConfig_entryDescription(rName, "description2"),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -229,7 +229,7 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccManagedPrefixListConfig_Name(rName1),
+				Config:       testAccVPCManagedPrefixListConfig_name(rName1),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -243,7 +243,7 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccManagedPrefixListConfig_Name(rName2),
+				Config:       testAccVPCManagedPrefixListConfig_name(rName2),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
@@ -266,7 +266,7 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccVPCManagedPrefixListConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -280,7 +280,7 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccManagedPrefixListConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCManagedPrefixListConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -290,7 +290,7 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccManagedPrefixListConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccVPCManagedPrefixListConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -365,7 +365,7 @@ func testAccPreCheckManagedPrefixList(t *testing.T) {
 	}
 }
 
-func testAccManagedPrefixListConfig_AddressFamily(rName string, addressFamily string) string {
+func testAccVPCManagedPrefixListConfig_addressFamily(rName string, addressFamily string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = %[2]q
@@ -375,7 +375,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName, addressFamily)
 }
 
-func testAccManagedPrefixListConfig_Entry_CIDR1(rName string) string {
+func testAccVPCManagedPrefixListConfig_entryCIDR1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -395,7 +395,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListConfig_Entry_CIDR2(rName string) string {
+func testAccVPCManagedPrefixListConfig_entryCIDR2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -415,7 +415,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListConfig_Entry_Description(rName string, description string) string {
+func testAccVPCManagedPrefixListConfig_entryDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -435,7 +435,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName, description)
 }
 
-func testAccManagedPrefixListConfig_Name(rName string) string {
+func testAccVPCManagedPrefixListConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -445,7 +445,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListUpdatedConfig(rName string) string {
+func testAccVPCManagedPrefixListConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -455,7 +455,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListConfig_Tags1(rName string, tagKey1 string, tagValue1 string) string {
+func testAccVPCManagedPrefixListConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
@@ -469,7 +469,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccManagedPrefixListConfig_Tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccVPCManagedPrefixListConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q

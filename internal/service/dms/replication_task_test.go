@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccReplicationTask_basic(t *testing.T) {
+func TestAccDMSReplicationTask_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -61,7 +61,7 @@ func TestAccReplicationTask_basic(t *testing.T) {
 	})
 }
 
-func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
+func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -88,7 +88,7 @@ func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
 	})
 }
 
-func TestAccReplicationTask_startReplicationTask(t *testing.T) {
+func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -133,7 +133,7 @@ func TestAccReplicationTask_startReplicationTask(t *testing.T) {
 	})
 }
 
-func TestAccReplicationTask_disappears(t *testing.T) {
+func TestAccDMSReplicationTask_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 

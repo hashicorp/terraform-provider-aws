@@ -29,7 +29,7 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`error finding Connect Instance Summary by instance_alias`),
 			},
 			{
-				Config: testAccInstanceBasicDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -46,7 +46,7 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceAliasDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_alias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -78,7 +78,7 @@ data "aws_connect_instance" "test" {
 }
 `
 
-func testAccInstanceBasicDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q
@@ -93,7 +93,7 @@ data "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceAliasDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_alias(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q

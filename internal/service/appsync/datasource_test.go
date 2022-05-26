@@ -165,7 +165,7 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_ElasticSearchConfig_region(rName, acctest.Region()),
+				Config: testAccDataSourceConfig_elasticsearchRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
@@ -608,7 +608,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccDataSourceConfig_Base_elasticSearch(rName string) string {
+func testAccDataSourceConfig_Base_elasticsearch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = %q
@@ -794,8 +794,8 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, useCallerCredentials)
 }
 
-func testAccDataSourceConfig_ElasticSearchConfig_region(rName, region string) string {
-	return testAccDataSourceConfig_Base_elasticSearch(rName) + fmt.Sprintf(`
+func testAccDataSourceConfig_elasticsearchRegion(rName, region string) string {
+	return testAccDataSourceConfig_Base_elasticsearch(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
@@ -855,7 +855,7 @@ resource "aws_appsync_datasource" "test" {
 }
 
 func testAccDataSourceConfig_Type_elasticSearch(rName string) string {
-	return testAccDataSourceConfig_Base_elasticSearch(rName) + fmt.Sprintf(`
+	return testAccDataSourceConfig_Base_elasticsearch(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q

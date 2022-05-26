@@ -692,7 +692,7 @@ func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*e
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -735,7 +735,7 @@ func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -774,7 +774,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 	return nil
 }
 
-func getLbNameFromArn(arn string) (string, error) {
+func getLBNameFromARN(arn string) (string, error) {
 	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {

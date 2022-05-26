@@ -19,7 +19,7 @@ func TestAccVPCsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCsDataSourceConfig(rName),
+				Config: testAccVPCVPCsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
 				),
@@ -37,7 +37,7 @@ func TestAccVPCsDataSource_tags(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCsDataSourceConfig_tags(rName),
+				Config: testAccVPCVPCsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", "1"),
 				),
@@ -55,7 +55,7 @@ func TestAccVPCsDataSource_filters(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCsDataSourceConfig_filters(rName),
+				Config: testAccVPCVPCsDataSourceConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
 				),
@@ -73,7 +73,7 @@ func TestAccVPCsDataSource_empty(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCsDataSourceConfig_empty(rName),
+				Config: testAccVPCVPCsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", "0"),
 				),
@@ -82,7 +82,7 @@ func TestAccVPCsDataSource_empty(t *testing.T) {
 	})
 }
 
-func testAccVPCsDataSourceConfig(rName string) string {
+func testAccVPCVPCsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
@@ -96,7 +96,7 @@ data "aws_vpcs" "test" {}
 `, rName)
 }
 
-func testAccVPCsDataSourceConfig_tags(rName string) string {
+func testAccVPCVPCsDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
@@ -116,7 +116,7 @@ data "aws_vpcs" "test" {
 `, rName)
 }
 
-func testAccVPCsDataSourceConfig_filters(rName string) string {
+func testAccVPCVPCsDataSourceConfig_filters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/25"
@@ -135,7 +135,7 @@ data "aws_vpcs" "test" {
 `, rName)
 }
 
-func testAccVPCsDataSourceConfig_empty(rName string) string {
+func testAccVPCVPCsDataSourceConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpcs" "test" {
   tags = {

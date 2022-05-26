@@ -133,7 +133,7 @@ func ResourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							Set: costExplorerCostCategorySplitChargesParameter,
+							Set: costCategorySplitChargesParameter,
 						},
 						"source": {
 							Type:         schema.TypeString,
@@ -153,7 +153,7 @@ func ResourceCostCategory() *schema.Resource {
 						},
 					},
 				},
-				Set: costExplorerCostCategorySplitCharges,
+				Set: costCategorySplitCharges,
 			},
 		},
 	}
@@ -975,7 +975,7 @@ func flattenCostCategorySplitChargeRules(apiObjects []*costexplorer.CostCategory
 	return tfList
 }
 
-func costExplorerCostCategorySplitCharges(v interface{}) int {
+func costCategorySplitCharges(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(m["method"].(string))
@@ -985,7 +985,7 @@ func costExplorerCostCategorySplitCharges(v interface{}) int {
 	return schema.HashString(buf.String())
 }
 
-func costExplorerCostCategorySplitChargesParameter(v interface{}) int {
+func costCategorySplitChargesParameter(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(m["type"].(string))

@@ -24,7 +24,7 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMIFromInstanceConfig(rName),
+				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &image),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
@@ -53,7 +53,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMIFromInstanceTags1Config(rName, "key1", "value1"),
+				Config: testAccAMIFromInstanceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -61,7 +61,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAMIFromInstanceTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAMIFromInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -70,7 +70,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAMIFromInstanceTags1Config(rName, "key2", "value2"),
+				Config: testAccAMIFromInstanceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -93,7 +93,7 @@ func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMIFromInstanceConfig(rName),
+				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
@@ -106,7 +106,7 @@ func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 
 func testAccAMIFromInstanceBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -120,7 +120,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccAMIFromInstanceConfig(rName string) string {
+func testAccAMIFromInstanceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAMIFromInstanceBaseConfig(rName),
 		fmt.Sprintf(`
@@ -132,7 +132,7 @@ resource "aws_ami_from_instance" "test" {
 `, rName))
 }
 
-func testAccAMIFromInstanceTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAMIFromInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccAMIFromInstanceBaseConfig(rName),
 		fmt.Sprintf(`
@@ -148,7 +148,7 @@ resource "aws_ami_from_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAMIFromInstanceTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAMIFromInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccAMIFromInstanceBaseConfig(rName),
 		fmt.Sprintf(`

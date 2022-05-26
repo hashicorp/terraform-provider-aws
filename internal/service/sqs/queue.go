@@ -201,7 +201,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		QueueName: aws.String(name),
 	}
 
-	attributes, err := queueAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	output := outputRaw.(map[string]string)
 
-	err = queueAttributeMap.ApiAttributesToResourceData(output, d)
+	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 
 	if err != nil {
 		return err
@@ -336,7 +336,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		attributes, err := queueAttributeMap.ResourceDataToApiAttributesUpdate(d)
+		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 		if err != nil {
 			return err

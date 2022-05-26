@@ -466,7 +466,7 @@ func TestAccRoute53Record_failover(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_failoverCNAMERecord,
+				Config: testAccRecordConfig_failoverCNAME,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					testAccCheckRecordExists("aws_route53_record.www-secondary", &record2),
@@ -493,7 +493,7 @@ func TestAccRoute53Record_Weighted_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_weightedCNAMERecord,
+				Config: testAccRecordConfig_weightedCNAME,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.www-dev", &record1),
 					testAccCheckRecordExists(resourceName, &record2),
@@ -521,7 +521,7 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testaccRecordConfig_weightedRoutingPolicy,
+				Config: testAccRecordConfig_weightedRoutingPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -533,7 +533,7 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 			{
-				Config: testaccRecordConfig_simpleRoutingPolicy,
+				Config: testAccRecordConfig_simpleRoutingPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -547,7 +547,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 	resourceName := "aws_route53_record.alias"
 
 	rs := sdkacctest.RandString(10)
-	config := fmt.Sprintf(testAccRecordConfig_aliasELB, rs)
+	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELB, rs)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
@@ -555,7 +555,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccRecordConfig_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -633,7 +633,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 	resourceName := "aws_route53_record.alias"
 
 	rs := sdkacctest.RandString(10)
-	config := fmt.Sprintf(testAccRecordConfig_aliasELBUppercase, rs)
+	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELBUppercase, rs)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
@@ -641,7 +641,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccRecordConfig_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -667,7 +667,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_weightedELBAliasRecord,
+				Config: testAccRecordConfig_weightedELBAlias,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					testAccCheckRecordExists("aws_route53_record.elb_weighted_alias_dev", &record2),
@@ -681,7 +681,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 			},
 
 			{
-				Config: testAccRecordConfig_weightedAliasRecord,
+				Config: testAccRecordConfig_weightedAlias,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.green_origin", &record3),
 					testAccCheckRecordExists("aws_route53_record.r53_weighted_alias_live", &record4),
@@ -704,7 +704,7 @@ func TestAccRoute53Record_Geolocation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_geolocationCNAMERecord,
+				Config: testAccRecordConfig_geolocationCNAME,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.default", &record1),
 					testAccCheckRecordExists("aws_route53_record.california", &record2),
@@ -983,7 +983,7 @@ func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_longTxtRecord,
+				Config: testAccRecordConfig_longTxt,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -1009,7 +1009,7 @@ func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_multiValueAnswerARecord,
+				Config: testAccRecordConfig_multiValueAnswerA,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.www-server1", &record1),
 					testAccCheckRecordExists("aws_route53_record.www-server2", &record2),
@@ -1472,7 +1472,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRecordConfig_failoverCNAMERecord = `
+const testAccRecordConfig_failoverCNAME = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1520,7 +1520,7 @@ resource "aws_route53_record" "www-secondary" {
 }
 `
 
-const testAccRecordConfig_weightedCNAMERecord = `
+const testAccRecordConfig_weightedCNAME = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1568,7 +1568,7 @@ resource "aws_route53_record" "www-off" {
 }
 `
 
-const testAccRecordConfig_geolocationCNAMERecord = `
+const testAccRecordConfig_geolocationCNAME = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1982,7 +1982,7 @@ resource "aws_route53_record" "test" {
 `
 }
 
-const testAccRecordConfig_weightedELBAliasRecord = `
+const testAccRecordConfig_weightedELBAlias = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -2057,7 +2057,7 @@ resource "aws_route53_record" "elb_weighted_alias_dev" {
 }
 `
 
-const testAccRecordConfig_weightedAliasRecord = `
+const testAccRecordConfig_weightedAlias = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2271,7 +2271,7 @@ resource "aws_route53_record" "empty" {
 }
 `
 
-const testAccRecordConfig_longTxtRecord = `
+const testAccRecordConfig_longTxt = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2301,7 +2301,7 @@ resource "aws_route53_record" "underscore" {
 }
 `
 
-const testAccRecordConfig_multiValueAnswerARecord = `
+const testAccRecordConfig_multiValueAnswerA = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2327,7 +2327,7 @@ resource "aws_route53_record" "www-server2" {
 }
 `
 
-const testaccRecordConfig_weightedRoutingPolicy = `
+const testAccRecordConfig_weightedRoutingPolicy = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2347,7 +2347,7 @@ resource "aws_route53_record" "www-server1" {
 }
 `
 
-const testaccRecordConfig_simpleRoutingPolicy = `
+const testAccRecordConfig_simpleRoutingPolicy = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }

@@ -29,7 +29,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationConfig(rName),
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
@@ -64,7 +64,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationConfig(rName),
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
@@ -117,7 +117,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicitCIDR(rName, cidr),
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
@@ -196,7 +196,7 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, v *ec2.VpcCidrBlock
 	}
 }
 
-func testAccVPCIPv4CIDRBlockAssociationConfig(rName string) string {
+func testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -238,7 +238,7 @@ resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
 `, rName, netmaskLength))
 }
 
-func testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicitCIDR(rName, cidr string) string {
+func testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr string) string {
 	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
