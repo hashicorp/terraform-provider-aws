@@ -3,7 +3,7 @@ subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_subnet_group"
 description: |-
-    Provides details about a specific redshift subnet_group
+  Provides details about a specific redshift subnet_group
 ---
 
 # Data Source: aws_redshift_subnet_group
