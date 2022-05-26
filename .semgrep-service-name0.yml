@@ -289,7 +289,6 @@ rules:
         - internal/service/dax
         - internal/service/directconnect
         - internal/service/dms
-        - internal/service/docdb
         - internal/service/dynamodb
         - internal/service/ecr
         - internal/service/ecrpublic
