@@ -57,12 +57,21 @@ Terraform Providers, see the [Extending Terraform documentation](https://www.ter
 
 Our acceptance test suite creates real resources, and as a result they cost real money to run.
 Because the resources only exist for a short period of time, the total amount
-of money required is usually a relatively small amount. That said there are particular services which are very expensive to run and its important to be prepared for those costs. 
+of money required is usually a relatively small amount. That said there are particular services 
+which are very expensive to run and its important to be prepared for those costs. 
 
-Some services which can be cost prohibitive are:
+Some services which can be cost prohibitive include (among others):
 
-- Workspaces
+- WorkSpaces
+- Glue
+- OpenSearch
+- RDS
 - ACM
+- FSx
+- Kinesis Analytics
+- EC2
+- ElastiCache
+- Storage Gateway
 
 We don't want financial limitations to be a barrier to contribution, so if you are unable to
 pay to run acceptance tests for your contribution, mention this in your
