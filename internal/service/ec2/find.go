@@ -4213,7 +4213,7 @@ func FindLaunchTemplateVersions(conn *ec2.EC2, input *ec2.DescribeLaunchTemplate
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound, errCodeInvalidLaunchTemplateIdVersionNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound, errCodeInvalidLaunchTemplateNameNotFoundException, errCodeInvalidLaunchTemplateIdVersionNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
