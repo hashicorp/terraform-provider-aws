@@ -270,3 +270,32 @@ func FindEventSubscriptionByName(conn *redshift.Redshift, name string) (*redshif
 
 	return output.EventSubscriptionsList[0], nil
 }
+
+func FindSubnetGroupByName(conn *redshift.Redshift, name string) (*redshift.ClusterSubnetGroup, error) {
+	input := &redshift.DescribeClusterSubnetGroupsInput{
+		ClusterSubnetGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeClusterSubnetGroups(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ClusterSubnetGroups) == 0 || output.ClusterSubnetGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ClusterSubnetGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ClusterSubnetGroups[0], nil
+}
