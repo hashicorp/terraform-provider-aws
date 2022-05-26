@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_group"
 description: |-
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch Log Groups can be imported using the `name`, e.g.
+Cloudwatch Log Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_log_group.test_group yada

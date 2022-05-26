@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_vpc_link"
 description: |-
@@ -51,8 +51,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-API Gateway VPC Link can be imported using the `id`, e.g.
+API Gateway VPC Link can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_vpc_link.example <vpc_link_id>
+$ terraform import aws_api_gateway_vpc_link.example 12345abcde
 ```

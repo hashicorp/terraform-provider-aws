@@ -10,6 +10,9 @@ description: |-
 
 Provides an ElastiCache user resource.
 
+~> **Note:** All arguments including the username and passwords will be stored in the raw state as plain-text.
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
+
 ## Example Usage
 
 ```terraform
@@ -45,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache users can be imported using the `user_id`, e.g.
+ElastiCache users can be imported using the `user_id`, e.g.,
 
 ```
 $ terraform import aws_elasticache_user.my_user userId1

@@ -15,9 +15,9 @@ For information about CloudFront distributions, see the
 CloudFront web distributions, see the [POST Distribution][2] page in the Amazon
 CloudFront API Reference.
 
-~> **NOTE:** CloudFront distributions take about 15 minutes to a deployed state
-after creation or modification. During this time, deletes to resources will be
-blocked. If you need to delete a distribution that is enabled and you do not
+~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed
+state after creation or modification. During this time, deletes to resources will
+be blocked. If you need to delete a distribution that is enabled and you do not
 want to wait, you need to use the `retain_on_delete` flag.
 
 ## Example Usage
@@ -27,11 +27,15 @@ The following example below creates a CloudFront distribution with an S3 origin.
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "mybucket"
-  acl    = "private"
 
   tags = {
     Name = "My bucket"
   }
+}
+
+resource "aws_s3_bucket_acl" "b_acl" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 
 locals {
@@ -306,11 +310,13 @@ of several sub-resources - these resources are laid out below.
 * `origin_request_policy_id` (Optional) - The unique identifier of the origin request policy
     that is attached to the behavior.
 
-* `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
+* `path_pattern` (Required) - The pattern (for example, `images/*.jpg`) that
     specifies which requests you want this cache behavior to apply to.
 
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
     that is attached to this cache behavior.
+  
+* `response_headers_policy_id` (Optional) - The identifier for a response headers policy.
 
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
     media files in Microsoft Smooth Streaming format using the origin that is
@@ -626,7 +632,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.
+Cloudfront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE

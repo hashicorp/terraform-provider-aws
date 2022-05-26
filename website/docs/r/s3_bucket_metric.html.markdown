@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_metric"
 description: |-
@@ -25,7 +25,7 @@ resource "aws_s3_bucket_metric" "example-entire-bucket" {
 }
 ```
 
-### Add metrics configuration with S3 bucket object filter
+### Add metrics configuration with S3 object filter
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -68,7 +68,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket metric configurations can be imported using `bucket:metric`, e.g.
+S3 bucket metric configurations can be imported using `bucket:metric`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket

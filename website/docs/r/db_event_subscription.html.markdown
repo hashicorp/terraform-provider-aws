@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_event_subscription"
 description: |-
@@ -84,7 +84,7 @@ configuration options:
 
 ## Import
 
-DB Event Subscriptions can be imported using the `name`, e.g.
+DB Event Subscriptions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_event_subscription.default rds-event-sub

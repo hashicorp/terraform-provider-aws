@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_capacity_provider"
 description: |-
@@ -20,7 +20,7 @@ resource "aws_autoscaling_group" "test" {
 
   tag {
     key                 = "AmazonECSManaged"
-    value               = ""
+    value               = true
     propagate_at_launch = true
   }
 }
@@ -74,7 +74,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.
+ECS Capacity Providers can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_ecs_capacity_provider.example example

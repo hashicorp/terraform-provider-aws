@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_connection"
 description: |-
@@ -194,7 +194,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.
+EventBridge Connection can be imported using the `name`, e.g.,
 
 ```console
 $ terraform import aws_cloudwatch_event_connection.test ngrok-connection

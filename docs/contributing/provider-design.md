@@ -92,11 +92,11 @@ When discussing data sources, they are typically classified by the intended numb
 
 #### Plural Data Sources
 
-These data sources are intended to return zero, one, or many results, usually associated with a managed resource type. Typically results are a set unless ordering guarantees are provided by the remote system. These should be named with a plural suffix (e.g. `s` or `es`) and should not include any specific attribute in the naming (e.g. prefer `aws_ec2_transit_gateways` instead of `aws_ec2_transit_gateway_ids`).
+These data sources are intended to return zero, one, or many results, usually associated with a managed resource type. Typically results are a set unless ordering guarantees are provided by the remote system. These should be named with a plural suffix (e.g., `s` or `es`) and should not include any specific attribute in the naming (e.g., prefer `aws_ec2_transit_gateways` instead of `aws_ec2_transit_gateway_ids`).
 
 #### Singular Data Sources
 
-These data sources are intended to return one result or an error. These should not include any specific attribute in the naming (e.g. prefer `aws_ec2_transit_gateway` instead of `aws_ec2_transit_gateway_id`).
+These data sources are intended to return one result or an error. These should not include any specific attribute in the naming (e.g., prefer `aws_ec2_transit_gateway` instead of `aws_ec2_transit_gateway_id`).
 
 ### IAM Resource-Based Policy Resources
 

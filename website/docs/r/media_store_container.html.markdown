@@ -1,5 +1,5 @@
 ---
-subcategory: "MediaStore"
+subcategory: "Elemental MediaStore"
 layout: "aws"
 page_title: "AWS: aws_media_store_container"
 description: |-
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaStore Container can be imported using the MediaStore Container Name, e.g.
+MediaStore Container can be imported using the MediaStore Container Name, e.g.,
 
 ```
 $ terraform import aws_media_store_container.example example

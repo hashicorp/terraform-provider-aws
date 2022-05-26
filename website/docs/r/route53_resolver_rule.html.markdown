@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule"
 description: |-
@@ -71,7 +71,7 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
-Route53 Resolver rules can be imported using the `id`, e.g.
+Route53 Resolver rules can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0

@@ -3,7 +3,7 @@ subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack"
 description: |-
-    Provides metadata of a CloudFormation stack (e.g. outputs)
+    Provides metadata of a CloudFormation stack (e.g., outputs)
 ---
 
 # Data Source: aws_cloudformation_stack

@@ -1,12 +1,12 @@
 ---
-subcategory: ""
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_default_tags"
 description: |-
   Access the default tags configured on the provider.
 ---
 
-# Data Source: aws_default_Tags
+# Data Source: aws_default_tags
 
 Use this data source to get the default tags configured on the provider.
 

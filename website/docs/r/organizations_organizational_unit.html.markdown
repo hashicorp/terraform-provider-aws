@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS Organizations Organizational Units can be imported by using the `id`, e.g.
+AWS Organizations Organizational Units can be imported by using the `id`, e.g.,
 
 ```
 $ terraform import aws_organizations_organizational_unit.example ou-1234567

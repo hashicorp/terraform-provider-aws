@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule_association"
 description: |-
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Resolver rule associations can be imported using the `id`, e.g.
+Route53 Resolver rule associations can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example

@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_route_table"
 description: |-
@@ -76,6 +76,7 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
+* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
@@ -97,9 +98,16 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `vpc_id` - ID of the VPC.
 
+## Timeouts
+
+`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
+
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.
+Default VPC route tables can be imported using the `vpc_id`, e.g.,
 
 ```
 $ terraform import aws_default_route_table.example vpc-33cc44dd

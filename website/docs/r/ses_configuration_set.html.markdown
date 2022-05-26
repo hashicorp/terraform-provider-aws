@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_configuration_set"
 description: |-
@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES Configuration Sets can be imported using their `name`, e.g.
+SES Configuration Sets can be imported using their `name`, e.g.,
 
 ```
 $ terraform import aws_ses_configuration_set.test some-configuration-set-test
