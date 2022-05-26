@@ -77,6 +77,16 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validRedisVersionString,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
+						oldVersion, err := gversion.NewVersion(old)
+						if err != nil {
+							return false
+						}
+						return oldVersion.Segments()[0] >= 6
+					}
+					return false
+				},
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -142,7 +152,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 	}
 }
 
-func descriptionDiffSuppress(_, old, new string, d *schema.ResourceData) bool {
+func descriptionDiffSuppress(_, old, new string, _ *schema.ResourceData) bool {
 	if (old == EmptyDescription && new == "") || (old == "" && new == EmptyDescription) {
 		return true
 	}
@@ -270,9 +280,11 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 			if p != "" {
 				return fmt.Errorf("cannot change parameter group name on minor engine version upgrade, upgrading from %s to %s", engineVersion.String(), requestedVersion.String())
 			}
-			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
-			if err != nil {
-				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
+			if t, _ := regexp.MatchString(`[6-9]\.x`, v.(string)); !t {
+				err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
+				if err != nil {
+					return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
+				}
 			}
 		}
 	}
