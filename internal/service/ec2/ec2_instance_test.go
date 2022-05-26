@@ -961,28 +961,10 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_disableAPITermination(t *testing.T) {
+func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	checkDisableApiTermination := func(expected bool) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-			r, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-				InstanceId: v.InstanceId,
-				Attribute:  aws.String("disableApiTermination"),
-			})
-			if err != nil {
-				return err
-			}
-			got := *r.DisableApiTermination.Value
-			if got != expected {
-				return fmt.Errorf("expected: %t, got: %t", expected, got)
-			}
-			return nil
-		}
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -994,7 +976,7 @@ func TestAccEC2Instance_disableAPITermination(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					checkDisableApiTermination(true),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
 				),
 			},
 			{
@@ -1007,8 +989,36 @@ func TestAccEC2Instance_disableAPITermination(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					checkDisableApiTermination(false),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPITermination(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 		},
 	})
