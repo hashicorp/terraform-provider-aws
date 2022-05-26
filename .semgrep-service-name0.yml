@@ -314,7 +314,6 @@ rules:
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
         - internal/service/lambda
-        - internal/service/logs
         - internal/service/meta
         - internal/service/networkmanager
         - internal/service/organizations
@@ -1390,7 +1389,7 @@ rules:
     message: Do not use "cloudwatchlog" in var name inside logs package
     paths:
       include:
-      - internal/service/logs
+        - internal/service/logs
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1433,7 +1432,7 @@ rules:
     message: Do not use "cloudwatchlogs" in var name inside logs package
     paths:
       include:
-      - internal/service/logs
+        - internal/service/logs
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

@@ -26,7 +26,7 @@ func TestAccLogsStream_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
 				),
@@ -53,7 +53,7 @@ func TestAccLogsStream_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceStream(), resourceName),
@@ -78,7 +78,7 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
 					testAccCheckGroupExists(logGroupResourceName, &lg),
@@ -179,7 +179,7 @@ func TestValidateStreamName(t *testing.T) {
 	}
 }
 
-func testAccStreamConfig(rName string) string {
+func testAccStreamConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
