@@ -1828,7 +1828,7 @@ resource "aws_security_group" "sg_for_lambda" {
 
 func ConfigVPCWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptIn(),
+		ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

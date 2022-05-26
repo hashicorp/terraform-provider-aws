@@ -11,6 +11,39 @@ const (
 )
 
 const (
+	DefaultEnabledMetricsGranularity = "1Minute"
+)
+
+const (
+	DefaultTerminationPolicy = "Default"
+)
+
+const (
+	DefaultWarmPoolMaxGroupPreparedCapacity = -1
+)
+
+const (
+	InstanceHealthStatusHealthy   = "Healthy"
+	InstanceHealthStatusUnhealthy = "Unhealthy"
+)
+
+const (
+	LoadBalancerStateAdding    = "Adding"
+	LoadBalancerStateAdded     = "Added"
+	LoadBalancerStateInService = "InService"
+	LoadBalancerStateRemoving  = "Removing"
+	LoadBalancerStateRemoved   = "Removed"
+)
+
+const (
+	LoadBalancerTargetGroupStateAdding    = "Adding"
+	LoadBalancerTargetGroupStateAdded     = "Added"
+	LoadBalancerTargetGroupStateInService = "InService"
+	LoadBalancerTargetGroupStateRemoving  = "Removing"
+	LoadBalancerTargetGroupStateRemoved   = "Removed"
+)
+
+const (
 	PolicyTypePredictiveScaling     = "PredictiveScaling"
 	PolicyTypeSimpleScaling         = "SimpleScaling"
 	PolicyTypeStepScaling           = "StepScaling"
