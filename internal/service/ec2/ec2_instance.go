@@ -1506,16 +1506,14 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if err := modifyInstanceAttributeWithStopStart(conn, input); err != nil {
-				return fmt.Errorf("updating Ec2 Instance (%s) user data base64: %w", d.Id(), err)
+				return fmt.Errorf("updating EC2 Instance (%s) user data base64: %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
-
-		if err != nil {
-			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
+		if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
+			return err
 		}
 	}
 
@@ -1742,7 +1740,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
+	if err := disableInstanceAPITermination(conn, d.Id(), true); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
@@ -1767,7 +1765,7 @@ func disableInstanceAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %w", id, err)
 	}
 
 	return nil
