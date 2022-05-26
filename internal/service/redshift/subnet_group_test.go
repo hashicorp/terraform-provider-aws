@@ -230,8 +230,8 @@ func testAccCheckSubnetGroupExists(n string, v *redshift.ClusterSubnetGroup) res
 func testAccSubnetGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_redshift_subnet_group" "test" {
-  name        = %[1]q
-  subnet_ids  = aws_subnet.test[*].id
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName))
 }
