@@ -403,7 +403,7 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 		CheckDestroy:      testAccCheckImagePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineConfig_scheduleScheduleExpression(rName, "cron(1 0 * * ? *)"),
+				Config: testAccImagePipelineConfig_scheduleExpression(rName, "cron(1 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
@@ -416,7 +416,7 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImagePipelineConfig_scheduleScheduleExpression(rName, "cron(2 0 * * ? *)"),
+				Config: testAccImagePipelineConfig_scheduleExpression(rName, "cron(2 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
@@ -917,7 +917,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 `, rName, pipelineExecutionStartCondition))
 }
 
-func testAccImagePipelineConfig_scheduleScheduleExpression(rName string, scheduleExpression string) string {
+func testAccImagePipelineConfig_scheduleExpression(rName string, scheduleExpression string) string {
 	return acctest.ConfigCompose(
 		testAccImagePipelineBaseConfig(rName),
 		fmt.Sprintf(`

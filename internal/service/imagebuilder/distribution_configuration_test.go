@@ -152,7 +152,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_amiamITags(rName, "key1", "value1"),
+				Config: testAccDistributionConfigurationConfig_amiTags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -169,7 +169,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_amiamITags(rName, "key2", "value2"),
+				Config: testAccDistributionConfigurationConfig_amiTags(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -196,7 +196,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_de
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_amidescription(rName, "description1"),
+				Config: testAccDistributionConfigurationConfig_amiDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -212,7 +212,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_de
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_amidescription(rName, "description2"),
+				Config: testAccDistributionConfigurationConfig_amiDescription(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -480,7 +480,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_containerContainerTags(rName, "tag1"),
+				Config: testAccDistributionConfigurationConfig_containerTags(rName, "tag1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -494,7 +494,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_containerContainerTags(rName, "tag2"),
+				Config: testAccDistributionConfigurationConfig_containerTags(rName, "tag2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -599,7 +599,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_launchTemplateLaunchTemplateIDDefault(rName),
+				Config: testAccDistributionConfigurationConfig_launchTemplateIDDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -614,7 +614,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_launchTemplateLaunchTemplateIDNonDefault(rName),
+				Config: testAccDistributionConfigurationConfig_launchTemplateIDNonDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -625,7 +625,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 				),
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_launchTemplateLaunchTemplateIDAccountID(rName, "111111111111"),
+				Config: testAccDistributionConfigurationConfig_launchTemplateIDAccountID(rName, "111111111111"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -829,7 +829,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName))
 }
 
-func testAccDistributionConfigurationConfig_amiamITags(rName string, amiTagKey string, amiTagValue string) string {
+func testAccDistributionConfigurationConfig_amiTags(rName string, amiTagKey string, amiTagValue string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -849,7 +849,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName, amiTagKey, amiTagValue)
 }
 
-func testAccDistributionConfigurationConfig_amidescription(rName string, description string) string {
+func testAccDistributionConfigurationConfig_amiDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1078,7 +1078,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName, description)
 }
 
-func testAccDistributionConfigurationConfig_containerContainerTags(rName string, containerTag string) string {
+func testAccDistributionConfigurationConfig_containerTags(rName string, containerTag string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1101,7 +1101,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName, containerTag)
 }
 
-func testAccDistributionConfigurationConfig_launchTemplateLaunchTemplateIDDefault(rName string) string {
+func testAccDistributionConfigurationConfig_launchTemplateIDDefault(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1128,7 +1128,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName)
 }
 
-func testAccDistributionConfigurationConfig_launchTemplateLaunchTemplateIDNonDefault(rName string) string {
+func testAccDistributionConfigurationConfig_launchTemplateIDNonDefault(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1155,7 +1155,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName)
 }
 
-func testAccDistributionConfigurationConfig_launchTemplateLaunchTemplateIDAccountID(rName string, accountId string) string {
+func testAccDistributionConfigurationConfig_launchTemplateIDAccountID(rName string, accountId string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

@@ -263,7 +263,7 @@ func TestAccImageBuilderComponent_uri(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentConfig_uRI(rName),
+				Config: testAccComponentConfig_uri(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 				),
@@ -540,7 +540,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccComponentConfig_uRI(rName string) string {
+func testAccComponentConfig_uri(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
