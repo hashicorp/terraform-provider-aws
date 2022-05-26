@@ -169,7 +169,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_source",
-						"type":          "int",
+						"type":          "int-array",
 						"source_fields": "int_test,int_test_2",
 					}),
 				),
@@ -198,7 +198,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_source",
-						"type":          "int",
+						"type":          "int-array",
 						"source_fields": "*",
 					}),
 				),
@@ -437,7 +437,7 @@ resource "aws_cloudsearch_domain" "test" {
 
   index_field {
     name   = "int_test_source"
-    type   = "int"
+    type   = "int-array"
 
     source_fields = "int_test,int_test_2"
   }
@@ -464,7 +464,7 @@ resource "aws_cloudsearch_domain" "test" {
 
   index_field {
     name   = "int_test_source"
-    type   = "int"
+    type   = "int-array"
 
     source_fields = "*"
   }
