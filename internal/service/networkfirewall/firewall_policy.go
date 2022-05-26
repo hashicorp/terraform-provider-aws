@@ -80,6 +80,10 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
+									"override_action": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 								},
 							},
 						},
@@ -327,6 +331,11 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
+		if v, ok := tfMap["override_action"].(string); ok && v != "" {
+			override := &networkfirewall.StatefulRuleGroupOverride{}
+			override.SetAction(v)
+			reference.Override = override
+		}
 		references = append(references, reference)
 	}
 	return references
@@ -438,6 +447,10 @@ func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGr
 		if ref.Priority != nil {
 			reference["priority"] = int(aws.Int64Value(ref.Priority))
 		}
+		if ref.Override != nil {
+			reference["override_action"] = aws.StringValue(ref.Override.Action)
+		}
+
 		references = append(references, reference)
 	}
 

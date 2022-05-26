@@ -103,6 +103,8 @@ The `stateful_rule_group_reference` block supports the following arguments:
 
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateful rule group.
 
+* `override_action` - (Optional) The action that changes the rule group from DROP to ALERT . This only applies to managed rule groups.
+
 ### Stateless Custom Action
 
 The `stateless_custom_action` block supports the following arguments:
