@@ -166,7 +166,7 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("port", endpoint.Port)
 	d.Set("address", endpoint.Address)
 
-	if err := d.Set("vpc_endpoint", flattenVpcEndpoint(endpoint.VpcEndpoint)); err != nil {
+	if err := d.Set("vpc_endpoint", flattenVPCEndpoint(endpoint.VpcEndpoint)); err != nil {
 		return fmt.Errorf("setting vpc_endpoint: %w", err)
 	}
 
@@ -230,7 +230,7 @@ func vpcSgsIdsToSlice(vpsSgsIds []*redshift.VpcSecurityGroupMembership) []string
 	return VpcSgsSlice
 }
 
-func flattenVpcEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
+func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
