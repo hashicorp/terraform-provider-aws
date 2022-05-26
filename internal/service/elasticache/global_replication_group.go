@@ -137,6 +137,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade,
+			customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade,
 		),
 	}
 }
@@ -171,6 +172,49 @@ func customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade(_ context.
 of the Global Replication Group and all Replication Group members. The AWS provider cannot handle this internally.
 
 Please use the "-replace" option on the terraform plan and apply commands (see https://www.terraform.io/cli/commands/plan#replace-address).`, diff.Id())
+}
+
+type changesDiffer interface {
+	Id() string
+	GetChange(key string) (interface{}, interface{})
+	HasChange(key string) bool
+}
+
+func customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	return paramGroupNameRequiresMajorVersionUpgrade(diff)
+}
+
+// parameter_group_name can only be set when doing a major update,
+// but we also should allow it to stay set afterwards
+func paramGroupNameRequiresMajorVersionUpgrade(diff changesDiffer) error {
+	o, n := diff.GetChange("parameter_group_name")
+	if o.(string) == n.(string) {
+		return nil
+	}
+
+	if diff.Id() == "" {
+		if !diff.HasChange("engine_version") {
+			return errors.New("cannot change parameter group name without upgrading major engine version")
+		}
+	}
+
+	// cannot check for major version upgrade at plan time for new resource
+	if diff.Id() != "" {
+		o, n := diff.GetChange("engine_version")
+
+		newVersion, _ := normalizeEngineVersion(n.(string))
+		oldVersion, _ := gversion.NewVersion(o.(string))
+
+		vDiff := diffVersion(newVersion, oldVersion)
+		if vDiff[0] == 0 && vDiff[1] == 0 {
+			return errors.New("cannot change parameter group name without upgrading major engine version")
+		}
+		if vDiff[0] != 1 {
+			return fmt.Errorf("cannot change parameter group name on minor engine version upgrade, upgrading from %s to %s", oldVersion.String(), newVersion.String())
+		}
+	}
+
+	return nil
 }
 
 func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
@@ -215,13 +259,17 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: cannot downgrade version when creating, is %s, want %s", d.Id(), engineVersion.String(), requestedVersion.String())
 		}
 
+		p := d.Get("parameter_group_name").(string)
+
 		if diff[0] == 1 {
-			p := d.Get("parameter_group_name").(string)
 			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p))
 			if err != nil {
 				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)
 			}
 		} else if diff[1] == 1 {
+			if p != "" {
+				return fmt.Errorf("cannot change parameter group name on minor engine version upgrade, upgrading from %s to %s", engineVersion.String(), requestedVersion.String())
+			}
 			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
 			if err != nil {
 				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s) engine version on creation: %w", d.Id(), err)

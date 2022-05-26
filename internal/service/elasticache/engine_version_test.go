@@ -3,6 +3,7 @@ package elasticache
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-version"
@@ -562,5 +563,149 @@ func TestVersionDiff(t *testing.T) {
 				tc.v1, tc.v2,
 				expected, actual)
 		}
+	}
+}
+
+type mockDiff struct {
+	old, new  string
+	hasChange bool // force HasChange() to return true
+}
+
+func (d mockDiff) HasChange() bool {
+	return d.hasChange || d.old != d.new
+}
+
+func (d mockDiff) GetChange() (interface{}, interface{}) {
+	return d.old, d.new
+}
+
+type mockChangesDiffer struct {
+	id     string
+	values map[string]mockDiff
+}
+
+func (d *mockChangesDiffer) Id() string {
+	return d.id
+}
+
+func (d *mockChangesDiffer) HasChange(key string) bool {
+	return d.values[key].HasChange()
+}
+
+func (d *mockChangesDiffer) GetChange(key string) (interface{}, interface{}) {
+	return d.values[key].GetChange()
+}
+
+func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
+	testcases := map[string]struct {
+		isNew                  bool
+		paramOld, paramNew     string
+		paramHasChange         bool
+		versionOld, versionNew string
+		versionHasChange       bool
+		expectError            *regexp.Regexp
+	}{
+		"new resource, no param group set": {
+			isNew:    true,
+			paramOld: "",
+			paramNew: "",
+		},
+
+		"new resource, param group spurious diff": {
+			isNew:          true,
+			paramOld:       "",
+			paramNew:       "",
+			paramHasChange: true,
+		},
+
+		"new resource, set param group, no version set": {
+			isNew:       true,
+			paramOld:    "old",
+			paramNew:    "",
+			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+		},
+
+		// new resource with version changes can only be verified at apply-time
+
+		"update, no param group change": {
+			paramOld: "no-change",
+			paramNew: "no-change",
+		},
+
+		"update, param group spurious diff": {
+			paramOld:       "no-change",
+			paramNew:       "no-change",
+			paramHasChange: true,
+		},
+
+		"update, param group change, no version change": {
+			paramOld:    "old",
+			paramNew:    "new",
+			versionOld:  "6.0",
+			versionNew:  "6.0",
+			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+		},
+
+		"update, param group change, version spurious diff": {
+			paramOld:         "old",
+			paramNew:         "new",
+			versionOld:       "6.0",
+			versionNew:       "6.0",
+			versionHasChange: true,
+			expectError:      regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+		},
+
+		"update, param group change, minor version change": {
+			paramOld:    "old",
+			paramNew:    "new",
+			versionOld:  "6.0",
+			versionNew:  "6.2",
+			expectError: regexp.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
+		},
+
+		"update, param group change, major version change": {
+			paramOld:   "old",
+			paramNew:   "new",
+			versionOld: "5.0.6",
+			versionNew: "6.2",
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			diff := &mockChangesDiffer{
+				values: map[string]mockDiff{
+					"parameter_group_name": {
+						old:       testcase.paramOld,
+						new:       testcase.paramNew,
+						hasChange: testcase.paramHasChange,
+					},
+					"engine_version": {
+						old:       testcase.versionOld,
+						new:       testcase.versionNew,
+						hasChange: testcase.versionHasChange,
+					},
+				},
+			}
+			if !testcase.isNew {
+				diff.id = "some id"
+			}
+
+			err := paramGroupNameRequiresMajorVersionUpgrade(diff)
+
+			if testcase.expectError == nil {
+				if err != nil {
+					t.Fatalf("no error expected, got %s", err)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("expected error, got none")
+				}
+				if !testcase.expectError.MatchString(err.Error()) {
+					t.Fatalf("unexpected error: %q", err.Error())
+				}
+			}
+
+		})
 	}
 }
