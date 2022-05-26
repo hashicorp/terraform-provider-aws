@@ -309,7 +309,6 @@ rules:
         - internal/service/guardduty
         - internal/service/iam
         - internal/service/identitystore
-        - internal/service/imagebuilder
         - internal/service/iot
         - internal/service/kafka
         - internal/service/kinesis
