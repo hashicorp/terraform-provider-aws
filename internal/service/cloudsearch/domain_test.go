@@ -169,7 +169,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_source",
-						"type":          "int",
+						"type":          "int-array",
 						"source_fields": "int_test,int_test_2",
 					}),
 				),
@@ -183,7 +183,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 				Config: testAccDomainSourceFieldsUpdatedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test",
 						"type":          "int",
@@ -197,9 +197,15 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 						"source_fields": "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
-						"name":          "int_test_source",
+						"name":          "int_test_3",
 						"type":          "int",
-						"source_fields": "*",
+						"default_value": "8",
+						"source_fields": "",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test_source",
+						"type":          "int-array",
+						"source_fields": "int_test_3",
 					}),
 				),
 			},
@@ -437,7 +443,7 @@ resource "aws_cloudsearch_domain" "test" {
 
   index_field {
     name   = "int_test_source"
-    type   = "int"
+    type   = "int-array"
 
     source_fields = "int_test,int_test_2"
   }
@@ -463,10 +469,16 @@ resource "aws_cloudsearch_domain" "test" {
   }
 
   index_field {
-    name   = "int_test_source"
-    type   = "int"
+    name          = "int_test_3"
+    type          = "int"
+    default_value = "8"
+  }
 
-    source_fields = "*"
+  index_field {
+    name   = "int_test_source"
+    type   = "int-array"
+
+    source_fields = "int_test_3"
   }
 }
 `, rName)
