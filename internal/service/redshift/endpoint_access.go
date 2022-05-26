@@ -102,6 +102,7 @@ func ResourceEndpointAccess() *schema.Resource {
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -195,6 +196,10 @@ func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		if err != nil {
 			return fmt.Errorf("error updating Redshift endpoint access (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
 		}
 	}
 

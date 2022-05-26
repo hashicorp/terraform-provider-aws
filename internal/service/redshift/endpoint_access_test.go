@@ -48,6 +48,40 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
+	var v redshift.EndpointAccess
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	resourceName := "aws_redshift_endpoint_access.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointAccessDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointAccessConfig_sgs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointAccessExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointAccessConfig_sgsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointAccessExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 	var v redshift.EndpointAccess
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
@@ -143,7 +177,7 @@ func testAccCheckEndpointAccessExists(n string, v *redshift.EndpointAccess) reso
 	}
 }
 
-func testAccEndpointAccessConfig_basic(rName string) string {
+func testAccEndpointAccessConfigBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
@@ -163,11 +197,52 @@ resource "aws_redshift_cluster" "test" {
   availability_zone_relocation_enabled = true
   publicly_accessible                  = false
 }
+`, rName))
+}
 
+func testAccEndpointAccessConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointAccessConfigBase(rName), fmt.Sprintf(`
 resource "aws_redshift_endpoint_access" "test" {
   endpoint_name      = %[1]q
   subnet_group_name  = aws_redshift_subnet_group.test.id
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+}
+`, rName))
+}
+
+func testAccEndpointAccessConfig_sgs(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointAccessConfigBase(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_redshift_endpoint_access" "test" {
+  endpoint_name          = %[1]q
+  subnet_group_name      = aws_redshift_subnet_group.test.id
+  cluster_identifier     = aws_redshift_cluster.test.cluster_identifier
+  vpc_security_group_ids = [aws_security_group.test.id]  
+}
+`, rName))
+}
+
+func testAccEndpointAccessConfig_sgsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointAccessConfigBase(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_redshift_endpoint_access" "test" {
+  endpoint_name          = %[1]q
+  subnet_group_name      = aws_redshift_subnet_group.test.id
+  cluster_identifier     = aws_redshift_cluster.test.cluster_identifier
+  vpc_security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]  
 }
 `, rName))
 }

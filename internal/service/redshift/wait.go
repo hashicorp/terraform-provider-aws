@@ -176,7 +176,7 @@ func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshi
 
 func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
+		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"active"},
 		Refresh:    statusEndpointAccess(conn, id),
 		Timeout:    10 * time.Minute,
