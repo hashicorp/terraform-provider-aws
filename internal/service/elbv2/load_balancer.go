@@ -1,20 +1,19 @@
 package elbv2
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -220,6 +220,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
 			},
 
+			"enable_waf_fail_open": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+			},
+
 			"ip_address_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -251,6 +258,18 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "defensive",
+				ValidateFunc: validation.StringInSlice([]string{
+					"monitor",
+					"defensive",
+					"strictest",
+				}, false),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -260,6 +279,12 @@ func ResourceLoadBalancer() *schema.Resource {
 func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
 	return func(k string, old string, new string, d *schema.ResourceData) bool {
 		return d.Get("load_balancer_type").(string) == t
+	}
+}
+
+func suppressIfLBTypeNot(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("load_balancer_type").(string) != t
 	}
 }
 
@@ -334,6 +359,14 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
 
 	resp, err := conn.CreateLoadBalancer(elbOpts)
+
+	// Some partitions may not support tag-on-create
+	if elbOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
+		elbOpts.Tags = nil
+		resp, err = conn.CreateLoadBalancer(elbOpts)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating %s Load Balancer: %w", d.Get("load_balancer_type").(string), err)
 	}
@@ -351,6 +384,21 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
 
+	// Post-create tagging supported in some partitions
+	if elbOpts.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] error adding tags after create for ELBv2 Load Balancer (%s): %s", d.Id(), err)
+			return resourceLoadBalancerUpdate(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating ELBv2 Load Balancer (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	return resourceLoadBalancerUpdate(d, meta)
 }
 
@@ -359,7 +407,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 	lb, err := FindLoadBalancerByARN(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 		// The ALB is gone now, so just remove it from the state
 		log.Printf("[WARN] ALB %s not found in AWS, removing from state", d.Id())
 		d.SetId("")
@@ -384,33 +432,6 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
-		}
-	}
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
@@ -454,6 +475,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 				Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
 			})
 		}
+
 		if d.HasChange("enable_http2") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http2.enabled"),
@@ -461,10 +483,29 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			})
 		}
 
+		// The "waf.fail_open.enabled" attribute is not available in all AWS regions
+		// e.g. us-gov-east-1; thus, we can instead only modify the attribute as a result of d.HasChange()
+		// to avoid "ValidationError: Load balancer attribute key 'waf.fail_open.enabled' is not recognized"
+		// when modifying the attribute right after resource creation.
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22037
+		if d.HasChange("enable_waf_fail_open") {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("waf.fail_open.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("enable_waf_fail_open").(bool))),
+			})
+		}
+
 		if d.HasChange("drop_invalid_header_fields") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.drop_invalid_header_fields.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("drop_invalid_header_fields").(bool))),
+			})
+		}
+
+		if d.HasChange("desync_mitigation_mode") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.desync_mitigation_mode"),
+				Value: aws.String(d.Get("desync_mitigation_mode").(string)),
 			})
 		}
 
@@ -491,7 +532,25 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
-		_, err := conn.ModifyLoadBalancerAttributes(input)
+
+		// Not all attributes are supported in all partitions (e.g., ISO)
+		var err error
+		for {
+			_, err = conn.ModifyLoadBalancerAttributes(input)
+			if err == nil {
+				break
+			}
+
+			re := regexp.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
+			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
+				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[2], err)
+				input.Attributes = removeAttribute(input.Attributes, sm[2])
+				continue
+			}
+
+			break
+		}
+
 		if err != nil {
 			return fmt.Errorf("failure configuring LB attributes: %w", err)
 		}
@@ -542,6 +601,45 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := UpdateTags(conn, d.Id(), o, n)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			err = UpdateTags(conn, d.Id(), o, n)
+		}
+
+		// ISO partitions may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] Unable to update tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+
+			_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
+			}
+
+			return resourceLoadBalancerRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
@@ -565,7 +663,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := cleanupLBNetworkInterfaces(ec2conn, d.Id())
+	err := cleanupALBNetworkInterfaces(ec2conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ALB %q: %#v", d.Id(), err)
 	}
@@ -578,113 +676,105 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
+func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*elbv2.LoadBalancerAttribute {
+	for i, a := range attributes {
+		if aws.StringValue(a.Key) == key {
+			return append(attributes[:i], attributes[i+1:]...)
+		}
+	}
+
+	log.Printf("[WARN] Unable to remove attribute %s from Load Balancer attributes: not found", key)
+	return attributes
+}
+
 // ALB automatically creates ENI(s) on creation
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
+	name, err := getLBNameFromARN(lbArn)
+
 	if err != nil {
 		return err
 	}
 
-	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.instance-owner-id"),
-				Values: []*string{aws.String("amazon-elb")},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("ELB " + name)},
-			},
-		},
-	})
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn, "amazon-elb", "ELB "+name)
+
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Found %d ENIs to cleanup for LB %q",
-		len(out.NetworkInterfaces), name)
+	var errs *multierror.Error
 
-	if len(out.NetworkInterfaces) == 0 {
-		// Nothing to cleanup
-		return nil
+	for _, networkInterface := range networkInterfaces {
+		if networkInterface.Attachment == nil {
+			continue
+		}
+
+		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
+		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
+
+		err = tfec2.DetachNetworkInterface(conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
+
+		if err != nil {
+			errs = multierror.Append(errs, err)
+
+			continue
+		}
+
+		err = tfec2.DeleteNetworkInterface(conn, networkInterfaceID)
+
+		if err != nil {
+			errs = multierror.Append(errs, err)
+
+			continue
+		}
 	}
 
-	err = detachNetworkInterfaces(conn, out.NetworkInterfaces)
-	if err != nil {
-		return err
-	}
-
-	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
-
-	return err
+	return errs.ErrorOrNil()
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
+
 	if err != nil {
 		return err
 	}
 
-	// We cannot cleanup these ENIs ourselves as that would result in
-	// OperationNotPermitted: You are not allowed to manage 'ela-attach' attachments.
-	// yet presence of these ENIs may prevent us from deleting EIPs associated w/ the NLB
-	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.instance-owner-id"),
-				Values: []*string{aws.String("amazon-aws")},
-			},
-			{
-				Name:   aws.String("attachment.attachment-id"),
-				Values: []*string{aws.String("ela-attach-*")},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("ELB " + name)},
-			},
+	errAttached := errors.New("attached")
+
+	_, err = tfresource.RetryWhen(
+		loadBalancerNetworkInterfaceDetachTimeout,
+		func() (interface{}, error) {
+			networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn, "amazon-aws", "ELB "+name)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if len(networkInterfaces) > 0 {
+				return networkInterfaces, errAttached
+			}
+
+			return networkInterfaces, nil
 		},
-	}
-	var out *ec2.DescribeNetworkInterfacesOutput
-	err = resource.Retry(loadBalancerNetworkInterfaceDetachTimeout, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeNetworkInterfaces(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+		func(err error) (bool, error) {
+			if errors.Is(err, errAttached) {
+				return true, err
+			}
 
-		niCount := len(out.NetworkInterfaces)
-		if niCount > 0 {
-			log.Printf("[DEBUG] Found %d ENIs to cleanup for NLB %q", niCount, lbArn)
-			return resource.RetryableError(fmt.Errorf("waiting for %d ENIs of %q to clean up", niCount, lbArn))
-		}
-		log.Printf("[DEBUG] ENIs gone for NLB %q", lbArn)
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeNetworkInterfaces(input)
-		if err != nil {
-			return fmt.Errorf("error describing network inferfaces: %w", err)
-		}
-
-		niCount := len(out.NetworkInterfaces)
-		if niCount > 0 {
-			return fmt.Errorf("error waiting for %d ENIs of %q to clean up", niCount, lbArn)
-		}
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return fmt.Errorf("error describing network inferfaces: %w", err)
+		return err
 	}
 
 	return nil
 }
 
-func getLbNameFromArn(arn string) (string, error) {
+func getLBNameFromARN(arn string) (string, error) {
 	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
@@ -763,23 +853,6 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
 	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
@@ -820,15 +893,45 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			http2Enabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting ALB HTTP/2 Enabled: %t", http2Enabled)
 			d.Set("enable_http2", http2Enabled)
+		case "waf.fail_open.enabled":
+			wafFailOpenEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting ALB WAF fail open Enabled: %t", wafFailOpenEnabled)
+			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
 		case "load_balancing.cross_zone.enabled":
 			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
+		case "routing.http.desync_mitigation_mode":
+			desyncMitigationMode := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB Desync Mitigation Mode: %s", desyncMitigationMode)
+			d.Set("desync_mitigation_mode", desyncMitigationMode)
 		}
 	}
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
 		return fmt.Errorf("error setting access_logs: %w", err)
+	}
+
+	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -877,82 +980,4 @@ func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v int
 		}
 	}
 	return nil
-}
-
-func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: ni.NetworkInterfaceId,
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
-	}
-	return nil
-}
-
-func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		if ni.Attachment == nil {
-			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
-			continue
-		}
-		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
-			AttachmentId: ni.Attachment.AttachmentId,
-			Force:        aws.Bool(true),
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
-
-		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"true"},
-			Target:  []string{"false"},
-			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
-			Timeout: 10 * time.Minute,
-		}
-
-		if _, err := stateConf.WaitForState(); err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				continue
-			}
-			return fmt.Errorf(
-				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
-		}
-	}
-	return nil
-}
-
-func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
-
-		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
-			return nil, "", err
-		}
-
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
-	}
 }

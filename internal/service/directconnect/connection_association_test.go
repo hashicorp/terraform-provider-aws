@@ -19,13 +19,13 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfigBasic(rName),
+				Config: testAccConnectionAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName),
 				),
@@ -34,18 +34,18 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccDirectConnectConnectionAssociation_lAGOnConnection(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 	resourceName := "aws_dx_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfigLAGOnConnection(rName),
+				Config: testAccConnectionAssociationConfig_lagOnConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName),
 				),
@@ -60,13 +60,13 @@ func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfigMultiple(rName),
+				Config: testAccConnectionAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName1),
 					testAccCheckConnectionAssociationExists(resourceName2),
@@ -123,20 +123,24 @@ func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccDxConnectionAssociationConfigBasic(rName string) string {
+func testAccConnectionAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
+
+locals {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[1]
+}
 
 resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = local.location_code
   force_destroy         = true
 }
 
@@ -147,27 +151,31 @@ resource "aws_dx_connection_association" "test" {
 `, rName)
 }
 
-func testAccDxConnectionAssociationConfigLAGOnConnection(rName string) string {
+func testAccConnectionAssociationConfig_lagOnConnection(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
+
+locals {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[1]
+}
 
 resource "aws_dx_connection" "test1" {
   name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_connection" "test2" {
   name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connection_id         = aws_dx_connection.test1.id
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = local.location_code
 }
 
 resource "aws_dx_connection_association" "test" {
@@ -177,26 +185,30 @@ resource "aws_dx_connection_association" "test" {
 `, rName)
 }
 
-func testAccDxConnectionAssociationConfigMultiple(rName string) string {
+func testAccConnectionAssociationConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
+
+locals {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[1]
+}
 
 resource "aws_dx_connection" "test1" {
   name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_connection" "test2" {
   name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = local.location_code
   force_destroy         = true
 }
 

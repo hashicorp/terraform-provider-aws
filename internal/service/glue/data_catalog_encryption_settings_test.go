@@ -13,21 +13,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
+func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
+	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests")
+
 	var settings glue.DataCatalogEncryptionSettings
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogEncryptionSettingsNonEncryptedConfig(),
+				Config: testAccDataCatalogEncryptionSettingsConfig_nonEncrypted(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
@@ -45,7 +47,7 @@ func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataCatalogEncryptionSettingsEncryptedConfig(rName),
+				Config: testAccDataCatalogEncryptionSettingsConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
@@ -58,7 +60,7 @@ func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataCatalogEncryptionSettingsNonEncryptedConfig(),
+				Config: testAccDataCatalogEncryptionSettingsConfig_nonEncrypted(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
@@ -74,7 +76,7 @@ func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, settings *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
+func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, v *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -90,17 +92,18 @@ func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, settin
 		output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
 			CatalogId: aws.String(rs.Primary.ID),
 		})
+
 		if err != nil {
 			return err
 		}
 
-		*settings = *output.DataCatalogEncryptionSettings
+		*v = *output.DataCatalogEncryptionSettings
 
 		return nil
 	}
 }
 
-func testAccDataCatalogEncryptionSettingsEncryptedConfig(rName string) string {
+func testAccDataCatalogEncryptionSettingsConfig_encrypted(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -139,7 +142,7 @@ resource "aws_glue_data_catalog_encryption_settings" "test" {
 `, rName)
 }
 
-func testAccDataCatalogEncryptionSettingsNonEncryptedConfig() string {
+func testAccDataCatalogEncryptionSettingsConfig_nonEncrypted() string {
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {

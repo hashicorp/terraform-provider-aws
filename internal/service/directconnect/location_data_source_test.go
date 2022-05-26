@@ -12,9 +12,9 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 	dsResourceName := "data.aws_dx_location.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceDxLocationConfig_basic,
@@ -32,7 +32,11 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 const testAccDataSourceDxLocationConfig_basic = `
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+}
+
 data "aws_dx_location" "test" {
-  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location_code = local.location_codes[length(local.location_codes) - 1]
 }
 `

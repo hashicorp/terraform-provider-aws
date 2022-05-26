@@ -2,6 +2,7 @@ package glue
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -16,7 +17,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 		Create: resourceDataCatalogEncryptionSettingsPut,
 		Read:   resourceDataCatalogEncryptionSettingsRead,
 		Update: resourceDataCatalogEncryptionSettingsPut,
-		Delete: schema.Noop,
+		Delete: resourceDataCatalogEncryptionSettingsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,16 +81,21 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 
 func resourceDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
-		CatalogId:                     aws.String(catalogID),
-		DataCatalogEncryptionSettings: expandGlueDataCatalogEncryptionSettings(d.Get("data_catalog_encryption_settings").([]interface{})),
+		CatalogId: aws.String(catalogID),
 	}
 
+	if v, ok := d.GetOk("data_catalog_encryption_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DataCatalogEncryptionSettings = expandDataCatalogEncryptionSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %s", input)
 	_, err := conn.PutDataCatalogEncryptionSettings(input)
+
 	if err != nil {
-		return fmt.Errorf("Error setting Data Catalog Encryption Settings: %w", err)
+		return fmt.Errorf("error putting Glue Data Catalog Encryption Settings (%s): %w", catalogID, err)
 	}
 
 	d.SetId(catalogID)
@@ -100,92 +106,148 @@ func resourceDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta inter
 func resourceDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetDataCatalogEncryptionSettingsInput{
+	output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(d.Id()),
-	}
+	})
 
-	out, err := conn.GetDataCatalogEncryptionSettings(input)
 	if err != nil {
-		return fmt.Errorf("Error reading Glue Data Catalog Encryption Settings: %w", err)
+		return fmt.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %w", d.Id(), err)
 	}
 
 	d.Set("catalog_id", d.Id())
-
-	if err := d.Set("data_catalog_encryption_settings", flattenGlueDataCatalogEncryptionSettings(out.DataCatalogEncryptionSettings)); err != nil {
-		return fmt.Errorf("error setting data_catalog_encryption_settings: %w", err)
+	if output.DataCatalogEncryptionSettings != nil {
+		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
+			return fmt.Errorf("error setting data_catalog_encryption_settings: %w", err)
+		}
+	} else {
+		d.Set("data_catalog_encryption_settings", nil)
 	}
 
 	return nil
 }
 
-func expandGlueDataCatalogEncryptionSettings(settings []interface{}) *glue.DataCatalogEncryptionSettings {
-	m := settings[0].(map[string]interface{})
+func resourceDataCatalogEncryptionSettingsDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).GlueConn
 
-	target := &glue.DataCatalogEncryptionSettings{
-		ConnectionPasswordEncryption: expandGlueDataCatalogConnectionPasswordEncryption(m["connection_password_encryption"].([]interface{})),
-		EncryptionAtRest:             expandGlueDataCatalogEncryptionAtRest(m["encryption_at_rest"].([]interface{})),
+	input := &glue.PutDataCatalogEncryptionSettingsInput{
+		CatalogId:                     aws.String(d.Id()),
+		DataCatalogEncryptionSettings: &glue.DataCatalogEncryptionSettings{},
 	}
 
-	return target
+	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %s", input)
+	_, err := conn.PutDataCatalogEncryptionSettings(input)
+
+	if err != nil {
+		return fmt.Errorf("error putting Glue Data Catalog Encryption Settings (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
-func flattenGlueDataCatalogEncryptionSettings(settings *glue.DataCatalogEncryptionSettings) []map[string]interface{} {
-	m := map[string]interface{}{
-		"connection_password_encryption": flattenGlueDataCatalogConnectionPasswordEncryption(settings.ConnectionPasswordEncryption),
-		"encryption_at_rest":             flattenGlueDataCatalogEncryptionAtRest(settings.EncryptionAtRest),
+func expandDataCatalogEncryptionSettings(tfMap map[string]interface{}) *glue.DataCatalogEncryptionSettings {
+	if tfMap == nil {
+		return nil
 	}
 
-	return []map[string]interface{}{m}
+	apiObject := &glue.DataCatalogEncryptionSettings{}
+
+	if v, ok := tfMap["connection_password_encryption"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ConnectionPasswordEncryption = expandConnectionPasswordEncryption(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["encryption_at_rest"].([]interface{}); ok && len(v) > 0 {
+		apiObject.EncryptionAtRest = expandEncryptionAtRest(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
 }
 
-func expandGlueDataCatalogConnectionPasswordEncryption(settings []interface{}) *glue.ConnectionPasswordEncryption {
-	m := settings[0].(map[string]interface{})
-
-	target := &glue.ConnectionPasswordEncryption{
-		ReturnConnectionPasswordEncrypted: aws.Bool(m["return_connection_password_encrypted"].(bool)),
+func expandConnectionPasswordEncryption(tfMap map[string]interface{}) *glue.ConnectionPasswordEncryption {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["aws_kms_key_id"].(string); ok && v != "" {
-		target.AwsKmsKeyId = aws.String(v)
+	apiObject := &glue.ConnectionPasswordEncryption{}
+
+	if v, ok := tfMap["aws_kms_key_id"].(string); ok && v != "" {
+		apiObject.AwsKmsKeyId = aws.String(v)
 	}
 
-	return target
+	if v, ok := tfMap["return_connection_password_encrypted"].(bool); ok {
+		apiObject.ReturnConnectionPasswordEncrypted = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
-func flattenGlueDataCatalogConnectionPasswordEncryption(settings *glue.ConnectionPasswordEncryption) []map[string]interface{} {
-	m := map[string]interface{}{
-		"return_connection_password_encrypted": aws.BoolValue(settings.ReturnConnectionPasswordEncrypted),
+func expandEncryptionAtRest(tfMap map[string]interface{}) *glue.EncryptionAtRest {
+	if tfMap == nil {
+		return nil
 	}
 
-	if settings.AwsKmsKeyId != nil {
-		m["aws_kms_key_id"] = aws.StringValue(settings.AwsKmsKeyId)
+	apiObject := &glue.EncryptionAtRest{}
+
+	if v, ok := tfMap["catalog_encryption_mode"].(string); ok && v != "" {
+		apiObject.CatalogEncryptionMode = aws.String(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v, ok := tfMap["sse_aws_kms_key_id"].(string); ok && v != "" {
+		apiObject.SseAwsKmsKeyId = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandGlueDataCatalogEncryptionAtRest(settings []interface{}) *glue.EncryptionAtRest {
-	m := settings[0].(map[string]interface{})
-
-	target := &glue.EncryptionAtRest{
-		CatalogEncryptionMode: aws.String(m["catalog_encryption_mode"].(string)),
+func flattenDataCatalogEncryptionSettings(apiObject *glue.DataCatalogEncryptionSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	if v, ok := m["sse_aws_kms_key_id"].(string); ok && v != "" {
-		target.SseAwsKmsKeyId = aws.String(v)
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConnectionPasswordEncryption; v != nil {
+		tfMap["connection_password_encryption"] = []interface{}{flattenConnectionPasswordEncryption(v)}
 	}
 
-	return target
+	if v := apiObject.EncryptionAtRest; v != nil {
+		tfMap["encryption_at_rest"] = []interface{}{flattenEncryptionAtRest(v)}
+	}
+
+	return tfMap
 }
 
-func flattenGlueDataCatalogEncryptionAtRest(settings *glue.EncryptionAtRest) []map[string]interface{} {
-	m := map[string]interface{}{
-		"catalog_encryption_mode": aws.StringValue(settings.CatalogEncryptionMode),
+func flattenConnectionPasswordEncryption(apiObject *glue.ConnectionPasswordEncryption) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	if settings.SseAwsKmsKeyId != nil {
-		m["sse_aws_kms_key_id"] = aws.StringValue(settings.SseAwsKmsKeyId)
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AwsKmsKeyId; v != nil {
+		tfMap["aws_kms_key_id"] = aws.StringValue(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v := apiObject.ReturnConnectionPasswordEncrypted; v != nil {
+		tfMap["return_connection_password_encrypted"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEncryptionAtRest(apiObject *glue.EncryptionAtRest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CatalogEncryptionMode; v != nil {
+		tfMap["catalog_encryption_mode"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SseAwsKmsKeyId; v != nil {
+		tfMap["sse_aws_kms_key_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

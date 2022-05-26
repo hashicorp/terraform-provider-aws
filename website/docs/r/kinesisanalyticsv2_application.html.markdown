@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
+subcategory: "Kinesis Analytics V2"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application"
 description: |-
@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example-flink-application"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.bucket
   key    = "example-flink-application"
   source = "flink-app.jar"
@@ -38,7 +38,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.example.arn
-          file_key   = aws_s3_bucket_object.example.key
+          file_key   = aws_s3_object.example.key
         }
       }
 
@@ -104,7 +104,7 @@ resource "aws_cloudwatch_log_stream" "example" {
 
 resource "aws_kinesisanalyticsv2_application" "example" {
   name                   = "example-sql-application"
-  runtime_environment    = "SQL-1.0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.example.arn
 
   application_configuration {
@@ -220,7 +220,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example-flink-application"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.bucket
   key    = "example-flink-application"
   source = "flink-app.jar"
@@ -236,7 +236,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.example.arn
-          file_key   = aws_s3_bucket_object.example.key
+          file_key   = aws_s3_object.example.key
         }
       }
 
@@ -256,7 +256,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the application.
-* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`.
+* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
@@ -482,6 +482,15 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - The status of the application.
 * `version_id` - The current application version. Kinesis Data Analytics updates the `version_id` each time the application is updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_kinesisanalyticsv2_application` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for Application creation
+- `update` - (Default `10 minutes`) Used for Application modifications and snapshotting
+- `delete` - (Default `10 minutes`) Used for Application deletion
 
 ## Import
 

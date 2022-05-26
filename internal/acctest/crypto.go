@@ -19,7 +19,7 @@ const (
 	pemBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
 )
 
-var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128)
+var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
 
 // TLSRSAPrivateKeyPEM generates a RSA private key PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
@@ -110,7 +110,7 @@ func TLSRSAX509LocallySignedCertificatePEM(caKeyPem, caCertificatePem, keyPem, c
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{
@@ -168,7 +168,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(keyPem string) string {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		IsCA:                  true,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{
@@ -217,7 +217,7 @@ func TLSRSAX509SelfSignedCertificatePEM(keyPem, commonName string) string {
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{

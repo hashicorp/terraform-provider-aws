@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ami"
 description: |-
@@ -72,6 +72,7 @@ interpolation.
 
 * `arn` - The ARN of the AMI.
 * `architecture` - The OS architecture of the AMI (ie: `i386` or `x86_64`).
+* `boot_mode` - The boot mode of the image.
 * `block_device_mappings` - Set of objects with block device mappings of the AMI.
     * `device_name` - The physical name of the device.
     * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`).
@@ -85,6 +86,7 @@ interpolation.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - The virtual device name (for instance stores).
 * `creation_date` - The date and time the image was created.
+* `deprecation_time` - The date and time when the image will be deprecated.
 * `description` - The description of the AMI that was provided during image
   creation.
 * `hypervisor` - The hypervisor type of the image.
@@ -117,6 +119,7 @@ interpolation.
 * `tags` - Any tags assigned to the image.
     * `tags.#.key` - The key name of the tag.
     * `tags.#.value` - The value of the tag.
+* `tpm_support` - If the image is configured for NitroTPM support, the value is `v2.0`.
 * `virtualization_type` - The type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
 * `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.

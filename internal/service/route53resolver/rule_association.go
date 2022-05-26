@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +16,11 @@ import (
 
 const (
 	RuleAssociationStatusDeleted = "DELETED"
+)
+
+const (
+	ruleAssociationCreatedDefaultTimeout = 10 * time.Minute
+	ruleAssociationDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceRuleAssociation() *schema.Resource {
@@ -28,8 +33,8 @@ func ResourceRuleAssociation() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(ruleAssociationCreatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(ruleAssociationDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -89,7 +94,7 @@ func resourceRuleAssociationCreate(d *schema.ResourceData, meta interface{}) err
 func resourceRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	assocRaw, state, err := route53ResolverRuleAssociationRefresh(conn, d.Id())()
+	assocRaw, state, err := ruleAssociationRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver rule association (%s): %s", d.Id(), err)
 	}
@@ -116,7 +121,7 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -133,12 +138,12 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {
+func ruleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(assocId),
 		})
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return "", RuleAssociationStatusDeleted, nil
 		}
 		if err != nil {
@@ -157,7 +162,7 @@ func RuleAssociationWaitUntilTargetState(conn *route53resolver.Route53Resolver, 
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    route53ResolverRuleAssociationRefresh(conn, assocId),
+		Refresh:    ruleAssociationRefresh(conn, assocId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

@@ -1,4 +1,4 @@
-//go:generate go run -tags generate ../../generate/tags/main.go -ListTags=yes -ServiceTagsSlice=yes -TagType=TagListEntry -UntagInTagsElem=Keys -UpdateTags=yes
+//go:generate go run ../../generate/tags/main.go -ListTags -ServiceTagsSlice -TagType=TagListEntry -UntagInTagsElem=Keys -UpdateTags
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package datasync

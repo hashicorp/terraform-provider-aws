@@ -76,7 +76,15 @@ variable "workflow_labels" {
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
-      description = "Introduces a new resource"
+      description = "Introduces a new resource."
+    },
+    "new-service" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new service."
+    },
+    "pre-service-packages" = {
+      color       = "ffec6e", # color:vault
+      description = "Includes pre-Service Packages aspects."
     },
     "prerelease-tf-testing" = {
       color       = "60dea9", # color:nomad
@@ -102,9 +110,9 @@ variable "workflow_labels" {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
     },
-    "service/nas" = {
+    "service/meta" = {
       color       = "7b42bc", # color:terraform (logomark)
-      description = "(Not A Service) Issues and PRs that don't directly correspond to an AWS service."
+      description = "Issues and PRs that correspond to meta data sources."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient
@@ -130,6 +138,10 @@ variable "workflow_labels" {
       color       = "008196", # color:lightest-darkest waypoint gradient
       description = "Managed by automation to categorize the size of a PR."
     },
+    "skaff" = {
+      color       = "63d0ff", # color:packer
+      description = "Issues and pull requested related to the skaff tool"
+    }
     "stale" = {
       color       = "828a90", # color:stale grey
       description = "Old or inactive issues managed by automation, if no further action taken these will get closed."

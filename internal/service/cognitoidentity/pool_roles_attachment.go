@@ -6,11 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePoolRolesAttachment() *schema.Resource {
@@ -148,18 +149,19 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	ip, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIdentity, names.ErrActionReading, ResPoolRolesAttachment, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Cognito Identity Pool Roles Association %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CognitoIdentity, names.ErrActionReading, ResPoolRolesAttachment, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)
 
-	if err := d.Set("roles", flattenIdentityPoolRoles(ip.Roles)); err != nil {
+	if err := d.Set("roles", aws.StringValueMap(ip.Roles)); err != nil {
 		return fmt.Errorf("Error setting roles error: %#v", err)
 	}
 

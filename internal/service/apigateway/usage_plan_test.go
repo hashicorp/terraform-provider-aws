@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,10 +23,10 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanBasicConfig(rName),
@@ -63,10 +63,10 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanBasicTags1(rName, "key1", "value1"),
@@ -110,10 +110,10 @@ func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanBasicConfig(rName),
@@ -164,10 +164,10 @@ func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanProductCodeConfig(rName, "MYCODE"),
@@ -212,10 +212,10 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanBasicConfig(rName),
@@ -267,10 +267,10 @@ func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanThrottlingConfig(rName),
@@ -294,10 +294,10 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanBasicConfig(rName),
@@ -350,10 +350,10 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			// Create UsagePlan WITH Stages as the API calls are different
 			// when creating or updating.
@@ -434,10 +434,10 @@ func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanAPIStagesMultipleConfig(rName),
@@ -461,21 +461,80 @@ func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
+	var conf apigateway.UsagePlan
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_usage_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUsagePlanAPIStagesConfigThrottle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						"stage":      "test",
+						"throttle.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
+						"path":        "/test/GET",
+						"burst_limit": "3",
+						"rate_limit":  "6",
+					}),
+				),
+			},
+			{
+				Config: testAccUsagePlanAPIStagesConfigThrottleMulti(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						"stage":      "foo",
+						"throttle.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						"stage":      "test",
+						"throttle.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
+						"path":        "/test/GET",
+						"burst_limit": "3",
+						"rate_limit":  "6",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(resourceName, &conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -534,7 +593,7 @@ func testAccCheckUsagePlanDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			return err
 		}
 
@@ -725,6 +784,65 @@ resource "aws_api_gateway_usage_plan" "test" {
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
     stage  = aws_api_gateway_deployment.test.stage_name
+  }
+}
+`, rName)
+}
+
+func testAccUsagePlanAPIStagesConfigThrottle(rName string) string {
+	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
+resource "aws_api_gateway_usage_plan" "test" {
+  name = "%s"
+
+  throttle_settings {
+    burst_limit = 3
+    rate_limit  = 6
+  }
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
+
+    throttle {
+      path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
+      burst_limit = 3
+      rate_limit  = 6
+    }
+  }
+}
+`, rName)
+}
+
+func testAccUsagePlanAPIStagesConfigThrottleMulti(rName string) string {
+	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
+resource "aws_api_gateway_usage_plan" "test" {
+  name = "%s"
+
+  throttle_settings {
+    burst_limit = 3
+    rate_limit  = 6
+  }
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
+
+    throttle {
+      path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
+      burst_limit = 3
+      rate_limit  = 6
+    }
+  }
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.foo.stage_name
+
+    throttle {
+      path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
+      burst_limit = 3
+      rate_limit  = 6
+    }
   }
 }
 `, rName)

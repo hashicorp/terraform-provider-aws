@@ -26,13 +26,13 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		},
 		{
 			TestName:      "invalid ARN service",
-			InputARN:      "arn:aws:ec2:us-west-2:123456789012:alias/test-alias",
+			InputARN:      "arn:aws:ec2:us-west-2:123456789012:alias/test-alias", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected service kms`),
 		},
 		{
 			TestName:    "valid ARN",
-			InputARN:    "arn:aws:kms:us-west-2:123456789012:alias/test-alias",
-			ExpectedARN: "arn:aws:kms:us-west-2:123456789012:key/test-key",
+			InputARN:    "arn:aws:kms:us-west-2:123456789012:alias/test-alias", //lintignore:AWSAT003,AWSAT005
+			ExpectedARN: "arn:aws:kms:us-west-2:123456789012:key/test-key",     //lintignore:AWSAT003,AWSAT005
 		},
 	}
 
@@ -85,41 +85,41 @@ func TestKeyARNOrIDEqual(t *testing.T) {
 		},
 		{
 			name:   "equal ARNs",
-			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
-			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
+			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 			want:   true,
 		},
 		{
 			name:   "not equal ARNs",
-			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
-			second: "arn:aws:kms:us-east-2:111122224444:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
+			second: "arn:aws:kms:us-east-2:111122224444:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 		},
 		{
 			name:   "equal first ID, second ARN",
 			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
-			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 			want:   true,
 		},
 		{
 			name:   "equal first ARN, second ID",
-			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 			second: "1234abcd-12ab-34cd-56ef-1234567890ab",
 			want:   true,
 		},
 		{
 			name:   "not equal first ID, second ARN",
 			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
-			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ac",
+			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ac", //lintignore:AWSAT003,AWSAT005
 		},
 		{
 			name:   "not equal first ARN, second ID",
-			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 			second: "1234abcd-12ab-34cd-56ef-1234567890ac",
 		},
 		{
 			name:   "not equal first ID, second incorrect ARN",
 			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
-			second: "arn:aws:kms:us-east-2:111122223333:alias/1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122223333:alias/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 		},
 	}
 

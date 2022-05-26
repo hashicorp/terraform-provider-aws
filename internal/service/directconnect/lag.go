@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -97,9 +97,9 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("connection_id"); ok {
 		connectionIDSpecified = true
 		input.ConnectionId = aws.String(v.(string))
-		input.NumberOfConnections = aws.Int64(int64(1))
+		input.NumberOfConnections = aws.Int64(1)
 	} else {
-		input.NumberOfConnections = aws.Int64(int64(1))
+		input.NumberOfConnections = aws.Int64(1)
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -121,7 +121,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
+		err = deleteConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
 
 		if err != nil {
 			return err
@@ -224,14 +224,14 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
+			err = deleteConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
 
 			if err != nil {
 				return err
 			}
 		}
 	} else if v, ok := d.GetOk("connection_id"); ok {
-		if err := deleteDirectConnectConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
+		if err := deleteConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
 			return err
 		}
 	}

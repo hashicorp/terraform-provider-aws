@@ -20,15 +20,15 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -41,7 +41,7 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 			{
 				Config: testAccFileSystemPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -55,15 +55,15 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,15 +78,15 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 			{
 				Config: testAccFileSystemPolicyBypassConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
 				),
 			},
@@ -107,7 +107,61 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 	})
 }
 
-func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/21968
+func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
+	var desc efs.DescribeFileSystemPolicyOutput
+	resourceName := "aws_efs_file_system_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemPolicyFirstEquivalentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				Config:   testAccFileSystemPolicySecondEquivalentConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19245
+func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
+	var desc efs.DescribeFileSystemPolicyOutput
+	resourceName := "aws_efs_file_system_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFileSystemPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				Config:   testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func testAccCheckFileSystemPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -131,7 +185,7 @@ func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPolicyOutput) resource.TestCheckFunc {
+func testAccCheckFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -171,7 +225,7 @@ resource "aws_efs_file_system_policy" "test" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"
@@ -209,7 +263,7 @@ resource "aws_efs_file_system_policy" "test" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"
@@ -246,7 +300,7 @@ resource "aws_efs_file_system_policy" "test" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"
@@ -267,4 +321,124 @@ resource "aws_efs_file_system_policy" "test" {
 POLICY
 }
 `, rName, bypass)
+}
+
+func testAccFileSystemPolicyFirstEquivalentConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_file_system_policy" "test" {
+  file_system_id = aws_efs_file_system.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "ExamplePolicy01"
+    Statement = [{
+      Sid    = "ExampleStatement01"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Resource = aws_efs_file_system.test.arn
+      Action = [
+        "elasticfilesystem:ClientMount",
+        "elasticfilesystem:ClientWrite",
+      ]
+      Condition = {
+        Bool = {
+          "aws:SecureTransport" = "true"
+        }
+      }
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccFileSystemPolicySecondEquivalentConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_file_system_policy" "test" {
+  file_system_id = aws_efs_file_system.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "ExamplePolicy01"
+    Statement = [{
+      Sid    = "ExampleStatement01"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Resource = aws_efs_file_system.test.arn
+      Action = [
+        "elasticfilesystem:ClientWrite",
+        "elasticfilesystem:ClientMount",
+      ]
+      Condition = {
+        Bool = {
+          "aws:SecureTransport" = ["true"]
+        }
+      }
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_file_system_policy" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  policy         = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  version = "2012-10-17"
+
+  statement {
+    sid = "Allow mount and write"
+
+    actions = [
+      "elasticfilesystem:ClientWrite",
+      "elasticfilesystem:ClientRootAccess",
+      "elasticfilesystem:ClientMount",
+    ]
+
+    resources = [aws_efs_file_system.test.arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+  }
+
+  statement {
+    sid       = "Enforce in-transit encryption for all clients"
+    effect    = "Deny"
+    actions   = ["*"]
+    resources = [aws_efs_file_system.test.arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+`, rName)
 }

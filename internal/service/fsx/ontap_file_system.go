@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -183,7 +183,6 @@ func ResourceOntapFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1024, 192*1024),
 			},
 			"storage_type": {
@@ -197,7 +196,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				MinItems: 2,
+				MinItems: 1,
 				MaxItems: 2,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -206,8 +205,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{512, 1024, 2048}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048}),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -260,7 +258,7 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
-		input.OntapConfiguration.DiskIopsConfiguration = expandFsxOntapFileDiskIopsConfiguration(v.([]interface{}))
+		input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("fsx_admin_password"); ok {
@@ -352,11 +350,11 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	if err := d.Set("endpoints", flattenFsxOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return fmt.Errorf("error setting endpoints: %w", err)
 	}
 
-	if err := d.Set("disk_iops_configuration", flattenFsxOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
+	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
 		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
 	}
 
@@ -392,6 +390,10 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
 		}
 
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
 		if d.HasChange("automatic_backup_retention_days") {
 			input.OntapConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
 		}
@@ -408,6 +410,14 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 			input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
 
+		if d.HasChange("throughput_capacity") {
+			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+		}
+
+		if d.HasChange("disk_iops_configuration") {
+			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		_, err := conn.UpdateFileSystem(input)
 
 		if err != nil {
@@ -415,6 +425,10 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
+		}
+
+		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -445,7 +459,7 @@ func resourceOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandFsxOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
+func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -464,7 +478,7 @@ func expandFsxOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsCon
 	return &out
 }
 
-func flattenFsxOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+func flattenOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -480,23 +494,23 @@ func flattenFsxOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []i
 	return []interface{}{m}
 }
 
-func flattenFsxOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
+func flattenOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.Intercluster != nil {
-		m["intercluster"] = flattenFsxOntapFileSystemEndpoint(rs.Intercluster)
+		m["intercluster"] = flattenOntapFileSystemEndpoint(rs.Intercluster)
 	}
 	if rs.Management != nil {
-		m["management"] = flattenFsxOntapFileSystemEndpoint(rs.Management)
+		m["management"] = flattenOntapFileSystemEndpoint(rs.Management)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenFsxOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
+func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}

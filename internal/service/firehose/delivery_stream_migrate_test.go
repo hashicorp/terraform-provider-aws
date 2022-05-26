@@ -89,7 +89,7 @@ func TestMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	_, err = resourceInstanceMigrateState(0, is, meta)
+	_, err = resourceInstanceMigrateState(0, is)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)
@@ -126,8 +126,7 @@ func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 	return is, nil
 }
 
-func resourceInstanceMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func resourceInstanceMigrateState(v int, is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Instance State v0; migrating to v1")

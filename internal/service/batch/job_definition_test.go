@@ -24,10 +24,10 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigName(rName),
@@ -61,10 +61,10 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigName(rName),
@@ -84,10 +84,10 @@ func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigCapabilitiesEC2(rName),
@@ -122,10 +122,10 @@ func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDe
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName),
@@ -160,10 +160,10 @@ func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigCapabilitiesFargate(rName),
@@ -200,14 +200,14 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 			"param2": aws.String("val2"),
 		},
 		RetryStrategy: &batch.RetryStrategy{
-			Attempts: aws.Int64(int64(1)),
+			Attempts: aws.Int64(1),
 			EvaluateOnExit: []*batch.EvaluateOnExit{
 				{Action: aws.String(strings.ToLower(batch.RetryActionRetry)), OnStatusReason: aws.String("Host EC2*")},
 				{Action: aws.String(strings.ToLower(batch.RetryActionExit)), OnReason: aws.String("*")},
 			},
 		},
 		Timeout: &batch.JobTimeout{
-			AttemptDurationSeconds: aws.Int64(int64(60)),
+			AttemptDurationSeconds: aws.Int64(60),
 		},
 		ContainerProperties: &batch.ContainerProperties{
 			Command: []*string{aws.String("ls"), aws.String("-la")},
@@ -215,16 +215,16 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 				{Name: aws.String("VARNAME"), Value: aws.String("VARVAL")},
 			},
 			Image:  aws.String("busybox"),
-			Memory: aws.Int64(int64(512)),
+			Memory: aws.Int64(512),
 			MountPoints: []*batch.MountPoint{
 				{ContainerPath: aws.String("/tmp"), ReadOnly: aws.Bool(false), SourceVolume: aws.String("tmp")},
 			},
 			ResourceRequirements: []*batch.ResourceRequirement{},
 			Secrets:              []*batch.Secret{},
 			Ulimits: []*batch.Ulimit{
-				{HardLimit: aws.Int64(int64(1024)), Name: aws.String("nofile"), SoftLimit: aws.Int64(int64(1024))},
+				{HardLimit: aws.Int64(1024), Name: aws.String("nofile"), SoftLimit: aws.Int64(1024)},
 			},
-			Vcpus: aws.Int64(int64(1)),
+			Vcpus: aws.Int64(1),
 			Volumes: []*batch.Volume{
 				{
 					Host: &batch.Host{SourcePath: aws.String("/tmp")},
@@ -237,10 +237,10 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName),
@@ -264,10 +264,10 @@ func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName),
@@ -298,10 +298,10 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigTags1(rName, "key1", "value1"),
@@ -343,10 +343,10 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionPropagateTags(rName),

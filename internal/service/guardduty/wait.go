@@ -15,8 +15,7 @@ const (
 	adminAccountNotFoundTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a PublishingDestination to return Publishing
-	publishingDestinationCreatedTimeout    = 5 * time.Minute
-	publishingDestinationCreatedMinTimeout = 3 * time.Second
+	publishingDestinationCreatedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for membership to propagate
 	// When removing Organization Admin Accounts, there is eventual
@@ -32,7 +31,7 @@ func waitAdminAccountEnabled(conn *guardduty.GuardDuty, adminAccountID string) (
 		Pending: []string{adminStatusNotFound},
 		Target:  []string{guardduty.AdminStatusEnabled},
 		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
-		Timeout: adminAccountNotFoundTimeout,
+		Timeout: adminAccountEnabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

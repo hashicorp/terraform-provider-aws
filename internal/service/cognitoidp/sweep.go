@@ -37,7 +37,7 @@ func sweepUserPoolDomains(region string) error {
 	conn := client.(*conns.AWSClient).CognitoIDPConn
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(int64(50)),
+		MaxResults: aws.Int64(50),
 	}
 
 	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
@@ -89,7 +89,7 @@ func sweepUserPools(region string) error {
 	conn := client.(*conns.AWSClient).CognitoIDPConn
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(int64(50)),
+		MaxResults: aws.Int64(50),
 	}
 
 	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {

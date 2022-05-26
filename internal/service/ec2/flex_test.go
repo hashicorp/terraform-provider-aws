@@ -9,49 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestFlattenAttachment(t *testing.T) {
-	expanded := &ec2.NetworkInterfaceAttachment{
-		InstanceId:   aws.String("i-00001"),
-		DeviceIndex:  aws.Int64(int64(1)),
-		AttachmentId: aws.String("at-002"),
-	}
-
-	result := FlattenAttachment(expanded)
-
-	if result == nil {
-		t.Fatal("expected result to have value, but got nil")
-	}
-
-	if result["instance"] != "i-00001" {
-		t.Fatalf("expected instance to be i-00001, but got %s", result["instance"])
-	}
-
-	if result["device_index"] != int64(1) {
-		t.Fatalf("expected device_index to be 1, but got %d", result["device_index"])
-	}
-
-	if result["attachment_id"] != "at-002" {
-		t.Fatalf("expected attachment_id to be at-002, but got %s", result["attachment_id"])
-	}
-}
-
-func TestFlattenAttachmentWhenNoInstanceId(t *testing.T) {
-	expanded := &ec2.NetworkInterfaceAttachment{
-		DeviceIndex:  aws.Int64(int64(1)),
-		AttachmentId: aws.String("at-002"),
-	}
-
-	result := FlattenAttachment(expanded)
-
-	if result == nil {
-		t.Fatal("expected result to have value, but got nil")
-	}
-
-	if result["instance"] != nil {
-		t.Fatalf("expected instance to be nil, but got %s", result["instance"])
-	}
-}
-
 func TestFlattenGroupIdentifiers(t *testing.T) {
 	expanded := []*ec2.GroupIdentifier{
 		{GroupId: aws.String("sg-001")},
@@ -107,7 +64,7 @@ func TestExpandIPPerms(t *testing.T) {
 	expected := []ec2.IpPermission{
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges: []*ec2.IpRange{
 				{
@@ -129,7 +86,7 @@ func TestExpandIPPerms(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
@@ -216,8 +173,8 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	expected := []ec2.IpPermission{
 		{
 			IpProtocol: aws.String("-1"),
-			FromPort:   aws.Int64(int64(0)),
-			ToPort:     aws.Int64(int64(0)),
+			FromPort:   aws.Int64(0),
+			ToPort:     aws.Int64(0),
 			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
@@ -312,7 +269,7 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 	expected := []ec2.IpPermission{
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
@@ -326,7 +283,7 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
@@ -375,55 +332,6 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
 			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
 			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-}
-
-func TestFlattenNetworkInterfacesPrivateIPAddresses(t *testing.T) {
-	expanded := []*ec2.NetworkInterfacePrivateIpAddress{
-		{PrivateIpAddress: aws.String("192.168.0.1")},
-		{PrivateIpAddress: aws.String("192.168.0.2")},
-	}
-
-	result := FlattenNetworkInterfacesPrivateIPAddresses(expanded)
-
-	if result == nil {
-		t.Fatal("result was nil")
-	}
-
-	if len(result) != 2 {
-		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
-	}
-
-	if result[0] != "192.168.0.1" {
-		t.Fatalf("expected ip to be 192.168.0.1, but was %s", result[0])
-	}
-
-	if result[1] != "192.168.0.2" {
-		t.Fatalf("expected ip to be 192.168.0.2, but was %s", result[1])
-	}
-}
-
-func TestExpandPrivateIPAddresses(t *testing.T) {
-
-	ip1 := "192.168.0.1"
-	ip2 := "192.168.0.2"
-	flattened := []interface{}{
-		ip1,
-		ip2,
-	}
-
-	result := ExpandPrivateIPAddresses(flattened)
-
-	if len(result) != 2 {
-		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
-	}
-
-	if aws.StringValue(result[0].PrivateIpAddress) != "192.168.0.1" || !aws.BoolValue(result[0].Primary) {
-		t.Fatalf("expected ip to be 192.168.0.1 and Primary, but got %v, %t", aws.StringValue(result[0].PrivateIpAddress), aws.BoolValue(result[0].Primary))
-	}
-
-	if aws.StringValue(result[1].PrivateIpAddress) != "192.168.0.2" || aws.BoolValue(result[1].Primary) {
-		t.Fatalf("expected ip to be 192.168.0.2 and not Primary, but got %v, %t", aws.StringValue(result[1].PrivateIpAddress), aws.BoolValue(result[1].Primary))
 	}
 }
 

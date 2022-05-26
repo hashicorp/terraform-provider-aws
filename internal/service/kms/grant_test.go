@@ -19,13 +19,13 @@ func TestAccKMSGrant_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccGrantConfig_basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -51,13 +51,13 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_withConstraints(rName, "encryption_context_equals", `foo = "bar"
+				Config: testAccGrantConfig_constraints(rName, "encryption_context_equals", `foo = "bar"
                         baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
@@ -77,7 +77,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
 			},
 			{
-				Config: testAccGrant_withConstraints(rName, "encryption_context_subset", `foo = "bar"
+				Config: testAccGrantConfig_constraints(rName, "encryption_context_subset", `foo = "bar"
 			            baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
@@ -99,13 +99,13 @@ func TestAccKMSGrant_withRetiringPrincipal(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_withRetiringPrincipal(rName),
+				Config: testAccGrantConfig_retiringPrincipal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "retiring_principal"),
@@ -126,13 +126,13 @@ func TestAccKMSGrant_bare(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_bare(rName),
+				Config: testAccGrantConfig_bare(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "name"),
@@ -155,13 +155,13 @@ func TestAccKMSGrant_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_ARN(rName, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccGrantConfig_arn(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -187,13 +187,13 @@ func TestAccKMSGrant_asymmetricKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_AsymmetricKey(rName),
+				Config: testAccGrantConfig_asymmetricKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
 				),
@@ -213,13 +213,13 @@ func TestAccKMSGrant_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGrantDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccGrantConfig_basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
 					testAccCheckGrantDisappears(resourceName),
@@ -278,7 +278,7 @@ func testAccCheckGrantDisappears(name string) resource.TestCheckFunc {
 func testAccGrantBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test key %[1]s"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
@@ -302,21 +302,21 @@ resource "aws_iam_role" "test" {
 `, rName)
 }
 
-func testAccGrant_Basic(rName string, operations string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+func testAccGrantConfig_basic(rName string, operations string) string {
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = [%[2]s]
 }
-`, rName, operations)
+`, rName, operations))
 }
 
-func testAccGrant_withConstraints(rName string, constraintName string, encryptionContext string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+func testAccGrantConfig_constraints(rName string, constraintName string, encryptionContext string) string {
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name              = "%[1]s"
+  name              = %[1]q
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = ["RetireGrant", "DescribeKey"]
@@ -327,53 +327,53 @@ resource "aws_kms_grant" "test" {
     }
   }
 }
-`, rName, constraintName, encryptionContext)
+`, rName, constraintName, encryptionContext))
 }
 
-func testAccGrant_withRetiringPrincipal(rName string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+func testAccGrantConfig_retiringPrincipal(rName string) string {
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name               = "%[1]s"
+  name               = %[1]q
   key_id             = aws_kms_key.test.key_id
   grantee_principal  = aws_iam_role.test.arn
   operations         = ["ReEncryptTo", "CreateGrant"]
   retiring_principal = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
-func testAccGrant_bare(rName string) string {
-	return testAccGrantBaseConfig(rName) + `
+func testAccGrantConfig_bare(rName string) string {
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), `
 resource "aws_kms_grant" "test" {
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = ["ReEncryptTo", "CreateGrant"]
 }
-`
+`)
 }
 
-func testAccGrant_ARN(rName string, operations string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+func testAccGrantConfig_arn(rName string, operations string) string {
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name              = "%[1]s"
+  name              = %[1]q
   key_id            = aws_kms_key.test.arn
   grantee_principal = aws_iam_role.test.arn
   operations        = [%[2]s]
 }
-`, rName, operations)
+`, rName, operations))
 }
 
-func testAccGrant_AsymmetricKey(rName string) string {
+func testAccGrantConfig_asymmetricKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name              = "%[1]s"
+  name              = %[1]q
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = ["GetPublicKey", "Sign", "Verify"]
 }
 
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test key %[1]s"
+  description             = %[1]q
   deletion_window_in_days = 7
 
   key_usage                = "SIGN_VERIFY"

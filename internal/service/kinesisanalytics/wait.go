@@ -4,9 +4,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -72,7 +71,7 @@ func waitApplicationStopped(conn *kinesisanalytics.KinesisAnalytics, name string
 }
 
 // waitApplicationUpdated waits for an Application to update
-func waitApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+func waitApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusUpdating},
 		Target:  []string{kinesisanalytics.ApplicationStatusReady, kinesisanalytics.ApplicationStatusRunning},
@@ -94,7 +93,7 @@ func waitApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string
 func waitIAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = f()

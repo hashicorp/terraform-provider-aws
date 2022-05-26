@@ -79,6 +79,11 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		return !lastPage
 	})
 
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Runner AutoScaling Configuration Versions sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner AutoScaling Configuration Versions: %w", err))
 	}
@@ -135,6 +140,11 @@ func sweepConnections(region string) error {
 		return !lastPage
 	})
 
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Runner Connections sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Connections: %w", err))
 	}
@@ -188,6 +198,11 @@ func sweepServices(region string) error {
 
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Runner Services sweep for %s: %s", region, err)
+		return nil
+	}
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Services: %w", err))

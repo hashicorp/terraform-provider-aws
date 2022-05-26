@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +23,12 @@ import (
 
 const (
 	RuleStatusDeleted = "DELETED"
+)
+
+const (
+	ruleCreatedDefaultTimeout = 10 * time.Minute
+	ruleUpdatedDefaultTimeout = 10 * time.Minute
+	ruleDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceRule() *schema.Resource {
@@ -40,9 +46,9 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(ruleCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(ruleUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(ruleDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -94,7 +100,7 @@ func ResourceRule() *schema.Resource {
 						},
 					},
 				},
-				Set: route53ResolverRuleHashTargetIp,
+				Set: ruleHashTargetIP,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -164,7 +170,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ruleRaw, state, err := route53ResolverRuleRefresh(conn, d.Id())()
+	ruleRaw, state, err := ruleRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver rule (%s): %s", d.Id(), err)
 	}
@@ -184,7 +190,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("rule_type", rule.RuleType)
 	d.Set("share_status", rule.ShareStatus)
-	if err := d.Set("target_ip", schema.NewSet(route53ResolverRuleHashTargetIp, flattenRuleTargetIPs(rule.TargetIps))); err != nil {
+	if err := d.Set("target_ip", schema.NewSet(ruleHashTargetIP, flattenRuleTargetIPs(rule.TargetIps))); err != nil {
 		return err
 	}
 
@@ -257,7 +263,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 		ResolverRuleId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -288,12 +294,12 @@ func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v i
 	return nil
 }
 
-func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId string) resource.StateRefreshFunc {
+func ruleRefresh(conn *route53resolver.Route53Resolver, ruleId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(ruleId),
 		})
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return "", RuleStatusDeleted, nil
 		}
 		if err != nil {
@@ -312,7 +318,7 @@ func RuleWaitUntilTargetState(conn *route53resolver.Route53Resolver, ruleId stri
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    route53ResolverRuleRefresh(conn, ruleId),
+		Refresh:    ruleRefresh(conn, ruleId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -324,7 +330,7 @@ func RuleWaitUntilTargetState(conn *route53resolver.Route53Resolver, ruleId stri
 	return nil
 }
 
-func route53ResolverRuleHashTargetIp(v interface{}) int {
+func ruleHashTargetIP(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-%d-", m["ip"].(string), m["port"].(int)))

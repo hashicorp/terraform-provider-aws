@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,6 +51,28 @@ func ResourceUsagePlan() *schema.Resource {
 						"stage": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"throttle": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"path": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"burst_limit": {
+										Type:     schema.TypeInt,
+										Default:  0,
+										Optional: true,
+									},
+									"rate_limit": {
+										Type:     schema.TypeFloat,
+										Default:  0,
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -136,7 +158,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("api_stages"); ok && v.(*schema.Set).Len() > 0 {
-		params.ApiStages = expandApiGatewayUsageApiStages(v.(*schema.Set))
+		params.ApiStages = expandAPIStages(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("quota_settings"); ok {
@@ -151,11 +173,11 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 			return errors.New("At least one field is expected inside quota_settings")
 		}
 
-		params.Quota = expandApiGatewayUsageQuotaSettings(v.([]interface{}))
+		params.Quota = expandQuotaSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("throttle_settings"); ok {
-		params.Throttle = expandApiGatewayUsageThrottleSettings(v.([]interface{}))
+		params.Throttle = expandThrottleSettings(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -203,12 +225,12 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 		UsagePlanId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Usage Plan (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Usage Plan (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(up.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -235,19 +257,19 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("product_code", up.ProductCode)
 
 	if up.ApiStages != nil {
-		if err := d.Set("api_stages", flattenApiGatewayUsageApiStages(up.ApiStages)); err != nil {
+		if err := d.Set("api_stages", flattenAPIStages(up.ApiStages)); err != nil {
 			return fmt.Errorf("error setting api_stages error: %w", err)
 		}
 	}
 
 	if up.Throttle != nil {
-		if err := d.Set("throttle_settings", flattenApiGatewayUsagePlanThrottling(up.Throttle)); err != nil {
+		if err := d.Set("throttle_settings", flattenThrottleSettings(up.Throttle)); err != nil {
 			return fmt.Errorf("error setting throttle_settings error: %w", err)
 		}
 	}
 
 	if up.Quota != nil {
-		if err := d.Set("quota_settings", flattenApiGatewayUsagePlanQuota(up.Quota)); err != nil {
+		if err := d.Set("quota_settings", flattenQuotaSettings(up.Quota)); err != nil {
 			return fmt.Errorf("error setting quota_settings error: %w", err)
 		}
 	}
@@ -314,11 +336,28 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(ns) > 0 {
 			for _, v := range ns {
 				m := v.(map[string]interface{})
+				id := fmt.Sprintf("%s:%s", m["api_id"].(string), m["stage"].(string))
 				operations = append(operations, &apigateway.PatchOperation{
 					Op:    aws.String(apigateway.OpAdd),
 					Path:  aws.String("/apiStages"),
-					Value: aws.String(fmt.Sprintf("%s:%s", m["api_id"].(string), m["stage"].(string))),
+					Value: aws.String(id),
 				})
+				if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
+					for _, throttle := range t.List() {
+
+						th := throttle.(map[string]interface{})
+						operations = append(operations, &apigateway.PatchOperation{
+							Op:    aws.String(apigateway.OpReplace),
+							Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th["path"].(string))),
+							Value: aws.String(strconv.FormatFloat(th["rate_limit"].(float64), 'f', -1, 64)),
+						})
+						operations = append(operations, &apigateway.PatchOperation{
+							Op:    aws.String(apigateway.OpReplace),
+							Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th["path"].(string))),
+							Value: aws.String(strconv.Itoa(th["burst_limit"].(int))),
+						})
+					}
+				}
 			}
 		}
 	}
@@ -481,6 +520,10 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 		UsagePlanId: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting API gateway usage plan: %w", err)
 	}
@@ -489,7 +532,7 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func expandApiGatewayUsageApiStages(s *schema.Set) []*apigateway.ApiStage {
+func expandAPIStages(s *schema.Set) []*apigateway.ApiStage {
 	stages := []*apigateway.ApiStage{}
 
 	for _, stageRaw := range s.List() {
@@ -504,13 +547,17 @@ func expandApiGatewayUsageApiStages(s *schema.Set) []*apigateway.ApiStage {
 			stage.Stage = aws.String(v)
 		}
 
+		if v, ok := mStage["throttle"].(*schema.Set); ok && v.Len() > 0 {
+			stage.Throttle = expandThrottleSettingsList(v.List())
+		}
+
 		stages = append(stages, stage)
 	}
 
 	return stages
 }
 
-func expandApiGatewayUsageQuotaSettings(l []interface{}) *apigateway.QuotaSettings {
+func expandQuotaSettings(l []interface{}) *apigateway.QuotaSettings {
 	if len(l) == 0 {
 		return nil
 	}
@@ -534,7 +581,7 @@ func expandApiGatewayUsageQuotaSettings(l []interface{}) *apigateway.QuotaSettin
 	return qs
 }
 
-func expandApiGatewayUsageThrottleSettings(l []interface{}) *apigateway.ThrottleSettings {
+func expandThrottleSettings(l []interface{}) *apigateway.ThrottleSettings {
 	if len(l) == 0 {
 		return nil
 	}
@@ -554,7 +601,7 @@ func expandApiGatewayUsageThrottleSettings(l []interface{}) *apigateway.Throttle
 	return ts
 }
 
-func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]interface{} {
+func flattenAPIStages(s []*apigateway.ApiStage) []map[string]interface{} {
 	stages := make([]map[string]interface{}, 0)
 
 	for _, bd := range s {
@@ -562,6 +609,7 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 			stage := make(map[string]interface{})
 			stage["api_id"] = aws.StringValue(bd.ApiId)
 			stage["stage"] = aws.StringValue(bd.Stage)
+			stage["throttle"] = flattenThrottleSettingsMap(bd.Throttle)
 
 			stages = append(stages, stage)
 		}
@@ -574,7 +622,7 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 	return nil
 }
 
-func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[string]interface{} {
+func flattenThrottleSettings(s *apigateway.ThrottleSettings) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if s == nil {
@@ -592,7 +640,7 @@ func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[
 	return []map[string]interface{}{settings}
 }
 
-func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]interface{} {
+func flattenQuotaSettings(s *apigateway.QuotaSettings) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if s == nil {
@@ -612,4 +660,58 @@ func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]i
 	}
 
 	return []map[string]interface{}{settings}
+}
+
+func expandThrottleSettingsList(tfList []interface{}) map[string]*apigateway.ThrottleSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := map[string]*apigateway.ThrottleSettings{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := &apigateway.ThrottleSettings{}
+
+		if v, ok := tfMap["burst_limit"].(int); ok {
+			apiObject.BurstLimit = aws.Int64(int64(v))
+		}
+
+		if v, ok := tfMap["rate_limit"].(float64); ok {
+			apiObject.RateLimit = aws.Float64(v)
+		}
+
+		if v, ok := tfMap["path"].(string); ok && v != "" {
+			apiObjects[v] = apiObject
+		}
+	}
+
+	return apiObjects
+}
+
+func flattenThrottleSettingsMap(apiObjects map[string]*apigateway.ThrottleSettings) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for k, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, map[string]interface{}{
+			"path":        k,
+			"rate_limit":  aws.Float64Value(apiObject.RateLimit),
+			"burst_limit": aws.Int64Value(apiObject.BurstLimit),
+		})
+	}
+
+	return tfList
 }

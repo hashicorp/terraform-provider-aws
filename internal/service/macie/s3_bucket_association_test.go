@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,10 +18,10 @@ func TestAccMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckS3BucketAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, macie.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3BucketAssociationConfig_basic(rInt),
@@ -46,10 +47,10 @@ func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckS3BucketAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, macie.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3BucketAssociationConfig_accountIdAndPrefix(rInt),
@@ -153,6 +154,10 @@ func testAccPreCheck(t *testing.T) {
 	_, err := conn.ListS3Resources(input)
 
 	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if tfawserr.ErrMessageContains(err, macie.ErrCodeInvalidInputException, "Macie is not enabled for this AWS account") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

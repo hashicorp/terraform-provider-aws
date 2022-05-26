@@ -23,6 +23,9 @@ const (
 	// imageBuilderStateTimeout Maximum amount of time to wait for the statusImageBuilderState to be RUNNING
 	// or for the ImageBuilder to be deleted
 	imageBuilderStateTimeout = 60 * time.Minute
+	// userOperationTimeout Maximum amount of time to wait for User operation eventual consistency
+	userOperationTimeout = 4 * time.Minute
+	userAvailable        = "AVAILABLE"
 )
 
 // waitStackStateDeleted waits for a deleted stack
@@ -53,7 +56,7 @@ func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name 
 }
 
 // waitFleetStateRunning waits for a fleet running
-func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStarting},
 		Target:  []string{appstream.FleetStateRunning},
@@ -81,7 +84,7 @@ func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name 
 }
 
 // waitFleetStateStopped waits for a fleet stopped
-func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStopping},
 		Target:  []string{appstream.FleetStateStopped},
@@ -158,6 +161,23 @@ func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream
 			tfresource.SetLastError(err, errs.ErrorOrNil())
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitUserAvailable waits for a user be available
+func waitUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{userAvailable},
+		Refresh: statusUserAvailable(ctx, conn, username, authType),
+		Timeout: userOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*appstream.User); ok {
 		return output, err
 	}
 

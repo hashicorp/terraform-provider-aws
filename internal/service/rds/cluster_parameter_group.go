@@ -8,16 +8,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const rdsClusterParameterGroupMaxParamsBulkEdit = 20
+const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
@@ -33,6 +34,17 @@ func ResourceClusterParameterGroup() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -50,23 +62,16 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
 			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"apply_method": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "immediate",
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -75,16 +80,10 @@ func ResourceClusterParameterGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"apply_method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "immediate",
-						},
 					},
 				},
 				Set: resourceParameterHash,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -98,14 +97,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
+	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	createOpts := rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
@@ -159,6 +151,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", describeResp.DBClusterParameterGroups[0].Description)
 	d.Set("family", describeResp.DBClusterParameterGroups[0].DBParameterGroupFamily)
 	d.Set("name", describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones
 	describeParametersOpts := rds.DescribeDBClusterParametersInput{
@@ -223,10 +216,10 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 			// we've got them all.
 			for parameters != nil {
 				var paramsToModify []*rds.Parameter
-				if len(parameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
+				if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
 					paramsToModify, parameters = parameters[:], nil
 				} else {
-					paramsToModify, parameters = parameters[:rdsClusterParameterGroupMaxParamsBulkEdit], parameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
+					paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
 				}
 
 				modifyOpts := rds.ModifyDBClusterParameterGroupInput{
@@ -265,10 +258,10 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 			for resetParameters != nil {
 				parameterGroupName := d.Get("name").(string)
 				var paramsToReset []*rds.Parameter
-				if len(resetParameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
+				if len(resetParameters) <= clusterParameterGroupMaxParamsBulkEdit {
 					paramsToReset, resetParameters = resetParameters[:], nil
 				} else {
-					paramsToReset, resetParameters = resetParameters[:rdsClusterParameterGroupMaxParamsBulkEdit], resetParameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
+					paramsToReset, resetParameters = resetParameters[:clusterParameterGroupMaxParamsBulkEdit], resetParameters[clusterParameterGroupMaxParamsBulkEdit:]
 				}
 
 				resetOpts := rds.ResetDBClusterParameterGroupInput{

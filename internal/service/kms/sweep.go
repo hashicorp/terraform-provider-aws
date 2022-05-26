@@ -28,7 +28,7 @@ func sweepKeys(region string) error {
 	}
 	conn := client.(*conns.AWSClient).KMSConn
 
-	err = conn.ListKeysPages(&kms.ListKeysInput{Limit: aws.Int64(int64(1000))}, func(out *kms.ListKeysOutput, lastPage bool) bool {
+	err = conn.ListKeysPages(&kms.ListKeysInput{Limit: aws.Int64(1000)}, func(out *kms.ListKeysOutput, lastPage bool) bool {
 		for _, k := range out.Keys {
 			kKeyId := aws.StringValue(k.KeyId)
 			kOut, err := conn.DescribeKey(&kms.DescribeKeyInput{

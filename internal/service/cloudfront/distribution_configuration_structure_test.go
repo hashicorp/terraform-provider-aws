@@ -30,6 +30,7 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 		"compress":                    true,
 		"field_level_encryption_id":   "",
 		"realtime_log_config_arn":     "",
+		"response_headers_policy_id":  "",
 	}
 }
 
@@ -128,13 +129,13 @@ func customOriginConf() map[string]interface{} {
 		"origin_protocol_policy":   "http-only",
 		"http_port":                80,
 		"https_port":               443,
-		"origin_ssl_protocols":     customOriginSslProtocolsConf(),
+		"origin_ssl_protocols":     customOriginSSLProtocolsConf(),
 		"origin_read_timeout":      30,
 		"origin_keepalive_timeout": 5,
 	}
 }
 
-func customOriginSslProtocolsConf() *schema.Set {
+func customOriginSSLProtocolsConf() *schema.Set {
 	return schema.NewSet(schema.HashString, []interface{}{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"})
 }
 
@@ -264,7 +265,7 @@ func customErrorResponseConfNoResponseCode() map[string]interface{} {
 	return er
 }
 
-func viewerCertificateConfSetCloudFrontDefault() map[string]interface{} {
+func viewerCertificateConfSetDefault() map[string]interface{} {
 	return map[string]interface{}{
 		"acm_certificate_arn":            "",
 		"cloudfront_default_certificate": true,
@@ -809,7 +810,7 @@ func TestCloudFrontStructure_flattenCustomOriginConfig(t *testing.T) {
 }
 
 func TestCloudFrontStructure_expandCustomOriginConfigSSL(t *testing.T) {
-	in := customOriginSslProtocolsConf()
+	in := customOriginSSLProtocolsConf()
 	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	if *ocs.Quantity != 4 {
 		t.Fatalf("Expected Quantity to be 4, got %v", *ocs.Quantity)
@@ -817,7 +818,7 @@ func TestCloudFrontStructure_expandCustomOriginConfigSSL(t *testing.T) {
 }
 
 func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
-	in := customOriginSslProtocolsConf()
+	in := customOriginSSLProtocolsConf()
 	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	out := tfcloudfront.FlattenCustomOriginConfigSSL(ocs)
 
@@ -1043,7 +1044,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 }
 
 func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certificate(t *testing.T) {
-	data := viewerCertificateConfSetCloudFrontDefault()
+	data := viewerCertificateConfSetDefault()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
 		t.Fatalf("Expected ACMCertificateArn to be unset, got %v", *vc.ACMCertificateArn)

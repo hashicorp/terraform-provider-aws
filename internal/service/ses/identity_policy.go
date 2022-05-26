@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,6 +45,10 @@ func ResourceIdentityPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -55,13 +60,19 @@ func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 	identity := d.Get("identity").(string)
 	policyName := d.Get("name").(string)
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	input := &ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		PolicyName: aws.String(policyName),
-		Policy:     aws.String(d.Get("policy").(string)),
+		Policy:     aws.String(policy),
 	}
 
-	_, err := conn.PutIdentityPolicy(input)
+	_, err = conn.PutIdentityPolicy(input)
 	if err != nil {
 		return fmt.Errorf("error creating SES Identity (%s) Policy: %s", identity, err)
 	}
@@ -79,10 +90,16 @@ func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	req := ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		PolicyName: aws.String(policyName),
-		Policy:     aws.String(d.Get("policy").(string)),
+		Policy:     aws.String(policy),
 	}
 
 	_, err = conn.PutIdentityPolicy(&req)
@@ -131,7 +148,14 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("identity", identity)
 	d.Set("name", policyName)
-	d.Set("policy", policy)
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }

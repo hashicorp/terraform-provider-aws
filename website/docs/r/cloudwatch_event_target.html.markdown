@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_target"
 description: |-
@@ -98,6 +98,11 @@ resource "aws_iam_role" "ssm_lifecycle" {
 resource "aws_iam_policy" "ssm_lifecycle" {
   name   = "SSMLifecycle"
   policy = data.aws_iam_policy_document.ssm_lifecycle.json
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_lifecycle" {
+  policy_arn = aws_iam_policy.ssm_lifecycle.arn
+  role       = aws_iam_role.ssm_lifecycle.name
 }
 
 resource "aws_ssm_document" "stop_instance" {
@@ -270,6 +275,59 @@ resource "aws_api_gateway_stage" "example" {
 }
 ```
 
+## Example Cross-Account Event Bus target
+
+```terraform
+resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
+  name               = "event-bus-invoke-remote-event-bus"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+data "aws_iam_policy_document" "event_bus_invoke_remote_event_bus" {
+  statement {
+    effect    = "Allow"
+    actions   = ["events:PutEvents"]
+    resources = ["arn:aws:events:eu-west-1:1234567890:event-bus/My-Event-Bus"]
+  }
+}
+
+resource "aws_iam_policy" "event_bus_invoke_remote_event_bus" {
+  name   = "event_bus_invoke_remote_event_bus"
+  policy = data.aws_iam_policy_document.event_bus_invoke_remote_event_bus.json
+}
+
+resource "aws_iam_role_policy_attachment" "event_bus_invoke_remote_event_bus" {
+  role       = aws_iam_role.event_bus_invoke_remote_event_bus.name
+  policy_arn = aws_iam_policy.event_bus_invoke_remote_event_bus.arn
+}
+
+resource "aws_cloudwatch_event_rule" "stop_instances" {
+  name                = "StopInstance"
+  description         = "Stop instances nightly"
+  schedule_expression = "cron(0 0 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "stop_instances" {
+  target_id = "StopInstance"
+  arn       = "arn:aws:events:eu-west-1:1234567890:event-bus/My-Event-Bus"
+  rule      = aws_cloudwatch_event_rule.stop_instances.name
+  role_arn  = aws_iam_role.event_bus_invoke_remote_event_bus.arn
+}
+```
+
 ## Example Input Transformer Usage - JSON Object
 
 ```terraform
@@ -320,10 +378,10 @@ resource "aws_cloudwatch_event_rule" "example" {
 ## Argument Reference
 
 -> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must setup the right permissions
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
    using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
    or [`aws_sns_topic.policy`](/docs/providers/aws/r/sns_topic.html#policy).
-   More info [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/resource-based-policies-cwe.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are supported:
 
@@ -333,7 +391,7 @@ The following arguments are supported:
 * `arn` - (Required) The Amazon Resource Name (ARN) of the target.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream or Step Functions state machine.
+* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.

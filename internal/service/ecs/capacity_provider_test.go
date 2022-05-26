@@ -20,10 +20,10 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCapacityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderConfig(rName),
@@ -58,10 +58,10 @@ func TestAccECSCapacityProvider_disappears(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCapacityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderConfig(rName),
@@ -81,10 +81,10 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCapacityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderManagedScalingConfig(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
@@ -130,10 +130,10 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCapacityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderManagedScalingPartialConfig(rName),
@@ -165,10 +165,10 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCapacityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityProviderTags1Config(rName, "key1", "value1"),
@@ -321,7 +321,7 @@ resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
 
     managed_scaling {
       instance_warmup_period    = %[2]d

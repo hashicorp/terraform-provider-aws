@@ -8,27 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
-func TestFlattenEnabledMetrics(t *testing.T) {
-	expanded := []*autoscaling.EnabledMetric{
-		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupTotalInstances")},
-		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
-	}
-
-	result := flattenASGEnabledMetrics(expanded)
-
-	if len(result) != 2 {
-		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
-	}
-
-	if result[0] != "GroupTotalInstances" {
-		t.Fatalf("expected id to be GroupTotalInstances, but was %s", result[0])
-	}
-
-	if result[1] != "GroupMaxSize" {
-		t.Fatalf("expected id to be GroupMaxSize, but was %s", result[1])
-	}
-}
-
 func TestExpandStepAdjustments(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
@@ -45,7 +24,7 @@ func TestExpandStepAdjustments(t *testing.T) {
 	expected := &autoscaling.StepAdjustment{
 		MetricIntervalLowerBound: aws.Float64(1.0),
 		MetricIntervalUpperBound: aws.Float64(2.0),
-		ScalingAdjustment:        aws.Int64(int64(1)),
+		ScalingAdjustment:        aws.Int64(1),
 	}
 
 	if !reflect.DeepEqual(parameters[0], expected) {
@@ -61,7 +40,7 @@ func TestFlattenStepAdjustments(t *testing.T) {
 		{
 			MetricIntervalLowerBound: aws.Float64(1.0),
 			MetricIntervalUpperBound: aws.Float64(2.5),
-			ScalingAdjustment:        aws.Int64(int64(1)),
+			ScalingAdjustment:        aws.Int64(1),
 		},
 	}
 

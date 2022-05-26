@@ -3,10 +3,12 @@ package ds
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,6 +16,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
 func ResourceDirectory() *schema.Resource {
@@ -189,7 +195,7 @@ func ResourceDirectory() *schema.Resource {
 	}
 }
 
-func buildVpcSettings(d *schema.ResourceData) (vpcSettings *directoryservice.DirectoryVpcSettings, err error) {
+func buildVPCSettings(d *schema.ResourceData) (vpcSettings *directoryservice.DirectoryVpcSettings, err error) {
 	v, ok := d.GetOk("vpc_settings")
 	if !ok {
 		return nil, fmt.Errorf("vpc_settings is required for type = SimpleAD or MicrosoftAD")
@@ -275,7 +281,7 @@ func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema
 	return *out.DirectoryId, nil
 }
 
-func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+func createSimple(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -298,7 +304,7 @@ func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *sc
 		input.ShortName = aws.String(v.(string))
 	}
 
-	input.VpcSettings, err = buildVpcSettings(d)
+	input.VpcSettings, err = buildVPCSettings(d)
 	if err != nil {
 		return "", err
 	}
@@ -313,7 +319,7 @@ func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	return *out.DirectoryId, nil
 }
 
-func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+func createActive(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -333,7 +339,7 @@ func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *sc
 		input.Edition = aws.String(v.(string))
 	}
 
-	input.VpcSettings, err = buildVpcSettings(d)
+	input.VpcSettings, err = buildVPCSettings(d)
 	if err != nil {
 		return "", err
 	}
@@ -348,7 +354,7 @@ func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	return *out.DirectoryId, nil
 }
 
-func enableDirectoryServiceSso(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
+func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
 	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
 		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
 		if _, err := conn.EnableSso(&directoryservice.EnableSsoInput{
@@ -369,7 +375,7 @@ func enableDirectoryServiceSso(conn *directoryservice.DirectoryService, d *schem
 }
 
 func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	var directoryId string
 	var err error
@@ -378,9 +384,9 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	if directoryType == directoryservice.DirectoryTypeAdconnector {
 		directoryId, err = createDirectoryConnector(conn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
-		directoryId, err = createActiveDirectoryService(conn, d, meta)
+		directoryId, err = createActive(conn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
-		directoryId, err = createSimpleDirectoryService(conn, d, meta)
+		directoryId, err = createSimple(conn, d, meta)
 	}
 
 	if err != nil {
@@ -412,7 +418,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_sso") {
-		if err := enableDirectoryServiceSso(conn, d); err != nil {
+		if err := enableSSO(conn, d); err != nil {
 			return err
 		}
 	}
@@ -421,10 +427,10 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	if d.HasChange("enable_sso") {
-		if err := enableDirectoryServiceSso(conn, d); err != nil {
+		if err := enableSSO(conn, d); err != nil {
 			return err
 		}
 	}
@@ -441,7 +447,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -463,7 +469,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("alias", dir.Alias)
 	d.Set("description", dir.Description)
 
-	if *dir.Type == directoryservice.DirectoryTypeAdconnector {
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
 	} else {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
@@ -511,16 +517,30 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	input := &directoryservice.DeleteDirectoryInput{
 		DirectoryId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDirectory(input)
+	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
+	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteDirectory(input)
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+			return nil
+		}
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "authorized applications") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
 		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteDirectory(input)
 	}
 
 	if err != nil {

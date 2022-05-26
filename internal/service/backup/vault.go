@@ -7,11 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -26,14 +27,10 @@ func ResourceVault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -41,14 +38,18 @@ func ResourceVault() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
 			"recovery_points": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -60,8 +61,9 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := &backup.CreateBackupVaultInput{
-		BackupVaultName: aws.String(d.Get("name").(string)),
+		BackupVaultName: aws.String(name),
 		BackupVaultTags: Tags(tags.IgnoreAWS()),
 	}
 
@@ -70,11 +72,12 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err := conn.CreateBackupVault(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Backup Vault (%s): %s", d.Id(), err)
+		return fmt.Errorf("error creating Backup Vault (%s): %w", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
 	return resourceVaultRead(d, meta)
 }
@@ -84,34 +87,29 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &backup.DescribeBackupVaultInput{
-		BackupVaultName: aws.String(d.Id()),
-	}
+	output, err := FindBackupVaultByName(conn, d.Id())
 
-	resp, err := conn.DescribeBackupVault(input)
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
-		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Backup Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Backup Vault (%s): %w", d.Id(), err)
 	}
-	d.Set("name", resp.BackupVaultName)
-	d.Set("kms_key_arn", resp.EncryptionKeyArn)
-	d.Set("arn", resp.BackupVaultArn)
-	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
+
+	d.Set("arn", output.BackupVaultArn)
+	d.Set("kms_key_arn", output.EncryptionKeyArn)
+	d.Set("name", output.BackupVaultName)
+	d.Set("recovery_points", output.NumberOfRecoveryPoints)
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Vault (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Backup Vault (%s): %w", d.Id(), err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -132,7 +130,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Backup Vault (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating tags for Backup Vault (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -146,6 +144,10 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteBackupVault(&backup.DeleteBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error deleting Backup Vault (%s): %w", d.Id(), err)

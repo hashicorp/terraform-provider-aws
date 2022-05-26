@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_filter_rule"
 description: |-
