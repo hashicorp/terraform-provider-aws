@@ -2047,21 +2047,8 @@ func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instanc
 }
 
 func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) {
-	ltData, err := fetchLaunchTemplateData(specs, conn)
-	if err != nil {
-		return "", fmt.Errorf("failed fetching Launch Template AMI ID: %w", err)
-	}
-
-	if ltData.ImageId != nil {
-		return *ltData.ImageId, nil
-	}
-
-	return "", nil
-}
-
-func fetchLaunchTemplateData(specs []interface{}, conn *ec2.EC2) (*ec2.ResponseLaunchTemplateData, error) {
 	if len(specs) < 1 {
-		return nil, errors.New("Cannot fetch data for blank launch template spec.")
+		return "", errors.New("Cannot fetch AMI for blank launch template.")
 	}
 
 	spec := specs[0].(map[string]interface{})
@@ -2097,7 +2084,7 @@ func fetchLaunchTemplateData(specs []interface{}, conn *ec2.EC2) (*ec2.ResponseL
 
 	dltv, err := conn.DescribeLaunchTemplateVersions(request)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	var ltData *ec2.ResponseLaunchTemplateData
@@ -2108,7 +2095,11 @@ func fetchLaunchTemplateData(specs []interface{}, conn *ec2.EC2) (*ec2.ResponseL
 		ltData = dltv.LaunchTemplateVersions[0].LaunchTemplateData
 	}
 
-	return ltData, nil
+	if ltData.ImageId != nil {
+		return *ltData.ImageId, nil
+	}
+
+	return "", nil
 }
 
 func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
@@ -2585,20 +2576,8 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 		opts.InstanceType = aws.String(v.(string))
 	}
 
-	var interruptionBehavior string
 	if v, ok := d.GetOk("launch_template"); ok {
 		opts.LaunchTemplate = expandEc2LaunchTemplateSpecification(v.([]interface{}))
-
-		ltData, err := fetchLaunchTemplateData(v.([]interface{}), conn)
-		if err != nil {
-			return nil, err
-		}
-
-		if ltData.InstanceMarketOptions != nil && ltData.InstanceMarketOptions.SpotOptions != nil {
-			if v := ltData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior; v != nil {
-				interruptionBehavior = *v
-			}
-		}
 	}
 
 	instanceType := d.Get("instance_type").(string)
@@ -2654,15 +2633,12 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 	// aws_spot_instance_request. They represent the same data. :-|
 	opts.Placement = &ec2.Placement{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		GroupName:        aws.String(d.Get("placement_group").(string)),
 	}
 
 	opts.SpotPlacement = &ec2.SpotPlacement{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-	}
-
-	if interruptionBehavior == "" || interruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate {
-		opts.Placement.GroupName = aws.String(d.Get("placement_group").(string))
-		opts.SpotPlacement.GroupName = aws.String(d.Get("placement_group").(string))
+		GroupName:        aws.String(d.Get("placement_group").(string)),
 	}
 
 	if v := d.Get("tenancy").(string); v != "" {

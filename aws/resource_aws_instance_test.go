@@ -2803,30 +2803,6 @@ func TestAccAWSInstance_LaunchTemplate_SwapIDAndName(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_SpotAndStop(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-	launchTemplateResourceName := "aws_launch_template.test"
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_WithTemplate_WithSpot_WithStop(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
@@ -6603,34 +6579,6 @@ resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-}
-
-resource "aws_instance" "test" {
-  launch_template {
-    name = aws_launch_template.test.name
-  }
-}
-`, rName))
-}
-
-func testAccInstanceConfig_WithTemplate_WithSpot_WithStop(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
-		fmt.Sprintf(`
-resource "aws_launch_template" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-
-  instance_market_options {
-    market_type = "spot"
-
-    spot_options {
-      instance_interruption_behavior = "stop"
-      spot_instance_type             = "persistent"
-    }
-  }
 }
 
 resource "aws_instance" "test" {
