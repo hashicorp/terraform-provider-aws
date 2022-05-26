@@ -665,7 +665,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -719,7 +719,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -749,7 +749,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -776,7 +776,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -811,7 +811,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -841,7 +841,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -874,7 +874,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -918,7 +918,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.Errorf("error refreshing current_version attribute for MSK Cluster (%s): %s ", d.Id(), err)
+			return diag.FromErr(err)
 		}
 	}
 
@@ -1747,7 +1747,7 @@ func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta int
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading MSK Cluster (%s): %w", d.Id(), err)
 	}
 
 	d.Set("current_version", cluster.CurrentVersion)
