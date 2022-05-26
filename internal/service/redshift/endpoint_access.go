@@ -26,6 +26,10 @@ func ResourceEndpointAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -53,6 +57,46 @@ func ResourceEndpointAccess() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
+			},
+			"vpc_endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"network_interface": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"network_interface_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"private_ip_address": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"subnet_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"vpc_endpoint_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -90,6 +134,11 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(createOpts.EndpointName))
 	log.Printf("[INFO] Redshift endpoint access ID: %s", d.Id())
+
+	if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
+	}
+
 	return resourceEndpointAccessRead(d, meta)
 }
 
@@ -114,6 +163,11 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("resource_owner", endpoint.ResourceOwner)
 	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
 	d.Set("port", endpoint.Port)
+	d.Set("address", endpoint.Address)
+
+	if err := d.Set("vpc_endpoint", flattenVpcEndpoint(endpoint.VpcEndpoint)); err != nil {
+		return fmt.Errorf("setting vpc_endpoint: %w", err)
+	}
 
 	return nil
 }
@@ -152,11 +206,19 @@ func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteEndpointAccess(&redshift.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
-		return nil
+
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
+			return nil
+		}
+		return err
 	}
 
-	return err
+	if _, err := waitEndpointAccessDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Redshift Endpoint Access (%s) to be deleted: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func vpcSgsIdsToSlice(vpsSgsIds []*redshift.VpcSecurityGroupMembership) []string {
@@ -165,4 +227,70 @@ func vpcSgsIdsToSlice(vpsSgsIds []*redshift.VpcSecurityGroupMembership) []string
 		VpcSgsSlice = append(VpcSgsSlice, *s.VpcSecurityGroupId)
 	}
 	return VpcSgsSlice
+}
+
+func flattenVpcEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.NetworkInterfaces; v != nil {
+		tfMap["network_interface"] = flattenNetworkInterfaces(v)
+	}
+
+	if v := apiObject.VpcEndpointId; v != nil {
+		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNetworkInterface(apiObject *redshift.NetworkInterface) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZone; v != nil {
+		tfMap["availability_zone"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.NetworkInterfaceId; v != nil {
+		tfMap["network_interface_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrivateIpAddress; v != nil {
+		tfMap["private_ip_address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SubnetId; v != nil {
+		tfMap["subnet_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkInterfaces(apiObjects []*redshift.NetworkInterface) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNetworkInterface(apiObject))
+	}
+
+	return tfList
 }

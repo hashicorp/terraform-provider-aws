@@ -173,3 +173,45 @@ func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshi
 
 	return nil, err
 }
+
+func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating"},
+		Target:     []string{"active"},
+		Refresh:    statusEndpointAccess(conn, id),
+		Timeout:    10 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.EndpointAccess); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.EndpointStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEndpointAccessDeleted(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"deleting"},
+		Target:     []string{},
+		Refresh:    statusEndpointAccess(conn, id),
+		Timeout:    10 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.EndpointAccess); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.EndpointStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}
