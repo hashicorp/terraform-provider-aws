@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_cloudsearch_domain: Add `source_fields` attribute for `index_field`
+resource/aws_cloudsearch_domain: Add `ndex_field.source_fields` argument
 ```
