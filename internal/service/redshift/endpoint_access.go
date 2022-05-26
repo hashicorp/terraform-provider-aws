@@ -52,6 +52,7 @@ func ResourceEndpointAccess() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
+				Computed: true,
 			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
@@ -119,11 +120,11 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 		createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("cluster_identifier"); ok {
 		createOpts.ClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("resource_owner"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("resource_owner"); ok {
 		createOpts.ResourceOwner = aws.String(v.(string))
 	}
 
