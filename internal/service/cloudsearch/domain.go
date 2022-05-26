@@ -111,15 +111,15 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cloudsearch.IndexFieldType_Values(), false),
-						},
 						"source_fields": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`score`), "Cannot be set to reserved field score"),
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudsearch.IndexFieldType_Values(), false),
 						},
 					},
 				},
@@ -773,7 +773,6 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 	returnEnabled, _ := tfMap["return"].(bool)
 	searchEnabled, _ := tfMap["search"].(bool)
 	sortEnabled, _ := tfMap["sort"].(bool)
-	sourceFields, _ := tfMap["source_fields"].(string)
 
 	switch fieldType {
 	case cloudsearch.IndexFieldTypeDate:
@@ -784,12 +783,12 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceField = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
 		}
 
 		apiObject.DateOptions = options
@@ -801,12 +800,12 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceFields = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
 		}
 
 		apiObject.DateArrayOptions = options
@@ -819,10 +818,6 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceField = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			v, err := strconv.ParseFloat(v, 64)
 
@@ -831,6 +826,10 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			}
 
 			options.DefaultValue = aws.Float64(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
 		}
 
 		apiObject.DoubleOptions = options
@@ -842,10 +841,6 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceFields = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			v, err := strconv.ParseFloat(v, 64)
 
@@ -854,6 +849,10 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			}
 
 			options.DefaultValue = aws.Float64(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
 		}
 
 		apiObject.DoubleArrayOptions = options
@@ -866,10 +865,6 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceField = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			v, err := strconv.Atoi(v)
 
@@ -878,6 +873,10 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			}
 
 			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
 		}
 
 		apiObject.IntOptions = options
@@ -889,10 +888,6 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceFields = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			v, err := strconv.Atoi(v)
 
@@ -901,6 +896,10 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			}
 
 			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
 		}
 
 		apiObject.IntArrayOptions = options
@@ -913,12 +912,12 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceField = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
 		}
 
 		apiObject.LatLonOptions = options
@@ -931,12 +930,12 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceField = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
 		}
 
 		apiObject.LiteralOptions = options
@@ -948,12 +947,12 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if sourceFields != "" {
-			options.SourceFields = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
 		}
 
 		apiObject.LiteralArrayOptions = options
@@ -969,12 +968,12 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			options.AnalysisScheme = aws.String(analysisScheme)
 		}
 
-		if sourceFields != "" {
-			options.SourceField = aws.String(sourceFields)
-		}
-
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
 		}
 
 		apiObject.TextOptions = options
@@ -983,15 +982,14 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 		options := &cloudsearch.TextArrayOptions{
 			HighlightEnabled: aws.Bool(highlightEnabled),
 			ReturnEnabled:    aws.Bool(returnEnabled),
-			SourceFields:     aws.String(sourceFields),
 		}
 
 		if analysisScheme != "" {
 			options.AnalysisScheme = aws.String(analysisScheme)
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
 		}
 
 		apiObject.TextArrayOptions = options

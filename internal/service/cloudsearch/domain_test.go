@@ -17,7 +17,7 @@ import (
 func TestAccCloudSearchDomain_basic(t *testing.T) {
 	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := testAccDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
@@ -55,7 +55,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 func TestAccCloudSearchDomain_disappears(t *testing.T) {
 	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := testAccDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
@@ -78,7 +78,7 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := testAccDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
@@ -142,7 +142,7 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := testAccDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
@@ -159,11 +159,13 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 						"name":          "int_test",
 						"type":          "int",
 						"default_value": "2",
+						"source_fields": "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_2",
 						"type":          "int",
 						"default_value": "4",
+						"source_fields": "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_source",
@@ -186,11 +188,13 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 						"name":          "int_test",
 						"type":          "int",
 						"default_value": "2",
+						"source_fields": "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_2",
 						"type":          "int",
 						"default_value": "4",
+						"source_fields": "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						"name":          "int_test_source",
@@ -206,7 +210,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 func TestAccCloudSearchDomain_update(t *testing.T) {
 	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := testAccDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
@@ -267,6 +271,10 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccDomainName() string {
+	return acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 }
 
 func testAccDomainExists(n string, v *cloudsearch.DomainStatus) resource.TestCheckFunc {
@@ -431,7 +439,7 @@ resource "aws_cloudsearch_domain" "test" {
     name   = "int_test_source"
     type   = "int"
 
-	source_fields = "int_test,int_test_2"
+    source_fields = "int_test,int_test_2"
   }
 }
 `, rName)
@@ -458,7 +466,7 @@ resource "aws_cloudsearch_domain" "test" {
     name   = "int_test_source"
     type   = "int"
 
-	source_fields = "*"
+    source_fields = "*"
   }
 }
 `, rName)
