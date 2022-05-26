@@ -33,7 +33,7 @@ func ResourceEndpointAccess() *schema.Resource {
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Optional: true,
+				Required: true,
 			},
 			"endpoint_name": {
 				Type:     schema.TypeString,
