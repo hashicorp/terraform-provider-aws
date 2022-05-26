@@ -23,6 +23,7 @@ func ResourceSubnetGroup() *schema.Resource {
 		Read:   resourceSubnetGroupRead,
 		Update: resourceSubnetGroupUpdate,
 		Delete: resourceSubnetGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +52,6 @@ func ResourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -72,20 +72,23 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		subnetIds[i] = aws.String(subnetId.(string))
 	}
 
-	createOpts := redshift.CreateClusterSubnetGroupInput{
-		ClusterSubnetGroupName: aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := redshift.CreateClusterSubnetGroupInput{
+		ClusterSubnetGroupName: aws.String(name),
 		Description:            aws.String(d.Get("description").(string)),
 		SubnetIds:              subnetIds,
 		Tags:                   Tags(tags.IgnoreAWS()),
 	}
 
-	_, err := conn.CreateClusterSubnetGroup(&createOpts)
+	log.Printf("[DEBUG] Creating Redshift Subnet Group: %s", input)
+	_, err := conn.CreateClusterSubnetGroup(&input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Subnet Group: %w", err)
+		return fmt.Errorf("creating Redshift Subnet Group (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.ClusterSubnetGroupName))
-	log.Printf("[INFO] Redshift Subnet Group ID: %s", d.Id())
+	d.SetId(aws.StringValue(input.ClusterSubnetGroupName))
+
 	return resourceSubnetGroupRead(d, meta)
 }
 
@@ -103,32 +106,30 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Subnet Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Subnet Group (%s): %w", d.Id(), err)
 	}
 
-	d.Set("name", d.Id())
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   redshift.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("description", subnetgroup.Description)
+	d.Set("name", d.Id())
 	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
 	tags := KeyValueTags(subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
@@ -140,7 +141,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -156,14 +157,17 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			sIds = append(sIds, aws.String(s.(string)))
 		}
 
-		_, err := conn.ModifyClusterSubnetGroup(&redshift.ModifyClusterSubnetGroupInput{
+		input := &redshift.ModifyClusterSubnetGroupInput{
 			ClusterSubnetGroupName: aws.String(d.Id()),
 			Description:            aws.String(d.Get("description").(string)),
 			SubnetIds:              sIds,
-		})
+		}
+
+		log.Printf("[DEBUG] Updating Redshift Subnet Group: %s", input)
+		_, err := conn.ModifyClusterSubnetGroup(input)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("modifying Redshift Subnet Group (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -173,14 +177,20 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
+	log.Printf("[DEBUG] Deleting Redshift Subnet Group: %s", d.Id())
 	_, err := conn.DeleteClusterSubnetGroup(&redshift.DeleteClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
 		return nil
 	}
 
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting Redshift Subnet Group (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func subnetIdsToSlice(subnetIds []*redshift.Subnet) []string {
