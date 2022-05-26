@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift endpoint accesss can be imported using the `name`, e.g.,
+Redshift endpoint access can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_endpoint_access.example example
