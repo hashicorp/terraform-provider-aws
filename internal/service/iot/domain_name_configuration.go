@@ -22,42 +22,6 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 		Delete: resourceDomainNameConfigurationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"server_certificate_arns": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
-				},
-				Optional: true,
-				ForceNew: true,
-			},
-			"service_type": {
-				Type: schema.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{
-					"DATA",
-					"CREDENTIAL_PROVIDER",
-					"JOBS",
-				}, false),
-				Optional: true,
-				ForceNew: true,
-				Default:  "DATA",
-			},
-			"validation_certificate_arn": {
-				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidARN,
-				Optional:     true,
-				ForceNew:     true,
-			},
 			"authorizer_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -75,8 +39,36 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"domain_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"server_certificate_arns": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
+			"service_type": {
+				Type: schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{
+					"DATA",
+					"CREDENTIAL_PROVIDER",
+					"JOBS",
+				}, false),
+				Optional: true,
+				ForceNew: true,
+				Default:  "DATA",
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -85,6 +77,14 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 					"ENABLED",
 					"DISABLED",
 				}, false),
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"validation_certificate_arn": {
+				Type:         schema.TypeString,
+				ValidateFunc: verify.ValidARN,
+				Optional:     true,
+				ForceNew:     true,
 			},
 		},
 	}
