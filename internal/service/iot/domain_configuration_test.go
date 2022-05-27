@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccIotDomainNameConfiguration_main(t *testing.T) {
-	resourceName := "aws_iot_domain_name_configuration.test"
+func TestAccIotDomainConfiguration_basic(t *testing.T) {
+	resourceName := "aws_iot_domain_configuration.test"
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
@@ -20,7 +20,7 @@ func TestAccIotDomainNameConfiguration_main(t *testing.T) {
 		CheckDestroy:      acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIotDomainNameConfig(domain),
+				Config: testAccDomainConfigurationConfig(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
 				),
@@ -29,12 +29,12 @@ func TestAccIotDomainNameConfiguration_main(t *testing.T) {
 	})
 }
 
-func testAccIotDomainNameConfig(domain string) string {
-	return acctest.ConfigCompose(fmt.Sprintf(`
-resource "aws_iot_domain_name_configuration" "test" {
+func testAccDomainConfigurationConfig(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_domain_configuration" "test" {
   name         = "test"
-  domain_name  = "%[1]s"
+  domain_name  = %[1]q
   service_type = "DATA"
 }
-`, domain))
+`, domain)
 }

@@ -1556,7 +1556,7 @@ func Provider() *schema.Provider {
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
 			"aws_iot_certificate":                iot.ResourceCertificate(),
-			"aws_iot_domain_name_configuration":  iot.ResourceDomainNameConfiguration(),
+			"aws_iot_domain_configuration":       iot.ResourceDomainConfiguration(),
 			"aws_iot_indexing_configuration":     iot.ResourceIndexingConfiguration(),
 			"aws_iot_logging_options":            iot.ResourceLoggingOptions(),
 			"aws_iot_policy":                     iot.ResourcePolicy(),

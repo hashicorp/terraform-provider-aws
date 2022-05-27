@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceDomainNameConfiguration() *schema.Resource {
+func ResourceDomainConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceDomainNameConfigurationCreate,
-		ReadWithoutTimeout:   resourceDomainNameConfigurationRead,
-		UpdateWithoutTimeout: resourceDomainNameConfigurationUpdate,
-		DeleteWithoutTimeout: resourceDomainNameConfigurationDelete,
+		CreateWithoutTimeout: resourceDomainConfigurationCreate,
+		ReadWithoutTimeout:   resourceDomainConfigurationRead,
+		UpdateWithoutTimeout: resourceDomainConfigurationUpdate,
+		DeleteWithoutTimeout: resourceDomainConfigurationDelete,
 
 		CustomizeDiff: verify.SetTagsDiff,
 
@@ -86,7 +86,7 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 	}
 }
 
-func resourceDomainNameConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IoTConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -97,7 +97,7 @@ func resourceDomainNameConfigurationCreate(ctx context.Context, d *schema.Resour
 	}
 
 	if v, ok := d.GetOk("authorizer_config"); ok {
-		input.AuthorizerConfig = expandIotDomainNameConfigurationAuthorizerConfig(v.([]interface{}))
+		input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("domain_name"); ok {
@@ -129,10 +129,10 @@ func resourceDomainNameConfigurationCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(aws.StringValue(output.DomainConfigurationName))
 
-	return resourceDomainNameConfigurationRead(ctx, d, meta)
+	return resourceDomainConfigurationRead(ctx, d, meta)
 }
 
-func resourceDomainNameConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IoTConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
@@ -160,7 +160,7 @@ func resourceDomainNameConfigurationRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceDomainNameConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("authorizer_config") {
@@ -169,7 +169,7 @@ func resourceDomainNameConfigurationUpdate(ctx context.Context, d *schema.Resour
 		}
 
 		if d.HasChange("authorizer_config") {
-			input.AuthorizerConfig = expandIotDomainNameConfigurationAuthorizerConfig(d.Get("authorizer_config").([]interface{}))
+			input.AuthorizerConfig = expandAuthorizerConfig(d.Get("authorizer_config").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating IoT Domain Configuration: %s", d.Id())
@@ -188,10 +188,10 @@ func resourceDomainNameConfigurationUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	return resourceDomainNameConfigurationRead(ctx, d, meta)
+	return resourceDomainConfigurationRead(ctx, d, meta)
 }
 
-func resourceDomainNameConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.Get("status").(string) == iot.DomainConfigurationStatusEnabled {
@@ -218,7 +218,7 @@ func resourceDomainNameConfigurationDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandIotDomainNameConfigurationAuthorizerConfig(l []interface{}) *iot.AuthorizerConfig {
+func expandAuthorizerConfig(l []interface{}) *iot.AuthorizerConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
