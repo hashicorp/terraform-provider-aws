@@ -299,3 +299,32 @@ func FindSubnetGroupByName(conn *redshift.Redshift, name string) (*redshift.Clus
 
 	return output.ClusterSubnetGroups[0], nil
 }
+
+func FindEndpointAccessByName(conn *redshift.Redshift, name string) (*redshift.EndpointAccess, error) {
+	input := &redshift.DescribeEndpointAccessInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpointAccess(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.EndpointAccessList) == 0 || output.EndpointAccessList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.EndpointAccessList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.EndpointAccessList[0], nil
+}
