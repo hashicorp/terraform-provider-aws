@@ -3,7 +3,6 @@ package autoscaling_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -100,7 +99,7 @@ func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationNameGeneratedConfig(),
+				Config: testAccLaunchConfigurationConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -108,10 +107,9 @@ func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -128,7 +126,7 @@ func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationNamePrefixConfig("tf-acc-test-prefix-"),
+				Config: testAccLaunchConfigurationConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
@@ -136,10 +134,9 @@ func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -157,14 +154,30 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig(rName),
+				Config: testAccLaunchConfigurationConfig_withBlockDevices(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					testAccCheckLaunchConfigurationAttributes(&conf),
-					resource.TestMatchResourceAttr(resourceName, "image_id", regexp.MustCompile("^ami-[0-9a-z]+")),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "m1.small"),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", ""),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdb",
+						"volume_size": "9",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdc",
+						"iops":        "100",
+						"volume_size": "10",
+						"volume_type": "io1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+						"device_name":  "/dev/sde",
+						"virtual_name": "ephemeral0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
+						"volume_size": "11",
+						"volume_type": "gp2",
+					}),
 				),
 			},
 			{
@@ -607,46 +620,6 @@ func testAccCheckLaunchConfigurationWithEncryption(conf *autoscaling.LaunchConfi
 	}
 }
 
-func testAccCheckLaunchConfigurationAttributes(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !strings.HasPrefix(*conf.LaunchConfigurationName, "terraform-") && !strings.HasPrefix(*conf.LaunchConfigurationName, "tf-acc-test-") {
-			return fmt.Errorf("Bad name: %s", *conf.LaunchConfigurationName)
-		}
-
-		if *conf.InstanceType != "m1.small" {
-			return fmt.Errorf("Bad instance_type: %s", *conf.InstanceType)
-		}
-
-		// Map out the block devices by name, which should be unique.
-		blockDevices := make(map[string]*autoscaling.BlockDeviceMapping)
-		for _, blockDevice := range conf.BlockDeviceMappings {
-			blockDevices[*blockDevice.DeviceName] = blockDevice
-		}
-
-		// Check if the root block device exists.
-		if _, ok := blockDevices["/dev/xvda"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/xvda")
-		}
-
-		// Check if the secondary block device exists.
-		if _, ok := blockDevices["/dev/sdb"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sdb")
-		}
-
-		// Check if the third block device exists.
-		if _, ok := blockDevices["/dev/sdc"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sdc")
-		}
-
-		// Check if the fourth block device exists.
-		if _, ok := blockDevices["/dev/sde"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sde")
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
@@ -756,13 +729,31 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationConfig(rName string) string {
+func testAccLaunchConfigurationConfig_nameGenerated() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+`)
+}
+
+func testAccLaunchConfigurationConfig_namePrefix(namePrefix string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name_prefix   = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+`, namePrefix))
+}
+
+func testAccLaunchConfigurationConfig_withBlockDevices(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
-  user_data     = "testtest-user-data"
 
   root_block_device {
     volume_type = "gp2"
@@ -925,25 +916,6 @@ resource "aws_launch_configuration" "test" {
   spot_price    = "0.05"
 }
 `, rName))
-}
-
-func testAccLaunchConfigurationNameGeneratedConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
-resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-}
-`)
-}
-
-func testAccLaunchConfigurationNamePrefixConfig(namePrefix string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-}
-`, namePrefix))
 }
 
 func testAccLaunchConfigurationWithEncryption(rName string) string {
