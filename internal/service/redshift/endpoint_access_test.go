@@ -221,7 +221,7 @@ resource "aws_redshift_endpoint_access" "test" {
   endpoint_name          = %[1]q
   subnet_group_name      = aws_redshift_subnet_group.test.id
   cluster_identifier     = aws_redshift_cluster.test.cluster_identifier
-  vpc_security_group_ids = [aws_security_group.test.id]  
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 `, rName))
 }
@@ -242,7 +242,7 @@ resource "aws_redshift_endpoint_access" "test" {
   endpoint_name          = %[1]q
   subnet_group_name      = aws_redshift_subnet_group.test.id
   cluster_identifier     = aws_redshift_cluster.test.cluster_identifier
-  vpc_security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]  
+  vpc_security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
 }
 `, rName))
 }
