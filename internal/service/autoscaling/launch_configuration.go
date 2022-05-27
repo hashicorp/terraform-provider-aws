@@ -506,27 +506,23 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Launch Configuration: %s", input)
-
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := autoscalingconn.CreateLaunchConfiguration(&input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IamInstanceProfile") {
-				return resource.RetryableError(err)
+	_, err = tfresource.RetryWhen(propagationTimeout,
+		func() (interface{}, error) {
+			return autoscalingconn.CreateLaunchConfiguration(&input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "Invalid IamInstanceProfile") ||
+				tfawserr.ErrMessageContains(err, ErrCodeValidationError, "You are not authorized to perform this operation") {
+				return true, err
 			}
-			if tfawserr.ErrMessageContains(err, "ValidationError", "You are not authorized to perform this operation") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = autoscalingconn.CreateLaunchConfiguration(&input)
-	}
+
+			return false, err
+		})
+
 	if err != nil {
-		return fmt.Errorf("Error creating launch configuration: %w", err)
+		return fmt.Errorf("creating Auto Scaling Launch Configuration (%s): %w", lcName, err)
 	}
 
 	d.SetId(lcName)
