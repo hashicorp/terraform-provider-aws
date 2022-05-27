@@ -46,7 +46,7 @@ resource "aws_elasticache_replication_group" "secondary" {
 
 ### Managing Redis Engine Versions
 
-The initial Redis version is deterined by the version set on the primary replication group.
+The initial Redis version is determined by the version set on the primary replication group.
 However, once it is part of a Global Replication Group,
 the Global Replication Group manages the version of all member replication groups.
 
