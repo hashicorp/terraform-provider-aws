@@ -21,6 +21,8 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 		Update: resourceDomainNameConfigurationUpdate,
 		Delete: resourceDomainNameConfigurationDelete,
 
+		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"authorizer_config": {
 				Type:     schema.TypeList,
