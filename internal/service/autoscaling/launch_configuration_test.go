@@ -394,13 +394,14 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_withIAMProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "iam_instance_profile"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -918,6 +919,44 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
+func testAccLaunchConfigurationConfig_withIAMProfile(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_launch_configuration" "test" {
+  name                 = %[1]q
+  image_id             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = "t2.nano"
+  iam_instance_profile = aws_iam_instance_profile.test.name
+
+  associate_public_ip_address = true
+}
+`, rName))
+}
+
 func testAccLaunchConfigurationMetadataOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -1000,42 +1039,6 @@ resource "aws_launch_configuration" "test" {
     volume_size = 10
     encrypted   = true
   }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationConfig_withIAMProfile(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-}
-
-resource "aws_launch_configuration" "test" {
-  name                 = %[1]q
-  image_id             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type        = "t2.nano"
-  iam_instance_profile = aws_iam_instance_profile.test.name
 }
 `, rName))
 }
