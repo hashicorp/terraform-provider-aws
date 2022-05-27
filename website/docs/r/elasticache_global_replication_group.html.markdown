@@ -50,6 +50,9 @@ The initial Redis version is determined by the version set on the primary replic
 However, once it is part of a Global Replication Group,
 the Global Replication Group manages the version of all member replication groups.
 
+The member replication groups must have [`lifecycle.ignore_changes[engine_version]`](https://www.terraform.io/language/meta-arguments/lifecycle) set,
+or Terraform will always return a diff.
+
 In this example,
 the primary replication group will be created with Redis 6.0,
 and then upgraded to Redis 6.2 once added to the Global Replication Group.
@@ -72,6 +75,10 @@ resource "aws_elasticache_replication_group" "primary" {
   node_type      = "cache.m5.large"
 
   number_cache_clusters = 1
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
 }
 
 resource "aws_elasticache_replication_group" "secondary" {
@@ -82,6 +89,10 @@ resource "aws_elasticache_replication_group" "secondary" {
   global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
 
   number_cache_clusters = 1
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
 }
 ```
 
