@@ -277,8 +277,12 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting security_groups: %w", err)
 	}
 
-	if err := d.Set("metadata_options", flattenLaunchConfigInstanceMetadataOptions(lc.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
+	if lc.MetadataOptions != nil {
+		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
+			return fmt.Errorf("setting metadata_options: %w", err)
+		}
+	} else {
+		d.Set("metadata_options", nil)
 	}
 
 	classicSGs := make([]string, 0, len(lc.ClassicLinkVPCSecurityGroups))

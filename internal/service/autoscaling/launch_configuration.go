@@ -315,7 +315,6 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 		},
 	}
@@ -546,47 +545,43 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	lc, err := FindLaunchConfigurationByName(autoscalingconn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Autoscaling Launch Configuration %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Autoscaling Launch Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
 	}
 
-	d.Set("key_name", lc.KeyName)
+	d.Set("arn", lc.LaunchConfigurationARN)
+	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
+	d.Set("ebs_optimized", lc.EbsOptimized)
+	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
+	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
+	d.Set("key_name", lc.KeyName)
+	if lc.MetadataOptions != nil {
+		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
+			return fmt.Errorf("setting metadata_options: %w", err)
+		}
+	} else {
+		d.Set("metadata_options", nil)
+	}
 	d.Set("name", lc.LaunchConfigurationName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName)))
-	d.Set("arn", lc.LaunchConfigurationARN)
-
-	d.Set("iam_instance_profile", lc.IamInstanceProfile)
-	d.Set("ebs_optimized", lc.EbsOptimized)
+	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
 	d.Set("spot_price", lc.SpotPrice)
-	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
-	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
-	if err := d.Set("security_groups", flex.FlattenStringList(lc.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %w", err)
-	}
 	if v := aws.StringValue(lc.UserData); v != "" {
-		_, b64 := d.GetOk("user_data_base64")
-		if b64 {
+		if _, ok := d.GetOk("user_data_base64"); ok {
 			d.Set("user_data_base64", v)
 		} else {
 			d.Set("user_data", userDataHashSum(v))
 		}
 	}
-
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	if err := d.Set("vpc_classic_link_security_groups", flex.FlattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
-		return fmt.Errorf("error setting vpc_classic_link_security_groups: %w", err)
-	}
-
-	if err := d.Set("metadata_options", flattenLaunchConfigInstanceMetadataOptions(lc.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
-	}
+	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
 		return err
@@ -667,18 +662,26 @@ func expandLaunchConfigInstanceMetadataOptions(l []interface{}) *autoscaling.Ins
 	return opts
 }
 
-func flattenLaunchConfigInstanceMetadataOptions(opts *autoscaling.InstanceMetadataOptions) []interface{} {
-	if opts == nil {
+func flattenInstanceMetadataOptions(apiObject *autoscaling.InstanceMetadataOptions) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
-		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
-		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HttpEndpoint; v != nil {
+		tfMap["http_endpoint"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.HttpPutResponseHopLimit; v != nil {
+		tfMap["http_put_response_hop_limit"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.HttpTokens; v != nil {
+		tfMap["http_tokens"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, ec2conn *ec2.EC2) (
