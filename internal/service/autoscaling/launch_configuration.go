@@ -557,7 +557,11 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("arn", lc.LaunchConfigurationARN)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
 	d.Set("ebs_optimized", lc.EbsOptimized)
-	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
+	if lc.InstanceMonitoring != nil {
+		d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
+	} else {
+		d.Set("enable_monitoring", false)
+	}
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)

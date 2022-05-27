@@ -1,12 +1,9 @@
 package autoscaling
 
 import (
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -198,55 +195,27 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
-	if v, ok := d.GetOk("name"); ok {
-		d.SetId(v.(string))
-	}
+	name := d.Get("name").(string)
+	lc, err := FindLaunchConfigurationByName(autoscalingconn, name)
 
-	describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
-		LaunchConfigurationNames: []*string{aws.String(d.Id())},
-	}
-
-	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
-	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
 	if err != nil {
-		return fmt.Errorf("Error retrieving launch configuration: %w", err)
+		return fmt.Errorf("reading Auto Scaling Launch Configuration (%s): %w", name, err)
 	}
 
-	if describConfs == nil || len(describConfs.LaunchConfigurations) == 0 {
-		return errors.New("No matching Launch Configuration found")
-	}
+	d.SetId(name)
 
-	if len(describConfs.LaunchConfigurations) > 1 {
-		return errors.New("Multiple matching Launch Configurations found")
-	}
-
-	lc := describConfs.LaunchConfigurations[0]
-
-	d.Set("key_name", lc.KeyName)
-	d.Set("image_id", lc.ImageId)
-	d.Set("instance_type", lc.InstanceType)
 	d.Set("arn", lc.LaunchConfigurationARN)
-	d.Set("name", lc.LaunchConfigurationName)
-	d.Set("user_data", lc.UserData)
-	d.Set("iam_instance_profile", lc.IamInstanceProfile)
-	d.Set("ebs_optimized", lc.EbsOptimized)
-	d.Set("spot_price", lc.SpotPrice)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
-	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("enable_monitoring", false)
-
+	d.Set("ebs_optimized", lc.EbsOptimized)
 	if lc.InstanceMonitoring != nil {
 		d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
+	} else {
+		d.Set("enable_monitoring", false)
 	}
-
-	vpcSGs := make([]string, 0, len(lc.SecurityGroups))
-	for _, sg := range lc.SecurityGroups {
-		vpcSGs = append(vpcSGs, *sg)
-	}
-	if err := d.Set("security_groups", vpcSGs); err != nil {
-		return fmt.Errorf("error setting security_groups: %w", err)
-	}
-
+	d.Set("iam_instance_profile", lc.IamInstanceProfile)
+	d.Set("image_id", lc.ImageId)
+	d.Set("instance_type", lc.InstanceType)
+	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
 			return fmt.Errorf("setting metadata_options: %w", err)
@@ -254,14 +223,12 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 	} else {
 		d.Set("metadata_options", nil)
 	}
-
-	classicSGs := make([]string, 0, len(lc.ClassicLinkVPCSecurityGroups))
-	for _, sg := range lc.ClassicLinkVPCSecurityGroups {
-		classicSGs = append(classicSGs, *sg)
-	}
-	if err := d.Set("vpc_classic_link_security_groups", classicSGs); err != nil {
-		return fmt.Errorf("error setting vpc_classic_link_security_groups: %w", err)
-	}
+	d.Set("name", lc.LaunchConfigurationName)
+	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
+	d.Set("spot_price", lc.SpotPrice)
+	d.Set("user_data", lc.UserData)
+	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
+	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
 		return err
