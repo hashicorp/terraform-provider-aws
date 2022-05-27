@@ -407,34 +407,6 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingLaunchConfiguration_withEncryption(t *testing.T) {
-	var conf autoscaling.LaunchConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchConfigurationWithEncryption(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchConfigurationExists("aws_launch_configuration.test", &conf),
-					testAccCheckLaunchConfigurationWithEncryption(&conf),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
-			},
-		},
-	})
-}
-
 func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -447,14 +419,21 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithGP3(rName),
+				Config: testAccLaunchConfigurationConfig_withGP3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdb",
+						"encrypted":   "true",
+						"throughput":  "150",
+						"volume_size": "9",
 						"volume_type": "gp3",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"throughput": "150",
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
+						"volume_size": "11",
+						"volume_type": "gp3",
 					}),
 				),
 			},
@@ -957,6 +936,29 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
+func testAccLaunchConfigurationConfig_withGP3(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name                        = %[1]q
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = "t2.micro"
+
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 11
+  }
+
+  ebs_block_device {
+    volume_type = "gp3"
+    device_name = "/dev/sdb"
+    volume_size = 9
+    encrypted   = true
+    throughput  = 150
+  }
+}
+`, rName))
+}
+
 func testAccLaunchConfigurationMetadataOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -992,30 +994,6 @@ resource "aws_launch_configuration" "test" {
     device_name = "/dev/sdb"
     volume_size = 9
     encrypted   = true
-  }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationWithGP3(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name                        = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  associate_public_ip_address = false
-
-  root_block_device {
-    volume_type = "gp3"
-    volume_size = 11
-  }
-
-  ebs_block_device {
-    volume_type = "gp3"
-    device_name = "/dev/sdb"
-    volume_size = 9
-    encrypted   = true
-    throughput  = 150
   }
 }
 `, rName))
