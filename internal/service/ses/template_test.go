@@ -28,7 +28,7 @@ func TestAccSESTemplate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTemplateResourceBasic1Config(rName),
+				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -59,7 +59,7 @@ func TestAccSESTemplate_update(t *testing.T) {
 		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTemplateResourceBasic1Config(rName),
+				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &template),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("template/%s", rName)),
@@ -75,7 +75,7 @@ func TestAccSESTemplate_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckTemplateResourceBasic2Config(rName),
+				Config: testAccTemplateConfig_resourceBasic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -85,7 +85,7 @@ func TestAccSESTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckTemplateResourceBasic3Config(rName),
+				Config: testAccTemplateConfig_resourceBasic3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -110,7 +110,7 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTemplateResourceBasic1Config(rName),
+				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &template),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceTemplate(), resourceName),
@@ -186,7 +186,7 @@ func testAccCheckTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckTemplateResourceBasic1Config(name string) string {
+func testAccTemplateConfig_resourceBasic1(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"
@@ -196,7 +196,7 @@ resource "aws_ses_template" "test" {
 `, name)
 }
 
-func testAccCheckTemplateResourceBasic2Config(name string) string {
+func testAccTemplateConfig_resourceBasic2(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"
@@ -207,7 +207,7 @@ resource "aws_ses_template" "test" {
 `, name)
 }
 
-func testAccCheckTemplateResourceBasic3Config(name string) string {
+func testAccTemplateConfig_resourceBasic3(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"

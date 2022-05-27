@@ -104,7 +104,7 @@ func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("arn", attributes[TopicAttributeNameTopicArn])
+	d.Set("arn", attributes[TopicAttributeNameTopicARN])
 	d.Set("owner", attributes[TopicAttributeNameOwner])
 	d.Set("policy", policyToSet)
 

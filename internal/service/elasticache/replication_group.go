@@ -62,7 +62,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
-				Default:      "true",
+				Computed:     true,
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"automatic_failover_enabled": {
@@ -253,7 +253,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == elasticacheDefaultRedisPort {
+					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
 						return true
 					}
 					return false
@@ -966,8 +966,10 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := DisassociateReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
+	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
+	if hasGlobalReplicationGroupID {
+		globalReplicationGroupID := v.(string)
+		err := DisassociateReplicationGroup(conn, globalReplicationGroupID, d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -977,6 +979,19 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 	err := deleteReplicationGroup(d.Id(), conn, finalSnapshotID, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error deleting ElastiCache Replication Group (%s): %w", d.Id(), err)
+	}
+
+	if hasGlobalReplicationGroupID {
+		paramGroupName := d.Get("parameter_group_name").(string)
+		if paramGroupName != "" {
+			err := deleteParameterGroup(conn, paramGroupName)
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("error deleting ElastiCache Parameter Group (%s): %w", d.Id(), err)
+			}
+		}
 	}
 
 	return nil

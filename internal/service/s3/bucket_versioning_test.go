@@ -296,7 +296,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withVersioningMfaDelete(bucketName, false),
+				Config: testAccBucketConfig_versioningMFADelete(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
@@ -304,7 +304,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketVersioning_Migrate_MfaDeleteConfig(bucketName, s3.MFADeleteDisabled),
+				Config: testAccBucketVersioningConfig_Migrate_mfaDelete(bucketName, s3.MFADeleteDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
@@ -581,7 +581,7 @@ resource "aws_s3_bucket_versioning" "test" {
 `, rName, status)
 }
 
-func testAccBucketVersioning_Migrate_MfaDeleteConfig(rName, mfaDelete string) string {
+func testAccBucketVersioningConfig_Migrate_mfaDelete(rName, mfaDelete string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

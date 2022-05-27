@@ -92,7 +92,7 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(d.Get("public_key").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeKeyPair),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeKeyPair),
 	}
 
 	output, err := conn.ImportKeyPair(input)

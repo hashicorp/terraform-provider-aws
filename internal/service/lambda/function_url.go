@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceFunctionUrl() *schema.Resource {
+func ResourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionURLCreate,
 		ReadWithoutTimeout:   resourceFunctionURLRead,

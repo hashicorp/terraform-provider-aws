@@ -20,7 +20,7 @@ func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeIDsDataSourceConfig(rName),
+				Config: testAccEBSVolumesDataSourceConfig_volumeIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_tags", "ids.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_filter", "ids.#", "1"),
@@ -31,7 +31,7 @@ func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEBSVolumeIDsDataSourceConfig(rName string) string {
+func testAccEBSVolumesDataSourceConfig_volumeIDs(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 

@@ -254,7 +254,7 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("elasticsearch_config"); ok {
-		input.ElasticsearchConfig = expandElasticSearchDataSourceConfig(v.([]interface{}), region)
+		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
@@ -317,7 +317,7 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting dynamodb_config: %w", err)
 	}
 
-	if err := d.Set("elasticsearch_config", flattenElasticSearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
+	if err := d.Set("elasticsearch_config", flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
 		return fmt.Errorf("error setting elasticsearch_config: %w", err)
 	}
 
@@ -365,7 +365,7 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("elasticsearch_config"); ok {
-		input.ElasticsearchConfig = expandElasticSearchDataSourceConfig(v.([]interface{}), region)
+		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
@@ -526,7 +526,7 @@ func flattenDynamoDBDataSourceDeltaSyncConfig(config *appsync.DeltaSyncConfig) [
 	return []map[string]interface{}{result}
 }
 
-func expandElasticSearchDataSourceConfig(l []interface{}, currentRegion string) *appsync.ElasticsearchDataSourceConfig {
+func expandElasticsearchDataSourceConfig(l []interface{}, currentRegion string) *appsync.ElasticsearchDataSourceConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -545,7 +545,7 @@ func expandElasticSearchDataSourceConfig(l []interface{}, currentRegion string) 
 	return result
 }
 
-func flattenElasticSearchDataSourceConfig(config *appsync.ElasticsearchDataSourceConfig) []map[string]interface{} {
+func flattenElasticsearchDataSourceConfig(config *appsync.ElasticsearchDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}

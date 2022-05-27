@@ -20,7 +20,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestExpandS3MetricsFilter(t *testing.T) {
+func TestExpandMetricsFilter(t *testing.T) {
 	testCases := []struct {
 		Config                  map[string]interface{}
 		ExpectedS3MetricsFilter *s3.MetricsFilter
@@ -133,7 +133,7 @@ func TestExpandS3MetricsFilter(t *testing.T) {
 	}
 }
 
-func TestFlattenS3MetricsFilter(t *testing.T) {
+func TestFlattenMetricsFilter(t *testing.T) {
 	testCases := []struct {
 		S3MetricsFilter *s3.MetricsFilter
 		ExpectedConfig  map[string]interface{}

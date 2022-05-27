@@ -16,12 +16,12 @@ func TestAccConnectUserHierarchyStructureDataSource_instanceID(t *testing.T) {
 	datasourceName := "data.aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyStructureDataSourceConfig_InstanceID(rName),
+				Config: testAccUserHierarchyStructureDataSourceConfig_instanceID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_structure.#", resourceName, "hierarchy_structure.#"),
@@ -78,7 +78,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, rName)
 }
 
-func testAccUserHierarchyStructureDataSourceConfig_InstanceID(rName string) string {
+func testAccUserHierarchyStructureDataSourceConfig_instanceID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyStructureBaseDataSourceConfig(rName),
 		`

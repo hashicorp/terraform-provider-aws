@@ -104,7 +104,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 			"custom_headers_config": {
 				Type:     schema.TypeList,
@@ -134,7 +134,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 			"etag": {
 				Type:     schema.TypeString,
@@ -269,7 +269,26 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
+			},
+			"server_timing_headers_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"sampling_rate": {
+							Type:         schema.TypeFloat,
+							Required:     true,
+							ValidateFunc: validation.FloatBetween(0.0, 100.0),
+						},
+					},
+				},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 		},
 	}
@@ -297,6 +316,10 @@ func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("server_timing_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.ServerTimingHeadersConfig = expandResponseHeadersPolicyServerTimingHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	input := &cloudfront.CreateResponseHeadersPolicyInput{
@@ -356,6 +379,14 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 		d.Set("security_headers_config", nil)
 	}
 
+	if apiObject.ServerTimingHeadersConfig != nil {
+		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting server_timing_headers_config: %w", err)
+		}
+	} else {
+		d.Set("server_timing_headers_config", nil)
+	}
+
 	return nil
 }
 
@@ -384,6 +415,10 @@ func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("server_timing_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.ServerTimingHeadersConfig = expandResponseHeadersPolicyServerTimingHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	input := &cloudfront.UpdateResponseHeadersPolicyInput{
@@ -1053,6 +1088,46 @@ func flattenResponseHeadersPolicyXSSProtection(apiObject *cloudfront.ResponseHea
 
 	if v := apiObject.ReportUri; v != nil {
 		tfMap["report_uri"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+//
+// server_timing_headers_config:
+//
+
+func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyServerTimingHeadersConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyServerTimingHeadersConfig{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["sampling_rate"].(float64); ok && v != 0 {
+		apiObject.SamplingRate = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *cloudfront.ResponseHeadersPolicyServerTimingHeadersConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.SamplingRate; v != nil {
+		tfMap["sampling_rate"] = aws.Float64Value(v)
 	}
 
 	return tfMap

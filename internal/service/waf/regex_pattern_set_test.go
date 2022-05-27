@@ -46,7 +46,7 @@ func testAccRegexPatternSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexPatternSetConfig(patternSetName),
+				Config: testAccRegexPatternSetConfig_basic(patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`regexpatternset/.+`)),
@@ -77,7 +77,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexPatternSetConfig(patternSetName),
+				Config: testAccRegexPatternSetConfig_basic(patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
@@ -87,7 +87,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRegexPatternSetConfig_changePatterns(patternSetName),
+				Config: testAccRegexPatternSetConfig_changes(patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
@@ -118,7 +118,7 @@ func testAccRegexPatternSet_noPatterns(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexPatternSetConfig_noPatterns(patternSetName),
+				Config: testAccRegexPatternSetConfig_nos(patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(resourceName, &patternSet),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
@@ -146,7 +146,7 @@ func testAccRegexPatternSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexPatternSetConfig(patternSetName),
+				Config: testAccRegexPatternSetConfig_basic(patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(resourceName, &v),
 					testAccCheckRegexPatternSetDisappears(&v),
@@ -254,7 +254,7 @@ func testAccCheckRegexPatternSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRegexPatternSetConfig(name string) string {
+func testAccRegexPatternSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
   name                  = "%s"
@@ -263,7 +263,7 @@ resource "aws_waf_regex_pattern_set" "test" {
 `, name)
 }
 
-func testAccRegexPatternSetConfig_changePatterns(name string) string {
+func testAccRegexPatternSetConfig_changes(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
   name                  = "%s"
@@ -272,7 +272,7 @@ resource "aws_waf_regex_pattern_set" "test" {
 `, name)
 }
 
-func testAccRegexPatternSetConfig_noPatterns(name string) string {
+func testAccRegexPatternSetConfig_nos(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
   name = "%s"

@@ -59,7 +59,7 @@ func testAccCheckInvitationAccepterExists(resourceName string) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
 
-		result, err := tfdetective.FindInvitationByGraphArn(context.Background(), conn, rs.Primary.ID)
+		result, err := tfdetective.FindInvitationByGraphARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -81,7 +81,7 @@ func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		result, err := tfdetective.FindInvitationByGraphArn(context.Background(), conn, rs.Primary.ID)
+		result, err := tfdetective.FindInvitationByGraphARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) ||
 			tfresource.NotFound(err) {

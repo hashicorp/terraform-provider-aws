@@ -14,7 +14,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
+func TestDecodeBasePathMappingID(t *testing.T) {
 	var testCases = []struct {
 		Input      string
 		DomainName string

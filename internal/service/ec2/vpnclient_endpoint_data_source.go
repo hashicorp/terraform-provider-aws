@@ -199,7 +199,7 @@ func dataSourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) e
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	if err := d.Set("authentication_options", flattenClientVpnAuthentications(ep.AuthenticationOptions)); err != nil {
+	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)

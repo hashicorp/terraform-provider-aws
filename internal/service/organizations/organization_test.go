@@ -56,7 +56,7 @@ func testAccOrganization_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganization_AwsServiceAccessPrincipals(t *testing.T) {
+func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 	var organization organizations.Organization
 	resourceName := "aws_organizations_organization.test"
 
@@ -375,7 +375,7 @@ resource "aws_organizations_organization" "test" {
 `, featureSet)
 }
 
-func TestFlattenOrganizationsRoots(t *testing.T) {
+func TestFlattenRoots(t *testing.T) {
 	roots := []*organizations.Root{
 		{
 			Name: aws.String("Root1"),

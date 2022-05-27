@@ -21,7 +21,7 @@ func testAccTransitGatewayMulticastDomainDataSource_Filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainFilterDataSourceConfig(rName),
+				Config: testAccTransitGatewayMulticastDomainDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "associations.#", "0"),
@@ -51,7 +51,7 @@ func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainIDDataSourceConfig(rName),
+				Config: testAccTransitGatewayMulticastDomainDataSourceConfig_iD(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "associations.#", "1"),
@@ -70,7 +70,7 @@ func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayMulticastDomainFilterDataSourceConfig(rName string) string {
+func testAccTransitGatewayMulticastDomainDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
@@ -97,7 +97,7 @@ data "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayMulticastDomainIDDataSourceConfig(rName string) string {
+func testAccTransitGatewayMulticastDomainDataSourceConfig_iD(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

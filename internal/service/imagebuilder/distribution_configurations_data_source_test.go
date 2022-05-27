@@ -22,7 +22,7 @@ func TestAccImageBuilderDistributionConfigurationsDataSource_filter(t *testing.T
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigDistributionConfigurations_filter(rName),
+				Config: testAccDistributionConfigurationsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +34,7 @@ func TestAccImageBuilderDistributionConfigurationsDataSource_filter(t *testing.T
 	})
 }
 
-func testAccConfigDistributionConfigurations_filter(rName string) string {
+func testAccDistributionConfigurationsDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

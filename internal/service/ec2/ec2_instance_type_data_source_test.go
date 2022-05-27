@@ -16,7 +16,7 @@ func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceEc2InstanceTypeBasic,
+				Config: testAccInstanceTypeDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceBasic, "auto_recovery_supported", "true"),
 					resource.TestCheckResourceAttr(resourceBasic, "bare_metal", "false"),
@@ -76,7 +76,7 @@ func TestAccEC2InstanceTypeDataSource_metal(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceEc2InstanceTypeMetal,
+				Config: testAccInstanceTypeDataSourceConfig_metal,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_baseline_bandwidth", "19000"),
 					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_baseline_throughput", "2375"),
@@ -103,7 +103,7 @@ func TestAccEC2InstanceTypeDataSource_gpu(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceEc2InstanceTypeGpu,
+				Config: testAccInstanceTypeDataSourceConfig_gpu,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceGpu, "gpus.#", "1"),
 					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.count", "1"),
@@ -124,7 +124,7 @@ func TestAccEC2InstanceTypeDataSource_fpga(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceEc2InstanceTypeFgpa,
+				Config: testAccInstanceTypeDataSourceConfig_fgpa,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceFpga, "fpgas.#", "1"),
 					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.count", "1"),
@@ -138,25 +138,25 @@ func TestAccEC2InstanceTypeDataSource_fpga(t *testing.T) {
 	})
 }
 
-const testAccDataSourceEc2InstanceTypeBasic = `
+const testAccInstanceTypeDataSourceConfig_basic = `
 data "aws_ec2_instance_type" "basic" {
   instance_type = "m5.large"
 }
 `
 
-const testAccDataSourceEc2InstanceTypeMetal = `
+const testAccInstanceTypeDataSourceConfig_metal = `
 data "aws_ec2_instance_type" "metal" {
   instance_type = "i3en.metal"
 }
 `
 
-const testAccDataSourceEc2InstanceTypeGpu = `
+const testAccInstanceTypeDataSourceConfig_gpu = `
 data "aws_ec2_instance_type" "gpu" {
   instance_type = "g3.4xlarge"
 }
 `
 
-const testAccDataSourceEc2InstanceTypeFgpa = `
+const testAccInstanceTypeDataSourceConfig_fgpa = `
 data "aws_ec2_instance_type" "fpga" {
   instance_type = "f1.2xlarge"
 }

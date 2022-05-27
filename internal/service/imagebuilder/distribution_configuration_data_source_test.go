@@ -22,7 +22,7 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationARNDataSourceConfig(rName),
+				Config: testAccDistributionConfigurationDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
@@ -47,7 +47,7 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccDistributionConfigurationARNDataSourceConfig(rName string) string {
+func testAccDistributionConfigurationDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

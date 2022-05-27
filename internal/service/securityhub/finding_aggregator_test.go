@@ -24,7 +24,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFindingAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingAggregatorAllRegionsConfig(),
+				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS"),
@@ -37,7 +37,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFindingAggregatorSpecifiedRegionsConfig(),
+				Config: testAccFindingAggregatorConfig_specifiedRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "SPECIFIED_REGIONS"),
@@ -45,7 +45,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFindingAggregatorAllRegionsExceptSpecifiedConfig(),
+				Config: testAccFindingAggregatorConfig_allRegionsExceptSpecified(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS_EXCEPT_SPECIFIED"),
@@ -66,7 +66,7 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFindingAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingAggregatorAllRegionsConfig(),
+				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceFindingAggregator(), resourceName),
@@ -128,7 +128,7 @@ func testAccCheckFindingAggregatorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFindingAggregatorAllRegionsConfig() string {
+func testAccFindingAggregatorConfig_allRegions() string {
 	return `
 resource "aws_securityhub_account" "example" {}
 
@@ -140,7 +140,7 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 `
 }
 
-func testAccFindingAggregatorSpecifiedRegionsConfig() string {
+func testAccFindingAggregatorConfig_specifiedRegions() string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 
@@ -153,7 +153,7 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.UsEast1RegionID)
 }
 
-func testAccFindingAggregatorAllRegionsExceptSpecifiedConfig() string {
+func testAccFindingAggregatorConfig_allRegionsExceptSpecified() string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 

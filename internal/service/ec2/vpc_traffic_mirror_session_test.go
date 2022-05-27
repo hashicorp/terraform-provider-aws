@@ -37,7 +37,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			//create
 			{
-				Config: testAccTrafficMirrorSessionConfig(rName, session),
+				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -51,7 +51,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 			},
 			// update of description, packet length and VNI
 			{
-				Config: testAccTrafficMirrorSessionConfigWithOptionals(description, rName, session, pLen, vni),
+				Config: testAccVPCTrafficMirrorSessionConfig_optionals(description, rName, session, pLen, vni),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -62,7 +62,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 			},
 			// removal of description, packet length and VNI
 			{
-				Config: testAccTrafficMirrorSessionConfig(rName, session),
+				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -97,7 +97,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorSessionConfigTags1(rName, "key1", "value1", session),
+				Config: testAccVPCTrafficMirrorSessionConfig_tags1(rName, "key1", "value1", session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -110,7 +110,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrafficMirrorSessionConfigTags2(rName, "key1", "value1updated", "key2", "value2", session),
+				Config: testAccVPCTrafficMirrorSessionConfig_tags2(rName, "key1", "value1updated", "key2", "value2", session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -119,7 +119,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrafficMirrorSessionConfigTags1(rName, "key2", "value2", session),
+				Config: testAccVPCTrafficMirrorSessionConfig_tags1(rName, "key2", "value2", session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -146,7 +146,7 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorSessionConfig(rName, session),
+				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorSession(), resourceName),
@@ -189,7 +189,7 @@ func testAccCheckTrafficMirrorSessionExists(name string, session *ec2.TrafficMir
 }
 
 func testAccTrafficMirrorSessionConfigBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_availability_zones" "azs" {
   state = "available"
 
@@ -260,7 +260,7 @@ resource "aws_ec2_traffic_mirror_target" "target" {
 `, rName))
 }
 
-func testAccTrafficMirrorSessionConfig(rName string, session int) string {
+func testAccVPCTrafficMirrorSessionConfig_basic(rName string, session int) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorSessionConfigBase(rName), fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_session" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
@@ -271,7 +271,7 @@ resource "aws_ec2_traffic_mirror_session" "test" {
 `, session))
 }
 
-func testAccTrafficMirrorSessionConfigTags1(rName, tagKey1, tagValue1 string, session int) string {
+func testAccVPCTrafficMirrorSessionConfig_tags1(rName, tagKey1, tagValue1 string, session int) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorSessionConfigBase(rName), fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_session" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
@@ -286,7 +286,7 @@ resource "aws_ec2_traffic_mirror_session" "test" {
 `, tagKey1, tagValue1, session))
 }
 
-func testAccTrafficMirrorSessionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, session int) string {
+func testAccVPCTrafficMirrorSessionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, session int) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorSessionConfigBase(rName), fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_session" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
@@ -302,7 +302,7 @@ resource "aws_ec2_traffic_mirror_session" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2, session))
 }
 
-func testAccTrafficMirrorSessionConfigWithOptionals(description string, rName string, session, pLen, vni int) string {
+func testAccVPCTrafficMirrorSessionConfig_optionals(description string, rName string, session, pLen, vni int) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorSessionConfigBase(rName), fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_session" "test" {
   description              = "%s"

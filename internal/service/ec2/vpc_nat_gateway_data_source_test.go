@@ -23,7 +23,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewayDataSourceConfig(rName),
+				Config: testAccVPCNATGatewayDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "connectivity_type", resourceName, "connectivity_type"),
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "id", resourceName, "id"),
@@ -42,7 +42,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNATGatewayDataSourceConfig(rName string) string {
+func testAccVPCNATGatewayDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.5.0.0/16"

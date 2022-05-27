@@ -164,7 +164,7 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	}
 
 	err := conn.DescribeTrafficMirrorFiltersPages(input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
-		rule = findEc2TrafficMirrorFilterRule(ruleId, page.TrafficMirrorFilters)
+		rule = findTrafficMirrorFilterRule(ruleId, page.TrafficMirrorFilters)
 		return nil == rule
 	})
 
@@ -209,7 +209,7 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorFilter) (rule *ec2.TrafficMirrorFilterRule) {
+func findTrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorFilter) (rule *ec2.TrafficMirrorFilterRule) {
 	log.Printf("[DEBUG] searching %s in %d filters", ruleId, len(filters))
 	for _, v := range filters {
 		log.Printf("[DEBUG]: searching filter %s, ingress rule count = %d, egress rule count = %d",

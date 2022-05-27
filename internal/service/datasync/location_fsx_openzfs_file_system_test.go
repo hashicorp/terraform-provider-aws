@@ -167,7 +167,7 @@ func testAccCheckLocationFSxOpenZFSDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfdatasync.FindFsxOpenZfsLocationByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindFSxOpenZFSLocationByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -191,7 +191,7 @@ func testAccCheckLocationFSxOpenZFSExists(resourceName string, locationFsxOpenZf
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		output, err := tfdatasync.FindFsxOpenZfsLocationByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindFSxOpenZFSLocationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

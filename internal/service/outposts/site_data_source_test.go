@@ -19,7 +19,7 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteIDDataSourceConfig(),
+				Config: testAccSiteDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(dataSourceName, "account_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
@@ -42,7 +42,7 @@ func TestAccOutpostsSiteDataSource_name(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteNameDataSourceConfig(),
+				Config: testAccSiteDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", sourceDataSourceName, "account_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", sourceDataSourceName, "description"),
@@ -54,7 +54,7 @@ func TestAccOutpostsSiteDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccSiteIDDataSourceConfig() string {
+func testAccSiteDataSourceConfig_id() string {
 	return `
 data "aws_outposts_sites" "test" {}
 
@@ -64,7 +64,7 @@ data "aws_outposts_site" "test" {
 `
 }
 
-func testAccSiteNameDataSourceConfig() string {
+func testAccSiteDataSourceConfig_name() string {
 	return `
 data "aws_outposts_sites" "test" {}
 

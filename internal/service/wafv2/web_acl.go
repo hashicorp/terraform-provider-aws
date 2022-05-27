@@ -605,7 +605,7 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["ip_set_reference_statement"]; ok {
-		statement.IPSetReferenceStatement = expandIpSetReferenceStatement(v.([]interface{}))
+		statement.IPSetReferenceStatement = expandIPSetReferenceStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["geo_match_statement"]; ok {
@@ -645,11 +645,11 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["sqli_match_statement"]; ok {
-		statement.SqliMatchStatement = expandSqliMatchStatement(v.([]interface{}))
+		statement.SqliMatchStatement = expandSQLiMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["xss_match_statement"]; ok {
-		statement.XssMatchStatement = expandXssMatchStatement(v.([]interface{}))
+		statement.XssMatchStatement = expandXSSMatchStatement(v.([]interface{}))
 	}
 
 	return statement
@@ -765,7 +765,7 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.IPSetReferenceStatement != nil {
-		m["ip_set_reference_statement"] = flattenIpSetReferenceStatement(s.IPSetReferenceStatement)
+		m["ip_set_reference_statement"] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
 	}
 
 	if s.GeoMatchStatement != nil {
@@ -805,11 +805,11 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.SqliMatchStatement != nil {
-		m["sqli_match_statement"] = flattenSqliMatchStatement(s.SqliMatchStatement)
+		m["sqli_match_statement"] = flattenSQLiMatchStatement(s.SqliMatchStatement)
 	}
 
 	if s.XssMatchStatement != nil {
-		m["xss_match_statement"] = flattenXssMatchStatement(s.XssMatchStatement)
+		m["xss_match_statement"] = flattenXSSMatchStatement(s.XssMatchStatement)
 	}
 
 	return m

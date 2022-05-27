@@ -85,7 +85,7 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	input := &ec2.CreateCustomerGatewayInput{
 		BgpAsn:            aws.Int64(i64BgpAsn),
 		PublicIp:          aws.String(d.Get("ip_address").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 
@@ -180,7 +180,7 @@ func resourceCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCustomerGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
 		return nil
 	}
 

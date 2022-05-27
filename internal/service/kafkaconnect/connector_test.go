@@ -26,7 +26,7 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig(rName),
+				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -87,7 +87,7 @@ func TestAccKafkaConnectConnector_disappears(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig(rName),
+				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceConnector(), resourceName),
@@ -109,7 +109,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorAllAttributesConfig(rName),
+				Config: testAccConnectorConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -169,7 +169,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorAllAttributesCapacityUpdatedConfig(rName),
+				Config: testAccConnectorConfig_allAttributesCapacityUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -404,9 +404,9 @@ resource "aws_msk_cluster" "test" {
 `, rName))
 }
 
-func testAccConnectorConfig(rName string) string {
+func testAccConnectorConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfig(rName),
+		testAccCustomPluginConfig_basic(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
@@ -460,10 +460,10 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-func testAccConnectorAllAttributesConfig(rName string) string {
+func testAccConnectorConfig_allAttributes(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfig(rName),
-		testAccWorkerConfigurationConfig(rName),
+		testAccCustomPluginConfig_basic(rName),
+		testAccWorkerConfigurationConfig_basic(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -552,10 +552,10 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-func testAccConnectorAllAttributesCapacityUpdatedConfig(rName string) string {
+func testAccConnectorConfig_allAttributesCapacityUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfig(rName),
-		testAccWorkerConfigurationConfig(rName),
+		testAccCustomPluginConfig_basic(rName),
+		testAccWorkerConfigurationConfig_basic(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
