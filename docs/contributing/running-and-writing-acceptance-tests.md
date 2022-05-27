@@ -57,8 +57,8 @@ Terraform Providers, see the [Extending Terraform documentation](https://www.ter
 
 Our acceptance test suite creates real resources, and as a result they cost real money to run.
 Because the resources only exist for a short period of time, the total amount
-of money required is usually a relatively small amount. That said there are particular services 
-which are very expensive to run and its important to be prepared for those costs. 
+of money required is usually a relatively small amount. That said there are particular services
+which are very expensive to run and its important to be prepared for those costs.
 
 Some services which can be cost prohibitive include (among others):
 
