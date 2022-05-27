@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_snapshot"
 description: |-
@@ -12,7 +12,7 @@ Manages a DocDB database cluster snapshot for DocDB clusters.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_docdb_cluster_snapshot" "example" {
   db_cluster_identifier          = aws_docdb_cluster.example.id
   db_cluster_snapshot_identifier = "resourcetestsnapshot1234"
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_docdb_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.
+`aws_docdb_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot

@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_workspaces_directory: Add `workspace_access_properties.device_type_linux` attribute
+```
+
+```release-note:enhancement
+resource/aws_workspaces_directory: Add `workspace_access_properties.device_type_linux` argument
+```

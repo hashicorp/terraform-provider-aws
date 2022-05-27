@@ -12,7 +12,7 @@ Manages a Neptune database cluster snapshot.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_neptune_cluster_snapshot" "example" {
   db_cluster_identifier          = aws_neptune_cluster.example.id
   db_cluster_snapshot_identifier = "resourcetestsnapshot1234"
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.
+`aws_neptune_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
 
 ```
 $ terraform import aws_neptune_cluster_snapshot.example my-cluster-snapshot

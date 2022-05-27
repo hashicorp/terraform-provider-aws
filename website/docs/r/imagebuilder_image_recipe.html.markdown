@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_image_recipe"
 description: |-
@@ -12,7 +12,7 @@ Manages an Image Builder Image Recipe.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_imagebuilder_image_recipe" "example" {
   block_device_mapping {
     device_name = "/dev/xvdb"
@@ -26,6 +26,16 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
   component {
     component_arn = aws_imagebuilder_component.example.arn
+
+    parameter {
+      name  = "Parameter1"
+      value = "Value1"
+    }
+
+    parameter {
+      name  = "Parameter2"
+      value = "Value2"
+    }
   }
 
   name         = "example"
@@ -45,9 +55,11 @@ The following arguments are required:
 
 The following attributes are optional:
 
-* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
+* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
-* `tags` - (Optional) Key-value map of resource tags for the image recipe.
+* `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
+* `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
 ### block_device_mapping
@@ -73,9 +85,23 @@ The following arguments are optional:
 
 ### component
 
-The following arguments are required:
+The `component` block supports the following arguments:
 
 * `component_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Component to associate.
+* `parameter` - (Optional) Configuration block(s) for parameters to configure the component. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the component parameter.
+* `value` - (Required) The value for the named component parameter.
+
+### systems_manager_agent
+
+The following arguments are required:
+
+* `uninstall_after_build` - (Required) Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
 
 ## Attributes Reference
 
@@ -85,10 +111,11 @@ In addition to all arguments above, the following attributes are exported:
 * `date_created` - Date the image recipe was created.
 * `owner` - Owner of the image recipe.
 * `platform` - Platform of the image recipe.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-`aws_imagebuilder_image_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.
+`aws_imagebuilder_image_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0

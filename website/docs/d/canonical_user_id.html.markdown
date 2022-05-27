@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_canonical_user_id"
 description: |-
@@ -12,9 +12,11 @@ description: |-
 The Canonical User ID data source allows access to the [canonical user ID](http://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html)
 for the effective account in which Terraform is working.  
 
+~> **NOTE:** To use this data source, you must have the `s3:ListAllMyBuckets` permission.
+
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_canonical_user_id" "current" {}
 
 output "canonical_user_id" {

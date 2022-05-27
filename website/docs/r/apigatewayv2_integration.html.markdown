@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_integration"
 description: |-
@@ -15,7 +15,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_integration" "example" {
   api_id           = aws_apigatewayv2_api.example.id
   integration_type = "MOCK"
@@ -24,7 +24,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ### Lambda Integration
 
-```hcl
+```terraform
 resource "aws_lambda_function" "example" {
   filename      = "example.zip"
   function_name = "Example"
@@ -48,7 +48,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ### AWS Service Integration
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_integration" "example" {
   api_id              = aws_apigatewayv2_api.example.id
   credentials_arn     = aws_iam_role.example.arn
@@ -63,13 +63,52 @@ resource "aws_apigatewayv2_integration" "example" {
 }
 ```
 
+### Private Integration
+
+```terraform
+resource "aws_apigatewayv2_integration" "example" {
+  api_id           = aws_apigatewayv2_api.example.id
+  credentials_arn  = aws_iam_role.example.arn
+  description      = "Example with a load balancer"
+  integration_type = "HTTP_PROXY"
+  integration_uri  = aws_lb_listener.example.arn
+
+  integration_method = "ANY"
+  connection_type    = "VPC_LINK"
+  connection_id      = aws_apigatewayv2_vpc_link.example.id
+
+  tls_config {
+    server_name_to_verify = "example.com"
+  }
+
+  request_parameters = {
+    "append:header.authforintegration" = "$context.authorizer.authorizerResponse"
+    "overwrite:path"                   = "staticValueForIntegration"
+  }
+
+  response_parameters {
+    status_code = 403
+    mappings = {
+      "append:header.auth" = "$context.authorizer.authorizerResponse"
+    }
+  }
+
+  response_parameters {
+    status_code = 200
+    mappings = {
+      "overwrite:statuscode" = "204"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `api_id` - (Required) The API identifier.
 * `integration_type` - (Required) The integration type of an integration.
-Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (supported only for WebSocket APIs), `HTTP_PROXY`, `MOCK` (supported only for WebSocket APIs).
+Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (supported only for WebSocket APIs), `HTTP_PROXY`, `MOCK` (supported only for WebSocket APIs). For an HTTP API private integration, use `HTTP_PROXY`.
 * `connection_id` - (Optional) The ID of the [VPC link](apigatewayv2_vpc_link.html) for a private integration. Supported only for HTTP APIs. Must be between 1 and 1024 characters in length.
 * `connection_type` - (Optional) The type of the network connection to the integration endpoint. Valid values: `INTERNET`, `VPC_LINK`. Default is `INTERNET`.
 * `content_handling_strategy` - (Optional) How to handle response payload content type conversions. Valid values: `CONVERT_TO_BINARY`, `CONVERT_TO_TEXT`. Supported only for WebSocket APIs.
@@ -113,7 +152,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.
+`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_integration.example aabbccddee/1122334

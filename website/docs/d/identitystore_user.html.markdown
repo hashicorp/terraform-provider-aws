@@ -1,5 +1,5 @@
 ---
-subcategory: "Identity Store"
+subcategory: "SSO Identity Store"
 layout: "aws"
 page_title: "AWS: aws_identitystore_user"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to get an Identity Store User.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssoadmin_instances" "example" {}
 
 data "aws_identitystore_user" "example" {

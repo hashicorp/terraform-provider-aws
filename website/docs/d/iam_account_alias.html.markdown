@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
 description: |-
@@ -14,7 +14,7 @@ for the effective account in which Terraform is working.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_account_alias" "current" {}
 
 output "account_id" {

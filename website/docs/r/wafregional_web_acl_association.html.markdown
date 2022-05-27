@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl_association"
 description: |-
@@ -12,9 +12,11 @@ Manages an association with WAF Regional Web ACL.
 
 -> **Note:** An Application Load Balancer can only be associated with one WAF Regional WebACL.
 
-## Application Load Balancer Association Example
+## Example Usage
 
-```hcl
+### Application Load Balancer Association
+
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -82,9 +84,9 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 ```
 
-## API Gateway Association Example
+### API Gateway Association
 
-```hcl
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -186,7 +188,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.
+WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.,
 
 ```
 $ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn

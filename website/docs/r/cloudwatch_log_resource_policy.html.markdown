@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_resource_policy"
 description: |-
@@ -14,7 +14,7 @@ Provides a resource to manage a CloudWatch log resource policy.
 
 ### Elasticsearch Log Publishing
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "elasticsearch-log-publishing-policy" {
   statement {
     actions = [
@@ -40,7 +40,7 @@ resource "aws_cloudwatch_log_resource_policy" "elasticsearch-log-publishing-poli
 
 ### Route53 Query Logging
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "route53-query-logging-policy" {
   statement {
     actions = [
@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch log resource policies can be imported using the policy name, e.g.
+CloudWatch log resource policies can be imported using the policy name, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy

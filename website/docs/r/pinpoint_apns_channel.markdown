@@ -15,7 +15,7 @@ Provides a Pinpoint APNs Channel resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_apns_channel" "apns" {
   application_id = aws_pinpoint_app.app.application_id
 
@@ -52,9 +52,13 @@ If you choose to use __Key credentials__ you will have to provide:
 * `token_key` - (Required) The `.p8` file that you download from your Apple developer account when you create an authentication key.
 * `token_key_id` - (Required) The ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Pinpoint APNs Channel can be imported using the `application-id`, e.g.
+Pinpoint APNs Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_apns_channel.apns application-id

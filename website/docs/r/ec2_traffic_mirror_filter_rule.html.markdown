@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_filter_rule"
 description: |-
@@ -15,7 +15,7 @@ Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirrorin
 
 To create a basic traffic mirror session
 
-```hcl
+```terraform
 resource "aws_ec2_traffic_mirror_filter" "filter" {
   description      = "traffic mirror filter - terraform example"
   network_services = ["amazon-dns"]
@@ -82,7 +82,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Traffic mirror rules can be imported using the `traffic_mirror_filter_id` and `id` separated by `:` e.g.
+Traffic mirror rules can be imported using the `traffic_mirror_filter_id` and `id` separated by `:` e.g.,
 
 ```
 $ terraform import aws_ec2_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee

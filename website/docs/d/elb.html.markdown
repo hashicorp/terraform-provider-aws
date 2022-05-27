@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb"
 description: |-
@@ -18,7 +18,7 @@ with it, etc.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_name" {
   type    = string
   default = ""

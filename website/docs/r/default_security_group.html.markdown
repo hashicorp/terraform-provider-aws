@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_security_group"
 description: |-
@@ -24,7 +24,7 @@ For more information about default security groups, see the AWS documentation on
 
 The following config gives the default security group the same rules that AWS provides by default but under management by Terraform. This means that any ingress or egress rules added or changed will be detected as drift.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -52,7 +52,7 @@ resource "aws_default_security_group" "default" {
 
 The following denies all Egress traffic by omitting any `egress` rules, while including the default `ingress` rule to allow all traffic.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -79,12 +79,14 @@ The following arguments are optional:
 
 * `egress` - (Optional, VPC only) Configuration block. Detailed below.
 * `ingress` - (Optional) Configuration block. Detailed below.
-* `tags` - (Optional) Map of tags to assign to the resource.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_id` - (Optional, Forces new resource) VPC ID. **Note that changing the `vpc_id` will _not_ restore any default security group rules that were modified, added, or removed.** It will be left in its current state.
 
 ### egress and ingress
 
-Both the `egress` and `ingress` configuration blocks have the same arguments.
+Both arguments are processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+Both `egress` and `ingress` objects have the same arguments.
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this rule.
@@ -105,12 +107,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the security group.
 * `name` - Name of the security group.
 * `owner_id` - Owner ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 [aws-default-security-groups]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html#default-security-group
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.
+Security Groups can be imported using the `security group id`, e.g.,
 
 ```
 $ terraform import aws_default_security_group.default_sg sg-903004f8

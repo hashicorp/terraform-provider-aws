@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_domain_dkim"
 description: |-
@@ -31,7 +31,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
 }
@@ -52,7 +52,7 @@ resource "aws_route53_record" "example_amazonses_dkim_record" {
 
 ## Import
 
-DKIM tokens can be imported using the `domain` attribute, e.g.
+DKIM tokens can be imported using the `domain` attribute, e.g.,
 
 ```
 $ terraform import aws_ses_domain_dkim.example example.com

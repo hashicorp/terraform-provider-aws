@@ -1,5 +1,5 @@
 ---
-subcategory: "XRay"
+subcategory: "X-Ray"
 layout: "aws"
 page_title: "AWS: aws_xray_encryption_config"
 description: |-
@@ -14,7 +14,7 @@ Creates and manages an AWS XRay Encryption Config.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_xray_encryption_config" "example" {
   type = "NONE"
 }
@@ -22,7 +22,9 @@ resource "aws_xray_encryption_config" "example" {
 
 ## Example Usage with KMS Key
 
-```hcl
+```terraform
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "example" {
   description             = "Some Key"
   deletion_window_in_days = 7
@@ -36,7 +38,7 @@ resource "aws_kms_key" "example" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -65,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-XRay Encryption Config can be imported using the region name, e.g.
+XRay Encryption Config can be imported using the region name, e.g.,
 
 ```
 $ terraform import aws_xray_encryption_config.example us-west-2

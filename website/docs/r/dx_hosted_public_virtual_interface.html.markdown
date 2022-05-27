@@ -13,7 +13,7 @@ A hosted virtual interface is a virtual interface that is owned by another AWS a
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_hosted_public_virtual_interface" "foo" {
   connection_id = "dxcon-zzzzzzzz"
 
@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect hosted public virtual interfaces can be imported using the `vif id`, e.g.
+Direct Connect hosted public virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
 $ terraform import aws_dx_hosted_public_virtual_interface.test dxvif-33cc44dd

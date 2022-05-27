@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
 description: |-
@@ -14,7 +14,7 @@ the [account limits](http://docs.aws.amazon.com/kms/latest/developerguide/limits
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kms_key" "a" {}
 
 resource "aws_kms_alias" "a" {
@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS aliases can be imported using the `name`, e.g.
+KMS aliases can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_kms_alias.a alias/my-key-alias

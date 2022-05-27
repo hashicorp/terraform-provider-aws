@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling Plans"
+subcategory: "Auto Scaling Plans"
 layout: "aws"
 page_title: "AWS: aws_autoscalingplans_scaling_plan"
 description: |-
@@ -19,7 +19,7 @@ See the [AWS documentation](https://docs.aws.amazon.com/autoscaling/plans/usergu
 
 ### Basic Dynamic Scaling
 
-```hcl
+```terraform
 data "aws_availability_zones" "available" {}
 
 resource "aws_autoscaling_group" "example" {
@@ -70,7 +70,7 @@ resource "aws_autoscalingplans_scaling_plan" "example" {
 
 ### Basic Predictive Scaling
 
-```hcl
+```terraform
 data "aws_availability_zones" "available" {}
 
 resource "aws_autoscaling_group" "example" {
@@ -217,7 +217,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Auto Scaling scaling plans can be imported using the `name`, e.g.
+Auto Scaling scaling plans can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_autoscalingplans_scaling_plan.example MyScale1

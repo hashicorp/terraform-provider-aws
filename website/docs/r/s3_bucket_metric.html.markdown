@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_metric"
 description: |-
@@ -14,7 +14,7 @@ Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3
 
 ### Add metrics configuration for entire S3 bucket
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
@@ -25,9 +25,9 @@ resource "aws_s3_bucket_metric" "example-entire-bucket" {
 }
 ```
 
-### Add metrics configuration with S3 bucket object filter
+### Add metrics configuration with S3 object filter
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
@@ -62,9 +62,13 @@ The `filter` metric configuration supports the following:
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-S3 bucket metric configurations can be imported using `bucket:metric`, e.g.
+S3 bucket metric configurations can be imported using `bucket:metric`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket

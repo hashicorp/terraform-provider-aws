@@ -17,9 +17,11 @@ Sample Conformance Pack templates may be found in the
 successfully create or update. See also the
 [`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
 
-## Example Usage with Template Body
+## Example Usage
 
-```hcl
+### Template Body
+
+```terraform
 resource "aws_config_conformance_pack" "example" {
   name = "example"
 
@@ -46,12 +48,12 @@ EOT
 }
 ```
 
-## Example Usage with Template S3 URI
+### Template S3 URI
 
-```hcl
+```terraform
 resource "aws_config_conformance_pack" "example" {
   name            = "example"
-  template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_bucket_object.example.key}"
+  template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"
 
   depends_on = [aws_config_configuration_recorder.example]
 }
@@ -60,7 +62,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket  = aws_s3_bucket.example.id
   key     = "example-key"
   content = <<EOT
@@ -87,7 +89,7 @@ The following arguments are supported:
 * `delivery_s3_key_prefix` - (Optional) The prefix for the Amazon S3 bucket. Maximum length of 1024.
 * `input_parameter` - (Optional) Set of configuration blocks describing input parameters passed to the conformance pack template. Documented below. When configured, the parameters must also be included in the `template_body` or in the template stored in Amazon S3 if using `template_s3_uri`.
 * `template_body` - (Optional, required if `template_s3_uri` is not provided) A string containing full conformance pack template body. Maximum length of 51200. Drift detection is not possible with this argument.
-* `template_s3_uri` - (Optional, required if `template_body` is not provided) Location of file, e.g. `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
+* `template_s3_uri` - (Optional, required if `template_body` is not provided) Location of file, e.g., `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
 
 ### input_parameter Argument Reference
 
@@ -98,13 +100,13 @@ The `input_parameter` configuration block supports the following arguments:
 
 ## Attributes Reference
 
-In addition to all arguments above (except for `template_body` and `template_s3_uri`), the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the conformance pack.
 
 ## Import
 
-Config Conformance Packs can be imported using the `name`, e.g.
+Config Conformance Packs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_config_conformance_pack.example example

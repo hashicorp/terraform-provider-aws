@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_subnet_group"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to get information about an RDS subnet group.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_db_subnet_group" "database" {
   name = "my-test-database-subnet-group"
 }
