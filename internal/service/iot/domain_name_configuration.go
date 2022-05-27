@@ -1,11 +1,12 @@
 package iot
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,10 +17,10 @@ import (
 
 func ResourceDomainNameConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainNameConfigurationCreate,
-		Read:   resourceDomainNameConfigurationRead,
-		Update: resourceDomainNameConfigurationUpdate,
-		Delete: resourceDomainNameConfigurationDelete,
+		CreateWithoutTimeout: resourceDomainNameConfigurationCreate,
+		ReadWithoutTimeout:   resourceDomainNameConfigurationRead,
+		UpdateWithoutTimeout: resourceDomainNameConfigurationUpdate,
+		DeleteWithoutTimeout: resourceDomainNameConfigurationDelete,
 
 		CustomizeDiff: verify.SetTagsDiff,
 
@@ -85,51 +86,136 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 	}
 }
 
-func resourceDomainNameConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IoTConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
-	apiObject := &iot.CreateDomainConfigurationInput{
+	input := &iot.CreateDomainConfigurationInput{
 		DomainConfigurationName: aws.String(name),
 	}
 
+	if v, ok := d.GetOk("authorizer_config"); ok {
+		input.AuthorizerConfig = expandIotDomainNameConfigurationAuthorizerConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("domain_name"); ok {
-		apiObject.DomainName = aws.String(v.(string))
+		input.DomainName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("server_certificate_arns"); ok {
-		apiObject.ServerCertificateArns = flex.ExpandStringList(v.([]interface{}))
+		input.ServerCertificateArns = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("service_type"); ok {
-		apiObject.ServiceType = aws.String(v.(string))
+		input.ServiceType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("validation_certificate_arn"); ok {
-		apiObject.ValidationCertificateArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("authorizer_config"); ok {
-		apiObject.AuthorizerConfig = expandIotDomainNameConfigurationAuthorizerConfig(v.([]interface{}))
+		input.ValidationCertificateArn = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		apiObject.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating IoT Domain Configuration: %s", name)
-	output, err := conn.CreateDomainConfiguration(apiObject)
+	log.Printf("[DEBUG] Creating IoT Domain Configuration: %s", input)
+	output, err := conn.CreateDomainConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating IoT Domain Configuration (%s): %s", name, err)
+		return diag.Errorf("creating IoT Domain Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.DomainConfigurationName))
 
-	return resourceDomainNameConfigurationRead(d, meta)
+	return resourceDomainNameConfigurationRead(ctx, d, meta)
+}
+
+func resourceDomainNameConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+
+	out, err := conn.DescribeDomainConfigurationWithContext(ctx, &iot.DescribeDomainConfigurationInput{
+		DomainConfigurationName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return diag.Errorf("reading IoT Domain Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", out.DomainConfigurationArn)
+
+	tags, _ := ListTags(conn, d.Get("arn").(string))
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
+	}
+
+	return nil
+}
+
+func resourceDomainNameConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).IoTConn
+
+	if d.HasChange("authorizer_config") {
+		input := iot.UpdateDomainConfigurationInput{
+			DomainConfigurationName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("authorizer_config") {
+			input.AuthorizerConfig = expandIotDomainNameConfigurationAuthorizerConfig(d.Get("authorizer_config").([]interface{}))
+		}
+
+		log.Printf("[DEBUG] Updating IoT Domain Configuration: %s", d.Id())
+		_, err := conn.UpdateDomainConfigurationWithContext(ctx, &input)
+
+		if err != nil {
+			return diag.Errorf("updating IoT Domain Configuration (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating IoT Domain Configuration (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceDomainNameConfigurationRead(ctx, d, meta)
+}
+
+func resourceDomainNameConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).IoTConn
+
+	if d.Get("status").(string) == iot.DomainConfigurationStatusEnabled {
+		log.Printf("[DEBUG] Disabling IoT Domain Configuration: %s", d.Id())
+		_, err := conn.UpdateDomainConfigurationWithContext(ctx, &iot.UpdateDomainConfigurationInput{
+			DomainConfigurationName:   aws.String(d.Id()),
+			DomainConfigurationStatus: aws.String(iot.DomainConfigurationStatusDisabled),
+		})
+
+		if err != nil {
+			return diag.Errorf("disabling IoT Domain Configuration (%s): %s", d.Id(), err)
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting IoT Domain Configuration: %s", d.Id())
+	_, err := conn.DeleteDomainConfigurationWithContext(ctx, &iot.DeleteDomainConfigurationInput{
+		DomainConfigurationName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return diag.Errorf("deleting IoT Domain Configuration (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandIotDomainNameConfigurationAuthorizerConfig(l []interface{}) *iot.AuthorizerConfig {
@@ -145,85 +231,4 @@ func expandIotDomainNameConfigurationAuthorizerConfig(l []interface{}) *iot.Auth
 	}
 
 	return iotAuthorizerConfig
-}
-
-func resourceDomainNameConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-
-	out, err := conn.DescribeDomainConfiguration(&iot.DescribeDomainConfigurationInput{
-		DomainConfigurationName: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("error reading domain details: %v", err)
-	}
-
-	d.Set("arn", out.DomainConfigurationArn)
-
-	tags, _ := ListTags(conn, d.Get("arn").(string))
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceDomainNameConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-
-	input := iot.UpdateDomainConfigurationInput{
-		DomainConfigurationName: aws.String(d.Id()),
-	}
-
-	if d.HasChange("authorizer_config") {
-		input.AuthorizerConfig = expandIotDomainNameConfigurationAuthorizerConfig(d.Get("authorizer_config").([]interface{}))
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating IoT Domain Name Configuration (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	log.Printf("[INFO] Updating IoT Domain Configuration: %s", d.Id())
-	_, err := conn.UpdateDomainConfiguration(&input)
-
-	if err != nil {
-		return fmt.Errorf("error updating IoT Domain Configuration (%s): %w", d.Id(), err)
-	}
-
-	return resourceCertificateRead(d, meta)
-}
-
-func resourceDomainNameConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-
-	if d.Get("status").(string) == iot.DomainConfigurationStatusEnabled {
-		log.Printf("[INFO] Disabling IoT Domain Configuration: %s", d.Id())
-		_, err := conn.UpdateDomainConfiguration(&iot.UpdateDomainConfigurationInput{
-			DomainConfigurationName:   aws.String(d.Id()),
-			DomainConfigurationStatus: aws.String(iot.DomainConfigurationStatusDisabled),
-		})
-
-		if err != nil {
-			return fmt.Errorf("error disabling IoT Domain Configuration (%s): %s", d.Id(), err)
-		}
-	}
-
-	_, err := conn.DeleteDomainConfiguration(&iot.DeleteDomainConfigurationInput{
-		DomainConfigurationName: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		return fmt.Errorf("error deleting certificate: %v", err)
-	}
-
-	return nil
 }
