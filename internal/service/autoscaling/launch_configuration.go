@@ -19,6 +19,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -375,134 +376,43 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		input.UserData = aws.String(v.(string))
 	}
 
-	var blockDevices []*autoscaling.BlockDeviceMapping
-
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
-	rootDeviceName, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn)
+	imageID := d.Get("image_id").(string)
+	rootDeviceName, err := findImageRootDeviceName(ec2conn, imageID)
+
 	if err != nil {
 		return err
 	}
-	if rootDeviceName == nil {
-		// We do this so the value is empty so we don't have to do nil checks later
-		var blank string
-		rootDeviceName = &blank
-	}
 
-	if v, ok := d.GetOk("ebs_block_device"); ok {
-		vL := v.(*schema.Set).List()
-		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			ebs := &autoscaling.Ebs{}
+	var blockDeviceMappings []*autoscaling.BlockDeviceMapping
 
-			var noDevice *bool
-			if v, ok := bd["no_device"].(bool); ok && v {
-				noDevice = aws.Bool(v)
-			} else {
-				ebs.DeleteOnTermination = aws.Bool(bd["delete_on_termination"].(bool))
-			}
+	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
+		v := expandBlockDeviceMappings(v.(*schema.Set).List(), expandBlockDeviceMappingForEBSBlockDevice)
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
-				ebs.SnapshotId = aws.String(v)
-			}
-
-			if v, ok := bd["encrypted"].(bool); ok && v {
-				ebs.Encrypted = aws.Bool(v)
-			}
-
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
-			}
-
-			if v, ok := bd["iops"].(int); ok && v > 0 {
-				ebs.Iops = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
-				ebs.Throughput = aws.Int64(int64(v))
-			}
-
-			if bd["device_name"].(string) == aws.StringValue(rootDeviceName) {
-				return fmt.Errorf("Root device (%s) declared as an 'ebs_block_device'.  Use 'root_block_device' keyword.", *rootDeviceName)
-			}
-
-			blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
-				Ebs:        ebs,
-				NoDevice:   noDevice,
-			})
-		}
-	}
-
-	if v, ok := d.GetOk("ephemeral_block_device"); ok {
-		vL := v.(*schema.Set).List()
-		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			bdm := &autoscaling.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
-			}
-
-			if v, ok := bd["no_device"].(bool); ok && v {
-				bdm.NoDevice = aws.Bool(true)
-			}
-
-			if v, ok := bd["virtual_name"].(string); ok && v != "" {
-				bdm.VirtualName = aws.String(v)
-			}
-
-			blockDevices = append(blockDevices, bdm)
-		}
-	}
-
-	if v, ok := d.GetOk("root_block_device"); ok {
-		vL := v.([]interface{})
-		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			ebs := &autoscaling.Ebs{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
-			}
-
-			if v, ok := bd["encrypted"].(bool); ok && v {
-				ebs.Encrypted = aws.Bool(v)
-			}
-
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
-			}
-
-			if v, ok := bd["iops"].(int); ok && v > 0 {
-				ebs.Iops = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
-				ebs.Throughput = aws.Int64(int64(v))
-			}
-
-			if dn, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn); err == nil {
-				if dn == nil {
-					return fmt.Errorf(
-						"Expected to find a Root Device name for AMI (%s), but got none",
-						d.Get("image_id").(string))
-				}
-				blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
-					DeviceName: dn,
-					Ebs:        ebs,
-				})
-			} else {
-				return err
+		for _, v := range v {
+			if aws.StringValue(v.DeviceName) == rootDeviceName {
+				return fmt.Errorf("root device (%s) declared as an 'ebs_block_device'. Use 'root_block_device' argument.", rootDeviceName)
 			}
 		}
+
+		blockDeviceMappings = append(blockDeviceMappings, v...)
 	}
 
-	if len(blockDevices) > 0 {
-		input.BlockDeviceMappings = blockDevices
+	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
+		v := expandBlockDeviceMappings(v.(*schema.Set).List(), expandBlockDeviceMappingForEphemeralBlockDevice)
+
+		blockDeviceMappings = append(blockDeviceMappings, v...)
+	}
+
+	if v, ok := d.GetOk("root_block_device"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		v := expandBlockDeviceMappingForRootBlockDevice(v.([]interface{})[0].(map[string]interface{}))
+		v.DeviceName = aws.String(rootDeviceName)
+
+		blockDeviceMappings = append(blockDeviceMappings, v)
+	}
+
+	if len(blockDeviceMappings) > 0 {
+		input.BlockDeviceMappings = blockDeviceMappings
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Launch Configuration: %s", input)
@@ -631,6 +541,136 @@ func readLCBlockDevices(d *schema.ResourceData, lc *autoscaling.LaunchConfigurat
 	}
 
 	return nil
+}
+
+func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.BlockDeviceMapping{
+		Ebs: &autoscaling.Ebs{},
+	}
+
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+		apiObject.DeviceName = aws.String(v)
+	}
+
+	if v, ok := tfMap["no_device"].(bool); ok && v {
+		apiObject.NoDevice = aws.Bool(v)
+	} else if v, ok := tfMap["delete_on_termination"].(bool); ok {
+		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["encrypted"].(bool); ok && v {
+		apiObject.Ebs.Encrypted = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+		apiObject.Ebs.Iops = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+		apiObject.Ebs.SnapshotId = aws.String(v)
+	}
+
+	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+		apiObject.Ebs.Throughput = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+		apiObject.Ebs.VolumeType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.BlockDeviceMapping{}
+
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+		apiObject.DeviceName = aws.String(v)
+	}
+
+	if v, ok := tfMap["no_device"].(bool); ok && v {
+		apiObject.NoDevice = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+		apiObject.VirtualName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.BlockDeviceMapping{
+		Ebs: &autoscaling.Ebs{},
+	}
+
+	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["encrypted"].(bool); ok && v {
+		apiObject.Ebs.Encrypted = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+		apiObject.Ebs.Iops = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+		apiObject.Ebs.Throughput = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+		apiObject.Ebs.VolumeType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interface{}) *autoscaling.BlockDeviceMapping) []*autoscaling.BlockDeviceMapping {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*autoscaling.BlockDeviceMapping
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := fn(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandInstanceMetadataOptions(tfMap map[string]interface{}) *autoscaling.InstanceMetadataOptions {
@@ -892,4 +932,50 @@ func FindLaunchConfigurationByName(conn *autoscaling.AutoScaling, name string) (
 	}
 
 	return output, nil
+}
+
+func findImageRootDeviceName(conn *ec2.EC2, imageID string) (string, error) {
+	image, err := tfec2.FindImageByID(conn, imageID)
+
+	if err != nil {
+		return "", err
+	}
+
+	// Instance store backed AMIs do not provide a root device name.
+	if aws.StringValue(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
+		return "", nil
+	}
+
+	rootDeviceName := aws.StringValue(image.RootDeviceName)
+
+	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
+	// DeviceName in the BlockDeviceMapping list (which will instead have
+	// something like "/dev/sda")
+	//
+	// While this seems like it breaks an invariant of AMIs, it ends up working
+	// on the AWS side, and AMIs like this are common enough that we need to
+	// special case it so Terraform does the right thing.
+	//
+	// Our heuristic is: if the RootDeviceName does not appear in the
+	// BlockDeviceMapping, assume that the DeviceName of the first
+	// BlockDeviceMapping entry serves as the root device.
+	rootDeviceInBlockDeviceMappings := false
+
+	for _, v := range image.BlockDeviceMappings {
+		if aws.StringValue(v.DeviceName) == rootDeviceName {
+			rootDeviceInBlockDeviceMappings = true
+		}
+	}
+
+	if !rootDeviceInBlockDeviceMappings && len(image.BlockDeviceMappings) > 0 {
+		rootDeviceName = aws.StringValue(image.BlockDeviceMappings[0].DeviceName)
+	}
+
+	if rootDeviceName == "" {
+		return "", &resource.NotFoundError{
+			Message: fmt.Sprintf("finding root device name for EC2 AMI (%s)", imageID),
+		}
+	}
+
+	return rootDeviceName, nil
 }
