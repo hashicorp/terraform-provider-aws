@@ -132,7 +132,7 @@ func testAccCheckEndpointAccessDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_subnet_group" {
+		if rs.Type != "aws_redshift_endpoint_access" {
 			continue
 		}
 
@@ -146,7 +146,7 @@ func testAccCheckEndpointAccessDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Redshift Subent Group %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Redshift Endpoint Access %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -160,7 +160,7 @@ func testAccCheckEndpointAccessExists(n string, v *redshift.EndpointAccess) reso
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Subnet Group ID is set")
+			return fmt.Errorf("No Redshift Endpoint Access ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
