@@ -174,7 +174,7 @@ func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshi
 	return nil, err
 }
 
-func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
+func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"active"},
@@ -195,7 +195,7 @@ func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.End
 	return nil, err
 }
 
-func waitEndpointAccessDeleted(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
+func waitEndpointAccessDeleted(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
