@@ -447,7 +447,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingLaunchConfiguration_updateEBSBlockDevices(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
@@ -459,26 +459,41 @@ func TestAccAutoScalingLaunchConfiguration_updateEBSBlockDevices(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithEncryption(rName),
+				Config: testAccLaunchConfigurationConfig_withEncryptedEBSBlockDevice(rName, 9),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdb",
+						"encrypted":   "true",
 						"volume_size": "9",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
+						"volume_size": "11",
+						"volume_type": "gp2",
 					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchConfigurationWithEncryptionUpdated(rName),
+				Config: testAccLaunchConfigurationConfig_withEncryptedEBSBlockDevice(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdb",
+						"encrypted":   "true",
 						"volume_size": "10",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
+						"volume_size": "11",
+						"volume_type": "gp2",
 					}),
 				),
 			},
@@ -581,32 +596,6 @@ func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckLaunchConfigurationWithEncryption(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// Map out the block devices by name, which should be unique.
-		blockDevices := make(map[string]*autoscaling.BlockDeviceMapping)
-		for _, blockDevice := range conf.BlockDeviceMappings {
-			blockDevices[*blockDevice.DeviceName] = blockDevice
-		}
-
-		// Check if the root block device exists.
-		if _, ok := blockDevices["/dev/xvda"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/xvda")
-		} else if blockDevices["/dev/xvda"].Ebs.Encrypted != nil {
-			return fmt.Errorf("root device should not include value for Encrypted")
-		}
-
-		// Check if the secondary block device exists.
-		if _, ok := blockDevices["/dev/sdb"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sdb")
-		} else if !*blockDevices["/dev/sdb"].Ebs.Encrypted {
-			return fmt.Errorf("block device isn't encrypted as expected: /dev/sdb")
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
@@ -959,6 +948,27 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
+func testAccLaunchConfigurationConfig_withEncryptedEBSBlockDevice(rName string, size int) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = %[2]d
+    encrypted   = true
+  }
+}
+`, rName, size))
+}
+
 func testAccLaunchConfigurationMetadataOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -972,50 +982,6 @@ resource "aws_launch_configuration" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
-  }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationWithEncryption(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name                        = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  associate_public_ip_address = false
-
-  root_block_device {
-    volume_type = "gp2"
-    volume_size = 11
-  }
-
-  ebs_block_device {
-    device_name = "/dev/sdb"
-    volume_size = 9
-    encrypted   = true
-  }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationWithEncryptionUpdated(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name                        = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  associate_public_ip_address = false
-
-  root_block_device {
-    volume_type = "gp2"
-    volume_size = 11
-  }
-
-  ebs_block_device {
-    device_name = "/dev/sdb"
-    volume_size = 10
-    encrypted   = true
   }
 }
 `, rName))
