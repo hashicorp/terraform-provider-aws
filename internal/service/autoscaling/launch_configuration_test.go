@@ -329,17 +329,16 @@ func TestAccAutoScalingLaunchConfiguration_withSpotPrice(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithSpotPriceConfig(rName),
+				Config: testAccLaunchConfigurationConfig_withSpotPrice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -351,6 +350,8 @@ func TestAccAutoScalingLaunchConfiguration_withVPCClassicLink(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
+	vpcResourceName := "aws_vpc.test"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
@@ -362,8 +363,11 @@ func TestAccAutoScalingLaunchConfiguration_withVPCClassicLink(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_withVPCClassicLink(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					acctest.CheckVPCExists("aws_vpc.test", &vpc),
-					testAccCheckSecurityGroupExists("aws_security_group.test", &group),
+					acctest.CheckVPCExists(vpcResourceName, &vpc),
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_classic_link_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_security_groups.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_classic_link_security_groups.*", sgResourceName, "id"),
 				),
 			},
 			{
@@ -872,13 +876,44 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationWithSpotPriceConfig(rName string) string {
+func testAccLaunchConfigurationConfig_withSpotPrice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   spot_price    = "0.05"
+}
+`, rName))
+}
+
+func testAccLaunchConfigurationConfig_withVPCClassicLink(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block         = "10.0.0.0/16"
+  enable_classiclink = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+
+  vpc_classic_link_id              = aws_vpc.test.id
+  vpc_classic_link_security_groups = [aws_security_group.test.id]
 }
 `, rName))
 }
@@ -965,37 +1000,6 @@ resource "aws_launch_configuration" "test" {
     volume_size = 10
     encrypted   = true
   }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationConfig_withVPCClassicLink(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block         = "10.0.0.0/16"
-  enable_classiclink = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-
-  vpc_classic_link_id              = aws_vpc.test.id
-  vpc_classic_link_security_groups = [aws_security_group.test.id]
 }
 `, rName))
 }
