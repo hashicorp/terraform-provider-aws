@@ -195,7 +195,7 @@ func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.End
 	return nil, err
 }
 
-func waitEndpointAccessDeleted(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) { //nolint:unparam
+func waitEndpointAccessDeleted(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
