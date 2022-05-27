@@ -66,7 +66,7 @@ Some services which can be cost prohibitive include (among others):
 - Glue
 - OpenSearch
 - RDS
-- ACM
+- ACM (Amazon Certificate Manager)
 - FSx
 - Kinesis Analytics
 - EC2
