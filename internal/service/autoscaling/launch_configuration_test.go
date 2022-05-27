@@ -181,10 +181,9 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -438,10 +437,9 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -513,13 +511,13 @@ func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationMetadataOptionsConfig(rName),
+				Config: testAccLaunchConfigurationConfig_withMetadataOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 				),
 			},
 			{
@@ -543,7 +541,7 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationEBSNoDeviceConfig(rName),
+				Config: testAccLaunchConfigurationConfig_withEBSNoDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
@@ -554,10 +552,9 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -575,20 +572,19 @@ func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig_userData(rName),
+				Config: testAccLaunchConfigurationConfig_withUserData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchConfigurationConfig_userDataBase64(rName),
+				Config: testAccLaunchConfigurationConfig_withUserDataBase64(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
@@ -969,10 +965,8 @@ resource "aws_launch_configuration" "test" {
 `, rName, size))
 }
 
-func testAccLaunchConfigurationMetadataOptionsConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
+func testAccLaunchConfigurationConfig_withMetadataOptions(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.nano"
@@ -987,7 +981,7 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationEBSNoDeviceConfig(rName string) string {
+func testAccLaunchConfigurationConfig_withEBSNoDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name_prefix   = %[1]q
@@ -1002,26 +996,24 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationConfig_userData(rName string) string {
+func testAccLaunchConfigurationConfig_withUserData(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  user_data                   = "foo:-with-character's"
-  associate_public_ip_address = false
+  name_prefix   = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  user_data     = "foo:-with-character's"
 }
 `, rName))
 }
 
-func testAccLaunchConfigurationConfig_userDataBase64(rName string) string {
+func testAccLaunchConfigurationConfig_withUserDataBase64(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  user_data_base64            = base64encode("hello world")
-  associate_public_ip_address = false
+  name_prefix      = %[1]q
+  image_id         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type    = "t2.micro"
+  user_data_base64 = base64encode("hello world")
 }
 `, rName))
 }
