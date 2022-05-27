@@ -48,6 +48,20 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
       }
       bar : {
         name : "bar",
+        attributes : {
+          someAttribute : {
+            constraints : {
+              type : "string",
+              required : true
+            }
+          },
+          someOtherAttribute : {
+            constraints : {
+              type : "number",
+              required : true
+            }
+          }
+        }
       }
     }
     values : {
@@ -56,6 +70,8 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
       }
       bar : {
         enabled : "true",
+        someAttribute: "Hello World",
+        someOtherAttribute: 123
       }
     }
     version : "1"
