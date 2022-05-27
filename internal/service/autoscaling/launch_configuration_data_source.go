@@ -14,83 +14,16 @@ import (
 func DataSourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLaunchConfigurationRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"instance_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"key_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"user_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"spot_price": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"placement_tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"enable_monitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -100,42 +33,34 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"no_device": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -143,7 +68,14 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_monitoring": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -153,7 +85,6 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"virtual_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -161,7 +92,22 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-
+			"iam_instance_profile": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -171,18 +117,25 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"placement_tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"root_block_device": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -192,33 +145,50 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"spot_price": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_classic_link_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_classic_link_security_groups": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
