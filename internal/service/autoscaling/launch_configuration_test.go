@@ -202,16 +202,15 @@ func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName),
+				Config: testAccLaunchConfigurationConfig_withInstanceStoreAMI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -231,7 +230,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithRootBlockDeviceCopiedAMIConfig(rName),
+				Config: testAccLaunchConfigurationCofing_withRootBlockDeviceCopiedAMI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckAMIExists(amiCopyResourceName, &ami),
@@ -240,7 +239,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName, 10),
+				Config: testAccLaunchConfigurationConfig_withRootBlockDeviceVolumeSize(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 				),
@@ -261,22 +260,23 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName, 11),
+				Config: testAccLaunchConfigurationConfig_withRootBlockDeviceVolumeSize(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName, 20),
+				Config: testAccLaunchConfigurationConfig_withRootBlockDeviceVolumeSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "20"),
 				),
 			},
@@ -296,17 +296,22 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationWithEncryptedRootBlockDeviceConfig(rName),
+				Config: testAccLaunchConfigurationConfig_withEncryptedRootBlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
+						"encrypted":   "true",
+						"volume_size": "11",
+						"volume_type": "gp2",
+					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -802,7 +807,7 @@ data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
 `
 }
 
-func testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName string) string {
+func testAccLaunchConfigurationConfig_withInstanceStoreAMI(rName string) string {
 	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVInstanceStoreAMIConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
@@ -814,7 +819,7 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationWithRootBlockDeviceCopiedAMIConfig(rName string) string {
+func testAccLaunchConfigurationCofing_withRootBlockDeviceCopiedAMI(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -836,7 +841,7 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName string, volumeSize int) string {
+func testAccLaunchConfigurationConfig_withRootBlockDeviceVolumeSize(rName string, volumeSize int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -850,41 +855,30 @@ resource "aws_launch_configuration" "test" {
 `, rName, volumeSize))
 }
 
-func testAccLaunchConfigurationWithEncryptedRootBlockDeviceConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccLaunchConfigurationConfig_withEncryptedRootBlockDevice(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name_prefix                 = %[1]q
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t3.nano"
-  user_data                   = "testtest-user-data"
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 
   root_block_device {
     encrypted   = true
     volume_type = "gp2"
     volume_size = 11
   }
+}
+`, rName))
+}
+
+func testAccLaunchConfigurationWithSpotPriceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  spot_price    = "0.05"
 }
 `, rName))
 }
@@ -903,17 +897,6 @@ resource "aws_launch_configuration" "test" {
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
   }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationWithSpotPriceConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-  spot_price    = "0.05"
 }
 `, rName))
 }
