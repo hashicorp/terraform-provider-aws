@@ -21,19 +21,19 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName),
+				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceAllowedPrincipalExists("aws_vpc_endpoint_service_allowed_principal.foo"),
+					testAccCheckVPCEndpointServiceAllowedPrincipalExists("aws_vpc_endpoint_service_allowed_principal.foo"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckVpcEndpointServiceAllowedPrincipalDestroy(s *terraform.State) error {
+func testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -66,7 +66,7 @@ func testAccCheckVpcEndpointServiceAllowedPrincipalDestroy(s *terraform.State) e
 	return nil
 }
 
-func testAccCheckVpcEndpointServiceAllowedPrincipalExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCEndpointServiceAllowedPrincipalExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -96,7 +96,7 @@ func testAccCheckVpcEndpointServiceAllowedPrincipalExists(n string) resource.Tes
 	}
 }
 
-func testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName string) string {
+func testAccVPCEndpointServiceAllowedPrincipalConfig_basic(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(
 		`
 resource "aws_vpc" "nlb_test" {

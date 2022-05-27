@@ -70,7 +70,7 @@ func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateIpGroup(&workspaces.CreateIpGroupInput{
 		GroupName: aws.String(d.Get("name").(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
-		UserRules: expandIpGroupRules(rules),
+		UserRules: expandIPGroupRules(rules),
 		Tags:      Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
@@ -112,7 +112,7 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", ipGroup.GroupName)
 	d.Set("description", ipGroup.GroupDesc)
-	d.Set("rules", flattenIpGroupRules(ipGroup.UserRules))
+	d.Set("rules", flattenIPGroupRules(ipGroup.UserRules))
 
 	tags, err := ListTags(conn, d.Id())
 	if err != nil {
@@ -142,7 +142,7 @@ func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] Updating WorkSpaces IP Group Rules")
 		_, err := conn.UpdateRulesOfIpGroup(&workspaces.UpdateRulesOfIpGroupInput{
 			GroupId:   aws.String(d.Id()),
-			UserRules: expandIpGroupRules(rules),
+			UserRules: expandIPGroupRules(rules),
 		})
 		if err != nil {
 			return err
@@ -209,7 +209,7 @@ func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandIpGroupRules(rules []interface{}) []*workspaces.IpRuleItem {
+func expandIPGroupRules(rules []interface{}) []*workspaces.IpRuleItem {
 	var result []*workspaces.IpRuleItem
 	for _, rule := range rules {
 		r := rule.(map[string]interface{})
@@ -222,7 +222,7 @@ func expandIpGroupRules(rules []interface{}) []*workspaces.IpRuleItem {
 	return result
 }
 
-func flattenIpGroupRules(rules []*workspaces.IpRuleItem) []map[string]interface{} {
+func flattenIPGroupRules(rules []*workspaces.IpRuleItem) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(rules))
 	for _, rule := range rules {
 		r := map[string]interface{}{}

@@ -2586,7 +2586,7 @@ func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.Import
 
 func testAccFSxWindowsFileSystemBaseConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"

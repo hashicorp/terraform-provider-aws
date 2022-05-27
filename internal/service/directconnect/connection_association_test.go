@@ -25,7 +25,7 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfigBasic(rName),
+				Config: testAccConnectionAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName),
 				),
@@ -34,7 +34,7 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccDirectConnectConnectionAssociation_lAGOnConnection(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 	resourceName := "aws_dx_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -45,7 +45,7 @@ func TestAccDirectConnectConnectionAssociation_lAGOnConnection(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfigLAGOnConnection(rName),
+				Config: testAccConnectionAssociationConfig_lagOnConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName),
 				),
@@ -66,7 +66,7 @@ func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfigMultiple(rName),
+				Config: testAccConnectionAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName1),
 					testAccCheckConnectionAssociationExists(resourceName2),
@@ -123,7 +123,7 @@ func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccDxConnectionAssociationConfigBasic(rName string) string {
+func testAccConnectionAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -151,7 +151,7 @@ resource "aws_dx_connection_association" "test" {
 `, rName)
 }
 
-func testAccDxConnectionAssociationConfigLAGOnConnection(rName string) string {
+func testAccConnectionAssociationConfig_lagOnConnection(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -185,7 +185,7 @@ resource "aws_dx_connection_association" "test" {
 `, rName)
 }
 
-func testAccDxConnectionAssociationConfigMultiple(rName string) string {
+func testAccConnectionAssociationConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 

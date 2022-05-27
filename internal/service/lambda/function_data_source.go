@@ -270,7 +270,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("handler", function.Handler)
-	d.Set("invoke_arn", functionInvokeArn(aws.StringValue(function.FunctionArn), meta))
+	d.Set("invoke_arn", functionInvokeARN(aws.StringValue(function.FunctionArn), meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 

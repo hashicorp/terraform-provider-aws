@@ -29,7 +29,7 @@ func TestAccGlueSchema_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("schema/%s/%s", rName, rName)),
@@ -68,7 +68,7 @@ func TestAccGlueSchema_json(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaJsonConfig(rName),
+				Config: testAccSchemaConfig_json(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "data_format", "JSON"),
@@ -97,7 +97,7 @@ func TestAccGlueSchema_protobuf(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaProtobufConfig(rName),
+				Config: testAccSchemaConfig_protobuf(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "data_format", "PROTOBUF"),
@@ -126,14 +126,14 @@ func TestAccGlueSchema_description(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaDescriptionConfig(rName, "First Description"),
+				Config: testAccSchemaConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
-				Config: testAccSchemaDescriptionConfig(rName, "Second Description"),
+				Config: testAccSchemaConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
@@ -161,14 +161,14 @@ func TestAccGlueSchema_compatibility(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaCompatibillityConfig(rName, "DISABLED"),
+				Config: testAccSchemaConfig_compatibility(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "DISABLED"),
 				),
 			},
 			{
-				Config: testAccSchemaCompatibillityConfig(rName, "FULL"),
+				Config: testAccSchemaConfig_compatibility(rName, "FULL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "FULL"),
@@ -195,7 +195,7 @@ func TestAccGlueSchema_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaTags1Config(rName, "key1", "value1"),
+				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -208,7 +208,7 @@ func TestAccGlueSchema_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -217,7 +217,7 @@ func TestAccGlueSchema_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSchemaTags1Config(rName, "key2", "value2"),
+				Config: testAccSchemaConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -241,7 +241,7 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
@@ -250,7 +250,7 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSchemaSchemaDefinitionUpdatedConfig(rName),
+				Config: testAccSchemaConfig_definitionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"),
@@ -280,7 +280,7 @@ func TestAccGlueSchema_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceSchema(), resourceName),
@@ -304,7 +304,7 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 		CheckDestroy:      testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
@@ -393,7 +393,7 @@ resource "aws_glue_registry" "test" {
 `, rName)
 }
 
-func testAccSchemaDescriptionConfig(rName, description string) string {
+func testAccSchemaConfig_description(rName, description string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -406,7 +406,7 @@ resource "aws_glue_schema" "test" {
 `, rName, description)
 }
 
-func testAccSchemaCompatibillityConfig(rName, compat string) string {
+func testAccSchemaConfig_compatibility(rName, compat string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -418,7 +418,7 @@ resource "aws_glue_schema" "test" {
 `, rName, compat)
 }
 
-func testAccSchemaBasicConfig(rName string) string {
+func testAccSchemaConfig_basic(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -430,7 +430,7 @@ resource "aws_glue_schema" "test" {
 `, rName)
 }
 
-func testAccSchemaJsonConfig(rName string) string {
+func testAccSchemaConfig_json(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -442,7 +442,7 @@ resource "aws_glue_schema" "test" {
 `, rName)
 }
 
-func testAccSchemaProtobufConfig(rName string) string {
+func testAccSchemaConfig_protobuf(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -454,7 +454,7 @@ resource "aws_glue_schema" "test" {
 `, rName)
 }
 
-func testAccSchemaTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccSchemaConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -470,7 +470,7 @@ resource "aws_glue_schema" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccSchemaTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSchemaConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -487,7 +487,7 @@ resource "aws_glue_schema" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccSchemaSchemaDefinitionUpdatedConfig(rName string) string {
+func testAccSchemaConfig_definitionUpdated(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q

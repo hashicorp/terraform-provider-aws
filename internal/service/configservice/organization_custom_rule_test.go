@@ -199,7 +199,7 @@ func testAccOrganizationCustomRule_InputParameters(t *testing.T) {
 	})
 }
 
-func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
+func testAccOrganizationCustomRule_lambdaFunctionARN(t *testing.T) {
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName1 := "aws_lambda_function.test"
@@ -213,7 +213,7 @@ func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationCustomRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigLambdaFunctionArn1(rName),
+				Config: testAccOrganizationCustomRuleConfig_lambdaFunctionARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName1, "arn"),
@@ -225,7 +225,7 @@ func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigLambdaFunctionArn2(rName),
+				Config: testAccOrganizationCustomRuleConfig_lambdaFunctionARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName2, "arn"),
@@ -682,7 +682,7 @@ PARAMS
 `, rName, inputParameters)
 }
 
-func testAccOrganizationCustomRuleConfigLambdaFunctionArn1(rName string) string {
+func testAccOrganizationCustomRuleConfig_lambdaFunctionARN1(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -694,7 +694,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigLambdaFunctionArn2(rName string) string {
+func testAccOrganizationCustomRuleConfig_lambdaFunctionARN2(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_function" "test2" {
   filename      = "test-fixtures/lambdatest.zip"

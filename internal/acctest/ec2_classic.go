@@ -17,7 +17,7 @@ import (
 
 const (
 	// EC2-Classic region testing environment variable name
-	Ec2ClassicRegionEnvVar = "AWS_EC2_CLASSIC_REGION"
+	ec2ClassicRegionEnvVar = "AWS_EC2_CLASSIC_REGION"
 )
 
 // ProviderEC2Classic is the EC2-Classic provider instance
@@ -67,7 +67,7 @@ func ConfigEC2ClassicRegionProvider() string {
 
 // EC2ClassicRegion returns the EC2-Classic region for testing
 func EC2ClassicRegion() string {
-	v := os.Getenv(Ec2ClassicRegionEnvVar)
+	v := os.Getenv(ec2ClassicRegionEnvVar)
 
 	if v != "" {
 		return v

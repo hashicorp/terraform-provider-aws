@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
@@ -983,9 +983,9 @@ func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.GetBucketLifecycleConfiguration(input)
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
 			continue
@@ -1029,9 +1029,9 @@ func testAccCheckBucketLifecycleConfigurationExists(n string) resource.TestCheck
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := verify.RetryOnAWSCode(tfs3.ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.GetBucketLifecycleConfiguration(input)
-		})
+		}, tfs3.ErrCodeNoSuchLifecycleConfiguration)
 
 		if err != nil {
 			return err

@@ -112,7 +112,7 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		MountOptions:   expandDataSyncSmbMountOptions(d.Get("mount_options").([]interface{})),
+		MountOptions:   expandSMBMountOptions(d.Get("mount_options").([]interface{})),
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
@@ -180,7 +180,7 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("domain", output.Domain)
 
-	if err := d.Set("mount_options", flattenDataSyncSmbMountOptions(output.MountOptions)); err != nil {
+	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
 		return fmt.Errorf("error setting mount_options: %w", err)
 	}
 
@@ -211,7 +211,7 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &datasync.UpdateLocationSmbInput{
 			LocationArn:  aws.String(d.Id()),
 			AgentArns:    flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-			MountOptions: expandDataSyncSmbMountOptions(d.Get("mount_options").([]interface{})),
+			MountOptions: expandSMBMountOptions(d.Get("mount_options").([]interface{})),
 			Password:     aws.String(d.Get("password").(string)),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 			User:         aws.String(d.Get("user").(string)),
@@ -231,7 +231,7 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating DataSync SMB location (%s) tags: %w", d.Id(), err)
 		}
 	}
 	return resourceLocationSMBRead(d, meta)
@@ -256,4 +256,30 @@ func resourceLocationSMBDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func flattenSMBMountOptions(mountOptions *datasync.SmbMountOptions) []interface{} {
+	if mountOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"version": aws.StringValue(mountOptions.Version),
+	}
+
+	return []interface{}{m}
+}
+
+func expandSMBMountOptions(l []interface{}) *datasync.SmbMountOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	smbMountOptions := &datasync.SmbMountOptions{
+		Version: aws.String(m["version"].(string)),
+	}
+
+	return smbMountOptions
 }

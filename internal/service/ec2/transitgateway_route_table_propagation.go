@@ -81,7 +81,7 @@ func resourceTransitGatewayRouteTablePropagationRead(d *schema.ResourceData, met
 
 	transitGatewayPropagation, err := FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
 		d.SetId("")
 		return nil

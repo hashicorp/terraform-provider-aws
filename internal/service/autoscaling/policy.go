@@ -8,13 +8,15 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -28,18 +30,13 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"adjustment_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"autoscaling_group_name": {
 				Type:     schema.TypeString,
@@ -49,6 +46,11 @@ func ResourcePolicy() *schema.Resource {
 			"cooldown": {
 				Type:     schema.TypeInt,
 				Optional: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"estimated_instance_warmup": {
 				Type:     schema.TypeInt,
@@ -64,16 +66,16 @@ func ResourcePolicy() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"policy_type": {
+			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "SimpleScaling", // preserve AWS's default to make validation easier.
-				ValidateFunc: validation.StringInSlice([]string{
-					"SimpleScaling",
-					"StepScaling",
-					"TargetTrackingScaling",
-					"PredictiveScaling",
-				}, false),
+				Required: true,
+				ForceNew: true,
+			},
+			"policy_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      PolicyTypeSimpleScaling, // preserve AWS's default to make validation easier.
+				ValidateFunc: validation.StringInSlice(PolicyType_Values(), false),
 			},
 			"predictive_scaling_configuration": {
 				Type:     schema.TypeList,
@@ -81,6 +83,17 @@ func ResourcePolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"max_capacity_breach_behavior": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      autoscaling.PredictiveScalingMaxCapacityBreachBehaviorHonorMaxCapacity,
+							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMaxCapacityBreachBehavior_Values(), false),
+						},
+						"max_capacity_buffer": {
+							Type:         nullable.TypeNullableInt,
+							Optional:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
+						},
 						"metric_specification": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -129,6 +142,25 @@ func ResourcePolicy() *schema.Resource {
 											},
 										},
 									},
+									"predefined_load_metric_specification": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"predefined_metric_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedLoadMetricType_Values(), false),
+												},
+												"resource_label": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 									"predefined_metric_pair_specification": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -166,25 +198,6 @@ func ResourcePolicy() *schema.Resource {
 											},
 										},
 									},
-									"predefined_load_metric_specification": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										MaxItems:      1,
-										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"predefined_metric_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedLoadMetricType_Values(), false),
-												},
-												"resource_label": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
 									"target_value": {
 										Type:     schema.TypeInt,
 										Required: true,
@@ -192,21 +205,10 @@ func ResourcePolicy() *schema.Resource {
 								},
 							},
 						},
-						"max_capacity_breach_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "HonorMaxCapacity",
-							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMaxCapacityBreachBehavior_Values(), false),
-						},
-						"max_capacity_buffer": {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
-						},
 						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "ForecastOnly",
+							Default:      autoscaling.PredictiveScalingModeForecastOnly,
 							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMode_Values(), false),
 						},
 						"scheduling_buffer_time": {
@@ -250,24 +252,6 @@ func ResourcePolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"predefined_metric_specification": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"predefined_metric_type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"resource_label": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
 						"customized_metric_specification": {
 							Type:          schema.TypeList,
 							Optional:      true,
@@ -310,14 +294,32 @@ func ResourcePolicy() *schema.Resource {
 								},
 							},
 						},
-						"target_value": {
-							Type:     schema.TypeFloat,
-							Required: true,
-						},
 						"disable_scale_in": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"predefined_metric_specification": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"predefined_metric_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"resource_label": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"target_value": {
+							Type:     schema.TypeFloat,
+							Required: true,
 						},
 					},
 				},
@@ -413,48 +415,53 @@ func customizedMetricDataQuerySchema() *schema.Schema {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params, err := getPutScalingPolicyInput(d)
-	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Create: %#v", params)
+	name := d.Get("name").(string)
+	input, err := getPutScalingPolicyInput(d)
+
 	if err != nil {
 		return err
 	}
 
-	resp, err := conn.PutScalingPolicy(&params)
+	log.Printf("[DEBUG] Creating Auto Scaling Policy: %s", input)
+	_, err = conn.PutScalingPolicy(input)
+
 	if err != nil {
-		return fmt.Errorf("Error putting scaling policy: %s", err)
+		return fmt.Errorf("creating Auto Scaling Policy (%s): %w", name, err)
 	}
 
-	d.Set("arn", resp.PolicyARN)
-	d.SetId(d.Get("name").(string))
-	log.Printf("[INFO] AutoScaling Scaling PolicyARN: %s", d.Get("arn").(string))
+	d.SetId(name)
 
 	return resourcePolicyRead(d, meta)
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	p, err := getPolicy(d, meta)
-	if err != nil {
-		return err
-	}
-	if p == nil && !d.IsNewResource() {
-		log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
+	conn := meta.(*conns.AWSClient).AutoScalingConn
+
+	p, err := FindScalingPolicy(conn, d.Get("autoscaling_group_name").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	log.Printf("[DEBUG] Read Scaling Policy: ASG: %s, SP: %s, Obj: %s", d.Get("autoscaling_group_name"), d.Get("name"), p)
+	if err != nil {
+		return fmt.Errorf("reading Auto Scaling Policy (%s): %w", d.Id(), err)
+	}
 
 	d.Set("adjustment_type", p.AdjustmentType)
+	d.Set("arn", p.PolicyARN)
 	d.Set("autoscaling_group_name", p.AutoScalingGroupName)
 	d.Set("cooldown", p.Cooldown)
+	d.Set("enabled", p.Enabled)
 	d.Set("estimated_instance_warmup", p.EstimatedInstanceWarmup)
 	d.Set("metric_aggregation_type", p.MetricAggregationType)
+	d.Set("name", p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
 	if p.MinAdjustmentMagnitude != nil {
 		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 	}
-	d.Set("arn", p.PolicyARN)
-	d.Set("name", p.PolicyName)
+
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
 		return fmt.Errorf("error setting predictive_scaling_configuration: %s", err)
@@ -472,15 +479,17 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params, inputErr := getPutScalingPolicyInput(d)
-	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Update: %#v", params)
-	if inputErr != nil {
-		return inputErr
-	}
+	input, err := getPutScalingPolicyInput(d)
 
-	_, err := conn.PutScalingPolicy(&params)
 	if err != nil {
 		return err
+	}
+
+	log.Printf("[DEBUG] Updating Auto Scaling Policy: %s", input)
+	_, err = conn.PutScalingPolicy(input)
+
+	if err != nil {
+		return fmt.Errorf("updating Auto Scaling Policy (%s): %w", d.Id(), err)
 	}
 
 	return resourcePolicyRead(d, meta)
@@ -488,21 +497,19 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
-	p, err := getPolicy(d, meta)
-	if err != nil {
-		return err
-	}
-	if p == nil {
+
+	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
+	_, err := conn.DeletePolicy(&autoscaling.DeletePolicyInput{
+		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		PolicyName:           aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil
 	}
 
-	params := autoscaling.DeletePolicyInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		PolicyName:           aws.String(d.Get("name").(string)),
-	}
-	log.Printf("[DEBUG] Deleting Autoscaling Policy opts: %s", params)
-	if _, err := conn.DeletePolicy(&params); err != nil {
-		return fmt.Errorf("Autoscaling Scaling Policy: %s ", err)
+	if err != nil {
+		return fmt.Errorf("deleting Auto Scaling Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -524,12 +531,58 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
+func FindScalingPolicy(conn *autoscaling.AutoScaling, asgName, policyName string) (*autoscaling.ScalingPolicy, error) {
+	input := &autoscaling.DescribePoliciesInput{
+		AutoScalingGroupName: aws.String(asgName),
+		PolicyNames:          aws.StringSlice([]string{policyName}),
+	}
+	var output []*autoscaling.ScalingPolicy
+
+	err := conn.DescribePoliciesPages(input, func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ScalingPolicies {
+			if v == nil || aws.StringValue(v.PolicyName) != policyName {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
 // PutScalingPolicy can safely resend all parameters without destroying the
 // resource, so create and update can share this common function. It will error
 // if certain mutually exclusive values are set.
-func getPutScalingPolicyInput(d *schema.ResourceData) (autoscaling.PutScalingPolicyInput, error) {
-	var params = autoscaling.PutScalingPolicyInput{
+func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPolicyInput, error) {
+	var params = &autoscaling.PutScalingPolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		Enabled:              aws.Bool(d.Get("enabled").(bool)),
 		PolicyName:           aws.String(d.Get("name").(string)),
 	}
 
@@ -615,42 +668,6 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (autoscaling.PutScalingPol
 	}
 
 	return params, nil
-}
-
-func getPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPolicy, error) {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
-
-	params := autoscaling.DescribePoliciesInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		PolicyNames:          []*string{aws.String(d.Get("name").(string))},
-	}
-
-	log.Printf("[DEBUG] AutoScaling Scaling Policy Describe Params: %#v", params)
-	resp, err := conn.DescribePolicies(&params)
-	if err != nil {
-		//A ValidationError here can mean that either the Policy is missing OR the Autoscaling Group is missing
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ValidationError" {
-			log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
-			d.SetId("")
-
-			return nil, nil
-		}
-		return nil, fmt.Errorf("Error retrieving scaling policies: %s", err)
-	}
-
-	// find scaling policy
-	name := d.Get("name")
-	for idx, sp := range resp.ScalingPolicies {
-		if sp == nil {
-			continue
-		}
-
-		if aws.StringValue(sp.PolicyName) == name {
-			return resp.ScalingPolicies[idx], nil
-		}
-	}
-	// policy not found
-	return nil, nil
 }
 
 func resourceScalingAdjustmentHash(v interface{}) int {

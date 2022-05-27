@@ -117,7 +117,7 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
 	}
 
 	if value, ok := d.GetOk("encrypted"); ok {
@@ -281,9 +281,9 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 				VolumeId: aws.String(d.Id()),
 			})
 		},
-		ErrCodeVolumeInUse)
+		errCodeVolumeInUse)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVolumeNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
 		return nil
 	}
 

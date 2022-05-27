@@ -23,7 +23,7 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLicenseManagerAssociationConfig_basic,
+				Config: testAccAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(resourceName, &licenseSpecification),
 					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.example", "id"),
@@ -97,7 +97,7 @@ func testAccCheckAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccLicenseManagerAssociationConfig_basic = `
+const testAccAssociationConfig_basic = `
 data "aws_ami" "example" {
   most_recent = true
   owners      = ["amazon"]

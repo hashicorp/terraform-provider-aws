@@ -25,12 +25,12 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeDataSetDestroy,
+		CheckDestroy:      testAccCheckDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeDataSetConfig(rName),
+				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeDataSetExists(resourceName, &proj),
+					testAccCheckDataSetExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -43,9 +43,9 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataExchangeDataSetConfig(rNameUpdated),
+				Config: testAccDataSetConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeDataSetExists(resourceName, &proj),
+					testAccCheckDataSetExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+`)),
@@ -64,12 +64,12 @@ func TestAccDataExchangeDataSet_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeDataSetDestroy,
+		CheckDestroy:      testAccCheckDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeDataSetConfigTags1(rName, "key1", "value1"),
+				Config: testAccDataSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeDataSetExists(resourceName, &proj),
+					testAccCheckDataSetExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -80,18 +80,18 @@ func TestAccDataExchangeDataSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataExchangeDataSetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDataSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeDataSetExists(resourceName, &proj),
+					testAccCheckDataSetExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDataExchangeDataSetConfigTags1(rName, "key2", "value2"),
+				Config: testAccDataSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeDataSetExists(resourceName, &proj),
+					testAccCheckDataSetExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -109,12 +109,12 @@ func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeDataSetDestroy,
+		CheckDestroy:      testAccCheckDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeDataSetConfig(rName),
+				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeDataSetExists(resourceName, &proj),
+					testAccCheckDataSetExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceDataSet(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceDataSet(), resourceName),
 				),
@@ -124,7 +124,7 @@ func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDataExchangeDataSetExists(n string, v *dataexchange.GetDataSetOutput) resource.TestCheckFunc {
+func testAccCheckDataSetExists(n string, v *dataexchange.GetDataSetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -150,7 +150,7 @@ func testAccCheckDataExchangeDataSetExists(n string, v *dataexchange.GetDataSetO
 	}
 }
 
-func testAccCheckDataExchangeDataSetDestroy(s *terraform.State) error {
+func testAccCheckDataSetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -174,7 +174,7 @@ func testAccCheckDataExchangeDataSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDataExchangeDataSetConfig(rName string) string {
+func testAccDataSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"
@@ -184,7 +184,7 @@ resource "aws_dataexchange_data_set" "test" {
 `, rName)
 }
 
-func testAccDataExchangeDataSetConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDataSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"
@@ -198,7 +198,7 @@ resource "aws_dataexchange_data_set" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDataExchangeDataSetConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDataSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"

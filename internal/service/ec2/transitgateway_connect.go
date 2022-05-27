@@ -83,7 +83,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 		Options: &ec2.CreateTransitGatewayConnectRequestOptions{
 			Protocol: aws.String(d.Get("protocol").(string)),
 		},
-		TagSpecifications:                   ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:                   tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
 		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
 	}
 
@@ -237,7 +237,7 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 		TransitGatewayAttachmentId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayAttachmentIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return nil
 	}
 

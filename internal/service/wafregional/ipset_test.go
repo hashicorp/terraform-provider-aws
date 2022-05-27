@@ -32,7 +32,7 @@ func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPSetConfig(ipsetName),
+				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
@@ -63,7 +63,7 @@ func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPSetConfig(ipsetName),
+				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &v),
 					testAccCheckIPSetDisappears(&v),
@@ -87,7 +87,7 @@ func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPSetConfig(ipsetName),
+				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
@@ -98,7 +98,7 @@ func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIPSetChangeNameConfig(ipsetNewName),
+				Config: testAccIPSetConfig_changeName(ipsetNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetNewName),
@@ -129,7 +129,7 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPSetConfig(ipsetName),
+				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
@@ -141,7 +141,7 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIPSetChangeIPSetDescriptorsConfig(ipsetName),
+				Config: testAccIPSetConfig_changeDescriptors(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
@@ -235,7 +235,7 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 	})
 }
 
-func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
+func TestDiffIPSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
@@ -440,7 +440,7 @@ func testAccCheckIPSetExists(n string, v *waf.IPSet) resource.TestCheckFunc {
 	}
 }
 
-func testAccIPSetConfig(name string) string {
+func testAccIPSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
@@ -453,7 +453,7 @@ resource "aws_wafregional_ipset" "ipset" {
 `, name)
 }
 
-func testAccIPSetChangeNameConfig(name string) string {
+func testAccIPSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
@@ -466,7 +466,7 @@ resource "aws_wafregional_ipset" "ipset" {
 `, name)
 }
 
-func testAccIPSetChangeIPSetDescriptorsConfig(name string) string {
+func testAccIPSetConfig_changeDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"

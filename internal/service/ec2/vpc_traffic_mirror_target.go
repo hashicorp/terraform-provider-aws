@@ -85,7 +85,7 @@ func resourceTrafficMirrorTargetCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorTarget)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorTarget)
 	}
 
 	out, err := conn.CreateTrafficMirrorTarget(input)

@@ -27,7 +27,7 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowConfig(rName),
+				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
@@ -63,7 +63,7 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowDescriptionConfig(rName, "foo"),
+				Config: testAccMaintenanceWindowConfig_description(rName, "foo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -76,7 +76,7 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowDescriptionConfig(rName, "bar"),
+				Config: testAccMaintenanceWindowConfig_description(rName, "bar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -99,7 +99,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowTags1Config(rName, "key1", "value1"),
+				Config: testAccMaintenanceWindowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -112,7 +112,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMaintenanceWindowConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -121,7 +121,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMaintenanceWindowTags1Config(rName, "key2", "value2"),
+				Config: testAccMaintenanceWindowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -144,7 +144,7 @@ func TestAccSSMMaintenanceWindow_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowConfig(rName),
+				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &winId),
 					testAccCheckMaintenanceWindowDisappears(&winId),
@@ -168,7 +168,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowConfig(rName1),
+				Config: testAccMaintenanceWindowConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
@@ -179,7 +179,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMaintenanceWindowMultipleUpdatesConfig(rName2),
+				Config: testAccMaintenanceWindowConfig_multipleUpdates(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "8"),
@@ -205,7 +205,7 @@ func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowCutoffConfig(rName, 1),
+				Config: testAccMaintenanceWindowConfig_cutoff(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
@@ -217,7 +217,7 @@ func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowCutoffConfig(rName, 2),
+				Config: testAccMaintenanceWindowConfig_cutoff(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "2"),
@@ -239,7 +239,7 @@ func TestAccSSMMaintenanceWindow_duration(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowDurationConfig(rName, 3),
+				Config: testAccMaintenanceWindowConfig_duration(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3"),
@@ -251,7 +251,7 @@ func TestAccSSMMaintenanceWindow_duration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowDurationConfig(rName, 10),
+				Config: testAccMaintenanceWindowConfig_duration(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "duration", "10"),
@@ -273,7 +273,7 @@ func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowEnabledConfig(rName, false),
+				Config: testAccMaintenanceWindowConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -285,7 +285,7 @@ func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowEnabledConfig(rName, true),
+				Config: testAccMaintenanceWindowConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -309,7 +309,7 @@ func TestAccSSMMaintenanceWindow_endDate(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowEndDateConfig(rName, endDate1),
+				Config: testAccMaintenanceWindowConfig_endDate(rName, endDate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "end_date", endDate1),
@@ -321,14 +321,14 @@ func TestAccSSMMaintenanceWindow_endDate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowEndDateConfig(rName, endDate2),
+				Config: testAccMaintenanceWindowConfig_endDate(rName, endDate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "end_date", endDate2),
 				),
 			},
 			{
-				Config: testAccMaintenanceWindowConfig(rName),
+				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow3),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
@@ -350,7 +350,7 @@ func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowScheduleConfig(rName, "cron(0 16 ? * TUE *)"),
+				Config: testAccMaintenanceWindowConfig_schedule(rName, "cron(0 16 ? * TUE *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
@@ -362,7 +362,7 @@ func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowScheduleConfig(rName, "cron(0 16 ? * WED *)"),
+				Config: testAccMaintenanceWindowConfig_schedule(rName, "cron(0 16 ? * WED *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * WED *)"),
@@ -384,7 +384,7 @@ func TestAccSSMMaintenanceWindow_scheduleTimezone(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowScheduleTimezoneConfig(rName, "America/Los_Angeles"),
+				Config: testAccMaintenanceWindowConfig_scheduleTimezone(rName, "America/Los_Angeles"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", "America/Los_Angeles"),
@@ -396,14 +396,14 @@ func TestAccSSMMaintenanceWindow_scheduleTimezone(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowScheduleTimezoneConfig(rName, "America/New_York"),
+				Config: testAccMaintenanceWindowConfig_scheduleTimezone(rName, "America/New_York"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", "America/New_York"),
 				),
 			},
 			{
-				Config: testAccMaintenanceWindowConfig(rName),
+				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow3),
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", ""),
@@ -425,7 +425,7 @@ func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowScheduleOffsetConfig(rName, 2),
+				Config: testAccMaintenanceWindowConfig_scheduleOffset(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "2"),
@@ -437,7 +437,7 @@ func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowScheduleOffsetConfig(rName, 5),
+				Config: testAccMaintenanceWindowConfig_scheduleOffset(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "5"),
@@ -461,7 +461,7 @@ func TestAccSSMMaintenanceWindow_startDate(t *testing.T) {
 		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMaintenanceWindowStartDateConfig(rName, startDate1),
+				Config: testAccMaintenanceWindowConfig_startDate(rName, startDate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "start_date", startDate1),
@@ -473,14 +473,14 @@ func TestAccSSMMaintenanceWindow_startDate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMaintenanceWindowStartDateConfig(rName, startDate2),
+				Config: testAccMaintenanceWindowConfig_startDate(rName, startDate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "start_date", startDate2),
 				),
 			},
 			{
-				Config: testAccMaintenanceWindowConfig(rName),
+				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(resourceName, &maintenanceWindow3),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
@@ -570,7 +570,7 @@ func testAccCheckMaintenanceWindowDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccMaintenanceWindowConfig(rName string) string {
+func testAccMaintenanceWindowConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -581,7 +581,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName)
 }
 
-func testAccMaintenanceWindowDescriptionConfig(rName, desc string) string {
+func testAccMaintenanceWindowConfig_description(rName, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff      = 1
@@ -593,7 +593,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName, desc)
 }
 
-func testAccMaintenanceWindowTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccMaintenanceWindowConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -608,7 +608,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccMaintenanceWindowTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccMaintenanceWindowConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -624,7 +624,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccMaintenanceWindowCutoffConfig(rName string, cutoff int) string {
+func testAccMaintenanceWindowConfig_cutoff(rName string, cutoff int) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = %d
@@ -635,7 +635,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, cutoff, rName)
 }
 
-func testAccMaintenanceWindowDurationConfig(rName string, duration int) string {
+func testAccMaintenanceWindowConfig_duration(rName string, duration int) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -646,7 +646,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, duration, rName)
 }
 
-func testAccMaintenanceWindowEnabledConfig(rName string, enabled bool) string {
+func testAccMaintenanceWindowConfig_enabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -658,7 +658,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, enabled, rName)
 }
 
-func testAccMaintenanceWindowEndDateConfig(rName, endDate string) string {
+func testAccMaintenanceWindowConfig_endDate(rName, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -670,7 +670,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, endDate, rName)
 }
 
-func testAccMaintenanceWindowMultipleUpdatesConfig(rName string) string {
+func testAccMaintenanceWindowConfig_multipleUpdates(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 8
@@ -682,7 +682,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName)
 }
 
-func testAccMaintenanceWindowScheduleConfig(rName, schedule string) string {
+func testAccMaintenanceWindowConfig_schedule(rName, schedule string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
@@ -693,7 +693,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName, schedule)
 }
 
-func testAccMaintenanceWindowScheduleTimezoneConfig(rName, scheduleTimezone string) string {
+func testAccMaintenanceWindowConfig_scheduleTimezone(rName, scheduleTimezone string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff            = 1
@@ -705,7 +705,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName, scheduleTimezone)
 }
 
-func testAccMaintenanceWindowScheduleOffsetConfig(rName string, scheduleOffset int) string {
+func testAccMaintenanceWindowConfig_scheduleOffset(rName string, scheduleOffset int) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff          = 1
@@ -717,7 +717,7 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName, scheduleOffset)
 }
 
-func testAccMaintenanceWindowStartDateConfig(rName, startDate string) string {
+func testAccMaintenanceWindowConfig_startDate(rName, startDate string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff     = 1

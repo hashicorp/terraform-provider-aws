@@ -47,8 +47,8 @@ type opsworksLayerType struct {
 }
 
 var (
-	opsworksTrueString  = "true"
-	opsworksFalseString = "false"
+	trueString  = "true"
+	falseString = "false"
 )
 
 func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
@@ -696,9 +696,9 @@ func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*s
 		case schema.TypeBool:
 			boolValue := value.(bool)
 			if boolValue {
-				attrs[def.AttrName] = &opsworksTrueString
+				attrs[def.AttrName] = &trueString
 			} else {
-				attrs[def.AttrName] = &opsworksFalseString
+				attrs[def.AttrName] = &falseString
 			}
 		default:
 			// should never happen
@@ -733,7 +733,7 @@ func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[s
 				}
 			case schema.TypeBool:
 				boolValue := true
-				if strValue == opsworksFalseString {
+				if strValue == falseString {
 					boolValue = false
 				}
 				d.Set(key, boolValue)

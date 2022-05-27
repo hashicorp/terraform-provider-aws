@@ -21,7 +21,7 @@ func TestAccRedshiftOrderableClusterDataSource_clusterType(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableClusterDataSourceConfig_ClusterType("multi-node"),
+				Config: testAccOrderableClusterDataSourceConfig_type("multi-node"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "multi-node"),
 				),
@@ -40,7 +40,7 @@ func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableClusterDataSourceConfig_ClusterVersion("1.0"),
+				Config: testAccOrderableClusterDataSourceConfig_version("1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_version", "1.0"),
 				),
@@ -60,7 +60,7 @@ func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableClusterDataSourceConfig_NodeType(nodeType),
+				Config: testAccOrderableClusterDataSourceConfig_nodeType(nodeType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "node_type", nodeType),
 				),
@@ -80,7 +80,7 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableClusterDataSourceConfig_PreferredNodeTypes(preferredNodeType),
+				Config: testAccOrderableClusterDataSourceConfig_preferredNodeTypes(preferredNodeType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "node_type", preferredNodeType),
 				),
@@ -107,7 +107,7 @@ func testAccOrderableClusterPreCheck(t *testing.T) {
 	}
 }
 
-func testAccOrderableClusterDataSourceConfig_ClusterType(clusterType string) string {
+func testAccOrderableClusterDataSourceConfig_type(clusterType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   cluster_type         = %[1]q
@@ -116,7 +116,7 @@ data "aws_redshift_orderable_cluster" "test" {
 `, clusterType)
 }
 
-func testAccOrderableClusterDataSourceConfig_ClusterVersion(clusterVersion string) string {
+func testAccOrderableClusterDataSourceConfig_version(clusterVersion string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   cluster_version      = %[1]q
@@ -125,7 +125,7 @@ data "aws_redshift_orderable_cluster" "test" {
 `, clusterVersion)
 }
 
-func testAccOrderableClusterDataSourceConfig_NodeType(nodeType string) string {
+func testAccOrderableClusterDataSourceConfig_nodeType(nodeType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   node_type            = %[1]q
@@ -134,7 +134,7 @@ data "aws_redshift_orderable_cluster" "test" {
 `, nodeType)
 }
 
-func testAccOrderableClusterDataSourceConfig_PreferredNodeTypes(preferredNodeType string) string {
+func testAccOrderableClusterDataSourceConfig_preferredNodeTypes(preferredNodeType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   preferred_node_types = [

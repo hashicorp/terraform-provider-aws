@@ -32,12 +32,12 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmInstanceProfileDestroy,
+		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -50,9 +50,9 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmInstanceProfileConfig(rNameUpdated),
+				Config: testAccInstanceProfileConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -78,12 +78,12 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmInstanceProfileDestroy,
+		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmInstanceProfileConfigTags1(rName, "key1", "value1"),
+				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -94,18 +94,18 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmInstanceProfileConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccInstanceProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceFarmInstanceProfileConfigTags1(rName, "key2", "value2"),
+				Config: testAccInstanceProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -129,12 +129,12 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeviceFarmInstanceProfileDestroy,
+		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(resourceName, &profile),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
 				),
@@ -144,7 +144,7 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFarmInstanceProfileExists(n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -170,7 +170,7 @@ func testAccCheckDeviceFarmInstanceProfileExists(n string, v *devicefarm.Instanc
 	}
 }
 
-func testAccCheckDeviceFarmInstanceProfileDestroy(s *terraform.State) error {
+func testAccCheckInstanceProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -194,7 +194,7 @@ func testAccCheckDeviceFarmInstanceProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDeviceFarmInstanceProfileConfig(rName string) string {
+func testAccInstanceProfileConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
   name = %[1]q
@@ -202,7 +202,7 @@ resource "aws_devicefarm_instance_profile" "test" {
 `, rName)
 }
 
-func testAccDeviceFarmInstanceProfileConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccInstanceProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
   name = %[1]q
@@ -214,7 +214,7 @@ resource "aws_devicefarm_instance_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFarmInstanceProfileConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccInstanceProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
   name = %[1]q

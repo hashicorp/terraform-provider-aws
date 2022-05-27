@@ -260,7 +260,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.FleetType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
-		input.EC2InboundPermissions = expandIpPermissions(v.(*schema.Set))
+		input.EC2InboundPermissions = expandIPPermissions(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("instance_role_arn"); ok {
@@ -368,7 +368,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading for GameLift Fleet ec2 inbound permission (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("ec2_inbound_permission", flattenIpPermissions(portConfig.InboundPermissions)); err != nil {
+	if err := d.Set("ec2_inbound_permission", flattenIPPermissions(portConfig.InboundPermissions)); err != nil {
 		return fmt.Errorf("error setting ec2_inbound_permission: %w", err)
 	}
 
@@ -488,7 +488,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandIpPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
+func expandIPPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
 	if cfgs.Len() < 1 {
 		return []*gamelift.IpPermission{}
 	}
@@ -496,12 +496,12 @@ func expandIpPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
 	perms := make([]*gamelift.IpPermission, cfgs.Len())
 	for i, rawCfg := range cfgs.List() {
 		cfg := rawCfg.(map[string]interface{})
-		perms[i] = expandIpPermission(cfg)
+		perms[i] = expandIPPermission(cfg)
 	}
 	return perms
 }
 
-func expandIpPermission(cfg map[string]interface{}) *gamelift.IpPermission {
+func expandIPPermission(cfg map[string]interface{}) *gamelift.IpPermission {
 	return &gamelift.IpPermission{
 		FromPort: aws.Int64(int64(cfg["from_port"].(int))),
 		IpRange:  aws.String(cfg["ip_range"].(string)),
@@ -510,7 +510,7 @@ func expandIpPermission(cfg map[string]interface{}) *gamelift.IpPermission {
 	}
 }
 
-func flattenIpPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
+func flattenIPPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -521,7 +521,7 @@ func flattenIpPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
 			continue
 		}
 
-		if v := flattenIpPermission(apiObject); len(v) > 0 {
+		if v := flattenIPPermission(apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}
@@ -529,7 +529,7 @@ func flattenIpPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
 	return tfList
 }
 
-func flattenIpPermission(apiObject *gamelift.IpPermission) map[string]interface{} {
+func flattenIPPermission(apiObject *gamelift.IpPermission) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -655,13 +655,13 @@ OUTER:
 		}
 
 		// Add what's left for revocation
-		r = append(r, expandIpPermission(oldPerm))
+		r = append(r, expandIPPermission(oldPerm))
 	}
 
 	for _, np := range newPerms {
 		newPerm := np.(map[string]interface{})
 		// Add what's left for authorization
-		a = append(a, expandIpPermission(newPerm))
+		a = append(a, expandIPPermission(newPerm))
 	}
 	return
 }

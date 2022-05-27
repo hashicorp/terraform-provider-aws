@@ -96,7 +96,7 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AMPConn
 
-	rgn, err := FindRuleGroupNamespaceByArn(ctx, conn, d.Id())
+	rgn, err := FindRuleGroupNamespaceByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Prometheus Rule Group Namespace (%s) not found, removing from state", d.Id())
@@ -110,7 +110,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("data", string(rgn.Data))
 	d.Set("name", rgn.Name)
-	_, workspaceID, err := nameAndWorkspaceIdFromRuleGroupNamespaceArn(d.Id())
+	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -56,7 +56,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta 
 
 	input.Filters = BuildCustomFilterList(d.Get("filter").(*schema.Set))
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Filters = append(input.Filters, ec2TagFiltersFromMap(v)...)
+		input.Filters = append(input.Filters, tagFiltersFromMap(v)...)
 	}
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.

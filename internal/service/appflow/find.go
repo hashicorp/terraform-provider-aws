@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.FlowDefinition, error) {
+func FindFlowByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.FlowDefinition, error) {
 	in := &appflow.ListFlowsInput{}
 	var result *appflow.FlowDefinition
 
@@ -47,6 +47,49 @@ func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 		return nil, &resource.NotFoundError{
 			Message:     fmt.Sprintf("No flow with arn %q", arn),
 			LastRequest: in,
+		}
+	}
+
+	return result, nil
+}
+
+func FindConnectorProfileByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.ConnectorProfile, error) {
+	params := &appflow.DescribeConnectorProfilesInput{}
+	var result *appflow.ConnectorProfile
+
+	err := conn.DescribeConnectorProfilesPagesWithContext(ctx, params, func(page *appflow.DescribeConnectorProfilesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, connectorProfile := range page.ConnectorProfileDetails {
+			if connectorProfile == nil {
+				continue
+			}
+
+			if aws.StringValue(connectorProfile.ConnectorProfileArn) == arn {
+				result = connectorProfile
+				return false
+			}
+		}
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: params,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			Message:     fmt.Sprintf("No connector profile with arn %q", arn),
+			LastRequest: params,
 		}
 	}
 

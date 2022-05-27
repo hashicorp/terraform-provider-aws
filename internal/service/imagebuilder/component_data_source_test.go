@@ -22,7 +22,7 @@ func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentBuildVersionARNDataSourceConfig(rName),
+				Config: testAccComponentDataSourceConfig_buildVersionARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "change_description", resourceName, "change_description"),
@@ -44,7 +44,7 @@ func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccComponentBuildVersionARNDataSourceConfig(rName string) string {
+func testAccComponentDataSourceConfig_buildVersionARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({

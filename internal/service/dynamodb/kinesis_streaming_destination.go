@@ -80,7 +80,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	output, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+	output, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (stream: %s, table: %s) not found, removing from state", streamArn, tableName)

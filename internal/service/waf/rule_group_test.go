@@ -33,7 +33,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig(ruleName, groupName),
+				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists("aws_waf_rule.test", &rule),
 					testAccCheckRuleGroupExists(resourceName, &group),
@@ -73,7 +73,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig(ruleName, groupName),
+				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
@@ -82,7 +82,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig(ruleName, newGroupName),
+				Config: testAccRuleGroupConfig_basic(ruleName, newGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", newGroupName),
@@ -112,7 +112,7 @@ func TestAccWAFRuleGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig(ruleName, groupName),
+				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &group),
 					testAccCheckRuleGroupDisappears(&group),
@@ -141,7 +141,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig(ruleName1, groupName),
+				Config: testAccRuleGroupConfig_basic(ruleName1, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists("aws_waf_rule.test", &rule0),
 					testAccCheckRuleGroupExists(resourceName, &groupBefore),
@@ -156,7 +156,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName),
+				Config: testAccRuleGroupConfig_changeActivateds(ruleName1, ruleName2, ruleName3, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "3"),
@@ -232,7 +232,7 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupTags1Config(groupName, "key1", "value1"),
+				Config: testAccRuleGroupConfig_tags1(groupName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
@@ -242,7 +242,7 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupTags2Config(groupName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleGroupConfig_tags2(groupName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
@@ -253,7 +253,7 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupTags1Config(groupName, "key2", "value2"),
+				Config: testAccRuleGroupConfig_tags1(groupName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
@@ -283,7 +283,7 @@ func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_noActivatedRules(groupName),
+				Config: testAccRuleGroupConfig_noActivateds(groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
@@ -396,7 +396,7 @@ func testAccCheckRuleGroupExists(n string, group *waf.RuleGroup) resource.TestCh
 	}
 }
 
-func testAccRuleGroupConfig(ruleName, groupName string) string {
+func testAccRuleGroupConfig_basic(ruleName, groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule" "test" {
   name        = "%[1]s"
@@ -419,7 +419,7 @@ resource "aws_waf_rule_group" "test" {
 `, ruleName, groupName)
 }
 
-func testAccRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName string) string {
+func testAccRuleGroupConfig_changeActivateds(ruleName1, ruleName2, ruleName3, groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule" "test" {
   name        = "%[1]s"
@@ -470,7 +470,7 @@ resource "aws_waf_rule_group" "test" {
 `, ruleName1, ruleName2, ruleName3, groupName)
 }
 
-func testAccRuleGroupConfig_noActivatedRules(groupName string) string {
+func testAccRuleGroupConfig_noActivateds(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
   name        = "%[1]s"
@@ -479,7 +479,7 @@ resource "aws_waf_rule_group" "test" {
 `, groupName)
 }
 
-func testAccRuleGroupTags1Config(gName, tag1Key, tag1Value string) string {
+func testAccRuleGroupConfig_tags1(gName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
   name        = "%[1]s"
@@ -492,7 +492,7 @@ resource "aws_waf_rule_group" "test" {
 `, gName, tag1Key, tag1Value)
 }
 
-func testAccRuleGroupTags2Config(gName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccRuleGroupConfig_tags2(gName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
   name        = "%[1]s"

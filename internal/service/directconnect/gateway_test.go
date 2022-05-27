@@ -27,7 +27,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(rName, rBgpAsn),
+				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
@@ -55,7 +55,7 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(rName, rBgpAsn),
+				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
@@ -79,7 +79,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayAssociationConfig_multiVPNGatewaysSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
@@ -142,7 +142,7 @@ func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.T
 	}
 }
 
-func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
+func testAccGatewayConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q

@@ -239,8 +239,8 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
 		},
-		ErrCodeInvalidParameterException,
-		ErrCodeInvalidTransitGatewayIDNotFound,
+		errCodeInvalidParameterException,
+		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
 	if err != nil {
@@ -436,15 +436,15 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		func() (interface{}, error) {
 			return conn.DeleteRoute(input)
 		},
-		ErrCodeInvalidParameterException,
+		errCodeInvalidParameterException,
 	)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
 		return nil
 	}
 
 	// Local routes (which may have been imported) cannot be deleted. Remove from state.
-	if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "cannot remove local route") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "cannot remove local route") {
 		return nil
 	}
 
