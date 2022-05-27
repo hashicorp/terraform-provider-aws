@@ -61,32 +61,25 @@ func ResourceDomainNameConfiguration() *schema.Resource {
 				},
 			},
 			"service_type": {
-				Type: schema.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{
-					"DATA",
-					"CREDENTIAL_PROVIDER",
-					"JOBS",
-				}, false),
-				Optional: true,
-				ForceNew: true,
-				Default:  "DATA",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      iot.ServiceTypeData,
+				ValidateFunc: validation.StringInSlice(iot.ServiceType_Values(), false),
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "ENABLED",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ENABLED",
-					"DISABLED",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      iot.DomainConfigurationStatusEnabled,
+				ValidateFunc: validation.StringInSlice(iot.DomainConfigurationStatus_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"validation_certificate_arn": {
 				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidARN,
 				Optional:     true,
 				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
@@ -212,11 +205,11 @@ func resourceDomainNameConfigurationUpdate(d *schema.ResourceData, meta interfac
 func resourceDomainNameConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	if d.Get("status").(string) == "ENABLED" {
+	if d.Get("status").(string) == iot.DomainConfigurationStatusEnabled {
 		log.Printf("[INFO] Disabling IoT Domain Configuration: %s", d.Id())
 		_, err := conn.UpdateDomainConfiguration(&iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName:   aws.String(d.Id()),
-			DomainConfigurationStatus: aws.String("DISABLED"),
+			DomainConfigurationStatus: aws.String(iot.DomainConfigurationStatusDisabled),
 		})
 
 		if err != nil {
