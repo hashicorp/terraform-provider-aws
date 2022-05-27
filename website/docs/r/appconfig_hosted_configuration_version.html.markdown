@@ -35,7 +35,7 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 resource "aws_appconfig_hosted_configuration_version" "example" {
   application_id           = aws_appconfig_application.example.id
   configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
-  description              = "Example Freeform Hosted Configuration Version"
+  description              = "Example Feature Flag Configuration Version"
   content_type             = "application/json"
 
   content = jsonencode({
