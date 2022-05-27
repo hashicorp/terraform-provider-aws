@@ -716,6 +716,102 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Redshift_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "source", "target"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_access_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_redshiftUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_docDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1613,53 +1709,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_oracle(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "oracle"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-
-  tags = {
-    Name   = %[1]q
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-}
-`, rName)
-}
-
-func testAccEndpointConfig_oracleUpdate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "oracle"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
-
-  tags = {
-    Name   = %[1]q
-    Update = "updated"
-    Add    = "added"
-  }
-}
-`, rName)
-}
-
-func testAccEndpointConfig_oracleSecretID(rName string) string {
+func testAccEndpointConfig_secretBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1709,6 +1759,59 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
+`, rName)
+}
+
+func testAccEndpointConfig_oracle(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "oracle"
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_oracleUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "oracle"
+  server_name                 = "tftest-new-server_name"
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_oracleSecretID(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_secretBase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
@@ -1726,7 +1829,7 @@ resource "aws_dms_endpoint" "test" {
     Remove = "to-remove"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_postgreSQL(rName string) string {
@@ -1776,54 +1879,9 @@ resource "aws_dms_endpoint" "test" {
 }
 
 func testAccEndpointConfig_postgreSQLSecretID(rName string) string {
-	return fmt.Sprintf(`
-data "aws_kms_alias" "dms" {
-  name = "alias/aws/dms"
-}
-
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_secretsmanager_secret" "test" {
-  name                    = %[1]q
-  recovery_window_in_days = 0
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
-  role   = aws_iam_role.test.id
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Action": "secretsmanager:*",
-        "Effect": "Allow",
-        "Resource": "*"
-    }
-  ]
-}
-EOF
-}
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_secretBase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
@@ -1841,7 +1899,94 @@ resource "aws_dms_endpoint" "test" {
     Remove = "to-remove"
   }
 }
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier = %[1]q
+  database_name      = "tftest"
+  master_username    = "tftest"
+  master_password    = "tftest"
+  node_type          = "dc1.large"
+  cluster_type       = "single-node"
+}
 `, rName)
+}
+
+func testAccEndpointConfig_redshift(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_redshiftBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redshift"
+  server_name                 = aws_redshift_cluster.test.cluster_identifier
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_redshiftBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redshift"
+  server_name                 = aws_redshift_cluster.test.cluster_identifier
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "require"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftSecretID(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_secretBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "target"
+  engine_name                     = "redshift"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
 }
 
 func testAccEndpointConfig_docDB(rName string) string {
