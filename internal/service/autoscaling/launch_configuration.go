@@ -325,58 +325,54 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-
-	createLaunchConfigurationOpts := autoscaling.CreateLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(lcName),
-		ImageId:                 aws.String(d.Get("image_id").(string)),
-		InstanceType:            aws.String(d.Get("instance_type").(string)),
-		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
-	}
-
-	if v, ok := d.GetOk("user_data"); ok {
-		userData := verify.Base64Encode([]byte(v.(string)))
-		createLaunchConfigurationOpts.UserData = aws.String(userData)
-	} else if v, ok := d.GetOk("user_data_base64"); ok {
-		createLaunchConfigurationOpts.UserData = aws.String(v.(string))
-	}
-
-	createLaunchConfigurationOpts.InstanceMonitoring = &autoscaling.InstanceMonitoring{
-		Enabled: aws.Bool(d.Get("enable_monitoring").(bool)),
-	}
-
-	if v, ok := d.GetOk("iam_instance_profile"); ok {
-		createLaunchConfigurationOpts.IamInstanceProfile = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("placement_tenancy"); ok {
-		createLaunchConfigurationOpts.PlacementTenancy = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("associate_public_ip_address"); ok {
-		createLaunchConfigurationOpts.AssociatePublicIpAddress = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("key_name"); ok {
-		createLaunchConfigurationOpts.KeyName = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("spot_price"); ok {
-		createLaunchConfigurationOpts.SpotPrice = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("security_groups"); ok {
-		createLaunchConfigurationOpts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	input := autoscaling.CreateLaunchConfigurationInput{
+		AssociatePublicIpAddress: aws.Bool(d.Get("associate_public_ip_address").(bool)),
+		EbsOptimized:             aws.Bool(d.Get("ebs_optimized").(bool)),
+		ImageId:                  aws.String(d.Get("image_id").(string)),
+		InstanceType:             aws.String(d.Get("instance_type").(string)),
+		LaunchConfigurationName:  aws.String(lcName),
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_id"); ok {
-		createLaunchConfigurationOpts.ClassicLinkVPCId = aws.String(v.(string))
+		input.ClassicLinkVPCId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("metadata_options"); ok {
-		createLaunchConfigurationOpts.MetadataOptions = expandLaunchConfigInstanceMetadataOptions(v.([]interface{}))
+	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		input.ClassicLinkVPCSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok {
-		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("iam_instance_profile"); ok {
+		input.IamInstanceProfile = aws.String(v.(string))
+	}
+
+	input.InstanceMonitoring = &autoscaling.InstanceMonitoring{
+		Enabled: aws.Bool(d.Get("enable_monitoring").(bool)),
+	}
+
+	if v, ok := d.GetOk("key_name"); ok {
+		input.KeyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.MetadataOptions = expandInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("placement_tenancy"); ok {
+		input.PlacementTenancy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("spot_price"); ok {
+		input.SpotPrice = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("user_data"); ok {
+		input.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
+	} else if v, ok := d.GetOk("user_data_base64"); ok {
+		input.UserData = aws.String(v.(string))
 	}
 
 	var blockDevices []*autoscaling.BlockDeviceMapping
@@ -506,15 +502,15 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(blockDevices) > 0 {
-		createLaunchConfigurationOpts.BlockDeviceMappings = blockDevices
+		input.BlockDeviceMappings = blockDevices
 	}
 
-	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
+	log.Printf("[DEBUG] Creating Auto Scaling Launch Configuration: %s", input)
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
+		_, err := autoscalingconn.CreateLaunchConfiguration(&input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IamInstanceProfile") {
 				return resource.RetryableError(err)
@@ -527,7 +523,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
+		_, err = autoscalingconn.CreateLaunchConfiguration(&input)
 	}
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %w", err)
@@ -575,6 +571,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	}
 	d.Set("name", lc.LaunchConfigurationName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName)))
+	d.Set("placement_tenancy", lc.PlacementTenancy)
 	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
 	d.Set("spot_price", lc.SpotPrice)
 	if v := aws.StringValue(lc.UserData); v != "" {
@@ -640,30 +637,28 @@ func readLCBlockDevices(d *schema.ResourceData, lc *autoscaling.LaunchConfigurat
 	return nil
 }
 
-func expandLaunchConfigInstanceMetadataOptions(l []interface{}) *autoscaling.InstanceMetadataOptions {
-	if len(l) == 0 || l[0] == nil {
+func expandInstanceMetadataOptions(tfMap map[string]interface{}) *autoscaling.InstanceMetadataOptions {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &autoscaling.InstanceMetadataOptions{}
 
-	opts := &autoscaling.InstanceMetadataOptions{
-		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
-	}
+	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
+		apiObject.HttpEndpoint = aws.String(v)
 
-	if m["http_endpoint"].(string) == autoscaling.InstanceMetadataEndpointStateEnabled {
-		// These parameters are not allowed unless HttpEndpoint is enabled
+		if v == autoscaling.InstanceMetadataEndpointStateEnabled {
+			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
+				apiObject.HttpTokens = aws.String(v)
+			}
 
-		if v, ok := m["http_tokens"].(string); ok && v != "" {
-			opts.HttpTokens = aws.String(v)
-		}
-
-		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
-			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
+			if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
+				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+			}
 		}
 	}
 
-	return opts
+	return apiObject
 }
 
 func flattenInstanceMetadataOptions(apiObject *autoscaling.InstanceMetadataOptions) map[string]interface{} {
@@ -769,13 +764,14 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 	return blockDevices, nil
 }
 
-func userDataHashSum(user_data string) string {
+func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
-	// check against double-encoding when setting it
-	v, base64DecodeError := base64.StdEncoding.DecodeString(user_data)
-	if base64DecodeError != nil {
-		v = []byte(user_data)
+	// check against double-encoding when setting it.
+	v, err := base64.StdEncoding.DecodeString(userData)
+
+	if err != nil {
+		v = []byte(userData)
 	}
 
 	hash := sha1.Sum(v)

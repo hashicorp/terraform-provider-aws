@@ -31,17 +31,36 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccLaunchConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "placement_tenancy", ""),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "user_data"),
+					resource.TestCheckNoResourceAttr(resourceName, "user_data_base64"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_security_groups.#", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -59,7 +78,7 @@ func TestAccAutoScalingLaunchConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig(rName),
+				Config: testAccLaunchConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceLaunchConfiguration(), resourceName),
@@ -588,30 +607,6 @@ func testAccCheckLaunchConfigurationWithEncryption(conf *autoscaling.LaunchConfi
 	}
 }
 
-func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_launch_configuration" {
-			continue
-		}
-
-		_, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Autoscaling Launch Configuration %s still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
 func testAccCheckLaunchConfigurationAttributes(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*conf.LaunchConfigurationName, "terraform-") && !strings.HasPrefix(*conf.LaunchConfigurationName, "tf-acc-test-") {
@@ -652,6 +647,30 @@ func testAccCheckLaunchConfigurationAttributes(conf *autoscaling.LaunchConfigura
 	}
 }
 
+func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_launch_configuration" {
+			continue
+		}
+
+		_, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Auto Scaling Launch Configuration %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
 func testAccCheckLaunchConfigurationExists(n string, v *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -660,7 +679,7 @@ func testAccCheckLaunchConfigurationExists(n string, v *autoscaling.LaunchConfig
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Autoscaling Launch Configuration ID is set")
+			return fmt.Errorf("No Auto Scaling Launch Configuration ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
@@ -727,7 +746,50 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 	}
 }
 
-// configLatestAmazonLinuxPVInstanceStoreAmi returns the configuration for a data source that
+func testAccLaunchConfigurationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+`, rName))
+}
+
+func testAccLaunchConfigurationConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "m1.small"
+  user_data     = "testtest-user-data"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 9
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 10
+    volume_type = "io1"
+    iops        = 100
+  }
+
+  ephemeral_block_device {
+    device_name  = "/dev/sde"
+    virtual_name = "ephemeral0"
+  }
+}
+`, rName))
+}
+
+// testAccLatestAmazonLinuxPVInstanceStoreAMIConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
 // The data source is named 'amzn-ami-minimal-pv-ebs'.
 func testAccLatestAmazonLinuxPVInstanceStoreAMIConfig() string {
@@ -849,40 +911,6 @@ resource "aws_launch_configuration" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
-  }
-}
-`, rName))
-}
-
-func testAccLaunchConfigurationConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name                        = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "m1.small"
-  user_data                   = "testtest-user-data"
-  associate_public_ip_address = true
-
-  root_block_device {
-    volume_type = "gp2"
-    volume_size = 11
-  }
-
-  ebs_block_device {
-    device_name = "/dev/sdb"
-    volume_size = 9
-  }
-
-  ebs_block_device {
-    device_name = "/dev/sdc"
-    volume_size = 10
-    volume_type = "io1"
-    iops        = 100
-  }
-
-  ephemeral_block_device {
-    device_name  = "/dev/sde"
-    virtual_name = "ephemeral0"
   }
 }
 `, rName))
