@@ -1,8 +1,7 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_rate_based_rule"
-sidebar_current: "docs-aws-datasource-wafregional-rate-based-rule"
 description: |-
   Retrieves an AWS WAF Regional rate based rule id.
 ---
@@ -13,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafregional_rate_based_rule" "example" {
   name = "tfWAFRegionalRateBasedRule"
 }
