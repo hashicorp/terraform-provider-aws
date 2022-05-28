@@ -714,8 +714,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
 	req := &s3.CreateBucketInput{
-		Bucket:                     aws.String(bucket),
-		ObjectLockEnabledForBucket: aws.Bool(d.Get("object_lock_enabled").(bool)),
+		Bucket: aws.String(bucket),
 	}
 
 	if acl, ok := d.GetOk("acl"); ok {
@@ -741,6 +740,12 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if err := ValidBucketName(bucket, awsRegion); err != nil {
 		return fmt.Errorf("error validating S3 Bucket (%s) name: %w", bucket, err)
+	}
+
+	// S3 Object Lock is not supported on all partitions.
+
+	if v, ok := d.GetOk("object_lock_enabled"); ok {
+		req.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
 	}
 
 	// S3 Object Lock can only be enabled on bucket creation.
@@ -1282,7 +1287,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
 	} else {
-		d.Set("object_lock_enabled", false)
+		d.Set("object_lock_enabled", nil)
 		d.Set("object_lock_configuration", nil)
 	}
 
