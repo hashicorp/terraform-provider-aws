@@ -160,7 +160,7 @@ func testAccCheckHSMConfigurationExists(name string) resource.TestCheckFunc {
 func testAccHSMConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_hsm_configuration" "test" {
-  description                   = %[1]q	
+  description                   = %[1]q
   hsm_configuration_identifier  = %[1]q
   hsm_ip_address                = "10.0.0.1"
   hsm_partition_name            = "aws"
@@ -173,7 +173,7 @@ resource "aws_redshift_hsm_configuration" "test" {
 func testAccHSMConfigurationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_hsm_configuration" "test" {
-  description                   = %[1]q	
+  description                   = %[1]q
   hsm_configuration_identifier  = %[1]q
   hsm_ip_address                = "10.0.0.1"
   hsm_partition_name            = "aws"
@@ -190,7 +190,7 @@ resource "aws_redshift_hsm_configuration" "test" {
 func testAccHSMConfigurationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_hsm_configuration" "test" {
-  description                   = %[1]q	
+  description                   = %[1]q
   hsm_configuration_identifier  = %[1]q
   hsm_ip_address                = "10.0.0.1"
   hsm_partition_name            = "aws"
