@@ -399,6 +399,7 @@ resource "aws_docdb_cluster_instance" "test" {
   cluster_identifier 				= aws_docdb_cluster.default.id
   instance_class     				= data.aws_docdb_orderable_db_instance.test.instance_class
   promotion_tier     				= "3"
+  
   enable_performance_insights 		= true
   performance_insights_kms_key_id 	= aws_kms_key.test.arn
 }
