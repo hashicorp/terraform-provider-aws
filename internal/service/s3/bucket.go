@@ -743,7 +743,6 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// S3 Object Lock is not supported on all partitions.
-
 	if v, ok := d.GetOk("object_lock_enabled"); ok {
 		req.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
 	}
