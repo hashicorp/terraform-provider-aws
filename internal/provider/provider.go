@@ -1769,6 +1769,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
 			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
+			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),

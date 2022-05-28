@@ -29,16 +29,16 @@ func TestAccRedshiftHSMConfiguration_basic(t *testing.T) {
 				Config: testAccHSMConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMConfigurationExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`hsmclientcertificate:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`hsmconfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_configuration_identifier", rName),
-					// resource.TestCheckResourceAttrSet(resourceName, "hsm_configuration_public_key"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"hsm_partition_password", "hsm_server_public_certificate"},
 			},
 		},
 	})
@@ -63,9 +63,10 @@ func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"hsm_partition_password", "hsm_server_public_certificate"},
 			},
 			{
 				Config: testAccHSMConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -159,8 +160,12 @@ func testAccCheckHSMConfigurationExists(name string) resource.TestCheckFunc {
 func testAccHSMConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_hsm_configuration" "test" {
-  description                  = %[1]q	
-  hsm_configuration_identifier = %[1]q
+  description                   = %[1]q	
+  hsm_configuration_identifier  = %[1]q
+  hsm_ip_address                = "10.0.0.1"
+  hsm_partition_name            = "aws"
+  hsm_partition_password        = %[1]q
+  hsm_server_public_certificate = %[1]q
 }
 `, rName)
 }
@@ -168,7 +173,12 @@ resource "aws_redshift_hsm_configuration" "test" {
 func testAccHSMConfigurationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_hsm_configuration" "test" {
-  hsm_configuration_identifier = %[1]q
+  description                   = %[1]q	
+  hsm_configuration_identifier  = %[1]q
+  hsm_ip_address                = "10.0.0.1"
+  hsm_partition_name            = "aws"
+  hsm_partition_password        = %[1]q
+  hsm_server_public_certificate = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -180,7 +190,12 @@ resource "aws_redshift_hsm_configuration" "test" {
 func testAccHSMConfigurationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_hsm_configuration" "test" {
-  hsm_configuration_identifier = %[1]q
+  description                   = %[1]q	
+  hsm_configuration_identifier  = %[1]q
+  hsm_ip_address                = "10.0.0.1"
+  hsm_partition_name            = "aws"
+  hsm_partition_password        = %[1]q
+  hsm_server_public_certificate = %[1]q
 
   tags = {
     %[2]q = %[3]q
