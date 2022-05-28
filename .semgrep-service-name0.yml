@@ -279,20 +279,16 @@ rules:
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/codeartifact
-        - internal/service/codebuild
         - internal/service/codecommit
         - internal/service/codepipeline
         - internal/service/codestarconnections
         - internal/service/codestarnotifications
         - internal/service/cognitoidp
         - internal/service/configservice
-        - internal/service/connect
-        - internal/service/datapipeline
         - internal/service/datasync
         - internal/service/dax
         - internal/service/directconnect
         - internal/service/dms
-        - internal/service/docdb
         - internal/service/dynamodb
         - internal/service/ecr
         - internal/service/ecrpublic
@@ -301,38 +297,30 @@ rules:
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elasticsearch
-        - internal/service/elastictranscoder
         - internal/service/elb
         - internal/service/elbv2
         - internal/service/emr
         - internal/service/emrcontainers
         - internal/service/events
         - internal/service/firehose
-        - internal/service/fsx
         - internal/service/glacier
         - internal/service/globalaccelerator
         - internal/service/grafana
         - internal/service/guardduty
         - internal/service/iam
         - internal/service/identitystore
-        - internal/service/imagebuilder
         - internal/service/iot
         - internal/service/kafka
-        - internal/service/kafkaconnect
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
         - internal/service/lambda
-        - internal/service/logs
         - internal/service/meta
-        - internal/service/networkfirewall
         - internal/service/networkmanager
         - internal/service/organizations
-        - internal/service/outposts
         - internal/service/ram
         - internal/service/rds
         - internal/service/resourcegroups
         - internal/service/resourcegroupstaggingapi
-        - internal/service/route53
         - internal/service/route53domains
         - internal/service/route53recoverycontrolconfig
         - internal/service/route53recoveryreadiness
@@ -340,15 +328,7 @@ rules:
         - internal/service/s3control
         - internal/service/s3outposts
         - internal/service/schemas
-        - internal/service/secretsmanager
-        - internal/service/servicecatalog
-        - internal/service/servicediscovery
         - internal/service/servicequotas
-        - internal/service/ses
-        - internal/service/simpledb
-        - internal/service/ssm
-        - internal/service/ssoadmin
-        - internal/service/storagegateway
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
@@ -1409,7 +1389,7 @@ rules:
     message: Do not use "cloudwatchlog" in var name inside logs package
     paths:
       include:
-      - internal/service/logs
+        - internal/service/logs
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1452,7 +1432,7 @@ rules:
     message: Do not use "cloudwatchlogs" in var name inside logs package
     paths:
       include:
-      - internal/service/logs
+        - internal/service/logs
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

@@ -26,7 +26,7 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfig(rName),
+				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -62,7 +62,7 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfig(rName),
+				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
@@ -84,7 +84,7 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigDescription(rName),
+				Config: testAccCustomPluginConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
@@ -110,7 +110,7 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigObjectVersion(rName),
+				Config: testAccCustomPluginConfig_objectVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.object_version"),
@@ -200,7 +200,7 @@ resource "aws_s3_object" "test" {
 `, rName, s3BucketVersioning)
 }
 
-func testAccCustomPluginConfig(rName string) string {
+func testAccCustomPluginConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
@@ -216,7 +216,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
 `, rName))
 }
 
-func testAccCustomPluginConfigDescription(rName string) string {
+func testAccCustomPluginConfig_description(rName string) string {
 	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
@@ -233,7 +233,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
 `, rName))
 }
 
-func testAccCustomPluginConfigObjectVersion(rName string) string {
+func testAccCustomPluginConfig_objectVersion(rName string) string {
 	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, true), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q

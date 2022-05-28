@@ -23,6 +23,8 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone"),
@@ -40,6 +42,9 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "number_of_nodes"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "manual_snapshot_retention_period"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_track_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 				),
@@ -133,38 +138,10 @@ data "aws_redshift_cluster" "test" {
 }
 
 func testAccClusterDataSourceConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {

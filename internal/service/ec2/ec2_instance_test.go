@@ -961,28 +961,10 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_disableAPITermination(t *testing.T) {
+func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	checkDisableApiTermination := func(expected bool) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-			r, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-				InstanceId: v.InstanceId,
-				Attribute:  aws.String("disableApiTermination"),
-			})
-			if err != nil {
-				return err
-			}
-			got := *r.DisableApiTermination.Value
-			if got != expected {
-				return fmt.Errorf("expected: %t, got: %t", expected, got)
-			}
-			return nil
-		}
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -994,7 +976,7 @@ func TestAccEC2Instance_disableAPITermination(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					checkDisableApiTermination(true),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
 				),
 			},
 			{
@@ -1007,8 +989,36 @@ func TestAccEC2Instance_disableAPITermination(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					checkDisableApiTermination(false),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPITermination(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3203,6 +3213,29 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 					testAccCheckInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_templateSpotAndStop(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
 				),
 			},
 		},
@@ -7633,6 +7666,38 @@ resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+
+resource "aws_instance" "test" {
+  launch_template {
+    name = aws_launch_template.test.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_templateSpotAndStop(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  instance_market_options {
+    market_type = "spot"
+
+    spot_options {
+      instance_interruption_behavior = "stop"
+      spot_instance_type             = "persistent"
+    }
+  }
 }
 
 resource "aws_instance" "test" {

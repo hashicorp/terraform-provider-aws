@@ -29,7 +29,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig(rName),
+				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
@@ -45,7 +45,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterInstanceModifiedConfig(rName),
+				Config: testAccClusterInstanceConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
@@ -214,7 +214,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceKMSKeyConfig(rName),
+				Config: testAccClusterInstanceConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.foo", "arn"),
@@ -247,7 +247,7 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig(rName),
+				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccClusterInstanceDisappears(&v),
@@ -334,7 +334,7 @@ func testAccCheckClusterInstanceExists(n string, v *docdb.DBInstance) resource.T
 }
 
 // Add some random to the name, to avoid collision
-func testAccClusterInstanceConfig(rName string) string {
+func testAccClusterInstanceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = %[1]q
@@ -357,6 +357,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 }
 `, rName))
 }
+
 
 func testAccClusterInstanceConfigPerf(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
@@ -400,13 +401,15 @@ resource "aws_docdb_cluster_instance" "test" {
   instance_class     				= data.aws_docdb_orderable_db_instance.test.instance_class
   promotion_tier     				= "3"
   
-  enable_performance_insights 		= true
-  performance_insights_kms_key_id 	= aws_kms_key.test.arn
+  enable_performance_insights 		
+                            = true
+  performance_insights_kms_key_id 	
+                            = aws_kms_key.test.arn
 }
 `, rName))
 }
 
-func testAccClusterInstanceModifiedConfig(rName string) string {
+func testAccClusterInstanceConfig_modified(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = %[1]q
@@ -567,7 +570,7 @@ resource "aws_docdb_subnet_group" "test" {
 `, rName))
 }
 
-func testAccClusterInstanceKMSKeyConfig(rName string) string {
+func testAccClusterInstanceConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]s"

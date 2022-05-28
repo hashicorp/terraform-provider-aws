@@ -180,6 +180,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
 				),
 			},
+			{
+				Config: testAccServerConfig_securityPolicy("TransferSecurityPolicy-2022-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2022-03"),
+				),
+			},
 		},
 	})
 }

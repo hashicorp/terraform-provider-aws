@@ -50,6 +50,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 			{
@@ -84,6 +85,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 		},
@@ -121,6 +123,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 			{
@@ -173,6 +176,7 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.preload", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
 				),
 			},
 			{
@@ -204,6 +208,72 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.protection", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.report_uri", "https://example.com/"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_response_headers_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, true, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, true, 90),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "90"),
+				),
+			},
+			{
+				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, false, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "0"),
 				),
 			},
 		},
@@ -418,4 +488,17 @@ resource "aws_cloudfront_response_headers_policy" "test" {
   }
 }
 `, rName)
+}
+
+func testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName string, enabled bool, rate float64) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name = %[1]q
+
+  server_timing_headers_config {
+    enabled       = %[2]t
+    sampling_rate = %[3]f
+  }
+}
+`, rName, enabled, rate)
 }

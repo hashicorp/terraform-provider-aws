@@ -1,3 +1,0 @@
-```release-note:enhancement
-r/aws_cloudwatch_metric_stream: Add `statistics_configuration` argument
-```

@@ -732,7 +732,8 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map": location.DataSourceMap(),
+			"aws_location_map":         location.DataSourceMap(),
+			"aws_location_place_index": location.DataSourcePlaceIndex(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -807,6 +808,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_cluster":           redshift.DataSourceCluster(),
 			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
 			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
+			"aws_redshift_subnet_group":      redshift.DataSourceSubnetGroup(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
@@ -1764,6 +1766,7 @@ func Provider() *schema.Provider {
 
 			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
+			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
 			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),

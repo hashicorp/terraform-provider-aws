@@ -327,7 +327,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_globalIdentifierPrimarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
+				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExistsProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
 					testAccCheckClusterExistsProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
@@ -681,7 +681,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 	})
 }
 
-func testAccClusterConfig_globalIdentifierPrimarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`

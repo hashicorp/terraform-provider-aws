@@ -26,7 +26,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricFilterConfig(rInt),
+				Config: testAccMetricFilterConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
@@ -52,7 +52,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricFilterModifiedConfig(rInt),
+				Config: testAccMetricFilterConfig_modified(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
@@ -74,7 +74,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMetricFilterModifiedWithDimensionsConfig(rInt),
+				Config: testAccMetricFilterConfig_modifiedDimensions(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
@@ -100,7 +100,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMetricFilterManyConfig(rInt),
+				Config: testAccMetricFilterConfig_many(rInt),
 				Check:  testAccCheckMetricFilterManyExist("aws_cloudwatch_log_metric_filter.test", &mf),
 			},
 		},
@@ -119,7 +119,7 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricFilterConfig(rInt),
+				Config: testAccMetricFilterConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(resourceName, &mf),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceMetricFilter(), resourceName),
@@ -142,7 +142,7 @@ func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricFilterConfig(rInt),
+				Config: testAccMetricFilterConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(resourceName, &mf),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), "aws_cloudwatch_log_group.test"),
@@ -280,7 +280,7 @@ func testAccCheckMetricFilterManyExist(basename string, mf *cloudwatchlogs.Metri
 	}
 }
 
-func testAccMetricFilterConfig(rInt int) string {
+func testAccMetricFilterConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   name           = "MyAppAccessCount-%d"
@@ -300,7 +300,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccMetricFilterModifiedConfig(rInt int) string {
+func testAccMetricFilterConfig_modified(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   name = "MyAppAccessCount-%d"
@@ -326,7 +326,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccMetricFilterModifiedWithDimensionsConfig(rInt int) string {
+func testAccMetricFilterConfig_modifiedDimensions(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   name = "MyAppAccessCount-%d"
@@ -355,7 +355,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccMetricFilterManyConfig(rInt int) string {
+func testAccMetricFilterConfig_many(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   count          = 15

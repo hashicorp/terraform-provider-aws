@@ -22,7 +22,7 @@ func TestAccImageBuilderImagePipelinesDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckImagePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigImagePipelines_filter(rName),
+				Config: testAccImagePipelinesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +34,7 @@ func TestAccImageBuilderImagePipelinesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccConfigImagePipelines_filter(rName string) string {
+func testAccImagePipelinesDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

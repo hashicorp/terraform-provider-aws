@@ -42,7 +42,7 @@ func testAccLambdaFunctionAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLambdaFunctionAssociationConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -70,7 +70,7 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLambdaFunctionAssociationConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
@@ -185,7 +185,7 @@ resource "aws_connect_instance" "test" {
 `, rName, rName2)
 }
 
-func testAccLambdaFunctionAssociationConfigBasic(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationConfig_basic(rName string, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaFunctionAssociationConfigBase(rName, rName2), `
 resource "aws_connect_lambda_function_association" "test" {

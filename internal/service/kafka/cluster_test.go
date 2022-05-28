@@ -233,18 +233,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEBSVolumeSizeToStorageInfo(t 
 				PlanOnly: true,
 			},
 			{
-				// upgrade the instance type first. Multiple updates would cause a "The version of the cluster isn’t current. Check the current version and try again." error
-				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeOnlyConfig(rName, original_volume_size, "kafka.m5.4xlarge"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
-				),
-			},
-			{
-				// update storage and enable provisioned throughput
+				// upgrade the instance type, update storage, and enable provisioned throughput
 				Config: testAccClusterBrokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabledConfig(rName, updated_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
