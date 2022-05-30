@@ -38,6 +38,26 @@ func ResourceStatement() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"parameters": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"secret_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -85,6 +105,10 @@ func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 		request.StatementName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 {
+		request.Parameters = expandParameters(v.([]interface{}))
+	}
+
 	output, err := conn.ExecuteStatement(request)
 	if err != nil || output.Id == nil {
 		return fmt.Errorf("Error Executing Redshift Data Statement %s: %s", d.Get("cluster_identifier").(string), err)
@@ -120,5 +144,88 @@ func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("db_user", d.Get("db_user").(string))
 	d.Set("sql", sub.QueryString)
 
+	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
+		return fmt.Errorf("error setting parameters: %w", err)
+	}
+
 	return nil
+}
+
+func expandParameter(tfMap map[string]interface{}) *redshiftdataapiservice.SqlParameter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &redshiftdataapiservice.SqlParameter{}
+
+	if v, ok := tfMap["name"].(string); ok {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandParameters(tfList []interface{}) []*redshiftdataapiservice.SqlParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*redshiftdataapiservice.SqlParameter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandParameter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenParameter(apiObject *redshiftdataapiservice.SqlParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
+	}
+	return tfMap
+}
+
+func flattenParameters(apiObjects []*redshiftdataapiservice.SqlParameter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenParameter(apiObject))
+	}
+
+	return tfList
 }

@@ -30,6 +30,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 					testAccCheckStatementExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 				),
 			},
 			{
