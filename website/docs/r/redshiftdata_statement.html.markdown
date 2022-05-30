@@ -6,7 +6,7 @@ description: |-
   Provides a Redshift Data Statement execution resource.
 ---
 
-# Resource: aws_redshiftdata_.subnet_group
+# Resource: aws_redshiftdata_statement
 
 Executes a Redshift Data Statement.
 
