@@ -116,8 +116,8 @@ func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("cluster_identifier", sub.ClusterIdentifier)
 	d.Set("secret_arn", sub.SecretArn)
-	d.Set("database", sub.Database)
-	d.Set("db_user", sub.DbUser)
+	d.Set("database", d.Get("database").(string))
+	d.Set("db_user", d.Get("db_user").(string))
 	d.Set("sql", sub.QueryString)
 
 	return nil

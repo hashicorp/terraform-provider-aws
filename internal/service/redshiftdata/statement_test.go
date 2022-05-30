@@ -29,7 +29,6 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "db_user", "aws_redshift_cluster.test", "master_username"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 				),
 			},
@@ -37,7 +36,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"database"},
+				ImportStateVerifyIgnore: []string{"database", "db_user"},
 			},
 		},
 	})
