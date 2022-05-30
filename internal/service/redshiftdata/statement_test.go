@@ -25,7 +25,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStatement_basic(rName),
+				Config: testAccStatementConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
@@ -68,7 +68,7 @@ func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeSta
 	}
 }
 
-func testAccStatement_basic(rName string) string {
+func testAccStatementConfigBasic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
