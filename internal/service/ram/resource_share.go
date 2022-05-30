@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -31,6 +32,11 @@ func ResourceResourceShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_external_principals": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -40,13 +46,15 @@ func ResourceResourceShare() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"allow_external_principals": {
-				Type:     schema.TypeBool,
+			"permission_arns": {
+				Type:     schema.TypeSet,
+				ForceNew: true,
 				Optional: true,
-				Default:  false,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -63,6 +71,10 @@ func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error
 	request := &ram.CreateResourceShareInput{
 		Name:                    aws.String(d.Get("name").(string)),
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
+	}
+
+	if v, ok := d.GetOk("permission_arns"); ok && v.(*schema.Set).Len() > 0 {
+		request.PermissionArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if len(tags) > 0 {
@@ -133,6 +145,23 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	permsInput := &ram.ListResourceSharePermissionsInput{
+		ResourceShareArn: aws.String(d.Id()),
+	}
+
+	perms, err := conn.ListResourceSharePermissions(permsInput)
+	if err != nil {
+		return err
+	}
+
+	permArns := make([]*string, 0, len(perms.Permissions))
+
+	for _, perm := range perms.Permissions {
+		permArns = append(permArns, perm.Arn)
+	}
+
+	d.Set("permission_arns", flex.FlattenStringSet(permArns))
 
 	return nil
 }
