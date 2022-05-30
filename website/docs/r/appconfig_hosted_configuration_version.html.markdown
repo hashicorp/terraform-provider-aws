@@ -70,8 +70,8 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
       },
       bar : {
         enabled : "true",
-        someAttribute: "Hello World",
-        someOtherAttribute: 123
+        someAttribute : "Hello World",
+        someOtherAttribute : 123
       }
     },
     version : "1"
