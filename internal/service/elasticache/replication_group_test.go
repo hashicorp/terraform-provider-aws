@@ -159,6 +159,12 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "3.2.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v2),
@@ -182,7 +188,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &v4),
 					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -191,8 +197,14 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &v5),
 					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "5.0.6"),
@@ -2179,46 +2191,6 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 	})
 }
 
-func testAccCheckReplicationGroupParameterGroup(rg *elasticache.ReplicationGroup, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-
-		cacheCluster := rg.NodeGroups[0].NodeGroupMembers[0]
-		cluster, err := tfelasticache.FindCacheClusterByID(conn, aws.StringValue(cacheCluster.CacheClusterId))
-		if err != nil {
-			return fmt.Errorf("could not retrieve cache cluster (%s): %w", aws.StringValue(cacheCluster.CacheClusterId), err)
-		}
-
-		paramGroupName := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
-
-		group, err := tfelasticache.FindParameterGroupByName(conn, paramGroupName)
-		if err != nil {
-			return fmt.Errorf("error retrieving parameter group (%s): %w", paramGroupName, err)
-		}
-
-		*pg = *group
-
-		return nil
-	}
-}
-
-func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-
-		paramGroupName := aws.StringValue(pg.CacheParameterGroupName)
-
-		_, err := tfelasticache.FindParameterGroupByName(conn, paramGroupName)
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error finding parameter group (%s): %w", paramGroupName, err)
-		}
-		return fmt.Errorf("Cache Parameter Group (%s) still exists", paramGroupName)
-	}
-}
-
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValidation_numNodeGroupsOnSecondary(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2514,6 +2486,46 @@ func testAccCheckReplicationGroupDestroy(s *terraform.State) error {
 		return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
 	}
 	return nil
+}
+
+func testAccCheckReplicationGroupParameterGroup(rg *elasticache.ReplicationGroup, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+
+		cacheCluster := rg.NodeGroups[0].NodeGroupMembers[0]
+		cluster, err := tfelasticache.FindCacheClusterByID(conn, aws.StringValue(cacheCluster.CacheClusterId))
+		if err != nil {
+			return fmt.Errorf("could not retrieve cache cluster (%s): %w", aws.StringValue(cacheCluster.CacheClusterId), err)
+		}
+
+		paramGroupName := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+
+		group, err := tfelasticache.FindParameterGroupByName(conn, paramGroupName)
+		if err != nil {
+			return fmt.Errorf("error retrieving parameter group (%s): %w", paramGroupName, err)
+		}
+
+		*pg = *group
+
+		return nil
+	}
+}
+
+func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+
+		paramGroupName := aws.StringValue(pg.CacheParameterGroupName)
+
+		_, err := tfelasticache.FindParameterGroupByName(conn, paramGroupName)
+		if tfresource.NotFound(err) {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error finding parameter group (%s): %w", paramGroupName, err)
+		}
+		return fmt.Errorf("Cache Parameter Group (%s) still exists", paramGroupName)
+	}
 }
 
 func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) resource.TestCheckFunc {

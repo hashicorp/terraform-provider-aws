@@ -619,7 +619,7 @@ To read:
 func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
-    if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
+    if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
         apiObject.NestedAttributeName = expandStructure(v[0].(map[string]interface{}))
     }
 

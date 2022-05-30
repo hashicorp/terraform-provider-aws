@@ -973,7 +973,7 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 		apiObject.ClientSubnets = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["connectivity_info"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["connectivity_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ConnectivityInfo = expandConnectivityInfo(v[0].(map[string]interface{}))
 	}
 
@@ -993,7 +993,7 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 		}
 	}
 
-	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StorageInfo = expandStorageInfo(v[0].(map[string]interface{}))
 	}
 
@@ -1007,7 +1007,7 @@ func expandConnectivityInfo(tfMap map[string]interface{}) *kafka.ConnectivityInf
 
 	apiObject := &kafka.ConnectivityInfo{}
 
-	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
 	}
 
@@ -1021,7 +1021,7 @@ func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
 
 	apiObject := &kafka.StorageInfo{}
 
-	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EbsStorageInfo = expandEBSStorageInfo(v[0].(map[string]interface{}))
 	}
 
@@ -1035,7 +1035,7 @@ func expandEBSStorageInfo(tfMap map[string]interface{}) *kafka.EBSStorageInfo {
 
 	apiObject := &kafka.EBSStorageInfo{}
 
-	if v, ok := tfMap["provisioned_throughput"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["provisioned_throughput"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
 	}
 
@@ -1085,11 +1085,11 @@ func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthe
 
 	apiObject := &kafka.ClientAuthentication{}
 
-	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Sasl = expandSasl(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["tls"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tls"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Tls = expandTLS(v[0].(map[string]interface{}))
 	}
 
@@ -1166,7 +1166,7 @@ func expandEncryptionInfo(tfMap map[string]interface{}) *kafka.EncryptionInfo {
 
 	apiObject := &kafka.EncryptionInfo{}
 
-	if v, ok := tfMap["encryption_in_transit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["encryption_in_transit"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EncryptionInTransit = expandEncryptionInTransit(v[0].(map[string]interface{}))
 	}
 
@@ -1204,7 +1204,7 @@ func expandLoggingInfo(tfMap map[string]interface{}) *kafka.LoggingInfo {
 
 	apiObject := &kafka.LoggingInfo{}
 
-	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BrokerLogs = expandBrokerLogs(v[0].(map[string]interface{}))
 	}
 
@@ -1218,15 +1218,15 @@ func expandBrokerLogs(tfMap map[string]interface{}) *kafka.BrokerLogs {
 
 	apiObject := &kafka.BrokerLogs{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Firehose = expandFirehose(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.S3 = expandS3(v[0].(map[string]interface{}))
 	}
 
@@ -1298,7 +1298,7 @@ func expandOpenMonitoringInfo(tfMap map[string]interface{}) *kafka.OpenMonitorin
 
 	apiObject := &kafka.OpenMonitoringInfo{}
 
-	if v, ok := tfMap["prometheus"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["prometheus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Prometheus = expandPrometheusInfo(v[0].(map[string]interface{}))
 	}
 
@@ -1312,11 +1312,11 @@ func expandPrometheusInfo(tfMap map[string]interface{}) *kafka.PrometheusInfo {
 
 	apiObject := &kafka.PrometheusInfo{}
 
-	if v, ok := tfMap["jmx_exporter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["jmx_exporter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.JmxExporter = expandJmxExporterInfo(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["node_exporter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["node_exporter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NodeExporter = expandNodeExporterInfo(v[0].(map[string]interface{}))
 	}
 
