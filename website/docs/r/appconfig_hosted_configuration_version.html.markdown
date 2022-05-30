@@ -45,7 +45,7 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
         _deprecation : {
           "status" : "planned"
         }
-      }
+      },
       bar : {
         name : "bar",
         attributes : {
@@ -63,17 +63,17 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
           }
         }
       }
-    }
+    },
     values : {
       foo : {
         enabled : "true",
-      }
+      },
       bar : {
         enabled : "true",
         someAttribute: "Hello World",
         someOtherAttribute: 123
       }
-    }
+    },
     version : "1"
   })
 }
