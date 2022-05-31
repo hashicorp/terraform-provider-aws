@@ -24,7 +24,7 @@ func testAccDetector_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorConfig_basic1,
+				Config: testAccDetectorConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
@@ -40,21 +40,21 @@ func testAccDetector_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDetectorConfig_basic2,
+				Config: testAccDetectorConfig_disable,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "false"),
 				),
 			},
 			{
-				Config: testAccDetectorConfig_basic3,
+				Config: testAccDetectorConfig_enable,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
 			{
-				Config: testAccDetectorConfig_basic4,
+				Config: testAccDetectorConfig_findingPublishingFrequency,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
@@ -216,23 +216,23 @@ func testAccCheckDetectorExists(name string) resource.TestCheckFunc {
 	}
 }
 
-const testAccDetectorConfig_basic1 = `
+const testAccDetectorConfig_basic = `
 resource "aws_guardduty_detector" "test" {}
 `
 
-const testAccDetectorConfig_basic2 = `
+const testAccDetectorConfig_disable = `
 resource "aws_guardduty_detector" "test" {
   enable = false
 }
 `
 
-const testAccDetectorConfig_basic3 = `
+const testAccDetectorConfig_enable = `
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
 `
 
-const testAccDetectorConfig_basic4 = `
+const testAccDetectorConfig_findingPublishingFrequency = `
 resource "aws_guardduty_detector" "test" {
   finding_publishing_frequency = "FIFTEEN_MINUTES"
 }
