@@ -182,6 +182,68 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 	})
 }
 
+func testAccDetector_datasources_all(t *testing.T) {
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesAll(true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesAll(true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+				),
+			},
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesAll(false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+				),
+			},
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesAll(false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDetectorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
@@ -304,4 +366,21 @@ resource "aws_guardduty_detector" "test" {
   }
 }
 `, enable)
+}
+
+func testAccGuardDutyDetectorConfigDatasourcesAll(enableK8s, enableS3 bool) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    kubernetes {
+	  audit_logs {
+        enable = %[1]t
+	  }
+    }
+    s3_logs {
+		enable = %[2]t
+	  }
+	}
+}
+`, enableK8s, enableS3)
 }
