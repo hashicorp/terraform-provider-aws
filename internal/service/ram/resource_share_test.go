@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 )
 
 func TestAccRAMResourceShare_basic(t *testing.T) {
@@ -190,6 +191,29 @@ func TestAccRAMResourceShare_tags(t *testing.T) {
 	})
 }
 
+func TestAccRAMResourceShare_disappears(t *testing.T) {
+	var resourceShare ram.ResourceShare
+	resourceName := "aws_ram_resource_share.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceShareNameConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceShareExists(resourceName, &resourceShare),
+					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShare(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckResourceShareExists(resourceName string, resourceShare *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
@@ -203,21 +227,10 @@ func testAccCheckResourceShareExists(resourceName string, resourceShare *ram.Res
 			return fmt.Errorf("No ID is set")
 		}
 
-		request := &ram.GetResourceSharesInput{
-			ResourceShareArns: []*string{aws.String(rs.Primary.ID)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
-
-		output, err := conn.GetResourceShares(request)
+		resourceShare, err := tfram.FindResourceShareOwnerSelfByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-
-		if len(output.ResourceShares) == 0 {
-			return fmt.Errorf("No RAM resource share found")
-		}
-
-		resourceShare = output.ResourceShares[0]
 
 		if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusActive {
 			return fmt.Errorf("RAM resource share (%s) delet(ing|ed)", rs.Primary.ID)
@@ -235,21 +248,13 @@ func testAccCheckResourceShareDestroy(s *terraform.State) error {
 			continue
 		}
 
-		request := &ram.GetResourceSharesInput{
-			ResourceShareArns: []*string{aws.String(rs.Primary.ID)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
-
-		output, err := conn.GetResourceShares(request)
+		resourceShare, err := tfram.FindResourceShareOwnerSelfByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(output.ResourceShares) > 0 {
-			resourceShare := output.ResourceShares[0]
-			if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusDeleted {
-				return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
-			}
+		if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusDeleted {
+			return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
 		}
 	}
 

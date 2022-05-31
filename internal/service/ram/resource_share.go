@@ -102,12 +102,7 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	request := &ram.GetResourceSharesInput{
-		ResourceShareArns: []*string{aws.String(d.Id())},
-		ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-	}
-
-	output, err := conn.GetResourceShares(request)
+	resourceShare, err := FindResourceShareOwnerSelfByARN(conn, d.Id())
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			log.Printf("[WARN] RAM Resource Share (%s) not found, removing from state", d.Id())
@@ -116,14 +111,6 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("error reading RAM resource share %s: %w", d.Id(), err)
 	}
-
-	if !d.IsNewResource() && len(output.ResourceShares) == 0 {
-		log.Printf("[WARN] RAM Resource Share (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	resourceShare := output.ResourceShares[0]
 
 	if !d.IsNewResource() && aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusActive {
 		log.Printf("[WARN] RAM Resource Share (%s) not active, removing from state", d.Id())
