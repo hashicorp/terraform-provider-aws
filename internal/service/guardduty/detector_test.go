@@ -32,7 +32,7 @@ func testAccDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "SIX_HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -150,18 +150,18 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
 				),
 			},
 			{
@@ -174,8 +174,8 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
 				),
 			},
 		},
@@ -296,8 +296,10 @@ func testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(enable bool) s
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   datasources {
-    kubernetes_audit_logs {
-      enable = %[1]t
+    kubernetes {
+	  audit_logs {
+        enable = %[1]t
+	  }
     }
   }
 }

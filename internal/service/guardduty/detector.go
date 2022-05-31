@@ -40,7 +40,7 @@ func ResourceDetector() *schema.Resource {
 
 			"datasources": {
 				Type:     schema.TypeList,
-				MaxItems: 2,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -59,16 +59,25 @@ func ResourceDetector() *schema.Resource {
 								},
 							},
 						},
-						"kubernetes_audit_logs": {
+						"kubernetes": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enable": {
-										Type:     schema.TypeBool,
+									"audit_logs": {
+										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enable": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -260,8 +269,8 @@ func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.Dat
 	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
 		apiObject.S3Logs = expandS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["kubernetes_audit_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Kubernetes = expandKubernetesAuditLogsConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -281,16 +290,35 @@ func expandS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsCo
 	return apiObject
 }
 
-func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesConfiguration {
+func expandKubernetesConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &guardduty.KubernetesConfiguration{}
+	l, ok := tfMap["audit_logs"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.KubernetesConfiguration{
+		AuditLogs: expandKubernetesAuditLogsConfiguration(m),
+	}
+}
+
+func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesAuditLogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.KubernetesAuditLogsConfiguration{}
 
 	if v, ok := tfMap["enable"].(bool); ok {
-		apiObject.AuditLogs = &guardduty.KubernetesAuditLogsConfiguration{}
-		apiObject.AuditLogs.Enable = aws.Bool(v)
+		apiObject.Enable = aws.Bool(v) // This can be flattened a ton
 	}
 
 	return apiObject
@@ -308,7 +336,7 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 	}
 
 	if v := apiObject.Kubernetes; v != nil {
-		tfMap["kubernetes_audit_logs"] = []interface{}{flattenKubernetesAuditLogsConfiguration(v)}
+		tfMap["kubernetes"] = []interface{}{flattenKubernetesConfiguration(v)}
 	}
 
 	return tfMap
@@ -328,14 +356,28 @@ func flattenS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationRe
 	return tfMap
 }
 
-func flattenKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesConfigurationResult) map[string]interface{} {
+func flattenKubernetesConfiguration(apiObject *guardduty.KubernetesConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.AuditLogs.Status; v != nil {
+	if v := apiObject.AuditLogs; v != nil {
+		tfMap["audit_logs"] = []interface{}{flattenKubernetesAuditLogsConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesAuditLogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
 		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
 	}
 
