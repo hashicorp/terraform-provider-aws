@@ -133,8 +133,9 @@ resource "aws_launch_configuration" "test" {
   ebs_block_device {
     device_name = "/dev/sdc"
     volume_size = 10
-    volume_type = "io1"
-    iops        = 100
+    volume_type = "gp3"
+    iops        = 3000
+    throughput  = 125
   }
 
   ephemeral_block_device {

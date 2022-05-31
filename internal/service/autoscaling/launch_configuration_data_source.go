@@ -51,7 +51,7 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 						},
 						"throughput": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"volume_size": {
@@ -151,7 +151,7 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 						},
 						"throughput": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"volume_size": {
