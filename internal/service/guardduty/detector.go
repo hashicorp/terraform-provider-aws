@@ -132,7 +132,7 @@ func resourceDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
 	output, err := conn.CreateDetector(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Detector failed: %s", err.Error())
+		return fmt.Errorf("Creating GuardDuty Detector failed: %w", err)
 	}
 	d.SetId(aws.StringValue(output.DetectorId))
 
@@ -156,7 +156,7 @@ func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("Reading GuardDuty Detector '%s' failed: %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -212,7 +212,7 @@ func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
 		_, err := conn.UpdateDetector(&input)
 		if err != nil {
-			return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+			return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %w", d.Id(), err)
 		}
 	}
 
@@ -220,7 +220,7 @@ func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
