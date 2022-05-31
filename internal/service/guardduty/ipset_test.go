@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -25,13 +25,13 @@ func testAccIPSet_basic(t *testing.T) {
 	resourceName := "aws_guardduty_ipset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName1, ipsetName1, true),
+				Config: testAccIPSetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/ipset/.+$")),
@@ -47,7 +47,7 @@ func testAccIPSet_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName2, ipsetName2, false),
+				Config: testAccIPSetConfig_basic(bucketName, keyName2, ipsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName2),
@@ -64,13 +64,13 @@ func testAccIPSet_tags(t *testing.T) {
 	resourceName := "aws_guardduty_ipset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIPSetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyIpsetConfigTags1(rName, "key1", "value1"),
+				Config: testAccIPSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -83,7 +83,7 @@ func testAccIPSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyIpsetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccIPSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -92,7 +92,7 @@ func testAccIPSet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyIpsetConfigTags1(rName, "key2", "value2"),
+				Config: testAccIPSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -161,14 +161,18 @@ func testAccCheckIPSetExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName string, activate bool) string {
+func testAccIPSetConfig_basic(bucketName, keyName, ipsetName string, activate bool) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = "%s"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -188,14 +192,18 @@ resource "aws_guardduty_ipset" "test" {
 `, bucketName, keyName, ipsetName, activate)
 }
 
-func testAccGuardDutyIpsetConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccIPSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -219,14 +227,18 @@ resource "aws_guardduty_ipset" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccGuardDutyIpsetConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccIPSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

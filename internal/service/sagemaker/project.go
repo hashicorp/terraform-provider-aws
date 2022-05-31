@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -117,17 +118,17 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateProject(input)
-	})
+	}, "ValidationException")
 	if err != nil {
-		return fmt.Errorf("error creating Sagemaker project: %w", err)
+		return fmt.Errorf("error creating SageMaker project: %w", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitProjectCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Sagemaker Project (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Project (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceProjectRead(d, meta)
@@ -142,7 +143,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find Sagemaker Project (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Project (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("error reading SageMaker Project (%s): %w", d.Id(), err)
@@ -201,7 +202,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := WaitProjectUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Sagemaker Project (%s) to be updated: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for SageMaker Project (%s) to be updated: %w", d.Id(), err)
 		}
 	}
 

@@ -18,10 +18,10 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPRuleGroupNamespaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPRuleGroupNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
@@ -56,10 +56,10 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPRuleGroupNamespaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPRuleGroupNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
@@ -86,7 +86,7 @@ func testAccCheckRuleGroupNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
-		_, err := tfamp.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func testAccCheckAMPRuleGroupNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfamp.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

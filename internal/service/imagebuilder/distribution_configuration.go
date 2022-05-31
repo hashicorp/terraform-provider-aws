@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -73,6 +73,22 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"organization_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"organizational_unit_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
 												"user_groups": {
 													Type:     schema.TypeSet,
 													Optional: true,
@@ -148,6 +164,30 @@ func ResourceDistributionConfiguration() *schema.Resource {
 												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"launch_template_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 100,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"default": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"launch_template_id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidLaunchTemplateID,
 									},
 								},
 							},
@@ -380,6 +420,32 @@ func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *ima
 	return apiObject
 }
 
+func expandLaunchTemplateConfigurations(tfList []interface{}) []*imagebuilder.LaunchTemplateConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*imagebuilder.LaunchTemplateConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandLaunchTemplateConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution {
 	if tfMap == nil {
 		return nil
@@ -393,6 +459,10 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 
 	if v, ok := tfMap["container_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ContainerDistributionConfiguration = expandContainerDistributionConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["launch_template_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LaunchTemplateConfigurations = expandLaunchTemplateConfigurations(v.List())
 	}
 
 	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -446,6 +516,14 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebui
 
 	apiObject := &imagebuilder.LaunchPermissionConfiguration{}
 
+	if v, ok := tfMap["organization_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationArns = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["organizational_unit_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationalUnitArns = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["user_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.UserIds = flex.ExpandStringSet(v)
 	}
@@ -470,6 +548,28 @@ func expandTargetContainerRepository(tfMap map[string]interface{}) *imagebuilder
 
 	if v, ok := tfMap["service"].(string); ok && v != "" {
 		apiObject.Service = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchTemplateConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.LaunchTemplateConfiguration{}
+
+	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v)
+	}
+
+	if v, ok := tfMap["default"].(bool); ok {
+		apiObject.SetDefaultVersion = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
 	}
 
 	return apiObject
@@ -531,6 +631,24 @@ func flattenContainerDistributionConfiguration(apiObject *imagebuilder.Container
 	return tfMap
 }
 
+func flattenLaunchTemplateConfigurations(apiObjects []*imagebuilder.LaunchTemplateConfiguration) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenLaunchTemplateConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
 func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -544,6 +662,10 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 
 	if v := apiObject.ContainerDistributionConfiguration; v != nil {
 		tfMap["container_distribution_configuration"] = []interface{}{flattenContainerDistributionConfiguration(v)}
+	}
+
+	if v := apiObject.LaunchTemplateConfigurations; v != nil {
+		tfMap["launch_template_configuration"] = flattenLaunchTemplateConfigurations(v)
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
@@ -582,6 +704,14 @@ func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissi
 
 	tfMap := map[string]interface{}{}
 
+	if v := apiObject.OrganizationArns; v != nil {
+		tfMap["organization_arns"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.OrganizationalUnitArns; v != nil {
+		tfMap["organizational_unit_arns"] = aws.StringValueSlice(v)
+	}
+
 	if v := apiObject.UserGroups; v != nil {
 		tfMap["user_groups"] = aws.StringValueSlice(v)
 	}
@@ -606,6 +736,28 @@ func flattenTargetContainerRepository(apiObject *imagebuilder.TargetContainerRep
 
 	if v := apiObject.Service; v != nil {
 		tfMap["service"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["launch_template_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SetDefaultVersion; v != nil {
+		tfMap["default"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
 	}
 
 	return tfMap

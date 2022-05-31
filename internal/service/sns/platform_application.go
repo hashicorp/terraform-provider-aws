@@ -9,11 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -172,7 +171,7 @@ func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{})
 		Attributes:             attributes,
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.SetPlatformApplicationAttributes(req)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
@@ -215,7 +214,7 @@ func resourcePlatformApplicationRead(d *schema.ResourceData, meta interface{}) e
 
 	output, err := conn.GetPlatformApplicationAttributes(input)
 
-	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

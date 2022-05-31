@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_object"
 description: |-
@@ -37,6 +37,10 @@ resource "aws_kms_key" "examplekms" {
 
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
@@ -53,6 +57,10 @@ resource "aws_s3_object" "example" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
@@ -69,6 +77,10 @@ resource "aws_s3_object" "example" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
@@ -85,18 +97,26 @@ resource "aws_s3_object" "example" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
+}
 
-  versioning {
-    enabled = true
-  }
-
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_object" "example" {
+resource "aws_s3_object" "examplebucket_object" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.example]
+
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"
@@ -129,7 +149,7 @@ The following arguments are optional:
 * `content_language` - (Optional) Language the content is in e.g., en-US or en-GB.
 * `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g., application/octet-stream. All Valid MIME Types are valid for this input.
 * `content` - (Optional, conflicts with `source` and `content_base64`) Literal string value to use as the object content, which will be uploaded as UTF-8-encoded text.
-* `etag` - (Optional) Triggers updates when the value changes. The only meaningful value is `filemd5("path/to/file")` (Terraform 0.11.12 or later) or `${md5(file("path/to/file"))}` (Terraform 0.11.11 or earlier). This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"` (see `source_hash` instead).
+* `etag` - (Optional) Triggers updates when the value changes. The only meaningful value is `filemd5("path/to/file")` (Terraform 0.11.12 or later) or `${md5(file("path/to/file"))}` (Terraform 0.11.11 or earlier). This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"`, also if an object is larger than 16 MB, the AWS Management Console will upload or copy that object as a Multipart Upload, and therefore the ETag will not be an MD5 digest (see `source_hash` instead).
 * `force_destroy` - (Optional) Whether to allow the object to be deleted by removing any legal hold on any object version. Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
 * `kms_key_id` - (Optional) ARN of the KMS Key to use for object encryption. If the S3 Bucket has server-side encryption enabled, that value will automatically be used. If referencing the `aws_kms_key` resource, use the `arn` attribute. If referencing the `aws_kms_alias` data source or resource, use the `target_key_arn` attribute. Terraform will only perform drift detection if a configuration value is provided.
 * `metadata` - (Optional) Map of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).

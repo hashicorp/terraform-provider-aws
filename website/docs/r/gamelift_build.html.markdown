@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_build"
 description: |-
-  Provides a Gamelift Build resource.
+  Provides a GameLift Build resource.
 ---
 
 # Resource: aws_gamelift_build
 
-Provides an Gamelift Build resource.
+Provides an GameLift Build resource.
 
 ## Example Usage
 
@@ -22,8 +22,6 @@ resource "aws_gamelift_build" "test" {
     key      = aws_s3_object.test.key
     role_arn = aws_iam_role.test.arn
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 ```
 
@@ -44,15 +42,20 @@ The following arguments are supported:
 * `bucket` - (Required) Name of your S3 bucket.
 * `key` - (Required) Name of the zip file containing your build files.
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
+* `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Gamelift Build ID.
-* `arn` - Gamelift Build ARN.
+* `id` - GameLift Build ID.
+* `arn` - GameLift Build ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Gamelift Builds cannot be imported at this time.
+GameLift Builds can be imported using the ID, e.g.,
+
+```
+$ terraform import aws_gamelift_build.example <build-id>
+```

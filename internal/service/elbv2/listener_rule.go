@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -58,7 +58,7 @@ func ResourceListenerRule() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
 			"action": {
@@ -557,7 +557,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		resp, err = conn.DescribeRules(req)
 		if err != nil {
-			if d.IsNewResource() && tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
+			if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
 				return resource.RetryableError(err)
 			} else {
 				return resource.NonRetryableError(err)
@@ -569,7 +569,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.DescribeRules(req)
 	}
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
@@ -885,7 +885,7 @@ func resourceListenerRuleDelete(d *schema.ResourceData, meta interface{}) error 
 	_, err := conn.DeleteRule(&elbv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
 		return fmt.Errorf("Error deleting LB Listener Rule: %w", err)
 	}
 	return nil
@@ -913,7 +913,7 @@ func retryListenerRuleCreate(conn *elbv2.ELBV2, d *schema.ResourceData, params *
 			params.Priority = aws.Int64(priority + 1)
 			resp, err = conn.CreateRule(params)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, elbv2.ErrCodePriorityInUseException, "") {
+				if tfawserr.ErrCodeEquals(err, elbv2.ErrCodePriorityInUseException) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)

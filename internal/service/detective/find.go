@@ -6,11 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindDetectiveGraphByArn(conn *detective.Detective, ctx context.Context, arn string) (*detective.Graph, error) {
+func FindGraphByARN(conn *detective.Detective, ctx context.Context, arn string) (*detective.Graph, error) {
 	input := &detective.ListGraphsInput{}
 	var result *detective.Graph
 
@@ -51,7 +51,7 @@ func FindDetectiveGraphByArn(conn *detective.Detective, ctx context.Context, arn
 	return result, nil
 }
 
-func FindInvitationByGraphArn(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
+func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
 	input := &detective.ListInvitationsInput{}
 
 	var result *string
@@ -85,7 +85,7 @@ func FindInvitationByGraphArn(ctx context.Context, conn *detective.Detective, gr
 	return result, nil
 }
 
-func FindMemberByGraphArnAndAccountID(ctx context.Context, conn *detective.Detective, graphARN string, accountID string) (*detective.MemberDetail, error) {
+func FindMemberByGraphARNAndAccountID(ctx context.Context, conn *detective.Detective, graphARN string, accountID string) (*detective.MemberDetail, error) {
 	input := &detective.ListMembersInput{
 		GraphArn: aws.String(graphARN),
 	}

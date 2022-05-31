@@ -22,10 +22,10 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	sourceKey := "WshngtnNtnls"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectCopyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key),
@@ -46,10 +46,10 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	resourceName := "aws_s3_object_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectCopyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_BucketKeyEnabled_Bucket(rName),
@@ -67,10 +67,10 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	resourceName := "aws_s3_object_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectCopyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_BucketKeyEnabled_Object(rName),
@@ -179,19 +179,24 @@ resource "aws_s3_object" "source" {
 
 resource "aws_s3_bucket" "target" {
   bucket = "%[1]s-target"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.test.arn
-        sse_algorithm     = "aws:kms"
-      }
-      bucket_key_enabled = true
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.target.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.test.arn
+      sse_algorithm     = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 
 resource "aws_s3_object_copy" "test" {
+  # Must have bucket SSE enabled first
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
   bucket = aws_s3_bucket.target.bucket
   key    = "test"
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"

@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
 description: |-
@@ -11,6 +11,8 @@ description: |-
 `aws_subnet_ids` provides a set of ids for a vpc_id
 
 This resource can be useful for getting back a set of subnet ids for a vpc.
+
+~> **NOTE:** The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the [`aws_subnets`](subnets.html) data source instead.
 
 ## Example Usage
 

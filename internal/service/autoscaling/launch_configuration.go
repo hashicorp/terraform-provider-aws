@@ -1,26 +1,24 @@
 package autoscaling
 
 import ( // nosemgrep: aws-sdk-go-multiple-service-imports
-	"bytes"
+
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -30,6 +28,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 		Create: resourceLaunchConfigurationCreate,
 		Read:   resourceLaunchConfigurationRead,
 		Delete: resourceLaunchConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,137 +38,12 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(1, 255),
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
-			},
-
-			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"user_data": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data_base64"},
-				StateFunc: func(v interface{}) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
-				ValidateFunc: validation.StringLenBetween(1, 16384),
-			},
-
-			"user_data_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
-			},
-
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
-
-			"spot_price": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"placement_tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"enable_monitoring": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -182,54 +56,46 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-
 						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"no_device": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -239,7 +105,18 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"enable_monitoring": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  true,
+			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -249,23 +126,42 @@ func ResourceLaunchConfiguration() *schema.Resource {
 						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
-
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
 						"virtual_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"iam_instance_profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"image_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"key_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -281,13 +177,6 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataEndpointStateEnabled, autoscaling.InstanceMetadataEndpointStateDisabled}, false),
 						},
-						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
-						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -295,10 +184,37 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
+						},
 					},
 				},
 			},
-
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(1, 255),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
+			},
+			"placement_tenancy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"root_block_device": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -315,35 +231,30 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -352,6 +263,59 @@ func ResourceLaunchConfiguration() *schema.Resource {
 						},
 					},
 				},
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"spot_price": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"user_data": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data_base64"},
+				StateFunc: func(v interface{}) string {
+					switch v := v.(type) {
+					case string:
+						return userDataHashSum(v)
+					default:
+						return ""
+					}
+				},
+				ValidateFunc: validation.StringLenBetween(1, 16384),
+			},
+			"user_data_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data"},
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					if !verify.IsBase64Encoded([]byte(s)) {
+						errs = append(errs, fmt.Errorf(
+							"%s: must be base64-encoded", name,
+						))
+					}
+					return
+				},
+			},
+			"vpc_classic_link_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"vpc_classic_link_security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
@@ -482,10 +446,19 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
-			})
+			bdm := &autoscaling.BlockDeviceMapping{
+				DeviceName: aws.String(bd["device_name"].(string)),
+			}
+
+			if v, ok := bd["no_device"].(bool); ok && v {
+				bdm.NoDevice = aws.Bool(true)
+			}
+
+			if v, ok := bd["virtual_name"].(string); ok && v != "" {
+				bdm.VirtualName = aws.String(v)
+			}
+
+			blockDevices = append(blockDevices, bdm)
 		}
 	}
 
@@ -541,7 +514,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IamInstanceProfile") {
@@ -570,28 +543,17 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
-	describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
-		LaunchConfigurationNames: []*string{aws.String(d.Id())},
-	}
+	lc, err := FindLaunchConfigurationByName(autoscalingconn, d.Id())
 
-	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
-	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
-	if err != nil {
-		return fmt.Errorf("Error retrieving launch configuration: %w", err)
-	}
-	if len(describConfs.LaunchConfigurations) == 0 && !d.IsNewResource() {
-		log.Printf("[WARN] Launch Configuration (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Autoscaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	// Verify AWS returned our launch configuration
-	if aws.StringValue(describConfs.LaunchConfigurations[0].LaunchConfigurationName) != d.Id() {
-		return fmt.Errorf("Unable to find launch configuration: %#v", describConfs.LaunchConfigurations)
+	if err != nil {
+		return fmt.Errorf("error reading Autoscaling Launch Configuration (%s): %w", d.Id(), err)
 	}
-
-	lc := describConfs.LaunchConfigurations[0]
-	log.Printf("[DEBUG] launch configuration output: %s", lc)
 
 	d.Set("key_name", lc.KeyName)
 	d.Set("image_id", lc.ImageId)
@@ -634,37 +596,23 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	input := &autoscaling.DeleteLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
-	// Retry for Autoscaling eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
+	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteLaunchConfiguration(&autoscaling.DeleteLaunchConfigurationInput{
+				LaunchConfigurationName: aws.String(d.Id()),
+			})
+		},
+		autoscaling.ErrCodeResourceInUseFault)
 
-		if tfawserr.ErrMessageContains(err, autoscaling.ErrCodeResourceInUseFault, "") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") {
-			return nil
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = autoscalingconn.DeleteLaunchConfiguration(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -880,4 +828,69 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	}
 
 	return rootDeviceName, nil
+}
+
+func findLaunchConfiguration(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.LaunchConfiguration, error) {
+	output, err := findLaunchConfigurations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func findLaunchConfigurations(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) ([]*autoscaling.LaunchConfiguration, error) {
+	var output []*autoscaling.LaunchConfiguration
+
+	err := conn.DescribeLaunchConfigurationsPages(input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LaunchConfigurations {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindLaunchConfigurationByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.LaunchConfiguration, error) {
+	input := &autoscaling.DescribeLaunchConfigurationsInput{
+		LaunchConfigurationNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := findLaunchConfiguration(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.LaunchConfigurationName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

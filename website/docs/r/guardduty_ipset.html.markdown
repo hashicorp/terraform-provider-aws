@@ -27,11 +27,15 @@ resource "aws_guardduty_detector" "primary" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  acl = "private"
+  # ... other configuration
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "MyIPSet" {
-  acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.bucket.id
   key     = "MyIPSet"

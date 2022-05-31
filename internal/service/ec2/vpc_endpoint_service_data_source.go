@@ -117,7 +117,7 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if tagsOk {
-		req.Filters = append(req.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+		req.Filters = append(req.Filters, tagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
 
 	log.Printf("[DEBUG] Reading VPC Endpoint Service: %s", req)

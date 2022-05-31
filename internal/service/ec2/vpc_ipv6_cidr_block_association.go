@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,12 +42,9 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					validation.All(
-						verify.ValidIPv6CIDRNetworkAddress,
-						validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
-				),
+				ValidateFunc: validation.All(
+					verify.ValidIPv6CIDRNetworkAddress,
+					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
 			},
 			// ipam parameters are not required by the API but other usage mechanisms are not implemented yet. TODO ipv6 options:
 			// --amazon-provided-ipv6-cidr-block
@@ -147,7 +144,7 @@ func resourceVPCIPv6CIDRBlockAssociationDelete(d *schema.ResourceData, meta inte
 		AssociationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcCidrBlockAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return nil
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -111,7 +111,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(activatedRules) > 0 {
 		noActivatedRules := []interface{}{}
 
-		err := updateWafRuleGroupResource(d.Id(), noActivatedRules, activatedRules, conn)
+		err := updateRuleGroupResource(d.Id(), noActivatedRules, activatedRules, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
 		}
@@ -131,7 +131,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -185,7 +185,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("activated_rule")
 		oldRules, newRules := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWafRuleGroupResource(d.Id(), oldRules, newRules, conn)
+		err := updateRuleGroupResource(d.Id(), oldRules, newRules, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
 		}
@@ -206,15 +206,15 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
-	err := deleteWafRuleGroup(d.Id(), oldRules, conn)
+	err := deleteRuleGroup(d.Id(), oldRules, conn)
 
 	return err
 }
 
-func deleteWafRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error {
+func deleteRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error {
 	if len(oldRules) > 0 {
 		noRules := []interface{}{}
-		err := updateWafRuleGroupResource(id, oldRules, noRules, conn)
+		err := updateRuleGroupResource(id, oldRules, noRules, conn)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Rule Group Predicates: %s", err)
 		}
@@ -235,7 +235,7 @@ func deleteWafRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error 
 	return nil
 }
 
-func updateWafRuleGroupResource(id string, oldRules, newRules []interface{}, conn *waf.WAF) error {
+func updateRuleGroupResource(id string, oldRules, newRules []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleGroupInput{

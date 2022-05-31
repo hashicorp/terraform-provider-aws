@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -146,7 +146,7 @@ var (
 		},
 	}
 
-	sqsQueueAttributeMap = attrmap.New(map[string]string{
+	queueAttributeMap = attrmap.New(map[string]string{
 		"arn":                               sqs.QueueAttributeNameQueueArn,
 		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
 		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
@@ -201,7 +201,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		QueueName: aws.String(name),
 	}
 
-	attributes, err := sqsQueueAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	output := outputRaw.(map[string]string)
 
-	err = sqsQueueAttributeMap.ApiAttributesToResourceData(output, d)
+	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 
 	if err != nil {
 		return err
@@ -336,7 +336,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		attributes, err := sqsQueueAttributeMap.ResourceDataToApiAttributesUpdate(d)
+		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 		if err != nil {
 			return err

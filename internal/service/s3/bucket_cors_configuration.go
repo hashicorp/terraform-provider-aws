@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -98,9 +100,9 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketCorsWithContext(ctx, input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) CORS configuration: %w", bucket, err))
@@ -127,7 +129,9 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketCorsWithContext(ctx, input)
+	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+		return conn.GetBucketCorsWithContext(ctx, input)
+	}, ErrCodeNoSuchCORSConfiguration)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchCORSConfiguration) {
 		log.Printf("[WARN] S3 Bucket CORS Configuration (%s) not found, removing from state", d.Id())
@@ -139,7 +143,8 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error reading S3 bucket CORS configuration (%s): %w", d.Id(), err))
 	}
 
-	if output == nil {
+	output, ok := corsResponse.(*s3.GetBucketCorsOutput)
+	if !ok || output == nil {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading S3 bucket CORS configuration (%s): empty output", d.Id()))
 		}

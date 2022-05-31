@@ -19,7 +19,12 @@ resource "aws_guardduty_detector" "primary" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  acl = "private"
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "MyThreatIntelSet" {

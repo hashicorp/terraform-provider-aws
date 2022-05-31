@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -36,7 +36,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validName,
+				ValidateFunc:  validNameForResource,
 			},
 
 			"name_prefix": {
@@ -45,7 +45,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validName,
+				ValidateFunc:  validNameForResource,
 			},
 
 			"target_key_arn": {
@@ -56,7 +56,7 @@ func ResourceAlias() *schema.Resource {
 			"target_key_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentKmsKeyARNOrID,
+				DiffSuppressFunc: suppressEquivalentKeyARNOrID,
 			},
 		},
 	}
@@ -166,6 +166,6 @@ func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func suppressEquivalentKmsKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
+func suppressEquivalentKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
 	return KeyARNOrIDEqual(old, new)
 }

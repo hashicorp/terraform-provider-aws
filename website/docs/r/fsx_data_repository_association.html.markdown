@@ -1,5 +1,5 @@
 ---
-subcategory: "File System (FSx)"
+subcategory: "FSx"
 layout: "aws"
 page_title: "AWS: aws_fsx_data_repository_association"
 description: |-
@@ -16,8 +16,12 @@ Manages a FSx for Lustre Data Repository Association. See [Linking your file sys
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  acl    = "private"
   bucket = "my-bucket"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "example" {

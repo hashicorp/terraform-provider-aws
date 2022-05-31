@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -37,11 +37,15 @@ var SweeperClients map[string]interface{}
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
 func SharedRegionalSweepClient(region string) (interface{}, error) {
+	return SharedRegionalSweepClientWithContext(context.Background(), region)
+}
+
+func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
 	if client, ok := SweeperClients[region]; ok {
 		return client, nil
 	}
 
-	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullUri}, "credentials for running sweepers")
+	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullURI}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
@@ -54,35 +58,36 @@ func SharedRegionalSweepClient(region string) (interface{}, error) {
 	}
 
 	conf := &conns.Config{
-		MaxRetries: 5,
-		Region:     region,
+		MaxRetries:       5,
+		Region:           region,
+		SuppressDebugLog: true,
 	}
 
 	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
-		conf.AssumeRoleARN = role
+		conf.AssumeRole.RoleARN = role
 
-		conf.AssumeRoleDurationSeconds = defaultSweeperAssumeRoleDurationSeconds
+		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
 		if v := os.Getenv(conns.EnvVarAssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
 				return nil, fmt.Errorf("environment variable %s: %w", conns.EnvVarAssumeRoleDuration, err)
 			}
-			conf.AssumeRoleDurationSeconds = d
+			conf.AssumeRole.Duration = time.Duration(d) * time.Second
 		}
 
 		if v := os.Getenv(conns.EnvVarAssumeRoleExternalID); v != "" {
-			conf.AssumeRoleExternalID = v
+			conf.AssumeRole.ExternalID = v
 		}
 
 		if v := os.Getenv(conns.EnvVarAssumeRoleSessionName); v != "" {
-			conf.AssumeRoleSessionName = v
+			conf.AssumeRole.SessionName = v
 		}
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, err := conf.Client()
-	if err != nil {
-		return nil, fmt.Errorf("error getting AWS client: %w", err)
+	client, diags := conf.Client(ctx)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
 	}
 
 	SweeperClients[region] = client
@@ -105,10 +110,10 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 }
 
 func SweepOrchestrator(sweepResources []*SweepResource) error {
-	return SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+	return SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
 }
 
-func SweepOrchestratorContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+func SweepOrchestratorWithContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {

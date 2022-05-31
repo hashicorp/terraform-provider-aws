@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,13 +18,13 @@ func testAccDetector_basic(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfig_basic1,
+				Config: testAccDetectorConfig_basic1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
@@ -40,21 +40,21 @@ func testAccDetector_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyDetectorConfig_basic2,
+				Config: testAccDetectorConfig_basic2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "false"),
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfig_basic3,
+				Config: testAccDetectorConfig_basic3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfig_basic4,
+				Config: testAccDetectorConfig_basic4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
@@ -68,13 +68,13 @@ func testAccDetector_tags(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfigTags1("key1", "value1"),
+				Config: testAccDetectorConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -87,7 +87,7 @@ func testAccDetector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccDetectorConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -96,7 +96,7 @@ func testAccDetector_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigTags1("key2", "value2"),
+				Config: testAccDetectorConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -111,13 +111,13 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesS3Logs(true),
+				Config: testAccDetectorConfig_datasourcesS3Logs(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -131,7 +131,7 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesS3Logs(false),
+				Config: testAccDetectorConfig_datasourcesS3Logs(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -216,29 +216,29 @@ func testAccCheckDetectorExists(name string) resource.TestCheckFunc {
 	}
 }
 
-const testAccGuardDutyDetectorConfig_basic1 = `
+const testAccDetectorConfig_basic1 = `
 resource "aws_guardduty_detector" "test" {}
 `
 
-const testAccGuardDutyDetectorConfig_basic2 = `
+const testAccDetectorConfig_basic2 = `
 resource "aws_guardduty_detector" "test" {
   enable = false
 }
 `
 
-const testAccGuardDutyDetectorConfig_basic3 = `
+const testAccDetectorConfig_basic3 = `
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
 `
 
-const testAccGuardDutyDetectorConfig_basic4 = `
+const testAccDetectorConfig_basic4 = `
 resource "aws_guardduty_detector" "test" {
   finding_publishing_frequency = "FIFTEEN_MINUTES"
 }
 `
 
-func testAccGuardDutyDetectorConfigTags1(tagKey1, tagValue1 string) string {
+func testAccDetectorConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   tags = {
@@ -248,7 +248,7 @@ resource "aws_guardduty_detector" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccGuardDutyDetectorConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDetectorConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   tags = {
@@ -259,7 +259,7 @@ resource "aws_guardduty_detector" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccGuardDutyDetectorConfigDatasourcesS3Logs(enable bool) string {
+func testAccDetectorConfig_datasourcesS3Logs(enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   datasources {

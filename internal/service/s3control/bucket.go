@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,7 +22,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for s3control Bucket state to propagate
-	s3controlBucketStatePropagationTimeout = 5 * time.Minute
+	bucketStatePropagationTimeout = 5 * time.Minute
 )
 
 func ResourceBucket() *schema.Resource {
@@ -213,7 +213,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	// S3 Control Bucket have a backend state which cannot be checked so this error
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
-	err = resource.Retry(s3controlBucketStatePropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(bucketStatePropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteBucket(input)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidBucketState") {

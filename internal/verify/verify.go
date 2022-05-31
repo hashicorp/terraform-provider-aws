@@ -1,7 +1,7 @@
 package verify
 
 import (
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -41,6 +41,7 @@ const (
 	ErrCodeInternalServiceError        = "InternalServiceError"
 	ErrCodeInvalidAction               = "InvalidAction"
 	ErrCodeInvalidParameterException   = "InvalidParameterException"
+	ErrCodeInvalidParameterValue       = "InvalidParameterValue"
 	ErrCodeInvalidRequest              = "InvalidRequest"
 	ErrCodeOperationDisabledException  = "OperationDisabledException"
 	ErrCodeOperationNotPermitted       = "OperationNotPermitted"
@@ -73,6 +74,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterValue) {
 		return true
 	}
 

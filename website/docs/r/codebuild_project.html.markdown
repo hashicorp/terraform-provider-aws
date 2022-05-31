@@ -15,6 +15,10 @@ Provides a CodeBuild Project resource. See also the [`aws_codebuild_webhook` res
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
   acl    = "private"
 }
 

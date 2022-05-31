@@ -2,6 +2,7 @@ package kms
 
 import (
 	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,6 +47,10 @@ func DataSourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"public_key_pem": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"signing_algorithms": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -79,6 +84,10 @@ func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
 	d.Set("key_usage", output.KeyUsage)
 	d.Set("public_key", base64.StdEncoding.EncodeToString(output.PublicKey))
+	d.Set("public_key_pem", string(pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: output.PublicKey,
+	})))
 
 	if err := d.Set("encryption_algorithms", flex.FlattenStringList(output.EncryptionAlgorithms)); err != nil {
 		return fmt.Errorf("error setting encryption_algorithms: %w", err)

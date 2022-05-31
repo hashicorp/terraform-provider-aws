@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -101,10 +101,10 @@ func sweepObjects(region string) error {
 		}
 
 		// Delete everything including locked objects. Ignore any object errors.
-		err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
+		_, err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
 
 		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
+			return fmt.Errorf("error deleting S3 Bucket (%s) Objects: %s", bucketName, err)
 		}
 	}
 
@@ -179,11 +179,11 @@ func sweepBuckets(region string) error {
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
-			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 				return nil
 			}
 
-			if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
+			if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
 				return resource.RetryableError(err)
 			}
 
@@ -224,7 +224,7 @@ func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 
 	output, err := conn.GetObjectLockConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
+	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
 		return false, nil
 	}
 

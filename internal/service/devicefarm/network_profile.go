@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -199,7 +199,7 @@ func resourceNetworkProfileRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("uplink_loss_percent", project.UplinkLossPercent)
 	d.Set("type", project.Type)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "networkprofile", meta)
+	projectArn, err := decodeProjectARN(arn, "networkprofile", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
@@ -306,7 +306,7 @@ func resourceNetworkProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Deleting DeviceFarm Network Profile: %s", d.Id())
 	_, err := conn.DeleteNetworkProfile(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Network Profile: %w", err)

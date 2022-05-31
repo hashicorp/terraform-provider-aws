@@ -1,11 +1,11 @@
-```release-note:note
-data-source/aws_s3_bucket_object: The data source has been renamed. Use `aws_s3_object` instead
+```release-note:new-resource
+aws_s3_object
 ```
 
-```release-note:note
-data-source/aws_s3_bucket_objects: The data source has been renamed. Use `aws_s3_objects` instead
+```release-note:new-data-source
+aws_s3_object
 ```
 
-```release-note:note
-resource/aws_s3_bucket_object: The resource has been renamed. Use `aws_s3_object` instead
+```release-note:new-data-source
+aws_s3_objects
 ```

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	WafRuleDeleteTimeout = 5 * time.Minute
+	RuleDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceRule() *schema.Resource {
@@ -109,7 +109,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	newPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRuleResource(d.Id(), noPredicates, newPredicates, conn)
+		err := updateRuleResource(d.Id(), noPredicates, newPredicates, conn)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Rule (%s): %w", d.Id(), err)
 		}
@@ -198,7 +198,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWafRuleResource(d.Id(), oldP, newP, conn)
+		err := updateRuleResource(d.Id(), oldP, newP, conn)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Rule (%s): %w", d.Id(), err)
 		}
@@ -221,14 +221,14 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRuleResource(d.Id(), oldPredicates, noPredicates, conn)
+		err := updateRuleResource(d.Id(), oldPredicates, noPredicates, conn)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Rule (%s) predicates: %w", d.Id(), err)
 		}
 	}
 
 	wr := NewRetryer(conn)
-	err := resource.Retry(WafRuleDeleteTimeout, func() *resource.RetryError {
+	err := resource.Retry(RuleDeleteTimeout, func() *resource.RetryError {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRuleInput{
 				ChangeToken: token,
@@ -269,7 +269,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateWafRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
+func updateRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleInput{

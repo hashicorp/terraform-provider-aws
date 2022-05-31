@@ -17,9 +17,9 @@ func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
 	profileName := fmt.Sprintf("tf-acc-ds-instance-profile-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileDataSourceConfig(roleName, profileName),

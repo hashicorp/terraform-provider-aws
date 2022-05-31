@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -110,7 +110,7 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 
 	request := &ec2.CreateSnapshotInput{
 		VolumeId:          aws.String(d.Get("volume_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		request.Description = aws.String(v.(string))
@@ -278,7 +278,7 @@ func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
 			SnapshotId: aws.String(d.Id()),
 		})
-	}, ErrCodeInvalidSnapshotInUse)
+	}, errCodeInvalidSnapshotInUse)
 
 	if err != nil {
 		return fmt.Errorf("error deleting EBS Snapshot (%s): %w", d.Id(), err)
@@ -297,7 +297,7 @@ func resourceEBSSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) 
 		if err == nil {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotReady") {
 			return resource.RetryableError(fmt.Errorf("EBS Snapshot - waiting for snapshot to become available"))
 		}
 		return resource.NonRetryableError(err)

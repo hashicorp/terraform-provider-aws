@@ -17,7 +17,7 @@ resource "aws_detective_graph" "example" {}
 
 resource "aws_detective_member" "example" {
   account_id                 = "AWS ACCOUNT ID"
-  email                      = "EMAIL"
+  email_address              = "EMAIL"
   graph_arn                  = aws_detective_graph.example.id
   message                    = "Message of the invitation"
   disable_email_notification = true

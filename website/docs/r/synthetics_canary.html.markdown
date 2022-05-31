@@ -1,5 +1,5 @@
 ---
-subcategory: "Synthetics"
+subcategory: "CloudWatch Synthetics"
 layout: "aws"
 page_title: "AWS: aws_synthetics_canary"
 description: |-
@@ -60,8 +60,8 @@ The following arguments are optional:
 
 ### s3_encryption
 
-* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE-S3` and `SSE-KMS`.
-* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE-KMS` for `encryption_mode`.
+* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE_S3` and `SSE_KMS`.
+* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE_KMS` for `encryption_mode`.
 
 ### schedule
 
@@ -73,6 +73,7 @@ The following arguments are optional:
 * `timeout_in_seconds` - (Optional) Number of seconds the canary is allowed to run before it must stop. If you omit this field, the frequency of the canary is used, up to a maximum of 840 (14 minutes).
 * `memory_in_mb` - (Optional) Maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
 * `active_tracing` - (Optional) Whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
+* `environment_variables` - (Optional) Map of environment variables that are accessible from the canary during execution. Please see [AWS Docs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime) for variables reserved for Lambda.
 
 ### vpc_config
 

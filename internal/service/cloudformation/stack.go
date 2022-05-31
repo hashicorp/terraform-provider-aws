@@ -1,22 +1,23 @@
 package cloudformation
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceStack() *schema.Resource {
@@ -37,25 +38,6 @@ func ResourceStack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"template_body": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidStringIsJSONOrYAML,
-				StateFunc: func(v interface{}) string {
-					template, _ := verify.NormalizeJSONOrYAMLString(v)
-					return template
-				},
-			},
-			"template_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -70,6 +52,15 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"iam_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"notification_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -82,14 +73,14 @@ func ResourceStack() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(cloudformation.OnFailure_Values(), false),
 			},
-			"parameters": {
+			"outputs": {
 				Type:     schema.TypeMap,
-				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"outputs": {
+			"parameters": {
 				Type:     schema.TypeMap,
+				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -107,16 +98,26 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"template_body": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidStringIsJSONOrYAML,
+				StateFunc: func(v interface{}) string {
+					template, _ := verify.NormalizeJSONOrYAMLString(v)
+					return template
+				},
+			},
+			"template_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"timeout_in_minutes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"iam_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 		},
 
@@ -183,7 +184,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	outputRaw, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateStack(input)
 		},
@@ -218,27 +219,36 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		StackName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeStacks(input)
-	if tfawserr.ErrCodeEquals(err, "ValidationError") {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ValidationError") {
+		names.LogNotFoundRemoveState(names.CloudFormation, names.ErrActionReading, ResStack, d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), err)
 	}
 
 	stacks := resp.Stacks
-	if len(stacks) < 1 {
+	if !d.IsNewResource() && len(stacks) < 1 {
+		names.LogNotFoundRemoveState(names.CloudFormation, names.ErrActionReading, ResStack, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && len(stacks) < 1 {
+		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), errors.New("not found after creation"))
+	}
+
+	stack := stacks[0]
+	if !d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	stack := stacks[0]
-	if aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
+		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), errors.New("status delete complete after creation"))
 	}
 
 	tInput := cloudformation.GetTemplateInput{
@@ -260,13 +270,8 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", stack.StackName)
 	d.Set("iam_role_arn", stack.RoleARN)
+	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
 
-	if stack.TimeoutInMinutes != nil {
-		d.Set("timeout_in_minutes", int(*stack.TimeoutInMinutes))
-	}
-	if stack.Description != nil {
-		d.Set("description", stack.Description)
-	}
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)
 
@@ -372,7 +377,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation Stack: %s", input)
-	_, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
+	_, err := tfresource.RetryWhen(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.UpdateStack(input)
 		},
@@ -385,11 +390,12 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed") {
 		return fmt.Errorf("error updating CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack (%s) update: %w", d.Id(), err)
 	}

@@ -2,12 +2,13 @@ package memorydb
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -498,25 +499,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
 
-	// The configured value of num_replicas_per_shard cannot be read back, so
-	// assume that it's the same as that of the largest shard.
-	//
-	// For the sake of caution, limit this search to stable shards.
-	var maxNumberOfNodesPerShard int64
-	for _, shard := range cluster.Shards {
-		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
-			continue
-		}
-
-		n := aws.Int64Value(shard.NumberOfNodes)
-		if n > maxNumberOfNodesPerShard {
-			maxNumberOfNodesPerShard = n
-		}
+	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
+	if err != nil {
+		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
-	if maxNumberOfNodesPerShard == 0 {
-		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): no available shards found", d.Id())
-	}
-	d.Set("num_replicas_per_shard", maxNumberOfNodesPerShard-1)
+	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
 	d.Set("parameter_group_name", cluster.ParameterGroupName)
@@ -650,4 +637,30 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 	}
 
 	return shardSet
+}
+
+// deriveClusterNumReplicasPerShard determines the replicas per shard
+// configuration of a cluster. As this cannot directly be read back, we
+// assume that it's the same as that of the largest shard.
+//
+// For the sake of caution, this search is limited to stable shards.
+func deriveClusterNumReplicasPerShard(cluster *memorydb.Cluster) (int, error) {
+	var maxNumberOfNodesPerShard int64
+
+	for _, shard := range cluster.Shards {
+		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
+			continue
+		}
+
+		n := aws.Int64Value(shard.NumberOfNodes)
+		if n > maxNumberOfNodesPerShard {
+			maxNumberOfNodesPerShard = n
+		}
+	}
+
+	if maxNumberOfNodesPerShard == 0 {
+		return 0, fmt.Errorf("no available shards found")
+	}
+
+	return int(maxNumberOfNodesPerShard - 1), nil
 }

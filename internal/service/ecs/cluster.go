@@ -4,26 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	ecsClusterTimeoutDelete = 10 * time.Minute
-	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -226,7 +219,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
 	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while creating: %w", d.Id(), err)
 	}
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
@@ -267,6 +260,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
 		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
@@ -310,12 +304,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Cluster (%s): %s", d.Id(), err)
-		return nil
-	}
-
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -350,7 +338,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while updating setting and configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -368,7 +356,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while updating capacity_providers, default_capacity_provider_strategy: %w", d.Id(), err)
 		}
 	}
 
@@ -398,7 +386,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
@@ -406,19 +394,19 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "ClusterContainsContainerInstancesException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsContainerInstancesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, "ClusterContainsServicesException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsServicesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, "ClusterContainsTasksException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsTasksException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
+		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
@@ -441,7 +429,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryClusterCreate(conn *ecs.ECS, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
 	var output *ecs.CreateClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateCluster(input)
 
