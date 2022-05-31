@@ -207,9 +207,27 @@ func testAccCheckDetectorDestroy(s *terraform.State) error {
 
 func testAccCheckDetectorExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Resource (%s) has empty ID", name)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+
+		output, err := conn.GetDetector(&guardduty.GetDetectorInput{
+			DetectorId: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if output == nil {
+			return fmt.Errorf("GuardDuty Detector not found: %s", name)
 		}
 
 		return nil
