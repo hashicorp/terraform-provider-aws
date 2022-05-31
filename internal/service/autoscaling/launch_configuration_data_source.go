@@ -224,14 +224,29 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 		d.Set("metadata_options", nil)
 	}
 	d.Set("name", lc.LaunchConfigurationName)
+	d.Set("placement_tenancy", lc.PlacementTenancy)
 	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("user_data", lc.UserData)
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
-	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
+	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+
+	if err != nil {
 		return err
+	}
+
+	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, map[string]map[string]interface{}{})
+
+	if err := d.Set("ebs_block_device", tfListEBSBlockDevice); err != nil {
+		return fmt.Errorf("setting ebs_block_device: %w", err)
+	}
+	if err := d.Set("ephemeral_block_device", tfListEphemeralBlockDevice); err != nil {
+		return fmt.Errorf("setting ephemeral_block_device: %w", err)
+	}
+	if err := d.Set("root_block_device", tfListRootBlockDevice); err != nil {
+		return fmt.Errorf("setting root_block_device: %w", err)
 	}
 
 	return nil

@@ -5,7 +5,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"log"
 
@@ -377,8 +376,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
-	imageID := d.Get("image_id").(string)
-	rootDeviceName, err := findImageRootDeviceName(ec2conn, imageID)
+	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
 
 	if err != nil {
 		return err
@@ -490,8 +488,39 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
-	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
+	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+
+	if tfresource.NotFound(err) {
+		// Don't block a refresh for a bad image.
+		rootDeviceName = ""
+	} else if err != nil {
 		return err
+	}
+
+	configuredEBSBlockDevices := make(map[string]map[string]interface{})
+
+	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			tfMap, ok := v.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			configuredEBSBlockDevices[tfMap["device_name"].(string)] = tfMap
+		}
+	}
+
+	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, configuredEBSBlockDevices)
+
+	if err := d.Set("ebs_block_device", tfListEBSBlockDevice); err != nil {
+		return fmt.Errorf("setting ebs_block_device: %w", err)
+	}
+	if err := d.Set("ephemeral_block_device", tfListEphemeralBlockDevice); err != nil {
+		return fmt.Errorf("setting ephemeral_block_device: %w", err)
+	}
+	if err := d.Set("root_block_device", tfListRootBlockDevice); err != nil {
+		return fmt.Errorf("setting root_block_device: %w", err)
 	}
 
 	return nil
@@ -515,29 +544,6 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 
 	if err != nil {
 		return fmt.Errorf("deleting Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func readLCBlockDevices(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, ec2conn *ec2.EC2) error {
-	ibds, err := readBlockDevicesFromLaunchConfiguration(d, lc, ec2conn)
-	if err != nil {
-		return err
-	}
-
-	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
-		return err
-	}
-	if err := d.Set("ephemeral_block_device", ibds["ephemeral"]); err != nil {
-		return err
-	}
-	if ibds["root"] != nil {
-		if err := d.Set("root_block_device", []interface{}{ibds["root"]}); err != nil {
-			return err
-		}
-	} else {
-		d.Set("root_block_device", []interface{}{})
 	}
 
 	return nil
@@ -673,6 +679,89 @@ func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interfac
 	return apiObjects
 }
 
+func flattenBlockDeviceMappings(apiObjects []*autoscaling.BlockDeviceMapping, rootDeviceName string, configuredEBSBlockDevices map[string]map[string]interface{}) ([]interface{}, []interface{}, []interface{}) {
+	if len(apiObjects) == 0 {
+		return nil, nil, nil
+	}
+
+	var tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.NoDevice; v != nil {
+			if v, ok := configuredEBSBlockDevices[aws.StringValue(apiObject.DeviceName)]; ok {
+				tfMap["delete_on_termination"] = v["delete_on_termination"].(bool)
+			} else {
+				// Keep existing value in place to avoid spurious diff.
+				tfMap["delete_on_termination"] = true
+			}
+		} else if v := apiObject.Ebs; v != nil {
+			if v := v.DeleteOnTermination; v != nil {
+				tfMap["delete_on_termination"] = aws.BoolValue(v)
+			}
+		}
+
+		if v := apiObject.Ebs; v != nil {
+			if v := v.Encrypted; v != nil {
+				tfMap["encrypted"] = aws.BoolValue(v)
+			}
+
+			if v := v.Iops; v != nil {
+				tfMap["iops"] = aws.Int64Value(v)
+			}
+
+			if v := v.Throughput; v != nil {
+				tfMap["throughput"] = aws.Int64Value(v)
+			}
+
+			if v := v.VolumeSize; v != nil {
+				tfMap["volume_size"] = aws.Int64Value(v)
+			}
+
+			if v := v.VolumeType; v != nil {
+				tfMap["volume_type"] = aws.StringValue(v)
+			}
+		}
+
+		if v := apiObject.DeviceName; aws.StringValue(v) == rootDeviceName {
+			tfListRootBlockDevice = append(tfListRootBlockDevice, tfMap)
+
+			continue
+		}
+
+		if v := apiObject.DeviceName; v != nil {
+			tfMap["device_name"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.VirtualName; v != nil {
+			tfMap["virtual_name"] = aws.StringValue(v)
+
+			tfListEphemeralBlockDevice = append(tfListEphemeralBlockDevice, tfMap)
+
+			continue
+		}
+
+		if v := apiObject.NoDevice; v != nil {
+			tfMap["no_device"] = aws.BoolValue(v)
+		}
+
+		if v := apiObject.Ebs; v != nil {
+			if v := v.SnapshotId; v != nil {
+				tfMap["snapshot_id"] = aws.StringValue(v)
+			}
+		}
+
+		tfListEBSBlockDevice = append(tfListEBSBlockDevice, tfMap)
+	}
+
+	return tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice
+}
+
 func expandInstanceMetadataOptions(tfMap map[string]interface{}) *autoscaling.InstanceMetadataOptions {
 	if tfMap == nil {
 		return nil
@@ -719,87 +808,6 @@ func flattenInstanceMetadataOptions(apiObject *autoscaling.InstanceMetadataOptio
 	return tfMap
 }
 
-func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, ec2conn *ec2.EC2) (
-	map[string]interface{}, error) {
-	blockDevices := make(map[string]interface{})
-	blockDevices["ebs"] = make([]map[string]interface{}, 0)
-	blockDevices["ephemeral"] = make([]map[string]interface{}, 0)
-	blockDevices["root"] = nil
-	if len(lc.BlockDeviceMappings) == 0 {
-		return nil, nil
-	}
-	v, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn)
-	if err != nil {
-		return nil, err
-	}
-	rootDeviceName := aws.StringValue(v)
-
-	// Collect existing configured devices, so we can check
-	// existing value of delete_on_termination below
-	existingEbsBlockDevices := make(map[string]map[string]interface{})
-	if v, ok := d.GetOk("ebs_block_device"); ok {
-		ebsBlocks := v.(*schema.Set)
-		for _, ebd := range ebsBlocks.List() {
-			m := ebd.(map[string]interface{})
-			deviceName := m["device_name"].(string)
-			existingEbsBlockDevices[deviceName] = m
-		}
-	}
-
-	for _, bdm := range lc.BlockDeviceMappings {
-		bd := make(map[string]interface{})
-
-		if bdm.NoDevice != nil {
-			// Keep existing value in place to avoid spurious diff
-			deleteOnTermination := true
-			if device, ok := existingEbsBlockDevices[*bdm.DeviceName]; ok {
-				deleteOnTermination = device["delete_on_termination"].(bool)
-			}
-			bd["delete_on_termination"] = deleteOnTermination
-		} else if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
-		}
-
-		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)
-		}
-		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
-		}
-		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd["iops"] = aws.Int64Value(bdm.Ebs.Iops)
-		}
-		if bdm.Ebs != nil && bdm.Ebs.Throughput != nil {
-			bd["throughput"] = aws.Int64Value(bdm.Ebs.Throughput)
-		}
-		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
-			bd["encrypted"] = aws.BoolValue(bdm.Ebs.Encrypted)
-		}
-
-		if bdm.DeviceName != nil && aws.StringValue(bdm.DeviceName) == rootDeviceName {
-			blockDevices["root"] = bd
-		} else {
-			if bdm.DeviceName != nil {
-				bd["device_name"] = aws.StringValue(bdm.DeviceName)
-			}
-
-			if bdm.VirtualName != nil {
-				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)
-				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
-			} else {
-				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd["snapshot_id"] = aws.StringValue(bdm.Ebs.SnapshotId)
-				}
-				if bdm.NoDevice != nil {
-					bd["no_device"] = aws.BoolValue(bdm.NoDevice)
-				}
-				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
-			}
-		}
-	}
-	return blockDevices, nil
-}
-
 func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
@@ -812,61 +820,6 @@ func userDataHashSum(userData string) string {
 
 	hash := sha1.Sum(v)
 	return hex.EncodeToString(hash[:])
-}
-
-func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
-	if ami == "" {
-		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
-	}
-
-	log.Printf("[DEBUG] Describing AMI %q to get root block device name", ami)
-	res, err := conn.DescribeImages(&ec2.DescribeImagesInput{
-		ImageIds: []*string{aws.String(ami)},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// For a bad image, we just return nil so we don't block a refresh
-	if len(res.Images) == 0 {
-		return nil, nil
-	}
-
-	image := res.Images[0]
-	rootDeviceName := image.RootDeviceName
-
-	// Instance store backed AMIs do not provide a root device name.
-	if aws.StringValue(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
-		return nil, nil
-	}
-
-	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
-	// DeviceName in the BlockDeviceMapping list (which will instead have
-	// something like "/dev/sda")
-	//
-	// While this seems like it breaks an invariant of AMIs, it ends up working
-	// on the AWS side, and AMIs like this are common enough that we need to
-	// special case it so Terraform does the right thing.
-	//
-	// Our heuristic is: if the RootDeviceName does not appear in the
-	// BlockDeviceMapping, assume that the DeviceName of the first
-	// BlockDeviceMapping entry serves as the root device.
-	rootDeviceNameInMapping := false
-	for _, bdm := range image.BlockDeviceMappings {
-		if aws.StringValue(bdm.DeviceName) == aws.StringValue(image.RootDeviceName) {
-			rootDeviceNameInMapping = true
-		}
-	}
-
-	if !rootDeviceNameInMapping && len(image.BlockDeviceMappings) > 0 {
-		rootDeviceName = image.BlockDeviceMappings[0].DeviceName
-	}
-
-	if rootDeviceName == nil {
-		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", ami)
-	}
-
-	return rootDeviceName, nil
 }
 
 func findLaunchConfiguration(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.LaunchConfiguration, error) {
