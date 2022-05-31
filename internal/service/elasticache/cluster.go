@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -535,8 +534,12 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("node_type", c.CacheNodeType)
 
 	d.Set("engine", c.Engine)
-	if err := setEngineVersionFromCacheCluster(d, c); err != nil {
-		return err
+	if aws.StringValue(c.Engine) == engineRedis {
+		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
+			return err
+		}
+	} else {
+		setEngineVersionMemcached(d, c.EngineVersion)
 	}
 	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
@@ -553,27 +556,6 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	}
 
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
-
-	return nil
-}
-
-func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
-	engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
-	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
-	}
-	if engineVersion.Segments()[0] < 6 {
-		d.Set("engine_version", engineVersion.String())
-	} else {
-		// Handle major-only version number
-		configVersion := d.Get("engine_version").(string)
-		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
-			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
-		} else {
-			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
-		}
-	}
-	d.Set("engine_version_actual", engineVersion.String())
 
 	return nil
 }
