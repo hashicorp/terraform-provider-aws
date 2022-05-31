@@ -931,7 +931,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
-		createInput.VPCZoneIdentifier = expandVpcZoneIdentifiers(v.(*schema.Set).List())
+		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Group: %s", createInput)
@@ -1229,7 +1229,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("vpc_zone_identifier") {
-			input.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
+			input.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 		}
 
 		log.Printf("[DEBUG] Updating Auto Scaling Group: %s", input)
@@ -2323,7 +2323,7 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.Insta
 	}
 
 	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
-		apiObject.BaselineEbsBandwidthMbps = expandBaselineEbsBandwidthMbpsRequest(v[0].(map[string]interface{}))
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
@@ -2351,7 +2351,7 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.Insta
 	}
 
 	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCpuRequest(v[0].(map[string]interface{}))
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
@@ -2379,7 +2379,7 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.Insta
 	}
 
 	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.VCpuCount = expandVCpuCountRequest(v[0].(map[string]interface{}))
+		apiObject.VCpuCount = expandVCPUCountRequest(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -2425,7 +2425,7 @@ func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *autos
 	return apiObject
 }
 
-func expandBaselineEbsBandwidthMbpsRequest(tfMap map[string]interface{}) *autoscaling.BaselineEbsBandwidthMbpsRequest {
+func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *autoscaling.BaselineEbsBandwidthMbpsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2445,7 +2445,7 @@ func expandBaselineEbsBandwidthMbpsRequest(tfMap map[string]interface{}) *autosc
 	return apiObject
 }
 
-func expandMemoryGiBPerVCpuRequest(tfMap map[string]interface{}) *autoscaling.MemoryGiBPerVCpuRequest {
+func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *autoscaling.MemoryGiBPerVCpuRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2525,7 +2525,7 @@ func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *autoscaling
 	return apiObject
 }
 
-func expandVCpuCountRequest(tfMap map[string]interface{}) *autoscaling.VCpuCountRequest {
+func expandVCPUCountRequest(tfMap map[string]interface{}) *autoscaling.VCpuCountRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2770,7 +2770,7 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 	return apiObject
 }
 
-func expandVpcZoneIdentifiers(tfList []interface{}) *string {
+func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 	vpcZoneIDs := make([]string, len(tfList))
 
 	for i, v := range tfList {
@@ -2986,7 +2986,7 @@ func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) ma
 	}
 
 	if v := apiObject.BaselineEbsBandwidthMbps; v != nil {
-		tfMap["baseline_ebs_bandwidth_mbps"] = []interface{}{flattenBaselineEbsBandwidthMbps(v)}
+		tfMap["baseline_ebs_bandwidth_mbps"] = []interface{}{flattenBaselineEBSBandwidthMbps(v)}
 	}
 
 	if v := apiObject.BurstablePerformance; v != nil {
@@ -3014,7 +3014,7 @@ func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) ma
 	}
 
 	if v := apiObject.MemoryGiBPerVCpu; v != nil {
-		tfMap["memory_gib_per_vcpu"] = []interface{}{flattenMemoryGiBPerVCpu(v)}
+		tfMap["memory_gib_per_vcpu"] = []interface{}{flattenMemoryGiBPerVCPU(v)}
 	}
 
 	if v := apiObject.MemoryMiB; v != nil {
@@ -3042,7 +3042,7 @@ func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) ma
 	}
 
 	if v := apiObject.VCpuCount; v != nil {
-		tfMap["vcpu_count"] = []interface{}{flattenVCpuCount(v)}
+		tfMap["vcpu_count"] = []interface{}{flattenVCPUCount(v)}
 	}
 
 	return tfMap
@@ -3084,7 +3084,7 @@ func flattenAcceleratorTotalMemoryMiB(apiObject *autoscaling.AcceleratorTotalMem
 	return tfMap
 }
 
-func flattenBaselineEbsBandwidthMbps(apiObject *autoscaling.BaselineEbsBandwidthMbpsRequest) map[string]interface{} {
+func flattenBaselineEBSBandwidthMbps(apiObject *autoscaling.BaselineEbsBandwidthMbpsRequest) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3102,7 +3102,7 @@ func flattenBaselineEbsBandwidthMbps(apiObject *autoscaling.BaselineEbsBandwidth
 	return tfMap
 }
 
-func flattenMemoryGiBPerVCpu(apiObject *autoscaling.MemoryGiBPerVCpuRequest) map[string]interface{} {
+func flattenMemoryGiBPerVCPU(apiObject *autoscaling.MemoryGiBPerVCpuRequest) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3174,7 +3174,7 @@ func flattentTotalLocalStorageGB(apiObject *autoscaling.TotalLocalStorageGBReque
 	return tfMap
 }
 
-func flattenVCpuCount(apiObject *autoscaling.VCpuCountRequest) map[string]interface{} {
+func flattenVCPUCount(apiObject *autoscaling.VCpuCountRequest) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
