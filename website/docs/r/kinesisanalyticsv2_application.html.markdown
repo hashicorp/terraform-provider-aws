@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
+subcategory: "Kinesis Analytics V2"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application"
 description: |-
@@ -104,7 +104,7 @@ resource "aws_cloudwatch_log_stream" "example" {
 
 resource "aws_kinesisanalyticsv2_application" "example" {
   name                   = "example-sql-application"
-  runtime_environment    = "SQL-1.0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.example.arn
 
   application_configuration {

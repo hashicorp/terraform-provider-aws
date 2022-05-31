@@ -1,5 +1,5 @@
 ---
-subcategory: "SWF"
+subcategory: "SWF (Simple Workflow)"
 layout: "aws"
 page_title: "AWS: aws_swf_domain"
 description: |-

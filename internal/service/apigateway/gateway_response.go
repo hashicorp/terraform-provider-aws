@@ -143,7 +143,7 @@ func resourceGatewayResponseDelete(d *schema.ResourceData, meta interface{}) err
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

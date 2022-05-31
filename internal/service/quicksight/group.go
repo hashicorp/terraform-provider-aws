@@ -106,8 +106,8 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeGroup(descOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] QuickSight Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -143,13 +143,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.UpdateGroup(updateOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
-		return fmt.Errorf("Error updating QuickSight Group %s: %s", d.Id(), err)
+		return fmt.Errorf("error updating QuickSight Group %s: %w", d.Id(), err)
 	}
 
 	return resourceGroupRead(d, meta)
@@ -170,7 +165,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteGroup(deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight Group %s: %s", d.Id(), err)

@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccServiceSpecificCredential_basic(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceSpecificCredentialDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccerviceSpecificCredentialBasicConfig(rName),
@@ -47,7 +47,7 @@ func TestAccServiceSpecificCredential_basic(t *testing.T) {
 	})
 }
 
-func TestAccServiceSpecificCredential_multi(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_multi(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
@@ -55,10 +55,10 @@ func TestAccServiceSpecificCredential_multi(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceSpecificCredentialDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccerviceSpecificCredentialMultiConfig(rName),
@@ -86,17 +86,17 @@ func TestAccServiceSpecificCredential_multi(t *testing.T) {
 	})
 }
 
-func TestAccServiceSpecificCredential_status(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceSpecificCredentialDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSpecificCredentialConfigStatus(rName, "Inactive"),
@@ -129,17 +129,17 @@ func TestAccServiceSpecificCredential_status(t *testing.T) {
 	})
 }
 
-func TestAccServiceSpecificCredential_disappears(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 	resourceName := "aws_iam_service_specific_credential.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceSpecificCredentialDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccerviceSpecificCredentialBasicConfig(rName),

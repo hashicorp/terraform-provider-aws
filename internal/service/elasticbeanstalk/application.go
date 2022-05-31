@@ -41,7 +41,6 @@ func ResourceApplication() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,
@@ -318,7 +317,7 @@ func getBeanstalkApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk)
 		ApplicationNames: []*string{aws.String(id)},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
 			return nil, nil
 		}
 		return nil, err

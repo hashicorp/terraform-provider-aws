@@ -83,7 +83,7 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if filtersOk {
-		params.TagFilters = buildRAMTagFilters(filters.(*schema.Set))
+		params.TagFilters = buildTagFilters(filters.(*schema.Set))
 	}
 
 	for {
@@ -126,7 +126,7 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func buildRAMTagFilters(set *schema.Set) []*ram.TagFilter {
+func buildTagFilters(set *schema.Set) []*ram.TagFilter {
 	var filters []*ram.TagFilter
 
 	for _, v := range set.List() {

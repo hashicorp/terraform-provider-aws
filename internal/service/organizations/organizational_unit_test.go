@@ -23,10 +23,10 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitConfig(name),
@@ -55,10 +55,10 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitConfig(name),
@@ -81,10 +81,10 @@ func testAccOrganizationalUnit_Name(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitConfig(name1),
@@ -117,10 +117,10 @@ func testAccOrganizationalUnit_Tags(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitTags1Config(name, "key1", "value1"),
@@ -170,10 +170,10 @@ func testAccCheckOrganizationalUnitDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 				continue
 			}
-			if tfawserr.ErrMessageContains(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
 				continue
 			}
 			return err
@@ -203,7 +203,7 @@ func testAccCheckOrganizationalUnitExists(n string, ou *organizations.Organizati
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
 				return fmt.Errorf("Organizational Unit %q does not exist", rs.Primary.ID)
 			}
 			return err

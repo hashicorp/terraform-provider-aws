@@ -112,8 +112,16 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 
-		if err := roleUpdateTags(conn, roleName, nil, tags); err != nil {
-			return fmt.Errorf("error updating IAM Service Linked Role (%s) tags: %w", d.Id(), err)
+		err = roleUpdateTags(conn, roleName, nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for IAM Service Linked Role (%s): %s", d.Id(), err)
+			return resourceServiceLinkedRoleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for IAM Service Linked Role (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -131,7 +139,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(conn, roleName)
 	}, d.IsNewResource())
 
@@ -196,8 +204,16 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := roleUpdateTags(conn, roleName, o, n); err != nil {
-			return fmt.Errorf("error updating IAM Service Linked Role (%s) tags: %w", d.Id(), err)
+		err := roleUpdateTags(conn, roleName, o, n)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for IAM Service Linked Role (%s): %s", d.Id(), err)
+			return resourceServiceLinkedRoleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM Service Linked Role (%s): %w", d.Id(), err)
 		}
 	}
 

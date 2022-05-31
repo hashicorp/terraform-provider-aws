@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface"
 description: |-
@@ -50,7 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `attachment` - (Optional) Configuration block to define the attachment of the ENI. See below.
+* `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [Attachment](#attachment) below for more details!
 * `description` - (Optional) Description for the network interface.
 * `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interface_type` will cause the resource to be destroyed and re-created.
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
@@ -69,7 +69,9 @@ The following arguments are optional:
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `attachment`
+### Attachment
+
+The `attachment` block supports the following:
 
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.

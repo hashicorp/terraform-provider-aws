@@ -11,7 +11,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -325,16 +324,14 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.CreateLoadBalancer(elbOpts)
 
+		if tfawserr.ErrCodeEquals(err, elb.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %w", err))
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// Check for IAM SSL Cert error, eventual consistancy issue
-				if awsErr.Code() == elb.ErrCodeCertificateNotFoundException {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 	if tfresource.TimedOut(err) {
@@ -374,13 +371,13 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeResp, err := elbconn.DescribeLoadBalancers(describeElbOpts)
 	if err != nil {
-		if IsNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error retrieving ELB: %s", err)
+		return fmt.Errorf("Error retrieving ELB Classic LB (%s): %w", elbName, err)
 	}
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
@@ -407,7 +404,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	var scheme bool
 	if lb.Scheme != nil {
-		scheme = *lb.Scheme == "internal"
+		scheme = aws.StringValue(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
 	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
@@ -417,8 +414,8 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
-		if lb.SourceSecurityGroup.OwnerAlias != nil && *lb.SourceSecurityGroup.OwnerAlias != "" {
-			group = aws.String(*lb.SourceSecurityGroup.OwnerAlias + "/" + *lb.SourceSecurityGroup.GroupName)
+		if v := aws.StringValue(lb.SourceSecurityGroup.OwnerAlias); v != "" {
+			group = aws.String(v + "/" + aws.StringValue(lb.SourceSecurityGroup.GroupName))
 		}
 		d.Set("source_security_group", group)
 
@@ -490,7 +487,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	// There's only one health check, so save that to state as we
 	// currently can
-	if *lb.HealthCheck.Target != "" {
+	if aws.StringValue(lb.HealthCheck.Target) != "" {
 		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
@@ -540,7 +537,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.CreateLoadBalancerListeners(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, elb.ErrCodeDuplicateListenerException, "") {
+					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
 						return resource.RetryableError(err)
 					}
@@ -838,22 +835,15 @@ func ListenerHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-",
-		strings.ToLower(m["instance_protocol"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["instance_protocol"].(string))))
 	buf.WriteString(fmt.Sprintf("%d-", m["lb_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-",
-		strings.ToLower(m["lb_protocol"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["lb_protocol"].(string))))
 
 	if v, ok := m["ssl_certificate_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	return create.StringHashcode(buf.String())
-}
-
-func IsNotFound(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == elb.ErrCodeAccessPointNotFoundException
 }
 
 func ValidAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {

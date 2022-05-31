@@ -16,7 +16,7 @@ import (
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
-// and `aws-opsworks-service-role`, and Opsworks stacks named `tf-acc`.
+// and `aws-opsworks-service-role`, and Opsworks stacks named `test`.
 
 func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,13 +24,13 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerVPCCreateConfig(rName),
+				Config: testAccCustomLayerConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -67,13 +67,13 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerTags1Config(rName, "key1", "value1"),
+				Config: testAccCustomLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -86,7 +86,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCustomLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -95,7 +95,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCustomLayerTags1Config(rName, "key2", "value2"),
+				Config: testAccCustomLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -112,13 +112,13 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerNoVPCCreateConfig(rName),
+				Config: testAccCustomLayerConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -146,7 +146,7 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomLayerUpdateConfig(rName),
+				Config: testAccCustomLayerConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "false"),
@@ -186,13 +186,13 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatch(rName, true),
+				Config: testAccCustomLayerConfig_cloudWatch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -209,7 +209,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatch(rName, false),
+				Config: testAccCustomLayerConfig_cloudWatch(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -221,7 +221,7 @@ func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOpsworksCustomLayerConfigCloudWatchFull(rName),
+				Config: testAccCustomLayerConfig_cloudWatchFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -250,13 +250,13 @@ func TestAccOpsWorksCustomLayer_disappears(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerNoVPCCreateConfig(rName),
+				Config: testAccCustomLayerConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceCustomLayer(), resourceName),
@@ -359,13 +359,14 @@ resource "aws_security_group" "tf-ops-acc-layer2" {
 `, name)
 }
 
-func testAccCustomLayerNoVPCCreateConfig(name string) string {
-	return testAccStackNoVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_noVPCCreate(name string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_noVPCCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
-  name                   = "%s"
+  stack_id               = aws_opsworks_stack.test.id
+  name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
   custom_security_group_ids = [
@@ -388,16 +389,17 @@ resource "aws_opsworks_custom_layer" "test" {
     encrypted       = false
   }
 }
-`, name)
+`, name))
 }
 
-func testAccCustomLayerVPCCreateConfig(name string) string {
-	return testAccStackNoVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_vpcCreate(name string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_noVPCCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
-  name                   = "%s"
+  stack_id               = aws_opsworks_stack.test.id
+  name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = false
 
@@ -422,12 +424,13 @@ resource "aws_opsworks_custom_layer" "test" {
     raid_level      = 0
   }
 }
-`, name)
+`, name))
 }
 
-func testAccCustomLayerUpdateConfig(name string) string {
-	return testAccStackNoVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_update(name string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_noVPCCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-layer3" {
   name = "tf-ops-acc-layer-%[1]s"
@@ -441,8 +444,8 @@ resource "aws_security_group" "tf-ops-acc-layer3" {
 }
 
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
-  name                   = "%[1]s"
+  stack_id               = aws_opsworks_stack.test.id
+  name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
   custom_security_group_ids = [
@@ -483,15 +486,16 @@ resource "aws_opsworks_custom_layer" "test" {
 }
 EOF
 }
-`, name)
+`, name))
 }
 
-func testAccCustomLayerTags1Config(name, tagKey1, tagValue1 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_tags1(name, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
+  stack_id               = aws_opsworks_stack.test.id
   name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = false
@@ -521,15 +525,16 @@ resource "aws_opsworks_custom_layer" "test" {
     %[2]q = %[3]q
   }
 }
-`, name, tagKey1, tagValue1)
+`, name, tagKey1, tagValue1))
 }
 
-func testAccCustomLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
+  stack_id               = aws_opsworks_stack.test.id
   name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = false
@@ -560,18 +565,19 @@ resource "aws_opsworks_custom_layer" "test" {
     %[4]q = %[5]q
   }
 }
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, name, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccOpsworksCustomLayerConfigCloudWatch(name string, enabled bool) string {
-	return testAccStackNoVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_cloudWatch(name string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_noVPCCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
+  stack_id               = aws_opsworks_stack.test.id
   name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
@@ -589,18 +595,19 @@ resource "aws_opsworks_custom_layer" "test" {
     }
   }
 }
-`, name, enabled)
+`, name, enabled))
 }
 
-func testAccOpsworksCustomLayerConfigCloudWatchFull(name string) string {
-	return testAccStackNoVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccCustomLayerConfig_cloudWatchFull(name string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_noVPCCreate(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 resource "aws_opsworks_custom_layer" "test" {
-  stack_id               = aws_opsworks_stack.tf-acc.id
+  stack_id               = aws_opsworks_stack.test.id
   name                   = %[1]q
   short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
@@ -626,5 +633,5 @@ resource "aws_opsworks_custom_layer" "test" {
     }
   }
 }
-`, name)
+`, name))
 }

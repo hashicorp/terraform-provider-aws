@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_pool"
 description: |-
@@ -21,7 +21,17 @@ via RAM, and using that pool id to create a VPC with a CIDR derived from
 AWS IPAM.
 
 ```terraform
-data "aws_vpc_ipam_pool" "test" {}
+data "aws_vpc_ipam_pool" "test" {
+  filter {
+    name   = "description"
+    values = ["*test*"]
+  }
+
+  filter {
+    name   = "address-family"
+    values = ["ipv4"]
+  }
+}
 
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id   = data.aws_vpc_ipam_pool.test.id

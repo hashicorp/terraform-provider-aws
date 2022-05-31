@@ -16,9 +16,9 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecr_authorization_token.repo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAuthorizationTokenBasicDataSourceConfig,

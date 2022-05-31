@@ -15,12 +15,12 @@ func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_glue_data_catalog_encryption_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogEncryptionSettingsDataSourceConfig(),
+				Config: testAccDataCatalogEncryptionSettingsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_catalog_encryption_settings", resourceName, "data_catalog_encryption_settings"),
@@ -30,7 +30,7 @@ func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataCatalogEncryptionSettingsDataSourceConfig() string {
+func testAccDataCatalogEncryptionSettingsDataSourceConfig_basic() string {
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {

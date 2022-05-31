@@ -21,14 +21,14 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecretRotationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecretRotationDestroy,
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
 			{
-				Config: testAccSecretRotationConfig(rName, 7),
+				Config: testAccSecretRotationConfig_basic(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
@@ -42,7 +42,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
 			/*
 				{
-					Config: testAccAWSSecretsManagerSecretConfig_Updated(rName),
+					Config: testAccSecretRotationConfig_managerUpdated(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSecretRotationExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
@@ -75,7 +75,7 @@ func testAccCheckSecretRotationDestroy(s *terraform.State) error {
 		output, err := conn.DescribeSecret(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			return err
@@ -121,7 +121,7 @@ func testAccCheckSecretRotationExists(resourceName string, secret *secretsmanage
 	}
 }
 
-func testAccSecretRotationConfig(rName string, automaticallyAfterDays int) string {
+func testAccSecretRotationConfig_basic(rName string, automaticallyAfterDays int) string {
 	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test1" {

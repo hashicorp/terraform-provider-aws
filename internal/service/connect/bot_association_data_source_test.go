@@ -17,12 +17,12 @@ func TestAccConnectBotAssociationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationDataSource_ConfigBasic(rName, rName2),
+				Config: testAccBotAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "lex_bot", resourceName, "lex_bot"),
@@ -87,7 +87,7 @@ resource "aws_connect_bot_association" "test" {
 `, rName, rName2)
 }
 
-func testAccBotAssociationDataSource_ConfigBasic(rName string, rName2 string) string {
+func testAccBotAssociationDataSourceConfig_basic(rName string, rName2 string) string {
 	return fmt.Sprintf(testAccBotAssociationDataSource_BaseConfig(rName, rName2) + `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id

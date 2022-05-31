@@ -87,7 +87,7 @@ func resourceSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) e
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findSnapshotCopyGrant(conn, grantName)
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -112,11 +112,10 @@ func resourceSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) err
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	grantName := d.Id()
-	log.Printf("[DEBUG] Looking for grant: %s", grantName)
 
 	grant, err := findSnapshotCopyGrant(conn, grantName)
-	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
-		log.Printf("[WARN] snapshot copy grant (%s) not found, removing from state", grantName)
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil) {
+		log.Printf("[WARN] Redshift Snapshot Copy Grant (%s) not found, removing from state", grantName)
 		d.SetId("")
 		return nil
 	}
@@ -178,7 +177,7 @@ func resourceSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.DeleteSnapshotCopyGrant(&deleteInput)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) {
 			return nil
 		}
 		return err
@@ -196,7 +195,7 @@ func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName stri
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findSnapshotCopyGrant(conn, grantName)
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
 			return nil
 		}
 		if err != nil {
@@ -208,7 +207,7 @@ func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName stri
 	if tfresource.TimedOut(err) {
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findSnapshotCopyGrant(conn, grantName)
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
 			return nil
 		}
 	}

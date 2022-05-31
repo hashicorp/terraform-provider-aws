@@ -64,6 +64,27 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 ```
 
+The example below creates a CloudFront response headers policy with a custom headers config and server timing headers config.
+
+```terraform
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name = "example-headers-policy"
+
+  custom_headers_config {
+    items {
+      header   = "X-Permitted-Cross-Domain-Policies"
+      override = true
+      value    = "none"
+    }
+  }
+
+  server_timing_headers_config {
+    enabled       = true
+    sampling_rate = 50
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -73,6 +94,7 @@ The following arguments are supported:
 * `cors_config` - (Optional) A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
 * `custom_headers_config` - (Optional) Object that contains an attribute `items` that contains a list of custom headers. See [Custom Header](#custom-header) for more information.
 * `security_headers_config` - (Optional) A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
+* `server_timing_headers_config` - (Optional) A configuration for enabling the Server-Timing header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
 ### Cors Config
 
@@ -131,6 +153,11 @@ The following arguments are supported:
 * `override` - (Required) A Boolean value that determines whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
 * `protection` - (Required) A Boolean value that determines the value of the `X-XSS-Protection` HTTP response header. When this setting is `true`, the value of the `X-XSS-Protection` header is `1`. When this setting is `false`, the value of the `X-XSS-Protection` header is `0`.
 * `report_uri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `X-XSS-Protection` header. You cannot specify a `report_uri` when `mode_block` is `true`.
+
+### Server Timing Headers Config
+
+* `enabled` - (Required) A Boolean that determines whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `sampling_rate` - (Required) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to. Valid range: Minimum value of 0.0. Maximum value of 100.0.
 
 ## Attributes Reference
 

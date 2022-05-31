@@ -29,9 +29,9 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
@@ -99,9 +99,9 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_ipAuth(rName, githubToken),
@@ -134,9 +134,9 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_unauthenticated(rName, githubToken),
@@ -167,9 +167,9 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookWithTagsConfig(rName, "tag1value", "tag2value", githubToken),
@@ -231,9 +231,9 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
@@ -260,9 +260,9 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
@@ -320,7 +320,7 @@ func testAccCheckWebhookExists(n string, webhook *codepipeline.ListWebhookItem) 
 }
 
 func testAccWebhookConfig_basic(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -340,7 +340,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookConfig_filters(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -365,7 +365,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookConfig_ipAuth(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "IP"
@@ -385,7 +385,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookConfig_unauthenticated(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "UNAUTHENTICATED"
@@ -401,7 +401,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookWithTagsConfig(rName, tag1, tag2, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -427,7 +427,7 @@ resource "aws_codepipeline_webhook" "test" {
 }
 
 func testAccWebhookConfig_secretTokenUpdated(rName, githubToken string) string {
-	return testAccWebhookConfig_codePipeline(rName, githubToken) + fmt.Sprintf(`
+	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
@@ -446,7 +446,7 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookConfig_codePipeline(rName, githubToken string) string {
+func testAccWebhookConfig_base(rName, githubToken string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

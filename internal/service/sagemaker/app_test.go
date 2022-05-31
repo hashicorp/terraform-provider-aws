@@ -26,13 +26,13 @@ func testAccApp_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppBasicConfig(rName),
+				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
@@ -64,13 +64,13 @@ func testAccApp_resourceSpec(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppResourceSpecConfig(rName),
+				Config: testAccAppConfig_resourceSpec(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
@@ -99,13 +99,13 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppResourceSpecLifecycleConfig(rName, uName),
+				Config: testAccAppConfig_resourceSpecLifecycle(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
@@ -134,13 +134,13 @@ func testAccApp_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppTags1Config(rName, "key1", "value1"),
+				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -153,7 +153,7 @@ func testAccApp_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -162,7 +162,7 @@ func testAccApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppTags1Config(rName, "key2", "value2"),
+				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -183,13 +183,13 @@ func testAccApp_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppBasicConfig(rName),
+				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &app),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
@@ -220,7 +220,7 @@ func testAccCheckAppDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker App (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker App (%s): %w", rs.Primary.ID, err)
 		}
 
 		appArn := aws.StringValue(app.AppArn)
@@ -263,7 +263,7 @@ func testAccCheckAppExists(n string, app *sagemaker.DescribeAppOutput) resource.
 func testAccAppBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # Sagemaker compute resources are not available at usw2-az4.
+  # SageMaker compute resources are not available at usw2-az4.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
 
@@ -330,7 +330,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccAppBasicConfig(rName string) string {
+func testAccAppConfig_basic(rName string) string {
 	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -341,7 +341,7 @@ resource "aws_sagemaker_app" "test" {
 `, rName)
 }
 
-func testAccAppTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -356,7 +356,7 @@ resource "aws_sagemaker_app" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAppTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAppConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -372,7 +372,7 @@ resource "aws_sagemaker_app" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAppResourceSpecConfig(rName string) string {
+func testAccAppConfig_resourceSpec(rName string) string {
 	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -387,7 +387,7 @@ resource "aws_sagemaker_app" "test" {
 `, rName)
 }
 
-func testAccAppResourceSpecLifecycleConfig(rName, uName string) string {
+func testAccAppConfig_resourceSpecLifecycle(rName, uName string) string {
 	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q

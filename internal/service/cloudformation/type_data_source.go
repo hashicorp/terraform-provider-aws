@@ -147,7 +147,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("execution_role_arn", output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
-		if err := d.Set("logging_config", []interface{}{flattenCloudformationLoggingConfig(output.LoggingConfig)}); err != nil {
+		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting logging_config: %w", err))
 		}
 	} else {

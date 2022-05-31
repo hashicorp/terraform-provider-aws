@@ -19,8 +19,8 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(setQuotaServiceCode, setQuotaQuotaCode),
@@ -49,8 +49,8 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(unsetQuotaServiceCode, unsetQuotaQuotaCode),
@@ -78,9 +78,9 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *tes
 			testAccPreCheck(t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaDataSourceConfig_PermissionError_QuotaCode("elasticloadbalancing", "L-53DA6B97"),
@@ -99,8 +99,8 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaQuotaNameDataSourceConfig("vpc", setQuotaQuotaName),
@@ -129,8 +129,8 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaQuotaNameDataSourceConfig(unsetQuotaServiceCode, unsetQuotaQuotaName),
@@ -158,9 +158,9 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaName(t *tes
 			testAccPreCheck(t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaDataSourceConfig_PermissionError_QuotaName("elasticloadbalancing", "Application Load Balancers per Region"),

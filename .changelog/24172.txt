@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_athena_database: Add import support.
+```
+
+```release-note:enhancement
+resource/aws_athena_database: Add `properties` argument.
+```
+
+```release-note:bug
+resource/aws_athena_database: Add drift detection for `comment`.
+```

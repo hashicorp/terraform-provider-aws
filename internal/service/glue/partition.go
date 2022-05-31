@@ -209,7 +209,7 @@ func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 		CatalogId:      aws.String(catalogID),
 		DatabaseName:   aws.String(dbName),
 		TableName:      aws.String(tableName),
-		PartitionInput: expandGluePartitionInput(d),
+		PartitionInput: expandPartitionInput(d),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Partition: %#v", input)
@@ -229,7 +229,7 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	partition, err := FindPartitionByValues(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -254,7 +254,7 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("creation_time", partition.CreationTime.Format(time.RFC3339))
 	}
 
-	if err := d.Set("storage_descriptor", flattenGlueStorageDescriptor(partition.StorageDescriptor)); err != nil {
+	if err := d.Set("storage_descriptor", flattenStorageDescriptor(partition.StorageDescriptor)); err != nil {
 		return fmt.Errorf("error setting storage_descriptor: %w", err)
 	}
 
@@ -277,7 +277,7 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 		CatalogId:          aws.String(catalogID),
 		DatabaseName:       aws.String(dbName),
 		TableName:          aws.String(tableName),
-		PartitionInput:     expandGluePartitionInput(d),
+		PartitionInput:     expandPartitionInput(d),
 		PartitionValueList: aws.StringSlice(values),
 	}
 
@@ -310,11 +310,11 @@ func resourcePartitionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandGluePartitionInput(d *schema.ResourceData) *glue.PartitionInput {
+func expandPartitionInput(d *schema.ResourceData) *glue.PartitionInput {
 	tableInput := &glue.PartitionInput{}
 
 	if v, ok := d.GetOk("storage_descriptor"); ok {
-		tableInput.StorageDescriptor = expandGlueStorageDescriptor(v.([]interface{}))
+		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {

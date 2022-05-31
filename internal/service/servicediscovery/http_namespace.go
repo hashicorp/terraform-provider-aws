@@ -105,7 +105,7 @@ func resourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetNamespace(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
 			d.SetId("")
 			return nil
 		}
@@ -159,7 +159,7 @@ func resourceHTTPNamespaceDelete(d *schema.ResourceData, meta interface{}) error
 
 	output, err := conn.DeleteNamespace(input)
 
-	if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
 		return nil
 	}
 

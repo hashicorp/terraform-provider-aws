@@ -130,7 +130,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 		ConfigurationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
 			log.Printf("[WARN] MQ Configuration %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
