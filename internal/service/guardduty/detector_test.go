@@ -25,11 +25,14 @@ func testAccDetector_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "SIX_HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -41,21 +44,21 @@ func testAccDetector_basic(t *testing.T) {
 			},
 			{
 				Config: testAccDetectorConfig_disable,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "false"),
 				),
 			},
 			{
 				Config: testAccDetectorConfig_enable,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
 			{
 				Config: testAccDetectorConfig_findingPublishingFrequency,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
 				),
@@ -75,7 +78,7 @@ func testAccDetector_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorConfig_tags1("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -88,7 +91,7 @@ func testAccDetector_tags(t *testing.T) {
 			},
 			{
 				Config: testAccDetectorConfig_tags2("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -97,7 +100,7 @@ func testAccDetector_tags(t *testing.T) {
 			},
 			{
 				Config: testAccDetectorConfig_tags1("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -118,7 +121,7 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorConfig_datasourcesS3Logs(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
@@ -132,7 +135,7 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 			},
 			{
 				Config: testAccDetectorConfig_datasourcesS3Logs(false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
@@ -154,7 +157,7 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.#", "1"),
@@ -168,7 +171,7 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 			},
 			{
 				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.#", "1"),
