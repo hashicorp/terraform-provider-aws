@@ -318,7 +318,7 @@ func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guard
 	apiObject := &guardduty.KubernetesAuditLogsConfiguration{}
 
 	if v, ok := tfMap["enable"].(bool); ok {
-		apiObject.Enable = aws.Bool(v) // This can be flattened a ton
+		apiObject.Enable = aws.Bool(v)
 	}
 
 	return apiObject
