@@ -3,6 +3,7 @@ package redshiftdata
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
@@ -20,6 +21,10 @@ func ResourceStatement() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -86,38 +91,39 @@ func ResourceStatement() *schema.Resource {
 func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftDataConn
 
-	request := &redshiftdataapiservice.ExecuteStatementInput{
+	input := &redshiftdataapiservice.ExecuteStatementInput{
 		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 		Database:          aws.String(d.Get("database").(string)),
 		Sql:               aws.String(d.Get("sql").(string)),
 		WithEvent:         aws.Bool(d.Get("with_event").(bool)),
 	}
 
-	if v, ok := d.GetOk("secret_arn"); ok {
-		request.SecretArn = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("db_user"); ok {
-		request.DbUser = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("statement_name"); ok {
-		request.StatementName = aws.String(v.(string))
+		input.DbUser = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 {
-		request.Parameters = expandParameters(v.([]interface{}))
+		input.Parameters = expandParameters(v.([]interface{}))
 	}
 
-	output, err := conn.ExecuteStatement(request)
-	if err != nil || output.Id == nil {
-		return fmt.Errorf("Error Executing Redshift Data Statement %s: %s", d.Get("cluster_identifier").(string), err)
+	if v, ok := d.GetOk("secret_arn"); ok {
+		input.SecretArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("statement_name"); ok {
+		input.StatementName = aws.String(v.(string))
+	}
+
+	output, err := conn.ExecuteStatement(input)
+
+	if err != nil {
+		return fmt.Errorf("executing Redshift Data Statement: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	if _, err := waitStatementFinished(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Data Statement (%s) to be finished: %w", d.Id(), err)
+	if _, err := waitStatementFinished(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for Redshift Data Statement (%s) to finish: %w", d.Id(), err)
 	}
 
 	return resourceStatementRead(d, meta)
@@ -126,7 +132,7 @@ func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftDataConn
 
-	sub, err := FindStatementById(conn, d.Id())
+	sub, err := FindStatementByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Data Statement (%s) not found, removing from state", d.Id())
@@ -135,7 +141,7 @@ func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Data Statement %s: %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Data Statement (%s): %w", d.Id(), err)
 	}
 
 	d.Set("cluster_identifier", sub.ClusterIdentifier)
@@ -145,7 +151,7 @@ func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sql", sub.QueryString)
 
 	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %w", err)
+		return fmt.Errorf("setting parameters: %w", err)
 	}
 
 	return nil

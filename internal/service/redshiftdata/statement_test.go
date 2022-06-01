@@ -51,18 +51,18 @@ func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeSta
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Data Statement is set")
+			return fmt.Errorf("No Redshift Data Statement ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn
 
-		out, err := tfredshiftdata.FindStatementById(conn, rs.Primary.ID)
+		output, err := tfredshiftdata.FindStatementByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}

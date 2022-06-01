@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindStatementById(conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
+func FindStatementByID(conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
 	input := &redshiftdataapiservice.DescribeStatementInput{
 		Id: aws.String(id),
 	}

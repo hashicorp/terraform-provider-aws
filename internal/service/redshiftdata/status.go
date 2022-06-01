@@ -9,7 +9,7 @@ import (
 
 func statusStatement(conn *redshiftdataapiservice.RedshiftDataAPIService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStatementById(conn, id)
+		output, err := FindStatementByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

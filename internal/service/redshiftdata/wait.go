@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitStatementFinished(conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) { //nolint:unparam
+func waitStatementFinished(conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) (*redshiftdataapiservice.DescribeStatementOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			redshiftdataapiservice.StatusStringPicked,
@@ -19,7 +19,7 @@ func waitStatementFinished(conn *redshiftdataapiservice.RedshiftDataAPIService, 
 		},
 		Target:     []string{redshiftdataapiservice.StatusStringFinished},
 		Refresh:    statusStatement(conn, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
