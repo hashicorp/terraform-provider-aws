@@ -252,6 +252,7 @@ func testAccCheckResourceShareDestroy(s *terraform.State) error {
 		}
 
 		resourceShare, err := tfram.FindResourceShareOwnerSelfByARN(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
