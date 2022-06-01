@@ -1,4 +1,25 @@
 ## 4.17.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_redshift_cluster_credentials` ([#25092](https://github.com/hashicorp/terraform-provider-aws/issues/25092))
+* **New Resource:** `aws_redshift_cluster_iam_roles` ([#25096](https://github.com/hashicorp/terraform-provider-aws/issues/25096))
+* **New Resource:** `aws_redshift_hsm_configuration` ([#25093](https://github.com/hashicorp/terraform-provider-aws/issues/25093))
+* **New Resource:** `aws_redshiftdata_statement` ([#25104](https://github.com/hashicorp/terraform-provider-aws/issues/25104))
+
+ENHANCEMENTS:
+
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `aurora`, `mariadb` and `mysql` engines ([#24846](https://github.com/hashicorp/terraform-provider-aws/issues/24846))
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `redshift` engine ([#25080](https://github.com/hashicorp/terraform-provider-aws/issues/25080))
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `sqlserver` engine ([#22646](https://github.com/hashicorp/terraform-provider-aws/issues/22646))
+* resource/aws_redshift_cluster: The `default_iam_role_arn` argument is now Computed ([#25096](https://github.com/hashicorp/terraform-provider-aws/issues/25096))
+
+BUG FIXES:
+
+* data-source/aws_launch_configuration: Correct data type for `ebs_block_device.throughput` and `root_block_device.throughput` attributes ([#25097](https://github.com/hashicorp/terraform-provider-aws/issues/25097))
+* resource/aws_ebs_volume: Fix to preserve `iops` when changing EBS volume type (`io1`, `io2`, `gp3`) ([#23280](https://github.com/hashicorp/terraform-provider-aws/issues/23280))
+* resource/aws_launch_configuration: Honor associate_public_ip_address = false ([#17695](https://github.com/hashicorp/terraform-provider-aws/issues/17695))
+
 ## 4.16.0 (May 27, 2022)
 
 FEATURES:
