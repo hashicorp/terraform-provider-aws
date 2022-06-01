@@ -59,29 +59,30 @@ func ResourceClusterIamRoles() *schema.Resource {
 func resourceClusterIamRolesCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
+	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.ModifyClusterIamRolesInput{
-		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-	}
-
-	if v, ok := d.GetOk("iam_roles"); ok && v.(*schema.Set).Len() > 0 {
-		input.AddIamRoles = flex.ExpandStringSet(v.(*schema.Set))
+		ClusterIdentifier: aws.String(clusterID),
 	}
 
 	if v, ok := d.GetOk("default_iam_role_arn"); ok {
 		input.DefaultIamRoleArn = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Adding Redshift Cluster Iam Roles IAM Roles: %s", input)
-	out, err := conn.ModifyClusterIamRoles(input)
-
-	if err != nil {
-		return fmt.Errorf("error adding Redshift Cluster Iam Roles (%s) IAM roles: %w", d.Id(), err)
+	if v, ok := d.GetOk("iam_roles"); ok && v.(*schema.Set).Len() > 0 {
+		input.AddIamRoles = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	d.SetId(aws.StringValue(out.Cluster.ClusterIdentifier))
+	log.Printf("[DEBUG] Adding Redshift Cluster IAM Roles: %s", input)
+	output, err := conn.ModifyClusterIamRoles(input)
+
+	if err != nil {
+		return fmt.Errorf("creating Redshift Cluster IAM Roles (%s): %w", clusterID, err)
+	}
+
+	d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
 
 	if _, err := waitClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster Iam Roles (%s) update: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Cluster IAM Roles (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceClusterIamRolesRead(d, meta)
@@ -93,23 +94,24 @@ func resourceClusterIamRolesRead(d *schema.ResourceData, meta interface{}) error
 	rsc, err := FindClusterByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Redshift Cluster Iam Roles (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Redshift Cluster IAM Roles (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Cluster Iam Roles (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Cluster IAM Roles (%s): %w", d.Id(), err)
 	}
 
-	var apiList []*string
+	var roleARNs []*string
 
 	for _, iamRole := range rsc.IamRoles {
-		apiList = append(apiList, iamRole.IamRoleArn)
+		roleARNs = append(roleARNs, iamRole.IamRoleArn)
 	}
-	d.Set("iam_roles", aws.StringValueSlice(apiList))
-	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
+
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
+	d.Set("iam_roles", aws.StringValueSlice(roleARNs))
 
 	return nil
 }
@@ -124,7 +126,6 @@ func resourceClusterIamRolesUpdate(d *schema.ResourceData, meta interface{}) err
 	if n == nil {
 		n = new(schema.Set)
 	}
-
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
 	add := ns.Difference(os)
@@ -137,15 +138,15 @@ func resourceClusterIamRolesUpdate(d *schema.ResourceData, meta interface{}) err
 		DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Modifying Redshift Cluster Iam Roles IAM Roles: %s", input)
+	log.Printf("[DEBUG] Modifying Redshift Cluster IAM Roles: %s", input)
 	_, err := conn.ModifyClusterIamRoles(input)
 
 	if err != nil {
-		return fmt.Errorf("error modifying Redshift Cluster Iam Roles (%s) IAM roles: %w", d.Id(), err)
+		return fmt.Errorf("updating Redshift Cluster IAM Roles (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster Iam Roles (%s) update: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Cluster IAM Roles (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceClusterIamRolesRead(d, meta)
@@ -160,15 +161,15 @@ func resourceClusterIamRolesDelete(d *schema.ResourceData, meta interface{}) err
 		DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Removing Redshift Cluster Iam Roles IAM Roles: %s", input)
+	log.Printf("[DEBUG] Removing Redshift Cluster IAM Roles: %s", input)
 	_, err := conn.ModifyClusterIamRoles(input)
 
 	if err != nil {
-		return fmt.Errorf("error removing Redshift Cluster Iam Roles (%s) IAM roles: %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Cluster IAM Roles (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster Iam Roles (%s) removal: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Cluster IAM Roles (%s) update: %w", d.Id(), err)
 	}
 
 	return nil
