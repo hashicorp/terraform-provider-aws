@@ -138,6 +138,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -1780,6 +1781,8 @@ func Provider() *schema.Provider {
 			"aws_redshift_snapshot_schedule_association": redshift.ResourceSnapshotScheduleAssociation(),
 			"aws_redshift_subnet_group":                  redshift.ResourceSubnetGroup(),
 			"aws_redshift_usage_limit":                   redshift.ResourceUsageLimit(),
+
+			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
