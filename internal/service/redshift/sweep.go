@@ -35,6 +35,11 @@ func init() {
 		F:    sweepHSMClientCertificates,
 	})
 
+	resource.AddTestSweepers("aws_redshift_hsm_configuration", &resource.Sweeper{
+		Name: "aws_redshift_hsm_configuration",
+		F:    sweepHSMConfigurations,
+	})
+
 	resource.AddTestSweepers("aws_redshift_authentication_profile", &resource.Sweeper{
 		Name: "aws_redshift_authentication_profile",
 		F:    sweepAuthenticationProfiles,
@@ -385,6 +390,51 @@ func sweepHSMClientCertificates(region string) error {
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Hsm Client Certificate sweep for %s: %s", region, err)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepHSMConfigurations(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).RedshiftConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeHsmConfigurationsPages(&redshift.DescribeHsmConfigurationsInput{}, func(resp *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
+		if len(resp.HsmConfigurations) == 0 {
+			log.Print("[DEBUG] No Redshift Hsm Configurations to sweep")
+			return !lastPage
+		}
+
+		for _, c := range resp.HsmConfigurations {
+			r := ResourceHSMConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(c.HsmConfigurationIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Hsm Configurations: %w", err))
+		// in case work can be done, don't jump out yet
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Hsm Configurations for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Hsm Configuration sweep for %s: %s", region, err)
 		return nil
 	}
 

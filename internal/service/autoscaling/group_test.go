@@ -1725,7 +1725,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 	})
 }
 
-func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryMiBAndVCpuCount(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
@@ -2221,7 +2221,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
-func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_baselineEbsBandwidthMbps(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
@@ -2691,7 +2691,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
-func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryGiBPerVCpu(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
