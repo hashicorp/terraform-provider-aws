@@ -35,8 +35,9 @@ func DataSourceClusterCredentials() *schema.Resource {
 				Optional: true,
 			},
 			"db_password": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"db_user": {
 				Type:     schema.TypeString,
