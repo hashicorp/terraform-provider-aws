@@ -502,10 +502,8 @@ func WaitLaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, p
 
 func WaitProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		// "TAINTED" is a valid target state as its described as a stable state per API docs, though can result from a failed update
-		// such that the stack rolls back to a previous version.
 		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusTainted},
+		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   StatusProvisionedProduct(conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,
@@ -516,7 +514,14 @@ func WaitProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLang
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ProvisionedProductDetail.StatusMessage)))
+		if detail := output.ProvisionedProductDetail; detail != nil {
+			status := aws.StringValue(detail.Status)
+			// Note: "TAINTED" is described as a stable state per API docs, though can result from a failed update
+			// such that the stack rolls back to a previous version
+			if status == servicecatalog.ProvisionedProductStatusError || status == servicecatalog.ProvisionedProductStatusTainted {
+				tfresource.SetLastError(err, errors.New(aws.StringValue(detail.StatusMessage)))
+			}
+		}
 		return output, err
 	}
 
