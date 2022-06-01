@@ -172,7 +172,22 @@ func testAccCheckInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, d
 
 func testAccInstanceRoleAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+resource "aws_db_instance_role_association" "test" {
+  db_instance_identifier = aws_db_instance.test.id
+  feature_name           = "S3_INTEGRATION"
+  role_arn               = aws_iam_role.test.arn
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = 10
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model       = data.aws_rds_orderable_db_instance.test.license_model
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
 
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "oracle-se2"
@@ -180,6 +195,11 @@ data "aws_rds_orderable_db_instance" "test" {
   storage_type  = "standard"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
+  name               = %[1]q
 }
 
 data "aws_iam_policy_document" "rds_assume_role_policy" {
@@ -194,26 +214,6 @@ data "aws_iam_policy_document" "rds_assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
-  name               = %[1]q
-}
-
-resource "aws_db_instance" "test" {
-  allocated_storage   = 10
-  engine              = data.aws_rds_orderable_db_instance.test.engine
-  identifier          = %[1]q
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_instance_role_association" "test" {
-  db_instance_identifier = aws_db_instance.test.id
-  feature_name           = "S3_INTEGRATION"
-  role_arn               = aws_iam_role.test.arn
-}
+data "aws_partition" "current" {}
 `, rName)
 }
