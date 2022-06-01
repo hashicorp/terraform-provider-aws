@@ -20,6 +20,7 @@ func ResourceClusterIamRoles() *schema.Resource {
 		Read:   resourceClusterIamRolesRead,
 		Update: resourceClusterIamRolesUpdate,
 		Delete: resourceClusterIamRolesDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,6 +40,7 @@ func ResourceClusterIamRoles() *schema.Resource {
 			"default_iam_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"iam_roles": {
