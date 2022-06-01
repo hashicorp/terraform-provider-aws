@@ -52,9 +52,10 @@ func ResourceHSMConfiguration() *schema.Resource {
 				ForceNew: true,
 			},
 			"hsm_partition_password": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			"hsm_server_public_certificate": {
 				Type:     schema.TypeString,
