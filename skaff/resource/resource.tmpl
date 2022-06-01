@@ -393,7 +393,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChanges("an_argument") {
-		in.AnArgument = d.Get("an_argument").(string)
+		in.AnArgument = aws.String(d.Get("an_argument").(string))
 		update = true
 	}
 
@@ -408,7 +408,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	// TIP: -- 3. Call the AWS modify/update function
 	{{- end }}
 	log.Printf("[DEBUG] Updating {{ .Service }} {{ .Resource }} (%s): %#v", d.Id(), in)
-	out, err := conn.Update{{ .Resource }}(ctx, in)
+	out, err := conn.Update{{ .Resource }}WithContext(ctx, in)
 	if err != nil {
 		return diag.Errorf("updating {{ .Service }} {{ .Resource }} (%s): %s", d.Id(), err)
 	}
@@ -585,7 +585,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 			return nil, "", err
 		}
 
-		return out, out.Status, nil
+		return out, aws.ToString(out.Status), nil
 	}
 }
 {{ if .IncludeComments }}
