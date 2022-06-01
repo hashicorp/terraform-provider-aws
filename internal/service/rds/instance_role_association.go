@@ -69,13 +69,13 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 	_, err := conn.AddRoleToDBInstance(input)
 
 	if err != nil {
-		return fmt.Errorf("error associating RDS DB Instance (%s) IAM Role (%s): %s", dbInstanceIdentifier, roleArn, err)
+		return fmt.Errorf("error associating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", dbInstanceIdentifier, roleArn))
 
 	if err := waitForDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
+		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) association: %w", dbInstanceIdentifier, roleArn, err)
 	}
 
 	return resourceInstanceRoleAssociationRead(d, meta)
@@ -87,7 +87,7 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading resource ID: %s", err)
+		return fmt.Errorf("error reading resource ID: %w", err)
 	}
 
 	dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
@@ -99,7 +99,7 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
+		return fmt.Errorf("error reading RDS DB Instance (%s) IAM Role (%s) association: %w", dbInstanceIdentifier, roleArn, err)
 	}
 
 	if dbInstanceRole == nil {
@@ -121,7 +121,7 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading resource ID: %s", err)
+		return fmt.Errorf("error reading resource ID: %w", err)
 	}
 
 	input := &rds.RemoveRoleFromDBInstanceInput{
@@ -142,11 +142,11 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating RDS DB Instance (%s) IAM Role (%s): %s", dbInstanceIdentifier, roleArn, err)
+		return fmt.Errorf("error disassociating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
 	}
 
 	if err := WaitForInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %s", dbInstanceIdentifier, roleArn, err)
+		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %w", dbInstanceIdentifier, roleArn, err)
 	}
 
 	return nil
