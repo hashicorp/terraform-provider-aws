@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceClusterIamRoles() *schema.Resource {
+func ResourceClusterIAMRoles() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterIamRolesCreate,
-		Read:   resourceClusterIamRolesRead,
-		Update: resourceClusterIamRolesUpdate,
-		Delete: resourceClusterIamRolesDelete,
+		Create: resourceClusterIAMRolesCreate,
+		Read:   resourceClusterIAMRolesRead,
+		Update: resourceClusterIAMRolesUpdate,
+		Delete: resourceClusterIAMRolesDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -56,7 +56,7 @@ func ResourceClusterIamRoles() *schema.Resource {
 	}
 }
 
-func resourceClusterIamRolesCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterIAMRolesCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	clusterID := d.Get("cluster_identifier").(string)
@@ -85,10 +85,10 @@ func resourceClusterIamRolesCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("waiting for Redshift Cluster IAM Roles (%s) update: %w", d.Id(), err)
 	}
 
-	return resourceClusterIamRolesRead(d, meta)
+	return resourceClusterIAMRolesRead(d, meta)
 }
 
-func resourceClusterIamRolesRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterIAMRolesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	rsc, err := FindClusterByID(conn, d.Id())
@@ -116,7 +116,7 @@ func resourceClusterIamRolesRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceClusterIamRolesUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterIAMRolesUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	o, n := d.GetChange("iam_role_arns")
@@ -149,10 +149,10 @@ func resourceClusterIamRolesUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("waiting for Redshift Cluster IAM Roles (%s) update: %w", d.Id(), err)
 	}
 
-	return resourceClusterIamRolesRead(d, meta)
+	return resourceClusterIAMRolesRead(d, meta)
 }
 
-func resourceClusterIamRolesDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterIAMRolesDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	input := &redshift.ModifyClusterIamRolesInput{

@@ -11,7 +11,7 @@ import (
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
-func TestAccRedshiftClusterIamRoles_basic(t *testing.T) {
+func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 	var v redshift.Cluster
 	resourceName := "aws_redshift_cluster_iam_roles.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,7 +23,7 @@ func TestAccRedshiftClusterIamRoles_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterIamRolesConfigBasic(rName),
+				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
@@ -35,14 +35,14 @@ func TestAccRedshiftClusterIamRoles_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterIamRolesConfigUpdated(rName),
+				Config: testAccClusterIAMRolesConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "2"),
 				),
 			},
 			{
-				Config: testAccClusterIamRolesConfigBasic(rName),
+				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
@@ -52,7 +52,7 @@ func TestAccRedshiftClusterIamRoles_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftClusterIamRoles_disappears(t *testing.T) {
+func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 	var v redshift.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -64,7 +64,7 @@ func TestAccRedshiftClusterIamRoles_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterIamRolesConfigBasic(rName),
+				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), resourceName),
@@ -75,7 +75,7 @@ func TestAccRedshiftClusterIamRoles_disappears(t *testing.T) {
 	})
 }
 
-func testAccClusterIamRolesConfigBase(rName string) string {
+func testAccClusterIAMRolesConfigBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_iam_role" "ec2" {
   name = "%[1]s-ec2"
@@ -139,8 +139,8 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterIamRolesConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterIamRolesConfigBase(rName), `
+func testAccClusterIAMRolesConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterIAMRolesConfigBase(rName), `
 resource "aws_redshift_cluster_iam_roles" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
   iam_role_arns      = [aws_iam_role.ec2.arn]
@@ -148,8 +148,8 @@ resource "aws_redshift_cluster_iam_roles" "test" {
 `)
 }
 
-func testAccClusterIamRolesConfigUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccClusterIamRolesConfigBase(rName), `
+func testAccClusterIAMRolesConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccClusterIAMRolesConfigBase(rName), `
 resource "aws_redshift_cluster_iam_roles" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
   iam_role_arns      = [aws_iam_role.ec2.arn, aws_iam_role.lambda.arn]
