@@ -716,7 +716,7 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_SqlServer_basic(t *testing.T) {
+func TestAccDMSEndpoint_SQLServer_basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -727,7 +727,7 @@ func TestAccDMSEndpoint_SqlServer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_SqlServer(rName),
+				Config: testAccEndpointConfig_SQLServer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -743,7 +743,7 @@ func TestAccDMSEndpoint_SqlServer_basic(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_SqlServer_secretID(t *testing.T) {
+func TestAccDMSEndpoint_SQLServer_secretID(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -754,7 +754,7 @@ func TestAccDMSEndpoint_SqlServer_secretID(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_SqlServerSecretID(rName),
+				Config: testAccEndpointConfig_SQLServerSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -769,7 +769,7 @@ func TestAccDMSEndpoint_SqlServer_secretID(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_SqlServer_update(t *testing.T) {
+func TestAccDMSEndpoint_SQLServer_update(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -780,14 +780,14 @@ func TestAccDMSEndpoint_SqlServer_update(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_SqlServer(rName),
+				Config: testAccEndpointConfig_SQLServer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_SqlServerUpdate(rName),
+				Config: testAccEndpointConfig_SQLServerUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -810,7 +810,7 @@ func TestAccDMSEndpoint_SqlServer_update(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/23143
-func TestAccDMSEndpoint_SqlServer_kmsKey(t *testing.T) {
+func TestAccDMSEndpoint_SQLServer_kmsKey(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1959,7 +1959,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_SqlServer(rName string) string {
+func testAccEndpointConfig_SQLServer(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
@@ -1982,7 +1982,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_SqlServerUpdate(rName string) string {
+func testAccEndpointConfig_SQLServerUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
@@ -2005,7 +2005,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_SqlServerSecretID(rName string) string {
+func testAccEndpointConfig_SQLServerSecretID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
