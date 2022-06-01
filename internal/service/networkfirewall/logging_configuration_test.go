@@ -294,7 +294,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_S3_updatePrefix(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3UpdatePrefix(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -335,7 +335,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateFirewallARN(t *testing.T) 
 			},
 			{
 				// ForceNew Firewall i.e. LoggingConfiguration Resource
-				Config: testAccLoggingConfigurationConfig_S3_updateFirewallARN(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3UpdateFirewallARN(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, "arn"),
@@ -897,7 +897,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 `, rName, destinationType, logType))
 }
 
-func testAccLoggingConfigurationConfig_S3_updateFirewallARN(bucketName, rName, destinationType, logType string) string {
+func testAccLoggingConfigurationConfig_s3UpdateFirewallARN(bucketName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
 		testAccLoggingConfigurationBaseConfig_updateFirewall(rName),
 		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),
@@ -918,7 +918,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 `, rName, destinationType, logType))
 }
 
-func testAccLoggingConfigurationConfig_S3_updatePrefix(bucketName, rName, destinationType, logType string) string {
+func testAccLoggingConfigurationConfig_s3UpdatePrefix(bucketName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
 		testAccLoggingConfigurationBaseConfig(rName),
 		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),

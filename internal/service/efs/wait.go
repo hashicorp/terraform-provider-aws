@@ -129,3 +129,38 @@ func waitBackupPolicyEnabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error
 
 	return nil, err
 }
+
+func waitReplicationConfigurationCreated(conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.ReplicationStatusEnabling},
+		Target:  []string{efs.ReplicationStatusEnabled},
+		Refresh: statusReplicationConfiguration(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationConfigurationDeleted(conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{efs.ReplicationStatusDeleting},
+		Target:                    []string{},
+		Refresh:                   statusReplicationConfiguration(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}

@@ -28,7 +28,7 @@ func TestAccElasticTranscoderPreset_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetConfig(rName),
+				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`preset/.+`)),
@@ -55,7 +55,7 @@ func TestAccElasticTranscoderPreset_video_noCodec(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetVideoNoCodec(rName),
+				Config: testAccPresetConfig_videoNoCodec(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 				),
@@ -82,7 +82,7 @@ func TestAccElasticTranscoderPreset_audio_noBitRate(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetNoBitRateConfig(rName),
+				Config: testAccPresetConfig_noBitRate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 				),
@@ -108,7 +108,7 @@ func TestAccElasticTranscoderPreset_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetConfig(rName),
+				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 					acctest.CheckResourceDisappears(acctest.Provider, tfet.ResourcePreset(), resourceName),
@@ -132,7 +132,7 @@ func TestAccElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetAudioCodecOptionsEmptyConfig(rName),
+				Config: testAccPresetConfig_audioCodecOptionsEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 				),
@@ -159,7 +159,7 @@ func TestAccElasticTranscoderPreset_description(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetDescriptionConfig(rName, "description1"),
+				Config: testAccPresetConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -187,7 +187,7 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetFull1Config(rName),
+				Config: testAccPresetConfig_full1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
@@ -204,7 +204,7 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPresetFull2Config(rName),
+				Config: testAccPresetConfig_full2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
@@ -237,7 +237,7 @@ func TestAccElasticTranscoderPreset_Video_frameRate(t *testing.T) {
 		CheckDestroy:      testAccCheckPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPresetVideoFrameRateConfig(rName, "29.97"),
+				Config: testAccPresetConfig_videoFrameRate(rName, "29.97"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "video.0.frame_rate", "29.97"),
@@ -304,7 +304,7 @@ func testAccCheckPresetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPresetConfig(rName string) string {
+func testAccPresetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "mp4"
@@ -321,7 +321,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func testAccPresetAudioCodecOptionsEmptyConfig(rName string) string {
+func testAccPresetConfig_audioCodecOptionsEmpty(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "mp4"
@@ -340,7 +340,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func testAccPresetDescriptionConfig(rName string, description string) string {
+func testAccPresetConfig_description(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
@@ -358,7 +358,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName, description)
 }
 
-func testAccPresetFull1Config(rName string) string {
+func testAccPresetConfig_full1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "mp4"
@@ -409,7 +409,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func testAccPresetFull2Config(rName string) string {
+func testAccPresetConfig_full2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "mp4"
@@ -474,7 +474,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func testAccPresetVideoFrameRateConfig(rName string, frameRate string) string {
+func testAccPresetConfig_videoFrameRate(rName string, frameRate string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "mp4"
@@ -513,7 +513,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName, frameRate)
 }
 
-func testAccPresetVideoNoCodec(rName string) string {
+func testAccPresetConfig_videoNoCodec(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "webm"
@@ -553,7 +553,7 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func testAccPresetNoBitRateConfig(rName string) string {
+func testAccPresetConfig_noBitRate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container = "wav"

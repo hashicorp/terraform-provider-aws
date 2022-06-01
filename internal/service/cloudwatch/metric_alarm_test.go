@@ -1004,7 +1004,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 // ValidationError: Invalid use of EC2 'Recover' action. i-abc123 is not a valid EC2 instance.
 func testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, action string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}

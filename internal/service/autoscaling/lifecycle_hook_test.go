@@ -148,7 +148,7 @@ func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportS
 func testAccLifecycleHookConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -229,7 +229,7 @@ EOF
 func testAccLifecycleHookConfig_omitDefaultResult(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q

@@ -362,7 +362,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_MFAConfiguration_SMSConfigurationAndSoftwareTokenMfaConfigurationEnabled(rName, false),
+				Config: testAccUserPoolConfig_MFAConfiguration_smsConfigurationAndSoftwareTokenMFAConfigurationEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
@@ -378,7 +378,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_MFAConfiguration_SMSConfigurationAndSoftwareTokenMfaConfigurationEnabled(rName, true),
+				Config: testAccUserPoolConfig_MFAConfiguration_smsConfigurationAndSoftwareTokenMFAConfigurationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
@@ -427,7 +427,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName, true),
+				Config: testAccUserPoolConfig_MFAConfiguration_softwareTokenMFAConfigurationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
@@ -450,7 +450,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName, true),
+				Config: testAccUserPoolConfig_MFAConfiguration_softwareTokenMFAConfigurationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
@@ -472,7 +472,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName, true),
+				Config: testAccUserPoolConfig_MFAConfiguration_softwareTokenMFAConfigurationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
@@ -496,7 +496,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 		CheckDestroy:      testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName, true),
+				Config: testAccUserPoolConfig_MFAConfiguration_softwareTokenMFAConfigurationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
@@ -1696,7 +1696,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName)
 }
 
-func testAccUserPoolConfig_MFAConfiguration_SMSConfigurationAndSoftwareTokenMfaConfigurationEnabled(rName string, enabled bool) string {
+func testAccUserPoolConfig_MFAConfiguration_smsConfigurationAndSoftwareTokenMFAConfigurationEnabled(rName string, enabled bool) string {
 	return testAccUserPoolSMSConfigurationBaseConfig(rName, "test") + fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
@@ -1714,7 +1714,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName, enabled)
 }
 
-func testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName string, enabled bool) string {
+func testAccUserPoolConfig_MFAConfiguration_softwareTokenMFAConfigurationEnabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"

@@ -143,7 +143,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
 		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behavior").(string)),
-		TagSpecifications:            ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotInstancesRequest),
+		TagSpecifications:            tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotInstancesRequest),
 
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.

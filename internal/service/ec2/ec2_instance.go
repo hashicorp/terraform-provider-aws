@@ -765,8 +765,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error collecting instance settings: %w", err)
 	}
 
-	tagSpecifications := ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
-	tagSpecifications = append(tagSpecifications, ec2TagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
+	tagSpecifications := tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
+	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
@@ -808,12 +808,12 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
 			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
 				return true, err
 			}
 
 			// IAM roles can also take time to propagate in AWS:
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, " has no associated IAM Roles") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
 				return true, err
 			}
 
@@ -933,7 +933,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("hibernation", v.Configured)
 	}
 
-	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
+	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
 		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
@@ -945,7 +945,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("maintenance_options", nil)
 	}
 
-	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
@@ -1173,7 +1173,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
-		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
 			err = nil
 		}
 
@@ -1506,16 +1506,14 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if err := modifyInstanceAttributeWithStopStart(conn, input); err != nil {
-				return fmt.Errorf("updating Ec2 Instance (%s) user data base64: %w", d.Id(), err)
+				return fmt.Errorf("updating EC2 Instance (%s) user data base64: %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
-
-		if err != nil {
-			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
+		if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
+			return err
 		}
 	}
 
@@ -1742,7 +1740,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
+	if err := disableInstanceAPITermination(conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
@@ -1761,13 +1759,13 @@ func disableInstanceAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 		InstanceId: aws.String(id),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeUnsupportedOperation, "not supported for spot instances") {
+	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %w", id, err)
 	}
 
 	return nil
@@ -1795,7 +1793,7 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 				InstanceIds: aws.StringSlice([]string{id}),
 			})
 		},
-		ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
+		errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
 	)
 
 	if err != nil {
@@ -1987,62 +1985,6 @@ func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instanc
 	return bd.DeviceName != nil &&
 		instance.RootDeviceName != nil &&
 		aws.StringValue(bd.DeviceName) == aws.StringValue(instance.RootDeviceName)
-}
-
-func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) {
-	if len(specs) < 1 {
-		return "", errors.New("Cannot fetch AMI for blank launch template.")
-	}
-
-	spec := specs[0].(map[string]interface{})
-
-	idValue, idOk := spec["id"]
-	nameValue, nameOk := spec["name"]
-
-	request := &ec2.DescribeLaunchTemplateVersionsInput{}
-
-	if idOk && idValue != "" {
-		request.LaunchTemplateId = aws.String(idValue.(string))
-	} else if nameOk && nameValue != "" {
-		request.LaunchTemplateName = aws.String(nameValue.(string))
-	}
-
-	var isLatest bool
-	defaultFilter := []*ec2.Filter{
-		{
-			Name:   aws.String("is-default-version"),
-			Values: aws.StringSlice([]string{"true"}),
-		},
-	}
-	if v, ok := spec["version"]; ok && v != "" {
-		switch v {
-		case LaunchTemplateVersionDefault:
-			request.Filters = defaultFilter
-		case LaunchTemplateVersionLatest:
-			isLatest = true
-		default:
-			request.Versions = []*string{aws.String(v.(string))}
-		}
-	}
-
-	dltv, err := conn.DescribeLaunchTemplateVersions(request)
-	if err != nil {
-		return "", err
-	}
-
-	var ltData *ec2.ResponseLaunchTemplateData
-	if isLatest {
-		index := len(dltv.LaunchTemplateVersions) - 1
-		ltData = dltv.LaunchTemplateVersions[index].LaunchTemplateData
-	} else {
-		ltData = dltv.LaunchTemplateVersions[0].LaunchTemplateData
-	}
-
-	if ltData.ImageId != nil {
-		return *ltData.ImageId, nil
-	}
-
-	return "", nil
 }
 
 func FetchRootDeviceName(conn *ec2.EC2, amiID string) (*string, error) {
@@ -2292,21 +2234,24 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			}
 
 			var amiID string
-			if v, ok := d.GetOk("launch_template"); ok {
-				var err error
-				amiID, err = fetchLaunchTemplateAmi(v.([]interface{}), conn)
+
+			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				launchTemplateData, err := findLaunchTemplateData(conn, expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{})))
+
 				if err != nil {
 					return nil, err
 				}
+
+				amiID = aws.StringValue(launchTemplateData.ImageId)
 			}
 
-			// AMI id from attributes overrides ami from launch template
+			// AMI from configuration overrides the one from the launch template.
 			if v, ok := d.GetOk("ami"); ok {
 				amiID = v.(string)
 			}
 
 			if amiID == "" {
-				return nil, errors.New("`ami` must be set or provided via launch template")
+				return nil, errors.New("`ami` must be set or provided via `launch_template`")
 			}
 
 			if dn, err := FetchRootDeviceName(conn, amiID); err == nil {
@@ -2336,7 +2281,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 	}
 
 	resp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: ec2AttributeFiltersFromMultimap(map[string][]string{
+		Filters: attributeFiltersFromMultimap(map[string][]string{
 			"resource-id": volumeIds,
 		}),
 	})
@@ -2344,7 +2289,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 		return nil, fmt.Errorf("error getting tags for volumes (%s): %s", volumeIds, err)
 	}
 
-	return ec2TagsFromTagDescriptions(resp.Tags), nil
+	return tagsFromTagDescriptions(resp.Tags), nil
 }
 
 // Determine whether we're referring to security groups with
@@ -2496,8 +2441,8 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
-		EnclaveOptions:        expandEc2EnclaveOptions(d.Get("enclave_options").([]interface{})),
+		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
@@ -2508,8 +2453,21 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		opts.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("launch_template"); ok {
-		opts.LaunchTemplate = expandEc2LaunchTemplateSpecification(v.([]interface{}))
+	var instanceInterruptionBehavior string
+
+	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+		launchTemplateData, err := findLaunchTemplateData(conn, launchTemplateSpecification)
+
+		if err != nil {
+			return nil, err
+		}
+
+		opts.LaunchTemplate = launchTemplateSpecification
+
+		if launchTemplateData.InstanceMarketOptions != nil && launchTemplateData.InstanceMarketOptions.SpotOptions != nil {
+			instanceInterruptionBehavior = aws.StringValue(launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
+		}
 	}
 
 	instanceType := d.Get("instance_type").(string)
@@ -2563,7 +2521,6 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	// aws_spot_instance_request. They represent the same data. :-|
 	opts.Placement = &ec2.Placement{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		GroupName:        aws.String(d.Get("placement_group").(string)),
 	}
 
 	if v, ok := d.GetOk("placement_partition_number"); ok {
@@ -2572,7 +2529,11 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 
 	opts.SpotPlacement = &ec2.SpotPlacement{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		GroupName:        aws.String(d.Get("placement_group").(string)),
+	}
+
+	if v := d.Get("placement_group").(string); instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate {
+		opts.Placement.GroupName = aws.String(v)
+		opts.SpotPlacement.GroupName = aws.String(v)
 	}
 
 	if v := d.Get("tenancy").(string); v != "" {
@@ -2706,7 +2667,7 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 		InstanceIds: aws.StringSlice([]string{id}),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil
 	}
 
@@ -2805,7 +2766,7 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
+func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2835,7 +2796,7 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 	return opts
 }
 
-func expandEc2EnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
+func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2862,7 +2823,7 @@ func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddres
 	return specs
 }
 
-func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
+func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
 	if opts == nil {
 		return nil
 	}
@@ -2877,7 +2838,7 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 	return []interface{}{m}
 }
 
-func flattenEc2EnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
+func flattenEnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 	if opts == nil {
 		return nil
 	}
@@ -3071,29 +3032,26 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 	return tfMap
 }
 
-func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
-	if len(specs) < 1 {
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.LaunchTemplateSpecification {
+	if tfMap == nil {
 		return nil
 	}
 
-	spec := specs[0].(map[string]interface{})
+	apiObject := &ec2.LaunchTemplateSpecification{}
 
-	idValue, idOk := spec["id"]
-	nameValue, nameOk := spec["name"]
-
-	result := &ec2.LaunchTemplateSpecification{}
-
-	if idOk && idValue != "" {
-		result.LaunchTemplateId = aws.String(idValue.(string))
-	} else if nameOk && nameValue != "" {
-		result.LaunchTemplateName = aws.String(nameValue.(string))
+	// DescribeLaunchTemplates returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set.
+	if v, ok := tfMap["id"]; ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v.(string))
+	} else if v, ok := tfMap["name"]; ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
-	if v, ok := spec["version"]; ok && v != "" {
-		result.Version = aws.String(v.(string))
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
 func flattenInstanceLaunchTemplate(conn *ec2.EC2, instanceID, previousLaunchTemplateVersion string) ([]interface{}, error) {
@@ -3176,6 +3134,43 @@ func findInstanceLaunchTemplateVersion(conn *ec2.EC2, id string) (string, error)
 	}
 
 	return launchTemplateVersion, nil
+}
+
+func findLaunchTemplateData(conn *ec2.EC2, launchTemplateSpecification *ec2.LaunchTemplateSpecification) (*ec2.ResponseLaunchTemplateData, error) {
+	input := &ec2.DescribeLaunchTemplateVersionsInput{}
+
+	if v := aws.StringValue(launchTemplateSpecification.LaunchTemplateId); v != "" {
+		input.LaunchTemplateId = aws.String(v)
+	} else if v := aws.StringValue(launchTemplateSpecification.LaunchTemplateName); v != "" {
+		input.LaunchTemplateName = aws.String(v)
+	}
+
+	var latestVersion bool
+
+	if v := aws.StringValue(launchTemplateSpecification.Version); v != "" {
+		switch v {
+		case LaunchTemplateVersionDefault:
+			input.Filters = BuildAttributeFilterList(map[string]string{
+				"is-default-version": "true",
+			})
+		case LaunchTemplateVersionLatest:
+			latestVersion = true
+		default:
+			input.Versions = aws.StringSlice([]string{v})
+		}
+	}
+
+	output, err := FindLaunchTemplateVersions(conn, input)
+
+	if err != nil {
+		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
+	}
+
+	if latestVersion {
+		return output[len(output)-1].LaunchTemplateData, nil
+	}
+
+	return output[0].LaunchTemplateData, nil
 }
 
 // findLaunchTemplateNameAndVersions returns the specified launch template's name, default version and latest version.

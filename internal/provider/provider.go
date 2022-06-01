@@ -589,8 +589,8 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
-			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
-			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceVPCIpamPreviewNextCidr(),
+			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),
@@ -636,12 +636,13 @@ func Provider() *schema.Provider {
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 
 			// Adding the Aliases for the ALB -> LB Rename
-			"aws_alb_listener":     elbv2.DataSourceListener(),
-			"aws_alb_target_group": elbv2.DataSourceTargetGroup(),
-			"aws_alb":              elbv2.DataSourceLoadBalancer(),
-			"aws_lb_listener":      elbv2.DataSourceListener(),
-			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
-			"aws_lb":               elbv2.DataSourceLoadBalancer(),
+			"aws_alb":               elbv2.DataSourceLoadBalancer(),
+			"aws_alb_listener":      elbv2.DataSourceListener(),
+			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
+			"aws_lb":                elbv2.DataSourceLoadBalancer(),
+			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
+			"aws_lb_listener":       elbv2.DataSourceListener(),
+			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
 
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
 
@@ -731,7 +732,8 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map": location.DataSourceMap(),
+			"aws_location_map":         location.DataSourceMap(),
+			"aws_location_place_index": location.DataSourcePlaceIndex(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -803,9 +805,11 @@ func Provider() *schema.Provider {
 			"aws_rds_engine_version":        rds.DataSourceEngineVersion(),
 			"aws_rds_orderable_db_instance": rds.DataSourceOrderableInstance(),
 
-			"aws_redshift_cluster":           redshift.DataSourceCluster(),
-			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
-			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
+			"aws_redshift_cluster":             redshift.DataSourceCluster(),
+			"aws_redshift_cluster_credentials": redshift.DataSourceClusterCredentials(),
+			"aws_redshift_orderable_cluster":   redshift.DataSourceOrderableCluster(),
+			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
+			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
@@ -976,7 +980,7 @@ func Provider() *schema.Provider {
 			"aws_appmesh_virtual_router":  appmesh.ResourceVirtualRouter(),
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
-			"aws_apprunner_vpc_connector":                      apprunner.ResourceVpcConnector(),
+			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
@@ -1342,13 +1346,13 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_service":                             ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":           ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
 			"aws_vpc_endpoint_subnet_association":                  ec2.ResourceVPCEndpointSubnetAssociation(),
-			"aws_vpc_ipam":                                         ec2.ResourceVPCIpam(),
-			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceVPCIpamOrganizationAdminAccount(),
-			"aws_vpc_ipam_pool":                                    ec2.ResourceVPCIpamPool(),
-			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceVPCIpamPoolCidrAllocation(),
-			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceVPCIpamPoolCidr(),
-			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceVPCIpamPreviewNextCidr(),
-			"aws_vpc_ipam_scope":                                   ec2.ResourceVPCIpamScope(),
+			"aws_vpc_ipam":                                         ec2.ResourceIPAM(),
+			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceIPAMOrganizationAdminAccount(),
+			"aws_vpc_ipam_pool":                                    ec2.ResourceIPAMPool(),
+			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceIPAMPoolCIDRAllocation(),
+			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceIPAMPoolCIDR(),
+			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceIPAMPreviewNextCIDR(),
+			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),
 			"aws_vpc_peering_connection":                           ec2.ResourceVPCPeeringConnection(),
@@ -1380,11 +1384,12 @@ func Provider() *schema.Provider {
 			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
 			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
-			"aws_efs_access_point":       efs.ResourceAccessPoint(),
-			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
-			"aws_efs_file_system":        efs.ResourceFileSystem(),
-			"aws_efs_file_system_policy": efs.ResourceFileSystemPolicy(),
-			"aws_efs_mount_target":       efs.ResourceMountTarget(),
+			"aws_efs_access_point":              efs.ResourceAccessPoint(),
+			"aws_efs_backup_policy":             efs.ResourceBackupPolicy(),
+			"aws_efs_file_system":               efs.ResourceFileSystem(),
+			"aws_efs_file_system_policy":        efs.ResourceFileSystemPolicy(),
+			"aws_efs_mount_target":              efs.ResourceMountTarget(),
+			"aws_efs_replication_configuration": efs.ResourceReplicationConfiguration(),
 
 			"aws_eks_addon":                    eks.ResourceAddon(),
 			"aws_eks_cluster":                  eks.ResourceCluster(),
@@ -1603,7 +1608,7 @@ func Provider() *schema.Provider {
 			"aws_lambda_event_source_mapping":           lambda.ResourceEventSourceMapping(),
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
-			"aws_lambda_function_url":                   lambda.ResourceFunctionUrl(),
+			"aws_lambda_function_url":                   lambda.ResourceFunctionURL(),
 			"aws_lambda_invocation":                     lambda.ResourceInvocation(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
 			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),
@@ -1625,7 +1630,8 @@ func Provider() *schema.Provider {
 			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
 
-			"aws_location_map": location.ResourceMap(),
+			"aws_location_map":         location.ResourceMap(),
+			"aws_location_place_index": location.ResourcePlaceIndex(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
@@ -1759,8 +1765,12 @@ func Provider() *schema.Provider {
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
 
+			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
+			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
+			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
+			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),
@@ -1768,6 +1778,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_snapshot_schedule":             redshift.ResourceSnapshotSchedule(),
 			"aws_redshift_snapshot_schedule_association": redshift.ResourceSnapshotScheduleAssociation(),
 			"aws_redshift_subnet_group":                  redshift.ResourceSubnetGroup(),
+			"aws_redshift_usage_limit":                   redshift.ResourceUsageLimit(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
@@ -1809,7 +1820,7 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                      s3.ResourceBucket(),
 			"aws_s3_bucket_accelerate_configuration":             s3.ResourceBucketAccelerateConfiguration(),
-			"aws_s3_bucket_acl":                                  s3.ResourceBucketAcl(),
+			"aws_s3_bucket_acl":                                  s3.ResourceBucketACL(),
 			"aws_s3_bucket_analytics_configuration":              s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_cors_configuration":                   s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration":    s3.ResourceBucketIntelligentTieringConfiguration(),

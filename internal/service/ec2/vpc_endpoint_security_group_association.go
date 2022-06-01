@@ -82,7 +82,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 		}
 	}
 
-	err := createVpcEndpointSecurityGroupAssociation(conn, vpcEndpointID, securityGroupID)
+	err := createVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, securityGroupID)
 
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 
 	if replaceDefaultAssociation {
 		// Delete the existing VPC endpoint/default security group association.
-		if err := deleteVpcEndpointSecurityGroupAssociation(conn, vpcEndpointID, defaultSecurityGroupID); err != nil {
+		if err := deleteVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, defaultSecurityGroupID); err != nil {
 			return err
 		}
 	}
@@ -146,18 +146,18 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(d *schema.ResourceData, m
 		}
 
 		// Add back the VPC endpoint/default security group association.
-		err = createVpcEndpointSecurityGroupAssociation(conn, vpcEndpointID, aws.StringValue(defaultSecurityGroup.GroupId))
+		err = createVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, aws.StringValue(defaultSecurityGroup.GroupId))
 
 		if err != nil {
 			return err
 		}
 	}
 
-	return deleteVpcEndpointSecurityGroupAssociation(conn, vpcEndpointID, securityGroupID)
+	return deleteVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, securityGroupID)
 }
 
-// createVpcEndpointSecurityGroupAssociation creates the specified VPC endpoint/security group association.
-func createVpcEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
+// createVPCEndpointSecurityGroupAssociation creates the specified VPC endpoint/security group association.
+func createVPCEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:       aws.String(vpcEndpointID),
 		AddSecurityGroupIds: aws.StringSlice([]string{securityGroupID}),
@@ -173,8 +173,8 @@ func createVpcEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, sec
 	return nil
 }
 
-// deleteVpcEndpointSecurityGroupAssociation deletes the specified VPC endpoint/security group association.
-func deleteVpcEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
+// deleteVPCEndpointSecurityGroupAssociation deletes the specified VPC endpoint/security group association.
+func deleteVPCEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:          aws.String(vpcEndpointID),
 		RemoveSecurityGroupIds: aws.StringSlice([]string{securityGroupID}),
@@ -183,7 +183,7 @@ func deleteVpcEndpointSecurityGroupAssociation(conn *ec2.EC2, vpcEndpointID, sec
 	log.Printf("[DEBUG] Deleting VPC Endpoint Security Group Association: %s", input)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound, ErrCodeInvalidGroupNotFound, ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIDNotFound, errCodeInvalidGroupNotFound, errCodeInvalidParameter) {
 		return nil
 	}
 

@@ -437,7 +437,7 @@ func testAccCheckApplicationSourceTags(scalingPlan *autoscalingplans.ScalingPlan
 
 func testAccScalingPlanConfigBase(rName, tagName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`

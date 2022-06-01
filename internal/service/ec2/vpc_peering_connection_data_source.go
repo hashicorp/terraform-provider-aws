@@ -186,13 +186,13 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)); err != nil {
+		if err := d.Set("accepter", flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)); err != nil {
+		if err := d.Set("requester", flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	}

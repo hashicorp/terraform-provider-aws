@@ -2,6 +2,7 @@ package cloudwatch_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -17,10 +18,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkipCloudwatch)
+	acctest.RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipCloudwatch(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"context deadline exceeded", // tests never fail in GovCloud, they just timeout
 	)
@@ -244,6 +245,77 @@ func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricStream_additional_statistics(t *testing.T) {
+	resourceName := "aws_cloudwatch_metric_stream.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p0"),
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p100"),
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p"),
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "tm"),
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "tc()"),
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p99.12345678901"),
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "IQM"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
+				),
+			},
+			{
+				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "PR(:50)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
+				),
+			},
+			{
+				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "TS(50.5:)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
+				),
+			},
+			{
+				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "TC(1:100)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
@@ -567,4 +639,41 @@ resource "aws_cloudwatch_metric_stream" "test" {
   }
 }
 `, rName)
+}
+
+func testAccMetricStreamAdditionalStatisticsConfig(rName string, stat string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_stream" "test" {
+  name          = %[1]q
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  output_format = "json"
+
+  statistics_configuration {
+    additional_statistics = [
+      "p1", "tm99"
+    ]
+
+    include_metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+    }
+  }
+
+  statistics_configuration {
+    additional_statistics = [
+	  %[2]q
+    ]
+
+    include_metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+    }
+  }
+}
+`, rName, stat)
 }

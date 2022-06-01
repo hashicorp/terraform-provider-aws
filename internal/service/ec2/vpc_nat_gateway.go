@@ -70,7 +70,7 @@ func resourceNATGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNatGatewayInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNatgateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNatgateway),
 	}
 
 	if v, ok := d.GetOk("allocation_id"); ok {
@@ -162,7 +162,7 @@ func resourceNATGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		NatGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNatGatewayNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeNatGatewayNotFound) {
 		return nil
 	}
 

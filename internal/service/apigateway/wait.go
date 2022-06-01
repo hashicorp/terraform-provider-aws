@@ -25,7 +25,7 @@ func waitAPIGatewayVPCLinkAvailable(conn *apigateway.APIGateway, vpcLinkId strin
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
-		Refresh:    apiGatewayVpcLinkStatus(conn, vpcLinkId),
+		Refresh:    vpcLinkStatus(conn, vpcLinkId),
 		Timeout:    apiGatewayVPCLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
@@ -45,7 +45,7 @@ func waitAPIGatewayVPCLinkDeleted(conn *apigateway.APIGateway, vpcLinkId string)
 		Target:     []string{},
 		Timeout:    apiGatewayVPCLinkDeleteTimeout,
 		MinTimeout: 1 * time.Second,
-		Refresh:    apiGatewayVpcLinkStatus(conn, vpcLinkId),
+		Refresh:    vpcLinkStatus(conn, vpcLinkId),
 	}
 
 	_, err := stateConf.WaitForState()

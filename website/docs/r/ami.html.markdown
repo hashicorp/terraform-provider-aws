@@ -55,6 +55,7 @@ The following arguments are supported:
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tpm_support` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 

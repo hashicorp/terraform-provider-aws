@@ -124,7 +124,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccCatalogDatabaseConfig_targetDatabase(rName),
+				Config:  testAccCatalogDatabaseConfig_target(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(resourceName),
@@ -139,7 +139,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccCatalogDatabaseConfig_targetDatabaseLocation(rName),
+				Config:  testAccCatalogDatabaseConfig_targetLocation(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(resourceName),
@@ -228,7 +228,7 @@ resource "aws_glue_catalog_database" "test" {
 `, rName, desc)
 }
 
-func testAccCatalogDatabaseConfig_targetDatabase(rName string) string {
+func testAccCatalogDatabaseConfig_target(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -245,7 +245,7 @@ resource "aws_glue_catalog_database" "test2" {
 `, rName)
 }
 
-func testAccCatalogDatabaseConfig_targetDatabaseLocation(rName string) string {
+func testAccCatalogDatabaseConfig_targetLocation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q

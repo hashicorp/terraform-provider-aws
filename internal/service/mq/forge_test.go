@@ -15,17 +15,17 @@ func TestCanonicalXML(t *testing.T) {
 	}{
 		{
 			Name:     "Config sample from MSDN",
-			Config:   testExampleXML_from_msdn,
-			Expected: testExampleXML_from_msdn,
+			Config:   testAccForgeConfig_testExampleXMLFromMsdn,
+			Expected: testAccForgeConfig_testExampleXMLFromMsdn,
 		},
 		{
 			Name:     "Config sample from MSDN, modified",
-			Config:   testExampleXML_from_msdn,
+			Config:   testAccForgeConfig_testExampleXMLFromMsdn,
 			Expected: testExampleXML_from_msdn_modified,
 		},
 		{
 			Name:        "Config sample from MSDN, flaw",
-			Config:      testExampleXML_from_msdn,
+			Config:      testAccForgeConfig_testExampleXMLFromMsdn,
 			Expected:    testExampleXML_from_msdn_flawed,
 			ExpectError: true,
 		},
@@ -78,7 +78,7 @@ func TestCanonicalXML(t *testing.T) {
 	}
 }
 
-const testExampleXML_from_msdn = `
+const testAccForgeConfig_testExampleXMLFromMsdn = `
 <?xml version="1.0"?>
 <purchaseOrder xmlns="http://tempuri.org/po.xsd" orderDate="1999-10-20">
     <shipTo country="US">

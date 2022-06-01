@@ -1,2 +1,2 @@
 # Needed for testing our workflows
--P ubuntu-latest=nektos/act-environments-ubuntu:18.04
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-18.04

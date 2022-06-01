@@ -27,7 +27,7 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDomainDKIMDestroy,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: fmt.Sprintf(testAccDomainDKIMConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainDKIMExists(resourceName),

@@ -21,10 +21,10 @@ func TestAccImageBuilderComponentsDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigComponent(rName),
+				Config: testAccComponentsDataSourceConfig_component(rName),
 			},
 			{
-				Config: testAccConfigComponentWithDataSource(rName),
+				Config: testAccComponentsDataSourceConfig_component2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +34,7 @@ func TestAccImageBuilderComponentsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccConfigComponent(rName string) string {
+func testAccComponentsDataSourceConfig_component(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -58,9 +58,9 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccConfigComponentWithDataSource(rName string) string {
+func testAccComponentsDataSourceConfig_component2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigComponent(rName),
+		testAccComponentsDataSourceConfig_component(rName),
 		`
 data "aws_imagebuilder_components" "test" {
   filter {

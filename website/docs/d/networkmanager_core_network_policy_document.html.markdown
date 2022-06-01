@@ -12,7 +12,7 @@ Generates a Core Network policy document in JSON format for use with resources t
 
 Using this data source to generate policy documents is *optional*. It is also valid to use literal JSON strings in your configuration or to use the `file` interpolation function to read a raw JSON policy document from a file.
 
--> For more information about building AWS Core Network policy documents with Terraform, see the [Using AWS & AWSCC Provider Together Guide](https://learn.hashicorp.com/tutorials/terraform/using-aws-awscc-together).
+-> For more information about building AWS Core Network policy documents with Terraform, see the [Using AWS & AWSCC Provider Together Guide](/docs/providers/aws/guides/using-aws-with-awscc-provider.html)
 
 ## Example Usage
 

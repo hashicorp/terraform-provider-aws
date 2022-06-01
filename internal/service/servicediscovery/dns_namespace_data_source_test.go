@@ -25,7 +25,7 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPrivateDNSNamespaceConfig(rName),
+				Config: testAccDNSNamespaceDataSourceConfig_private(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -52,7 +52,7 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPublicDNSNamespaceConfig(rName),
+				Config: testAccDNSNamespaceDataSourceConfig_public(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -64,7 +64,7 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
 	})
 }
 
-func testAccCheckPrivateDNSNamespaceConfig(rName string) string {
+func testAccDNSNamespaceDataSourceConfig_private(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -82,7 +82,7 @@ data "aws_service_discovery_dns_namespace" "test" {
 `, rName)
 }
 
-func testAccCheckPublicDNSNamespaceConfig(rName string) string {
+func testAccDNSNamespaceDataSourceConfig_public(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"

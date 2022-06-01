@@ -79,7 +79,7 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
@@ -145,7 +145,7 @@ func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 			},
 			// Test attribute removal
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
@@ -204,7 +204,7 @@ func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 			},
 			// Test attribute removal
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
@@ -262,7 +262,7 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 			},
 			// Test attribute removal
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
@@ -309,7 +309,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 			},
 			// Test attribute removal
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
@@ -391,7 +391,7 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicSubscriptionEmailConfig(rName, acctest.DefaultEmailAddress),
+				Config: testAccTopicSubscriptionConfig_email(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
@@ -450,7 +450,7 @@ func TestAccSNSTopicSubscription_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
@@ -473,7 +473,7 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
@@ -625,7 +625,7 @@ func TestObfuscateEndpointPassword(t *testing.T) {
 	}
 }
 
-func testAccTopicSubscriptionConfig(rName string) string {
+func testAccTopicSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1050,7 +1050,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName)
 }
 
-func testAccTopicSubscriptionEmailConfig(rName, email string) string {
+func testAccTopicSubscriptionConfig_email(rName, email string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q

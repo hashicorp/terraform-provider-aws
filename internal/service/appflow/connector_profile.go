@@ -1430,7 +1430,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	connectorProfile, err := FindConnectorProfileByArn(context.Background(), conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByARN(context.Background(), conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
@@ -1484,7 +1484,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, _ := FindConnectorProfileByArn(ctx, conn, d.Id())
+	out, _ := FindConnectorProfileByARN(ctx, conn, d.Id())
 
 	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
 
@@ -1584,7 +1584,7 @@ func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.
 	}
 
 	if v, ok := m["api_key"].([]interface{}); ok && len(v) > 0 {
-		credentials.ApiKey = expandApiKeyCredentials(v[0].(map[string]interface{}))
+		credentials.ApiKey = expandAPIKeyCredentials(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := m["basic"].([]interface{}); ok && len(v) > 0 {
@@ -1816,7 +1816,7 @@ func expandOAuthRequest(m map[string]interface{}) *appflow.ConnectorOAuthRequest
 	return &r
 }
 
-func expandApiKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredentials {
+func expandAPIKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredentials {
 	credentials := appflow.ApiKeyCredentials{}
 
 	if v, ok := m["api_key"].(string); ok && v != "" {

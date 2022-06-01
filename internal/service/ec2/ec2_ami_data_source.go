@@ -194,6 +194,10 @@ func DataSourceAMI() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -296,6 +300,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("state", image.State)
+	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 

@@ -110,7 +110,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvCnamePrefixConfig(rName),
+				Config: testAcEnvironmentConfig_cnamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					resource.TestMatchResourceAttr(resourceName, "cname", beanstalkCnameRegexp),
@@ -385,7 +385,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_settingWithJSONValue(t *tes
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvSettingJsonValue(rName, publicKey, acctest.DefaultEmailAddress),
+				Config: testAccEnvironmentConfig_settingJSONValue(rName, publicKey, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 				),
@@ -1043,7 +1043,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvCnamePrefixConfig(rName string) string {
+func testAcEnvironmentConfig_cnamePrefix(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -1498,7 +1498,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvSettingJsonValue(rName, publicKey, email string) string {
+func testAccEnvironmentConfig_settingJSONValue(rName, publicKey, email string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q

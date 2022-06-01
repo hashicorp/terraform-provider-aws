@@ -69,7 +69,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketReplicationConfigurationWithSseKmsEncryptedObjects(rName),
+				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -338,7 +338,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketReplicationConfigurationWithSseKmsEncryptedObjectsAndAccessControlTranslation(rName),
+				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -1677,7 +1677,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, rName))
 }
 
-func testAccBucketReplicationConfigurationWithSseKmsEncryptedObjects(rName string) string {
+func testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 resource "aws_kms_key" "test" {
   provider                = "awsalternate"
@@ -1776,7 +1776,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationWithSseKmsEncryptedObjectsAndAccessControlTranslation(rName string) string {
+func testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 data "aws_caller_identity" "current" {}
 

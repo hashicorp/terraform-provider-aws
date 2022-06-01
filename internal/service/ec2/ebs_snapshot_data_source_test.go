@@ -20,7 +20,7 @@ func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEBSSnapshotDataSourceConfig,
+				Config: testAccEBSSnapshotDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSSnapshotIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
@@ -50,7 +50,7 @@ func TestAccEC2EBSSnapshotDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEBSSnapshotFilterDataSourceConfig,
+				Config: testAccEBSSnapshotDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSSnapshotIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
@@ -70,7 +70,7 @@ func TestAccEC2EBSSnapshotDataSource_mostRecent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEBSSnapshotMostRecentDataSourceConfig,
+				Config: testAccEBSSnapshotDataSourceConfig_mostRecent,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSSnapshotIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
@@ -94,7 +94,7 @@ func testAccCheckEBSSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccCheckEBSSnapshotDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccEBSSnapshotDataSourceConfig_basic = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -110,7 +110,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-var testAccCheckEBSSnapshotFilterDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccEBSSnapshotDataSourceConfig_filter = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -129,7 +129,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-var testAccCheckEBSSnapshotMostRecentDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccEBSSnapshotDataSourceConfig_mostRecent = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
