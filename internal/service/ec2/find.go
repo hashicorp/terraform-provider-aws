@@ -4500,7 +4500,7 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, service
 	return output, nil
 }
 
-func FindSnapshotById(conn *ec2.EC2, name string) (*ec2.Snapshot, error) {
+func FindSnapshotByID(conn *ec2.EC2, name string) (*ec2.Snapshot, error) {
 	input := &ec2.DescribeSnapshotsInput{
 		SnapshotIds: aws.StringSlice([]string{name}),
 	}
@@ -4529,7 +4529,7 @@ func FindSnapshotById(conn *ec2.EC2, name string) (*ec2.Snapshot, error) {
 	return output.Snapshots[0], nil
 }
 
-func FindSnapshotTierStatusById(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+func FindSnapshotTierStatusByID(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
 	filters := map[string]string{
 		"snapshot-id": id,
 	}

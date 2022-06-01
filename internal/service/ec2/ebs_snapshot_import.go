@@ -296,7 +296,7 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	snapshot, err := FindSnapshotById(conn, d.Id())
+	snapshot, err := FindSnapshotByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Snapshot (%s) Not found - removing from state", d.Id())

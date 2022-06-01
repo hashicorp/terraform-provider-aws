@@ -237,7 +237,7 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		output, err := tfec2.FindSnapshotById(conn, rs.Primary.ID)
+		output, err := tfec2.FindSnapshotByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -257,7 +257,7 @@ func testAccCheckEBSSnapshotDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindSnapshotById(conn, rs.Primary.ID)
+		_, err := tfec2.FindSnapshotByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
