@@ -805,10 +805,11 @@ func Provider() *schema.Provider {
 			"aws_rds_engine_version":        rds.DataSourceEngineVersion(),
 			"aws_rds_orderable_db_instance": rds.DataSourceOrderableInstance(),
 
-			"aws_redshift_cluster":           redshift.DataSourceCluster(),
-			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
-			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
-			"aws_redshift_subnet_group":      redshift.DataSourceSubnetGroup(),
+			"aws_redshift_cluster":             redshift.DataSourceCluster(),
+			"aws_redshift_cluster_credentials": redshift.DataSourceClusterCredentials(),
+			"aws_redshift_orderable_cluster":   redshift.DataSourceOrderableCluster(),
+			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
+			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
