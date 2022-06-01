@@ -287,7 +287,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccCatalogTableConfig_Full_replacedValues(rName),
+				Config:  testAccCatalogTableConfig_fullReplacedValues(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(resourceName),
@@ -619,7 +619,7 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccCatalogTableConfig_targetTable(rName),
+				Config:  testAccCatalogTableConfig_target(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(resourceName),
@@ -765,7 +765,7 @@ resource "aws_glue_catalog_table" "test" {
 `, rName, desc)
 }
 
-func testAccCatalogTableConfig_Full_replacedValues(rName string) string {
+func testAccCatalogTableConfig_fullReplacedValues(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -1361,7 +1361,7 @@ resource "aws_glue_catalog_table" "test" {
 `, rName)
 }
 
-func testAccCatalogTableConfig_targetTable(rName string) string {
+func testAccCatalogTableConfig_target(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q

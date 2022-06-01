@@ -28,7 +28,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobConfig(rName),
+				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(profileResourceName, &conf),
 					testAccCheckSigningJobExists(resourceName, &job),
@@ -42,7 +42,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 
 }
 
-func testAccSigningJobConfig(rName string) string {
+func testAccSigningJobConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

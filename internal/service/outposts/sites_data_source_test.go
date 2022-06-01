@@ -21,7 +21,7 @@ func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSitesDataSourceConfig(),
+				Config: testAccSitesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSitesAttributes(dataSourceName),
 				),
@@ -66,7 +66,7 @@ func testAccPreCheckSites(t *testing.T) {
 	}
 }
 
-func testAccSitesDataSourceConfig() string {
+func testAccSitesDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_sites" "test" {}
 `

@@ -111,9 +111,8 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading EventBridge event bus (%s)", d.Id())
 	output, err := conn.DescribeEventBus(input)
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge event bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -121,8 +120,6 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading EventBridge event bus: %w", err)
 	}
-
-	log.Printf("[DEBUG] Found EventBridge bus: %#v", *output)
 
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)

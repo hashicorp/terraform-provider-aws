@@ -27,7 +27,7 @@ func DataSourceRulesPackages() *schema.Resource {
 func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
-	output, err := findRulesPackageArns(conn)
+	output, err := findRulesPackageARNs(conn)
 
 	if err != nil {
 		return fmt.Errorf("error reading Inspector Rules Packages: %w", err)
@@ -42,7 +42,7 @@ func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func findRulesPackageArns(conn *inspector.Inspector) ([]*string, error) {
+func findRulesPackageARNs(conn *inspector.Inspector) ([]*string, error) {
 	input := &inspector.ListRulesPackagesInput{}
 	var output []*string
 

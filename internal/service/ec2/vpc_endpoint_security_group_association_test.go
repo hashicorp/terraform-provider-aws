@@ -97,7 +97,7 @@ func TestAccVPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *tes
 		CheckDestroy:      testAccCheckVPCEndpointSecurityGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointSecurityGroupAssociationConfig_replaceDefaultAssociation(rName),
+				Config: testAccVPCEndpointSecurityGroupAssociationConfig_replaceDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointSecurityGroupAssociationExists(resourceName, &v),
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 1),
@@ -230,7 +230,7 @@ resource "aws_vpc_endpoint_security_group_association" "test" {
 `)
 }
 
-func testAccVPCEndpointSecurityGroupAssociationConfig_replaceDefaultAssociation(rName string) string {
+func testAccVPCEndpointSecurityGroupAssociationConfig_replaceDefault(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointSecurityGroupAssociationConfig_base(rName),
 		`

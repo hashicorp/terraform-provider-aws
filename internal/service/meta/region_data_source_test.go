@@ -11,7 +11,7 @@ import (
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestFindRegionByEc2Endpoint(t *testing.T) {
+func TestFindRegionByEC2Endpoint(t *testing.T) {
 	var testCases = []struct {
 		Value    string
 		ErrCount int

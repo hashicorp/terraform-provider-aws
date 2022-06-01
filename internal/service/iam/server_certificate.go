@@ -180,7 +180,7 @@ func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) err
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

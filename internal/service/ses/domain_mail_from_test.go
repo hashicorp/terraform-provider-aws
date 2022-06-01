@@ -26,7 +26,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainMailFromConfig(domain, mailFromDomain1),
+				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
@@ -35,7 +35,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainMailFromConfig(domain, mailFromDomain2),
+				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
@@ -65,7 +65,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainMailFromConfig(domain, mailFromDomain),
+				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(resourceName),
 					testAccCheckDomainMailFromDisappears(domain),
@@ -89,7 +89,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainMailFromConfig(domain, mailFromDomain),
+				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(resourceName),
 					testAccCheckDomainIdentityDisappears(domain),
@@ -205,7 +205,7 @@ func testAccCheckDomainMailFromDisappears(identity string) resource.TestCheckFun
 	}
 }
 
-func testAccDomainMailFromConfig(domain, mailFromDomain string) string {
+func testAccDomainMailFromConfig_basic(domain, mailFromDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
   domain = "%s"

@@ -26,7 +26,7 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionAccountIDConfig(rName),
+				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -56,7 +56,7 @@ func TestAccEC2AMILaunchPermission_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionAccountIDConfig(rName),
+				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMILaunchPermission(), resourceName),
@@ -78,7 +78,7 @@ func TestAccEC2AMILaunchPermission_Disappears_ami(t *testing.T) {
 		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionAccountIDConfig(rName),
+				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMICopy(), "aws_ami_copy.test"),
@@ -100,7 +100,7 @@ func TestAccEC2AMILaunchPermission_group(t *testing.T) {
 		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionGroupConfig(rName),
+				Config: testAccAMILaunchPermissionConfig_group(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
@@ -130,7 +130,7 @@ func TestAccEC2AMILaunchPermission_organizationARN(t *testing.T) {
 		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionOrganizationARNConfig(rName),
+				Config: testAccAMILaunchPermissionConfig_organizationARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
@@ -160,7 +160,7 @@ func TestAccEC2AMILaunchPermission_organizationalUnitARN(t *testing.T) {
 		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionOrganizationalUnitARNConfig(rName),
+				Config: testAccAMILaunchPermissionConfig_organizationalUnitARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
@@ -259,8 +259,8 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAMILaunchPermissionAccountIDConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccAMILaunchPermissionConfig_accountID(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
@@ -279,8 +279,8 @@ resource "aws_ami_launch_permission" "test" {
 `, rName))
 }
 
-func testAccAMILaunchPermissionGroupConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccAMILaunchPermissionConfig_group(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ami_copy" "test" {
@@ -298,8 +298,8 @@ resource "aws_ami_launch_permission" "test" {
 `, rName))
 }
 
-func testAccAMILaunchPermissionOrganizationARNConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccAMILaunchPermissionConfig_organizationARN(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
 data "aws_region" "current" {}
@@ -318,8 +318,8 @@ resource "aws_ami_launch_permission" "test" {
 `, rName))
 }
 
-func testAccAMILaunchPermissionOrganizationalUnitARNConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccAMILaunchPermissionConfig_organizationalUnitARN(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {

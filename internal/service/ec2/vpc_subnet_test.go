@@ -29,7 +29,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig(rName),
+				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
@@ -71,7 +71,7 @@ func TestAccVPCSubnet_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -84,7 +84,7 @@ func TestAccVPCSubnet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCSubnetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -93,7 +93,7 @@ func TestAccVPCSubnet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubnetTagsConfig1(rName, "key2", "value2"),
+				Config: testAccVPCSubnetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -118,7 +118,7 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccSubnetConfig(rName),
+					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -135,7 +135,7 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
-					testAccSubnetConfig(rName),
+					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -148,7 +148,7 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
-					testAccSubnetConfig(rName),
+					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -174,7 +174,7 @@ func TestAccVPCSubnet_DefaultTags_updateToProviderOnly(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -186,7 +186,7 @@ func TestAccVPCSubnet_DefaultTags_updateToProviderOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccSubnetConfig(rName),
+					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -219,7 +219,7 @@ func TestAccVPCSubnet_DefaultTags_updateToResourceOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccSubnetConfig(rName),
+					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -229,7 +229,7 @@ func TestAccVPCSubnet_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -262,7 +262,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testin
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccSubnetTagsConfig1(rName, "resourcekey1", "resourcevalue1"),
+					testAccVPCSubnetConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -281,7 +281,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testin
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccSubnetTagsConfig2(rName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
+					testAccVPCSubnetConfig_tags2(rName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -297,7 +297,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testin
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
-					testAccSubnetTagsConfig1(rName, "resourcekey3", "resourcevalue3"),
+					testAccVPCSubnetConfig_tags1(rName, "resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -327,7 +327,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccSubnetTagsConfig1(rName, "overlapkey1", "resourcevalue1"),
+					testAccVPCSubnetConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -344,7 +344,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccSubnetTagsConfig2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
+					testAccVPCSubnetConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -359,7 +359,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccSubnetTagsConfig1(rName, "overlapkey1", "resourcevalue2"),
+					testAccVPCSubnetConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
@@ -386,7 +386,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) 
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccSubnetTagsConfig1(rName, "overlapkey", "overlapvalue"),
+					testAccVPCSubnetConfig_tags1(rName, "overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
@@ -408,7 +408,7 @@ func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					testAccCheckSubnetUpdateTags(&subnet, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
@@ -418,14 +418,14 @@ func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccSubnetTagsConfig1(rName, "key1", "value1"),
+					testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccSubnetTagsConfig1(rName, "key1", "value1"),
+					testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -450,7 +450,7 @@ func TestAccVPCSubnet_updateTagsKnownAtApply(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_tagsComputedFromVPCDataSource1("key1", "value1"),
+				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -458,7 +458,7 @@ func TestAccVPCSubnet_updateTagsKnownAtApply(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubnetConfig_tagsComputedFromVPCDataSource2("key1", "value1", "key2", "value2"),
+				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource2("key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -487,7 +487,7 @@ func TestAccVPCSubnet_ignoreTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig(rName),
+				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					testAccCheckSubnetUpdateTags(&subnet, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
@@ -495,11 +495,11 @@ func TestAccVPCSubnet_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   acctest.ConfigCompose(acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"), testAccSubnetConfig(rName)),
+				Config:   acctest.ConfigCompose(acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"), testAccVPCSubnetConfig_basic(rName)),
 				PlanOnly: true,
 			},
 			{
-				Config:   acctest.ConfigCompose(acctest.ConfigIgnoreTagsKeys("ignorekey1"), testAccSubnetConfig(rName)),
+				Config:   acctest.ConfigCompose(acctest.ConfigIgnoreTagsKeys("ignorekey1"), testAccVPCSubnetConfig_basic(rName)),
 				PlanOnly: true,
 			},
 		},
@@ -518,7 +518,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_ipv6(rName),
+				Config: testAccVPCSubnetConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &before),
 					testAccCheckSubnetIPv6BeforeUpdate(&before),
@@ -530,14 +530,14 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetConfig_ipv6UpdateAssignv6OnCreation(rName),
+				Config: testAccVPCSubnetConfig_ipv6UpdateAssignv6OnCreation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &after),
 					testAccCheckSubnetIPv6AfterUpdate(&after),
 				),
 			},
 			{
-				Config: testAccSubnetConfig_ipv6UpdateV6CIDR(rName),
+				Config: testAccVPCSubnetConfig_ipv6UpdateV6CIDR(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &after),
 					testAccCheckSubnetNotRecreated(t, &before, &after),
@@ -559,7 +559,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_prev6(rName),
+				Config: testAccVPCSubnetConfig_prev6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -572,7 +572,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetConfig_ipv6(rName),
+				Config: testAccVPCSubnetConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
@@ -580,7 +580,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubnetConfig_prev6(rName),
+				Config: testAccVPCSubnetConfig_prev6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -603,7 +603,7 @@ func TestAccVPCSubnet_availabilityZoneID(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfigAvailabilityZoneId(rName),
+				Config: testAccVPCSubnetConfig_availabilityZoneID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
@@ -631,7 +631,7 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig(rName),
+				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnet(), resourceName),
@@ -655,7 +655,7 @@ func TestAccVPCSubnet_customerOwnedIPv4Pool(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_customerOwnedv4Pool(rName),
+				Config: testAccVPCSubnetConfig_customerOwnedv4Pool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ipv4_pool", coipDataSourceName, "pool_id"),
@@ -682,7 +682,7 @@ func TestAccVPCSubnet_mapCustomerOwnedIPOnLaunch(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_mapCustomerOwnedOnLaunch(rName, true),
+				Config: testAccVPCSubnetConfig_mapCustomerOwnedOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "true"),
@@ -709,7 +709,7 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_mapPublicOnLaunch(rName, true),
+				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
@@ -721,14 +721,14 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetConfig_mapPublicOnLaunch(rName, false),
+				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 				),
 			},
 			{
-				Config: testAccSubnetConfig_mapPublicOnLaunch(rName, true),
+				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
@@ -751,7 +751,7 @@ func TestAccVPCSubnet_outpost(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfigOutpost(rName),
+				Config: testAccVPCSubnetConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
@@ -778,7 +778,7 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_enableDNS64(rName, true),
+				Config: testAccVPCSubnetConfig_enableDNS64(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
@@ -790,14 +790,14 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetConfig_enableDNS64(rName, false),
+				Config: testAccVPCSubnetConfig_enableDNS64(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
 				),
 			},
 			{
-				Config: testAccSubnetConfig_enableDNS64(rName, true),
+				Config: testAccVPCSubnetConfig_enableDNS64(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
@@ -819,7 +819,7 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, true, "resource-name"),
+				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, true, "resource-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
@@ -833,7 +833,7 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetConfig_privateDNSNameOptionsOnLaunch(rName, false, true, "ip-name"),
+				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, false, true, "ip-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
@@ -842,7 +842,7 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, false, "resource-name"),
+				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, false, "resource-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
@@ -866,7 +866,7 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfigIPv6Native(rName),
+				Config: testAccVPCSubnetConfig_ipv6Native(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
@@ -974,7 +974,7 @@ func testAccCheckSubnetUpdateTags(subnet *ec2.Subnet, oldTags, newTags map[strin
 	}
 }
 
-func testAccSubnetConfig(rName string) string {
+func testAccVPCSubnetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -991,7 +991,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetTagsConfig1(rName, tagKey1, tagValue1 string) string {
+func testAccVPCSubnetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1012,7 +1012,7 @@ resource "aws_subnet" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccSubnetTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCSubnetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1051,7 +1051,7 @@ resource "aws_subnet" "test" {
 }
 `
 
-func testAccSubnetConfig_tagsComputedFromVPCDataSource1(tagKey1, tagValue1 string) string {
+func testAccVPCSubnetConfig_tagsComputedFromDataSource1(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccSubnetComputedTagsBaseConfig,
 		fmt.Sprintf(`
@@ -1063,7 +1063,7 @@ locals {
 `, tagKey1, tagValue1))
 }
 
-func testAccSubnetConfig_tagsComputedFromVPCDataSource2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCSubnetConfig_tagsComputedFromDataSource2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccSubnetComputedTagsBaseConfig,
 		fmt.Sprintf(`
@@ -1076,7 +1076,7 @@ locals {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccSubnetConfig_prev6(rName string) string {
+func testAccVPCSubnetConfig_prev6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1098,7 +1098,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetConfig_ipv6(rName string) string {
+func testAccVPCSubnetConfig_ipv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1122,7 +1122,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetConfig_ipv6UpdateAssignv6OnCreation(rName string) string {
+func testAccVPCSubnetConfig_ipv6UpdateAssignv6OnCreation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1146,7 +1146,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetConfig_ipv6UpdateV6CIDR(rName string) string {
+func testAccVPCSubnetConfig_ipv6UpdateV6CIDR(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1170,7 +1170,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetConfigAvailabilityZoneId(rName string) string {
+func testAccVPCSubnetConfig_availabilityZoneID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1192,7 +1192,7 @@ resource "aws_subnet" "test" {
 `, rName))
 }
 
-func testAccSubnetConfig_customerOwnedv4Pool(rName string) string {
+func testAccVPCSubnetConfig_customerOwnedv4Pool(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -1245,7 +1245,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetConfig_mapCustomerOwnedOnLaunch(rName string, mapCustomerOwnedIpOnLaunch bool) string {
+func testAccVPCSubnetConfig_mapCustomerOwnedOnLaunch(rName string, mapCustomerOwnedIpOnLaunch bool) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -1298,7 +1298,7 @@ resource "aws_subnet" "test" {
 `, rName, mapCustomerOwnedIpOnLaunch)
 }
 
-func testAccSubnetConfig_mapPublicOnLaunch(rName string, mapPublicIpOnLaunch bool) string {
+func testAccVPCSubnetConfig_mapPublicOnLaunch(rName string, mapPublicIpOnLaunch bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1320,7 +1320,7 @@ resource "aws_subnet" "test" {
 `, rName, mapPublicIpOnLaunch)
 }
 
-func testAccSubnetConfig_enableDNS64(rName string, enableDns64 bool) string {
+func testAccVPCSubnetConfig_enableDNS64(rName string, enableDns64 bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1345,7 +1345,7 @@ resource "aws_subnet" "test" {
 `, rName, enableDns64)
 }
 
-func testAccSubnetConfig_privateDNSNameOptionsOnLaunch(rName string, enableDnsAAAA, enableDnsA bool, hostnameType string) string {
+func testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName string, enableDnsAAAA, enableDnsA bool, hostnameType string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1373,7 +1373,7 @@ resource "aws_subnet" "test" {
 `, rName, enableDnsAAAA, enableDnsA, hostnameType)
 }
 
-func testAccSubnetConfigIPv6Native(rName string) string {
+func testAccVPCSubnetConfig_ipv6Native(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1399,7 +1399,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccSubnetConfigOutpost(rName string) string {
+func testAccVPCSubnetConfig_outpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

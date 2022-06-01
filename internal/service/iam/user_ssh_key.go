@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -161,15 +160,9 @@ func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			Status:         aws.String(d.Get("status").(string)),
 		}
 
-		log.Println("[DEBUG] Update IAM User SSH Key request:", request)
 		_, err := conn.UpdateSSHPublicKey(request)
 		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-				log.Printf("[WARN] No IAM user ssh key by ID (%s) found", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error updating IAM User SSH Key %s: %s", d.Id(), err)
+			return fmt.Errorf("error updating IAM User SSH Key (%s): %w", d.Id(), err)
 		}
 	}
 	return resourceUserSSHKeyRead(d, meta)
@@ -185,7 +178,7 @@ func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Println("[DEBUG] Delete IAM User SSH Key request:", request)
 	if _, err := conn.DeleteSSHPublicKey(request); err != nil {
-		return fmt.Errorf("Error deleting IAM User SSH Key %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting IAM User SSH Key (%s): %w", d.Id(), err)
 	}
 	return nil
 }

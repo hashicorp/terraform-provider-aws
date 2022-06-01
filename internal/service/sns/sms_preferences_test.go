@@ -41,7 +41,7 @@ func testAccSMSPreferences_defaultSMSType(t *testing.T) {
 		CheckDestroy:      testAccCheckSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSMSPreferencesConfig_defSMSType,
+				Config: testAccSMSPreferencesConfig_defType,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr(resourceName, "monthly_spend_limit"),
 					resource.TestCheckNoResourceAttr(resourceName, "delivery_status_iam_role_arn"),
@@ -116,7 +116,7 @@ func testAccCheckSMSPrefsDestroy(s *terraform.State) error {
 		var attrErrs *multierror.Error
 
 		// The API is returning undocumented keys, e.g. "UsageReportS3Enabled". Only check the keys we're aware of.
-		for _, snsAttrName := range tfsns.SMSPreferencesAttributeMap.ApiAttributeNames() {
+		for _, snsAttrName := range tfsns.SMSPreferencesAttributeMap.APIAttributeNames() {
 			v := aws.StringValue(attrs.Attributes[snsAttrName])
 			if snsAttrName != "MonthlySpendLimit" {
 				if v != "" {
@@ -131,7 +131,7 @@ func testAccCheckSMSPrefsDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccSMSPreferencesConfig_defSMSType = `
+const testAccSMSPreferencesConfig_defType = `
 resource "aws_sns_sms_preferences" "test" {
   default_sms_type = "Transactional"
 }

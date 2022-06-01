@@ -97,24 +97,24 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetResourceShares(request)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+			log.Printf("[WARN] RAM Resource Share (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading RAM resource share %s: %s", d.Id(), err)
+		return fmt.Errorf("error reading RAM resource share %s: %w", d.Id(), err)
 	}
 
-	if len(output.ResourceShares) == 0 {
-		log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
+	if !d.IsNewResource() && len(output.ResourceShares) == 0 {
+		log.Printf("[WARN] RAM Resource Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	resourceShare := output.ResourceShares[0]
 
-	if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusActive {
-		log.Printf("[WARN] RAM resource share (%s) delet(ing|ed), removing from state", d.Id())
+	if !d.IsNewResource() && aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusActive {
+		log.Printf("[WARN] RAM Resource Share (%s) not active, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -147,15 +147,9 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 			AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 		}
 
-		log.Println("[DEBUG] Update RAM resource share request:", request)
 		_, err := conn.UpdateResourceShare(request)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-				log.Printf("[WARN] No RAM resource share by ARN (%s) found", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error updating RAM resource share %s: %s", d.Id(), err)
+			return fmt.Errorf("error updating RAM resource share %s: %w", d.Id(), err)
 		}
 	}
 
@@ -163,7 +157,7 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating RAM resource share (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating RAM resource share (%s) tags: %w", d.Id(), err)
 		}
 	}
 

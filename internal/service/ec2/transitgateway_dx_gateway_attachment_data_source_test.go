@@ -27,7 +27,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGat
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDxAttachmentDataSourceConfig(rName, rBgpAsn),
+				Config: testAccTransitGatewayDxGatewayAttachmentDataSourceConfig_transit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -55,7 +55,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDxAttachmentFilterDataSourceConfig(rName, rBgpAsn),
+				Config: testAccTransitGatewayDxGatewayAttachmentDataSourceConfig_transitFilter(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -66,7 +66,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayDxAttachmentDataSourceConfig(rName string, rBgpAsn int) string {
+func testAccTransitGatewayDxGatewayAttachmentDataSourceConfig_transit(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -96,7 +96,7 @@ data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccTransitGatewayDxAttachmentFilterDataSourceConfig(rName string, rBgpAsn int) string {
+func testAccTransitGatewayDxGatewayAttachmentDataSourceConfig_transitFilter(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q

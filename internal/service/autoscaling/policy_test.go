@@ -493,7 +493,7 @@ func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdF
 func testAccPolicyConfigBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q

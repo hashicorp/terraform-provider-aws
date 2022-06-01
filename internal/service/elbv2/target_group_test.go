@@ -17,7 +17,7 @@ import (
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
-func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
+func TestLBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
 		name   string
 		arn    *string
@@ -48,7 +48,7 @@ func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}
 }
 
-func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
+func TestALBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
 		name   string
 		arn    *string

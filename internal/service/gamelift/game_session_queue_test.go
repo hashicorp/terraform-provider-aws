@@ -59,7 +59,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameSessionQueueBasicConfig(queueName,
+				Config: testAccGameSessionQueueConfig_basic(queueName,
 					playerLatencyPolicies, timeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
@@ -79,7 +79,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGameSessionQueueBasicConfig(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds),
+				Config: testAccGameSessionQueueConfig_basic(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`gamesessionqueue/.+`)),
@@ -123,7 +123,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameSessionQueueBasicTags1Config(queueName, "key1", "value1"),
+				Config: testAccGameSessionQueueConfig_basicTags1(queueName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -136,7 +136,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGameSessionQueueBasicTags2Config(queueName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGameSessionQueueConfig_basicTags2(queueName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -145,7 +145,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGameSessionQueueBasicTags1Config(queueName, "key2", "value2"),
+				Config: testAccGameSessionQueueConfig_basicTags1(queueName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -184,7 +184,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameSessionQueueBasicConfig(queueName,
+				Config: testAccGameSessionQueueConfig_basic(queueName,
 					playerLatencyPolicies, timeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
@@ -292,7 +292,7 @@ func testAccCheckGameSessionQueueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGameSessionQueueBasicConfig(queueName string,
+func testAccGameSessionQueueConfig_basic(queueName string,
 	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
@@ -318,7 +318,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 		timeoutInSeconds)
 }
 
-func testAccGameSessionQueueBasicTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccGameSessionQueueConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
   name         = %[1]q
@@ -342,7 +342,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccGameSessionQueueBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccGameSessionQueueConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
   name         = %[1]q

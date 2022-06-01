@@ -46,7 +46,7 @@ func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstancesBasicDataSourceConfig,
+				Config: testAccInstancesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "identity_store_ids.#", "1"),
@@ -58,4 +58,4 @@ func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccInstancesBasicDataSourceConfig = `data "aws_ssoadmin_instances" "test" {}`
+const testAccInstancesDataSourceConfig_basic = `data "aws_ssoadmin_instances" "test" {}`

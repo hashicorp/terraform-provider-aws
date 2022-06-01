@@ -350,6 +350,18 @@ var ValidStringDateOrPositiveInt = validation.Any(
 	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
 
+func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %s", k, err))
+	}
+	if duration < 0 {
+		errors = append(errors, fmt.Errorf("%q must be greater than zero", k))
+	}
+	return
+}
+
 // FloatGreaterThan returns a SchemaValidateFunc which tests if the provided value
 // is of type float and is greater than threshold.
 func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {

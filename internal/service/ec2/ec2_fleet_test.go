@@ -31,7 +31,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_Basic(rName),
+				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`fleet/.+`)),
@@ -80,7 +80,7 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_Basic(rName),
+				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFleet(), resourceName),
@@ -103,7 +103,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfigTags1(rName, "key1", "value1"),
+				Config: testAccFleetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -117,7 +117,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFleetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -126,7 +126,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetConfigTags1(rName, "key2", "value2"),
+				Config: testAccFleetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -149,7 +149,7 @@ func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_ExcessCapacityTerminationPolicy(rName, "no-termination"),
+				Config: testAccFleetConfig_excessCapacityTerminationPolicy(rName, "no-termination"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "no-termination"),
@@ -162,7 +162,7 @@ func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_ExcessCapacityTerminationPolicy(rName, "termination"),
+				Config: testAccFleetConfig_excessCapacityTerminationPolicy(rName, "termination"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -187,7 +187,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateID(rName, launchTemplateResourceName1),
+				Config: testAccFleetConfig_launchTemplateID(rName, launchTemplateResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -203,7 +203,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateID(rName, launchTemplateResourceName2),
+				Config: testAccFleetConfig_launchTemplateID(rName, launchTemplateResourceName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -231,7 +231,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName1),
+				Config: testAccFleetConfig_launchTemplateName(rName, launchTemplateResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -247,7 +247,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName2),
+				Config: testAccFleetConfig_launchTemplateName(rName, launchTemplateResourceName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -275,7 +275,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, "t3.micro"),
+				Config: testAccFleetConfig_launchTemplateVersion(rName, "t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(launchTemplateResourceName, &launchTemplate),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.micro"),
@@ -294,7 +294,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, "t3.small"),
+				Config: testAccFleetConfig_launchTemplateVersion(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(launchTemplateResourceName, &launchTemplate),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.small"),
@@ -324,7 +324,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName, 0),
+				Config: testAccFleetConfig_launchTemplateOverrideAvailabilityZone(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -339,7 +339,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName, 1),
+				Config: testAccFleetConfig_launchTemplateOverrideAvailabilityZone(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -362,7 +362,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCP
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`memory_mib {
                        min = 500
                      }
@@ -388,7 +388,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCP
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`memory_mib {
                        min = 500
                        max = 24000
@@ -432,7 +432,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_count {
                        min = 1
                      }
@@ -459,7 +459,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_count {
                        min = 1
                        max = 4
@@ -488,7 +488,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_count {
                        max = 0
                      }
@@ -529,7 +529,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManu
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_manufacturers = ["amd"]
                      memory_mib {
                        min = 500
@@ -554,7 +554,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManu
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_manufacturers = ["amazon-web-services", "amd", "nvidia", "xilinx"]
                      memory_mib {
                        min = 500
@@ -596,7 +596,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorName
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_names = ["a100"]
                      memory_mib {
                        min = 500
@@ -621,7 +621,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorName
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_names = ["a100", "v100", "k80", "t4", "m60", "radeon-pro-v520", "vu9p"]
                      memory_mib {
                        min = 500
@@ -666,7 +666,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_total_memory_mib {
                        min = 1000
                      }
@@ -693,7 +693,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_total_memory_mib {
                        max = 24000
                      }
@@ -720,7 +720,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_total_memory_mib {
                        min = 1000
                        max = 24000
@@ -763,7 +763,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_types = ["fpga"]
                      memory_mib {
                        min = 500
@@ -788,7 +788,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`accelerator_types = ["fpga", "gpu", "inference"]
                      memory_mib {
                        min = 500
@@ -829,7 +829,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`bare_metal = "excluded"
                      memory_mib {
                        min = 500
@@ -853,7 +853,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`bare_metal = "included"
                      memory_mib {
                        min = 500
@@ -877,7 +877,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`bare_metal = "required"
                      memory_mib {
                        min = 500
@@ -915,7 +915,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`baseline_ebs_bandwidth_mbps {
                        min = 10
                      }
@@ -942,7 +942,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`baseline_ebs_bandwidth_mbps {
                        max = 20000
                      }
@@ -969,7 +969,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`baseline_ebs_bandwidth_mbps {
                        min = 10
                        max = 20000
@@ -1012,7 +1012,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`burstable_performance = "excluded"
                      memory_mib {
                        min = 500
@@ -1036,7 +1036,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`burstable_performance = "included"
                      memory_mib {
                        min = 1000
@@ -1060,7 +1060,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`burstable_performance = "required"
                      memory_mib {
                        min = 1000
@@ -1098,7 +1098,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturer
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`cpu_manufacturers = ["amd"]
                      memory_mib {
                        min = 500
@@ -1123,7 +1123,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturer
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`cpu_manufacturers = ["amazon-web-services", "amd", "intel"]
                      memory_mib {
                        min = 500
@@ -1164,7 +1164,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanc
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`excluded_instance_types = ["t2.nano"]
                      memory_mib {
                        min = 500
@@ -1189,7 +1189,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanc
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`excluded_instance_types = ["t2.nano", "t3*", "t4g.*"]
                      memory_mib {
                        min = 500
@@ -1230,7 +1230,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`instance_generations = ["current"]
                      memory_mib {
                        min = 500
@@ -1255,7 +1255,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`instance_generations = ["current", "previous"]
                      memory_mib {
                        min = 500
@@ -1295,7 +1295,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`local_storage = "excluded"
                      memory_mib {
                        min = 500
@@ -1319,7 +1319,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`local_storage = "included"
                      memory_mib {
                        min = 500
@@ -1343,7 +1343,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`local_storage = "required"
                      memory_mib {
                        min = 500
@@ -1381,7 +1381,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`local_storage_types = ["hdd"]
                      memory_mib {
                        min = 500
@@ -1406,7 +1406,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`local_storage_types = ["hdd", "ssd"]
                      memory_mib {
                        min = 500
@@ -1446,7 +1446,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`memory_gib_per_vcpu {
                        min = 0.5
                      }
@@ -1473,7 +1473,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`memory_gib_per_vcpu {
                        max = 9.5
                      }
@@ -1500,7 +1500,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`memory_gib_per_vcpu {
                        min = 0.5
                        max = 9.5
@@ -1543,7 +1543,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`network_interface_count {
                        min = 1
                      }
@@ -1570,7 +1570,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`network_interface_count {
                        max = 10
                      }
@@ -1597,7 +1597,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`network_interface_count {
                        min = 1
                        max = 10
@@ -1640,7 +1640,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPric
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`on_demand_max_price_percentage_over_lowest_price = 50
                      memory_mib {
                        min = 500
@@ -1678,7 +1678,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`require_hibernate_support = false
                      memory_mib {
                        min = 500
@@ -1702,7 +1702,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`require_hibernate_support = true
                      memory_mib {
                        min = 500
@@ -1740,7 +1740,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_spotMaxPricePer
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`spot_max_price_percentage_over_lowest_price = 75
                      memory_mib {
                        min = 500
@@ -1778,7 +1778,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`total_local_storage_gb {
                        min = 0.5
                      }
@@ -1805,7 +1805,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`total_local_storage_gb {
                        max = 20.5
                      }
@@ -1832,7 +1832,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
 					`total_local_storage_gb {
                        min = 0.5
                        max = 20.5
@@ -1876,7 +1876,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, "t3.small"),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceType(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -1891,7 +1891,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, "t3.medium"),
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceType(rName, "t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -1918,7 +1918,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, "1.01"),
+				Config: testAccFleetConfig_launchTemplateOverrideMaxPrice(rName, "1.01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -1933,7 +1933,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, "1.02"),
+				Config: testAccFleetConfig_launchTemplateOverrideMaxPrice(rName, "1.02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -1958,7 +1958,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority(rName, 1),
+				Config: testAccFleetConfig_launchTemplateOverridePriority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -1973,7 +1973,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority(rName, 2),
+				Config: testAccFleetConfig_launchTemplateOverridePriority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -1998,7 +1998,7 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName, 1, 2),
+				Config: testAccFleetConfig_launchTemplateOverridePriorityMultiple(rName, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -2014,7 +2014,7 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName, 2, 1),
+				Config: testAccFleetConfig_launchTemplateOverridePriorityMultiple(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -2042,7 +2042,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_SubnetID(rName, 0),
+				Config: testAccFleetConfig_launchTemplateOverrideSubnetID(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -2057,7 +2057,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_SubnetID(rName, 1),
+				Config: testAccFleetConfig_launchTemplateOverrideSubnetID(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -2082,7 +2082,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName, 1),
+				Config: testAccFleetConfig_launchTemplateOverrideWeightedCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -2097,7 +2097,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName, 2),
+				Config: testAccFleetConfig_launchTemplateOverrideWeightedCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -2122,7 +2122,7 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName, 1, 1),
+				Config: testAccFleetConfig_launchTemplateOverrideWeightedCapacityMultiple(rName, 1, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -2138,7 +2138,7 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName, 1, 2),
+				Config: testAccFleetConfig_launchTemplateOverrideWeightedCapacityMultiple(rName, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -2164,7 +2164,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_OnDemandOptions_AllocationStrategy(rName, "prioritized"),
+				Config: testAccFleetConfig_onDemandOptionsAllocationStrategy(rName, "prioritized"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
@@ -2178,7 +2178,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_OnDemandOptions_AllocationStrategy(rName, "lowestPrice"),
+				Config: testAccFleetConfig_onDemandOptionsAllocationStrategy(rName, "lowestPrice"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2202,7 +2202,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_ReplaceUnhealthyInstances(rName, true),
+				Config: testAccFleetConfig_replaceUnhealthyInstances(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "true"),
@@ -2215,7 +2215,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_ReplaceUnhealthyInstances(rName, false),
+				Config: testAccFleetConfig_replaceUnhealthyInstances(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2238,7 +2238,7 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_SpotOptions_AllocationStrategy(rName, "diversified"),
+				Config: testAccFleetConfig_spotOptionsAllocationStrategy(rName, "diversified"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
@@ -2252,7 +2252,7 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_SpotOptions_AllocationStrategy(rName, "lowestPrice"),
+				Config: testAccFleetConfig_spotOptionsAllocationStrategy(rName, "lowestPrice"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2276,7 +2276,7 @@ func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_SpotOptions_CapacityRebalance(rName, "diversified"),
+				Config: testAccFleetConfig_spotOptionsCapacityRebalance(rName, "diversified"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
@@ -2304,7 +2304,7 @@ func TestAccEC2Fleet_capacityRebalanceInvalidType(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFleetConfigWithInvalidTypeForCapacityRebalance(rName),
+				Config:      testAccFleetConfig_invalidTypeForCapacityRebalance(rName),
 				ExpectError: regexp.MustCompile(`Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain`),
 			},
 		},
@@ -2323,7 +2323,7 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, "stop"),
+				Config: testAccFleetConfig_spotOptionsInstanceInterruptionBehavior(rName, "stop"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
@@ -2337,7 +2337,7 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, "terminate"),
+				Config: testAccFleetConfig_spotOptionsInstanceInterruptionBehavior(rName, "terminate"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2361,7 +2361,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_SpotOptions_InstancePoolsToUseCount(rName, 2),
+				Config: testAccFleetConfig_spotOptionsInstancePoolsToUseCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
@@ -2375,7 +2375,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_SpotOptions_InstancePoolsToUseCount(rName, 3),
+				Config: testAccFleetConfig_spotOptionsInstancePoolsToUseCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2399,7 +2399,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "on-demand"),
+				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "on-demand"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
@@ -2407,7 +2407,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 				),
 			},
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
+				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "spot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2431,7 +2431,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDema
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "on-demand"),
+				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "on-demand"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
@@ -2460,7 +2460,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
+				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "spot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
@@ -2489,7 +2489,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_TotalTargetCapacity(rName, 1),
+				Config: testAccFleetConfig_targetCapacitySpecificationTotalTargetCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
@@ -2503,7 +2503,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_TargetCapacitySpecification_TotalTargetCapacity(rName, 2),
+				Config: testAccFleetConfig_targetCapacitySpecificationTotalTargetCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
@@ -2527,7 +2527,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_TerminateInstancesWithExpiration(rName, true),
+				Config: testAccFleetConfig_terminateInstancesExpiration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "true"),
@@ -2540,7 +2540,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccFleetConfig_TerminateInstancesWithExpiration(rName, false),
+				Config: testAccFleetConfig_terminateInstancesExpiration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2563,7 +2563,7 @@ func TestAccEC2Fleet_type(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_Type(rName, "maintain"),
+				Config: testAccFleetConfig_type(rName, "maintain"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "type", "maintain"),
@@ -2577,7 +2577,7 @@ func TestAccEC2Fleet_type(t *testing.T) {
 			},
 			// This configuration will fulfill immediately, skip until ValidFrom is implemented
 			// {
-			// 	Config: testAccFleetConfig_Type(rName, "request"),
+			// 	Config: testAccFleetConfig_type(rName, "request"),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckFleetExists(resourceName, &fleet2),
 			// 		testAccCheckFleetRecreated(&fleet1, &fleet2),
@@ -2747,7 +2747,7 @@ func testAccPreCheckFleet(t *testing.T) {
 }
 
 func testAccFleetConfig_BaseLaunchTemplate(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -2756,7 +2756,7 @@ resource "aws_launch_template" "test" {
 `, rName))
 }
 
-func testAccFleetConfig_Basic(rName string) string {
+func testAccFleetConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), `
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -2776,7 +2776,7 @@ resource "aws_ec2_fleet" "test" {
 
 func testAccFleetConfig_multipleNetworkInterfaces(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2892,7 +2892,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName))
 }
 
-func testAccFleetConfig_ExcessCapacityTerminationPolicy(rName, excessCapacityTerminationPolicy string) string {
+func testAccFleetConfig_excessCapacityTerminationPolicy(rName, excessCapacityTerminationPolicy string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   excess_capacity_termination_policy = %[2]q
@@ -2916,8 +2916,8 @@ resource "aws_ec2_fleet" "test" {
 `, rName, excessCapacityTerminationPolicy))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateID(rName, launchTemplateResourceName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccFleetConfig_launchTemplateID(rName, launchTemplateResourceName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -2950,8 +2950,8 @@ resource "aws_ec2_fleet" "test" {
 `, rName, launchTemplateResourceName))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccFleetConfig_launchTemplateName(rName, launchTemplateResourceName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -2984,8 +2984,8 @@ resource "aws_ec2_fleet" "test" {
 `, rName, launchTemplateResourceName))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, instanceType string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+func testAccFleetConfig_launchTemplateVersion(rName, instanceType string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = %[2]q
@@ -3012,7 +3012,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, instanceType))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName string, availabilityZoneIndex int) string {
+func testAccFleetConfig_launchTemplateOverrideAvailabilityZone(rName string, availabilityZoneIndex int) string {
 	return acctest.ConfigCompose(
 		testAccFleetConfig_BaseLaunchTemplate(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -3041,7 +3041,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, availabilityZoneIndex))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_InstanceRequirements(rName, instanceRequirements string) string {
+func testAccFleetConfig_launchTemplateOverrideInstanceRequirements(rName, instanceRequirements string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3069,7 +3069,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, instanceRequirements))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, instanceType string) string {
+func testAccFleetConfig_launchTemplateOverrideInstanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3095,7 +3095,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, instanceType))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, maxPrice string) string {
+func testAccFleetConfig_launchTemplateOverrideMaxPrice(rName, maxPrice string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3121,7 +3121,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, maxPrice))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_Priority(rName string, priority int) string {
+func testAccFleetConfig_launchTemplateOverridePriority(rName string, priority int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3147,7 +3147,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, priority))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName string, priority1, priority2 int) string {
+func testAccFleetConfig_launchTemplateOverridePriorityMultiple(rName string, priority1, priority2 int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3179,7 +3179,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, priority1, priority2))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_SubnetID(rName string, subnetIndex int) string {
+func testAccFleetConfig_launchTemplateOverrideSubnetID(rName string, subnetIndex int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3224,7 +3224,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, subnetIndex))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName string, weightedCapacity int) string {
+func testAccFleetConfig_launchTemplateOverrideWeightedCapacity(rName string, weightedCapacity int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3250,7 +3250,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, weightedCapacity))
 }
 
-func testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName string, weightedCapacity1, weightedCapacity2 int) string {
+func testAccFleetConfig_launchTemplateOverrideWeightedCapacityMultiple(rName string, weightedCapacity1, weightedCapacity2 int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3282,7 +3282,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, weightedCapacity1, weightedCapacity2))
 }
 
-func testAccFleetConfig_OnDemandOptions_AllocationStrategy(rName, allocationStrategy string) string {
+func testAccFleetConfig_onDemandOptionsAllocationStrategy(rName, allocationStrategy string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3308,7 +3308,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-func testAccFleetConfig_ReplaceUnhealthyInstances(rName string, replaceUnhealthyInstances bool) string {
+func testAccFleetConfig_replaceUnhealthyInstances(rName string, replaceUnhealthyInstances bool) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   replace_unhealthy_instances = %[2]t
@@ -3332,7 +3332,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, replaceUnhealthyInstances))
 }
 
-func testAccFleetConfig_SpotOptions_AllocationStrategy(rName, allocationStrategy string) string {
+func testAccFleetConfig_spotOptionsAllocationStrategy(rName, allocationStrategy string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3358,7 +3358,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-func testAccFleetConfig_SpotOptions_CapacityRebalance(rName, allocationStrategy string) string {
+func testAccFleetConfig_spotOptionsCapacityRebalance(rName, allocationStrategy string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3389,7 +3389,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-func testAccFleetConfigWithInvalidTypeForCapacityRebalance(rName string) string {
+func testAccFleetConfig_invalidTypeForCapacityRebalance(rName string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   type = "request"
@@ -3422,7 +3422,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName))
 }
 
-func testAccFleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, instanceInterruptionBehavior string) string {
+func testAccFleetConfig_spotOptionsInstanceInterruptionBehavior(rName, instanceInterruptionBehavior string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3448,7 +3448,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, instanceInterruptionBehavior))
 }
 
-func testAccFleetConfig_SpotOptions_InstancePoolsToUseCount(rName string, instancePoolsToUseCount int) string {
+func testAccFleetConfig_spotOptionsInstancePoolsToUseCount(rName string, instancePoolsToUseCount int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3474,7 +3474,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, instancePoolsToUseCount))
 }
 
-func testAccFleetConfigTags1(rName, key1, value1 string) string {
+func testAccFleetConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3496,7 +3496,7 @@ resource "aws_ec2_fleet" "test" {
 `, key1, value1))
 }
 
-func testAccFleetConfigTags2(rName, key1, value1, key2, value2 string) string {
+func testAccFleetConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3519,7 +3519,7 @@ resource "aws_ec2_fleet" "test" {
 `, key1, value1, key2, value2))
 }
 
-func testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, defaultTargetCapacityType string) string {
+func testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, defaultTargetCapacityType string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
@@ -3541,7 +3541,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, defaultTargetCapacityType))
 }
 
-func testAccFleetConfig_TargetCapacitySpecification_TotalTargetCapacity(rName string, totalTargetCapacity int) string {
+func testAccFleetConfig_targetCapacitySpecificationTotalTargetCapacity(rName string, totalTargetCapacity int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   terminate_instances = true
@@ -3565,7 +3565,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, totalTargetCapacity))
 }
 
-func testAccFleetConfig_TerminateInstancesWithExpiration(rName string, terminateInstancesWithExpiration bool) string {
+func testAccFleetConfig_terminateInstancesExpiration(rName string, terminateInstancesWithExpiration bool) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   terminate_instances_with_expiration = %[2]t
@@ -3589,7 +3589,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, terminateInstancesWithExpiration))
 }
 
-func testAccFleetConfig_Type(rName, fleetType string) string {
+func testAccFleetConfig_type(rName, fleetType string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   type = %[2]q

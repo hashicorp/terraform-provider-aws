@@ -14,8 +14,8 @@ const (
 	resolverQueryLogConfigStatusNotFound = "NotFound"
 	resolverQueryLogConfigStatusUnknown  = "Unknown"
 
-	resolverDnssecConfigStatusNotFound = "NotFound"
-	resolverDnssecConfigStatusUnknown  = "Unknown"
+	dnssecConfigStatusNotFound = "NotFound"
+	dnssecConfigStatusUnknown  = "Unknown"
 
 	firewallDomainListStatusNotFound = "NotFound"
 	firewallDomainListStatusUnknown  = "Unknown"
@@ -72,15 +72,15 @@ func StatusDNSSECConfig(conn *route53resolver.Route53Resolver, dnssecConfigID st
 		dnssecConfig, err := FindResolverDNSSECConfigByID(conn, dnssecConfigID)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			return nil, resolverDnssecConfigStatusNotFound, nil
+			return nil, dnssecConfigStatusNotFound, nil
 		}
 
 		if err != nil {
-			return nil, resolverDnssecConfigStatusUnknown, err
+			return nil, dnssecConfigStatusUnknown, err
 		}
 
 		if dnssecConfig == nil {
-			return nil, resolverDnssecConfigStatusNotFound, nil
+			return nil, dnssecConfigStatusNotFound, nil
 		}
 
 		return dnssecConfig, aws.StringValue(dnssecConfig.ValidationStatus), nil
