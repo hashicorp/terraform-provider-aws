@@ -10,6 +10,8 @@ description: |-
 
 Provides a Redshift Cluster IAM Roles resource.
 
+~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `default_iam_role_arn` argument and the [`aws_redshift_cluster`](redshift_cluster.html) resource's `default_iam_role_arn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
+
 ## Example Usage
 
 ```terraform
