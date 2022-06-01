@@ -1205,7 +1205,6 @@ func TestAccDMSEndpoint_Redshift_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
-					resource.TestCheckResourceAttr(resourceName, "source", "target"),
 				),
 			},
 			{
@@ -1267,7 +1266,6 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 				Config: testAccEndpointConfig_redshiftUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
@@ -2710,6 +2708,9 @@ resource "aws_redshift_cluster" "test" {
   master_password    = "Mustbe8characters"
   node_type          = "dc2.large"
   cluster_type       = "single-node"
+
+  automated_snapshot_retention_period = 0
+  skip_final_snapshot                 = true
 }
 `, rName))
 }
@@ -2720,7 +2721,7 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "redshift"
-  server_name                 = aws_redshift_cluster.test.cluster_identifier
+  server_name                 = aws_redshift_cluster.test.dns_name
   port                        = 27017
   username                    = "tftest"
   password                    = "tftest"
@@ -2743,7 +2744,7 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "redshift"
-  server_name                 = aws_redshift_cluster.test.cluster_identifier
+  server_name                 = aws_redshift_cluster.test.dns_name
   port                        = 27018
   username                    = "tftest-new-username"
   password                    = "tftest-new-password"
