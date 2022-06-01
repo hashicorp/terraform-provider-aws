@@ -359,9 +359,9 @@ func testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(enable bool) s
 resource "aws_guardduty_detector" "test" {
   datasources {
     kubernetes {
-	  audit_logs {
+      audit_logs {
         enable = %[1]t
-	  }
+      }
     }
   }
 }
@@ -373,14 +373,14 @@ func testAccGuardDutyDetectorConfigDatasourcesAll(enableK8s, enableS3 bool) stri
 resource "aws_guardduty_detector" "test" {
   datasources {
     kubernetes {
-	  audit_logs {
+      audit_logs {
         enable = %[1]t
-	  }
+      }
     }
     s3_logs {
-		enable = %[2]t
-	  }
-	}
+      enable = %[2]t
+    }
+  }
 }
 `, enableK8s, enableS3)
 }
