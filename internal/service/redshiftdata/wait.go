@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitStatementFinished(conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) (*redshiftdataapiservice.DescribeStatementOutput, error) { //nolint:unparam
+func waitStatementFinished(conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) (*redshiftdataapiservice.DescribeStatementOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			redshiftdataapiservice.StatusStringPicked,
