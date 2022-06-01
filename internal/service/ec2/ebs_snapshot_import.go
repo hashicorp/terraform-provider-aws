@@ -157,13 +157,10 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Default:  "vmimport",
 			},
 			"storage_tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringInSlice(ec2.TargetStorageTier_Values(), false),
-					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -282,7 +279,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error setting EBS Snapshot Import (%s) Storage Tier: %w", d.Id(), err)
 		}
 
-		_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
+		_, err = WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute)
 		if err != nil {
 			return fmt.Errorf("Error waiting for EBS Snapshot Import (%s) Storage Tier to be archived: %w", d.Id(), err)
 		}

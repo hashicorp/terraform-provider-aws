@@ -2354,21 +2354,24 @@ func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID s
 	return nil, err
 }
 
-func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SnapshotTierStatus, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"standard"},
+		Pending: []string{TargetStorageTierStandard},
 		Target:  []string{ec2.TargetStorageTierArchive},
-		Refresh: StatusSnapshotTierStatus(conn, id),
-		Timeout: 60 * time.Minute,
+		Refresh: StatusSnapshotStorageTier(conn, id),
+		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
 
-	detail, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	} else {
-		return detail.(*ec2.SnapshotTierStatus), nil
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SnapshotTierStatus); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
+
+		return output, err
 	}
+
+	return nil, err
 }
 
 // WaitVolumeAttachmentAttached waits for a VolumeAttachment to return Attached

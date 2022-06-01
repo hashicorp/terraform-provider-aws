@@ -220,6 +220,10 @@ const (
 	SriovNetSupportSimple = "simple"
 )
 
+const (
+	TargetStorageTierStandard = "standard"
+)
+
 func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
 	for i, v := range slice {
 		if v == s {

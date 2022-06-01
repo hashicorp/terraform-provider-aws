@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -72,13 +74,10 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				ForceNew: true,
 			},
 			"storage_tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringInSlice(ec2.TargetStorageTier_Values(), false),
-					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -125,9 +124,16 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(res.SnapshotId))
 
-	err = resourceEBSSnapshotWaitForAvailable(d, conn)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return nil, conn.WaitUntilSnapshotCompleted(&ec2.DescribeSnapshotsInput{
+				SnapshotIds: aws.StringSlice([]string{d.Id()}),
+			})
+		},
+		errCodeResourceNotReady)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("waiting for EBS Snapshot Copy (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
@@ -140,7 +146,7 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("error setting EBS Snapshot Copy (%s) Storage Tier: %w", d.Id(), err)
 		}
 
-		_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
+		_, err = WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute)
 		if err != nil {
 			return fmt.Errorf("Error waiting for EBS Snapshot Copy (%s) Storage Tier to be archived: %w", d.Id(), err)
 		}

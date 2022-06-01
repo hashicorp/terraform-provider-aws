@@ -230,72 +230,74 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.Get("final_snapshot").(bool) {
+	// TODO
+	// if d.Get("final_snapshot").(bool) {
 
-		log.Printf("[INFO] final_snapshot parameter set to true; before volume destroying, snapshot will be created: %s", d.Id())
+	// 	log.Printf("[INFO] final_snapshot parameter set to true; before volume destroying, snapshot will be created: %s", d.Id())
 
-		request := &ec2.CreateSnapshotInput{
-			VolumeId:          aws.String(d.Id()),
-			TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSnapshot),
-		}
+	// 	request := &ec2.CreateSnapshotInput{
+	// 		VolumeId:          aws.String(d.Id()),
+	// 		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+	// 	}
 
-		var res *ec2.Snapshot
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			var err error
-			res, err = conn.CreateSnapshot(request)
+	// 	var res *ec2.Snapshot
+	// 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	// 		var err error
+	// 		res, err = conn.CreateSnapshot(request)
 
-			if tfawserr.ErrMessageContains(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
-				return resource.RetryableError(err)
-			}
+	// 		if tfawserr.ErrMessageContains(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
+	// 			return resource.RetryableError(err)
+	// 		}
 
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
+	// 		if err != nil {
+	// 			return resource.NonRetryableError(err)
+	// 		}
 
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			res, err = conn.CreateSnapshot(request)
-		}
-		if err != nil {
-			return fmt.Errorf("error creating EC2 EBS Snapshot: %s", err)
-		}
+	// 		return nil
+	// 	})
+	// 	if tfresource.TimedOut(err) {
+	// 		res, err = conn.CreateSnapshot(request)
+	// 	}
+	// 	if err != nil {
+	// 		return fmt.Errorf("error creating EC2 EBS Snapshot: %s", err)
+	// 	}
 
-		err = func() error {
-			log.Printf("Waiting for Snapshot %s to become available...", d.Id())
-			input := &ec2.DescribeSnapshotsInput{
-				SnapshotIds: []*string{aws.String(*res.SnapshotId)},
-			}
-			err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-				err := conn.WaitUntilSnapshotCompleted(input)
-				if err == nil {
-					return nil
-				}
-				if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
-					return resource.RetryableError(fmt.Errorf("CreatingSnapshot: waiting for snapshot to become available"))
-				}
-				return resource.NonRetryableError(err)
-			})
-			if tfresource.TimedOut(err) {
-				err = conn.WaitUntilSnapshotCompleted(input)
-			}
-			if err != nil {
-				return fmt.Errorf("Error waiting for EBS snapshot to complete: %s", err)
-			}
-			return nil
-		}()
+	// 	err = func() error {
+	// 		log.Printf("Waiting for Snapshot %s to become available...", d.Id())
+	// 		input := &ec2.DescribeSnapshotsInput{
+	// 			SnapshotIds: []*string{aws.String(*res.SnapshotId)},
+	// 		}
+	// 		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	// 			err := conn.WaitUntilSnapshotCompleted(input)
+	// 			if err == nil {
+	// 				return nil
+	// 			}
+	// 			if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
+	// 				return resource.RetryableError(fmt.Errorf("CreatingSnapshot: waiting for snapshot to become available"))
+	// 			}
+	// 			return resource.NonRetryableError(err)
+	// 		})
+	// 		if tfresource.TimedOut(err) {
+	// 			err = conn.WaitUntilSnapshotCompleted(input)
+	// 		}
+	// 		if err != nil {
+	// 			return fmt.Errorf("Error waiting for EBS snapshot to complete: %s", err)
+	// 		}
+	// 		return nil
+	// 	}()
 
-		if err != nil {
-			return fmt.Errorf("Error creating snapshot: %s", err)
-		}
+	// 	if err != nil {
+	// 		return fmt.Errorf("Error creating snapshot: %s", err)
+	// 	}
 
-	}
-	input := &ec2.DeleteVolumeInput{
-		VolumeId: aws.String(d.Id()),
-	}
+	// }
+	// input := &ec2.DeleteVolumeInput{
+	// 	VolumeId: aws.String(d.Id()),
+	// }
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVolume(input)
+	// err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	// 	_, err := conn.DeleteVolume(input)
+
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyVolumeInput{
 			VolumeId: aws.String(d.Id()),

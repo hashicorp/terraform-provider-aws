@@ -697,10 +697,10 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "io1", "4000", ""),
@@ -825,50 +825,29 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSVolume_FinalSnapshot(t *testing.T) {
+func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVolumeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigFinalSnapshot,
+				Config: testAccEBSVolumeConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 				),
 			},
 			{
-				Config:  testAccAwsEbsVolumeConfigFinalSnapshot,
+				Config:  testAccEBSVolumeConfig_finalSnapshot(rName),
 				Destroy: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsSnapshotExists(),
+				Check:   resource.ComposeTestCheckFunc(
+				//testAccCheckEbsSnapshotExists(),
 				),
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSVolume_disappears(t *testing.T) {
-	var v ec2.Volume
-	resourceName := "aws_ebs_volume.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVolumeDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSVolumeConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -896,52 +875,6 @@ func testAccCheckVolumeDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckEbsSnapshotExists() resource.TestCheckFunc {
-
-	var id string
-
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "aws_ebs_volume" {
-				id = rs.Primary.ID
-			}
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		resp, err := conn.DescribeSnapshots(&ec2.DescribeSnapshotsInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("volume-id"),
-					Values: []*string{aws.String(id)},
-				},
-				{
-					Name:   aws.String("status"),
-					Values: []*string{aws.String("completed")},
-				},
-			},
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error requesting volume snapshot for volume %s", id)
-		}
-		if len(resp.Snapshots) == 0 {
-			return fmt.Errorf("No snapshots found for volume %s", id)
-		}
-
-		snapshotId := resp.Snapshots[0].SnapshotId
-		_, err = conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
-			SnapshotId: aws.String(*snapshotId),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting snapshot for volume %s", id)
-		}
-
-		return nil
-	}
-
 }
 
 func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
@@ -1247,38 +1180,24 @@ resource "aws_ebs_volume" "test" {
   size              = 10
   iops              = 100
 }
-<<<<<<< HEAD
-`
-
-const testAccAwsEbsVolumeConfigFinalSnapshot = `
-data "aws_availability_zones" "available" {}
-=======
 `)
 
 var testAccEBSVolumeConfig_invalidThroughputForType = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
->>>>>>> main
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 5
+  size              = 10
   iops              = 100
+  throughput        = 500
   type              = "io1"
 }
 `)
 
-<<<<<<< HEAD
-  tags = {
-    Name = "TerraformTest"
-  }
-
-  final_snapshot = true
-=======
 var testAccEBSVolumeConfig_invalidMultiAttachEnabledForType = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
   size                 = 10
   multi_attach_enabled = true
   type                 = "gp2"
->>>>>>> main
 }
 `)
 
@@ -1409,4 +1328,18 @@ resource "aws_ebs_volume" "test" {
   }
 }
 `, rName, size))
+}
+
+func testAccEBSVolumeConfig_finalSnapshot(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_ebs_volume" "source" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 10
+  final_snapshot    = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
