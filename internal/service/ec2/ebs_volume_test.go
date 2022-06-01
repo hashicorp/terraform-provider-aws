@@ -691,19 +691,19 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSVolume_io1ToGp3(t *testing.T) {
+func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "100", "io1", "4000", ""),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "io1", "4000", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -726,7 +726,7 @@ func TestAccEC2EBSVolume_io1ToGp3(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "100", "gp3", "4000", "125"),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "gp3", "4000", "125"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
