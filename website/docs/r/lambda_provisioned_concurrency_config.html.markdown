@@ -14,7 +14,7 @@ Manages a Lambda Provisioned Concurrency Configuration.
 
 ### Alias Name
 
-```hcl
+```terraform
 resource "aws_lambda_provisioned_concurrency_config" "example" {
   function_name                     = aws_lambda_alias.example.function_name
   provisioned_concurrent_executions = 1
@@ -24,7 +24,7 @@ resource "aws_lambda_provisioned_concurrency_config" "example" {
 
 ### Function Version
 
-```hcl
+```terraform
 resource "aws_lambda_provisioned_concurrency_config" "example" {
   function_name                     = aws_lambda_function.example.function_name
   provisioned_concurrent_executions = 1
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Provisioned Concurrency Configs can be imported using the `function_name` and `qualifier` separated by a colon (`:`), e.g.
+Lambda Provisioned Concurrency Configs can be imported using the `function_name` and `qualifier` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_lambda_provisioned_concurrency_config.example my_function:production

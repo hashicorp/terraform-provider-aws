@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
 description: |-
@@ -14,7 +14,7 @@ without having to hard code the ARN as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kms_alias" "s3" {
   name = "alias/aws/s3"
 }

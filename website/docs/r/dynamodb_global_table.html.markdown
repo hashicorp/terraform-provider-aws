@@ -16,7 +16,7 @@ Manages [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
@@ -89,7 +89,7 @@ The following arguments are supported:
 
 #### `replica`
 
-* `region_name` - (Required) AWS region name of replica DynamoDB Table. e.g. `us-east-1`
+* `region_name` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
 
 ## Attributes Reference
 
@@ -100,7 +100,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB Global Tables can be imported using the global table name, e.g.
+DynamoDB Global Tables can be imported using the global table name, e.g.,
 
 ```
 $ terraform import aws_dynamodb_global_table.MyTable MyTable

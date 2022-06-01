@@ -1,5 +1,5 @@
 ---
-subcategory: "Lex"
+subcategory: "Lex Model Building"
 layout: "aws"
 page_title: "AWS: aws_lex_bot"
 description: |-
@@ -13,7 +13,7 @@ Provides an Amazon Lex Bot resource. For more information see
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lex_bot" "order_flowers_bot" {
   abort_statement {
     message {
@@ -114,8 +114,8 @@ slot values into the response card. For more information, see
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 1 mins) Used when creating the bot
-* `update` - (Defaults to 1 mins) Used when updating the bot
+* `create` - (Defaults to 5 mins) Used when creating the bot
+* `update` - (Defaults to 5 mins) Used when updating the bot
 * `delete` - (Defaults to 5 mins) Used when deleting the bot
 
 ## Attributes Reference

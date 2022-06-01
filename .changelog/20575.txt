@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Fix `handler`, `runtime` attribute validation for `package_type` is `Zip`
+```

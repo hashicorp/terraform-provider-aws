@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudHSM v2"
+subcategory: "CloudHSM"
 layout: "aws"
 page_title: "AWS: aws_cloudhsm_v2_hsm"
 description: |-
@@ -14,7 +14,7 @@ Creates an HSM module in Amazon CloudHSM v2 cluster.
 
 The following example below creates an HSM module in CloudHSM cluster.
 
-```hcl
+```terraform
 data "aws_cloudhsm_v2_cluster" "cluster" {
   cluster_id = var.cloudhsm_cluster_id
 }
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-HSM modules can be imported using their HSM ID, e.g.
+HSM modules can be imported using their HSM ID, e.g.,
 
 ```
 $ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca

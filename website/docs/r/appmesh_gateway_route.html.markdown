@@ -1,5 +1,5 @@
 ---
-subcategory: "AppMesh"
+subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_gateway_route"
 description: |-
@@ -12,7 +12,7 @@ Provides an AWS App Mesh gateway route resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_appmesh_gateway_route" "example" {
   name                 = "example-gateway-route"
   mesh_name            = "example-service-mesh"
@@ -49,7 +49,7 @@ The following arguments are supported:
 * `virtual_gateway_name` - (Required) The name of the [virtual gateway](/docs/providers/aws/r/appmesh_virtual_gateway.html) to associate the gateway route with. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The gateway route specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -91,11 +91,12 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - The creation date of the gateway route.
 * `last_updated_date` - The last update date of the gateway route.
 * `resource_owner` - The resource owner's AWS account ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
 App Mesh gateway routes can be imported using `mesh_name` and `virtual_gateway_name` together with the gateway route's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_appmesh_gateway_route.example mesh/gw1/example-gateway-route

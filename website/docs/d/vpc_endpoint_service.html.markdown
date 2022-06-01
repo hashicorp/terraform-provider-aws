@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service"
 description: |-
@@ -15,7 +15,7 @@ can be specified when creating a VPC endpoint within the region configured in th
 
 ### AWS Service
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_vpc_endpoint_service" "s3" {
   service      = "s3"
@@ -36,7 +36,7 @@ resource "aws_vpc_endpoint" "ep" {
 
 ### Non-AWS Service
 
-```hcl
+```terraform
 data "aws_vpc_endpoint_service" "custome" {
   service_name = "com.amazonaws.vpce.us-west-2.vpce-svc-0e87519c997c63cd8"
 }
@@ -44,7 +44,7 @@ data "aws_vpc_endpoint_service" "custome" {
 
 ### Filter
 
-```hcl
+```terraform
 data "aws_vpc_endpoint_service" "test" {
   filter {
     name   = "service-name"
@@ -59,7 +59,7 @@ The arguments of this data source act as filters for querying the available VPC 
 The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `service` - (Optional) The common name of an AWS service (e.g. `s3`).
+* `service` - (Optional) The common name of an AWS service (e.g., `s3`).
 * `service_name` - (Optional) The service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `service_type` - (Optional) The service type, `Gateway` or `Interface`.
 * `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.

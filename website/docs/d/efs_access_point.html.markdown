@@ -1,5 +1,5 @@
 ---
-subcategory: "EFS"
+subcategory: "EFS (Elastic File System)"
 layout: "aws"
 page_title: "AWS: aws_efs_access_point"
 description: |-
@@ -12,7 +12,7 @@ Provides information about an Elastic File System (EFS) Access Point.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_efs_access_point" "test" {
   access_point_id = "fsap-12345678"
 }

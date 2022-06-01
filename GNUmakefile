@@ -1,10 +1,18 @@
-SWEEP?=us-east-1,us-west-2
-TEST?=./...
-SWEEP_DIR?=./aws
-PKG_NAME=aws
-TEST_COUNT?=1
-ACCTEST_TIMEOUT?=120m
-ACCTEST_PARALLELISM?=20
+SWEEP               ?= us-west-2,us-east-1,us-east-2
+TEST                ?= ./...
+SWEEP_DIR           ?= ./internal/sweep
+PKG_NAME            ?= internal
+TEST_COUNT          ?= 1
+ACCTEST_TIMEOUT     ?= 180m
+ACCTEST_PARALLELISM ?= 20
+
+ifneq ($(origin PKG), undefined)
+	PKG_NAME = internal/service/$(PKG)
+endif
+
+ifneq ($(origin TESTS), undefined)
+	RUNARGS = -run='$(TESTS)'
+endif
 
 default: build
 
@@ -12,33 +20,41 @@ build: fmtcheck
 	go install
 
 gen:
-	rm -f aws/internal/keyvaluetags/*_gen.go
-	rm -f aws/internal/service/**/lister/*_gen.go
+	rm -f .github/labeler-issue-triage.yml
+	rm -f .github/labeler-pr-triage.yml
+	rm -f infrastructure/repository/labels-service.tf
+	rm -f internal/conns/*_gen.go
+	rm -f internal/service/**/*_gen.go
+	rm -f internal/sweep/sweep_test.go
+	rm -f names/*_gen.go
+	rm -f website/allowed-subcategories.txt
+	rm -f website/docs/guides/custom-service-endpoints.html.md
 	go generate ./...
 
 sweep:
+	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	go test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
+	go test $(TEST) $(TESTARGS) -timeout=5m
 
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
-		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
 		echo ""; \
-		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
-		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
+		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
-		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -49,6 +65,10 @@ gencheck:
 	@$(MAKE) gen
 	@git diff --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
+
+generate-changelog:
+	@echo "==> Generating changelog..."
+	@sh -c "'$(CURDIR)/scripts/generate-changelog.sh'"
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
@@ -62,7 +82,7 @@ docs-lint:
 		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
 		echo "Unexpected issues found in docs Markdown files."; \
 		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
@@ -70,25 +90,32 @@ docs-lint:
 docs-lint-fix:
 	@echo "==> Applying automatic docs linter fixes..."
 	@misspell -w -source=text docs/
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
 
 docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
 		-require-resource-subcategory
-	@misspell -error -source text CHANGELOG.md
+	@misspell -error -source text CHANGELOG.md .changelog
 
-lint: golangci-lint awsproviderlint importlint
+lint: golangci-lint providerlint importlint
+
+gh-workflows-lint:
+	@echo "==> Checking github workflows with actionlint..."
+	@actionlint
 
 golangci-lint:
+	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run ./$(PKG_NAME)/...
 
-awsproviderlint:
-	@awsproviderlint \
+providerlint:
+	@echo "==> Checking source code with providerlint..."
+	@providerlint \
 		-c 1 \
-		-AWSAT003=false \
+		-AT001.ignored-filename-suffixes=_data_source_test.go \
 		-AWSAT006=false \
+		-AWSR002=false \
 		-AWSV001=false \
 		-R001=false \
 		-R010=false \
@@ -96,6 +123,10 @@ awsproviderlint:
 		-R019=false \
 		-V001=false \
 		-V009=false \
+		-V011=false \
+		-V012=false \
+		-V013=false \
+		-V014=false \
 		-XR001=false \
 		-XR002=false \
 		-XR003=false \
@@ -103,19 +134,22 @@ awsproviderlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)
+		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
 
 importlint:
+	@echo "==> Checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd awsproviderlint && GO111MODULE=on go install .
-	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
-	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
-	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
+	cd providerlint && go install .
+	cd tools && go install github.com/bflad/tfproviderdocs
+	cd tools && go install github.com/client9/misspell/cmd/misspell
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && go install github.com/katbyte/terrafmt
+	cd tools && go install github.com/terraform-linters/tflint
+	cd tools && go install github.com/pavius/impi/cmd/impi
+	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -128,13 +162,16 @@ test-compile:
 website-link-check:
 	@scripts/markdown-link-check.sh
 
+website-link-check-ghrc:
+	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" scripts/markdown-link-check.sh
+
 website-lint:
 	@echo "==> Checking website against linters..."
 	@misspell -error -source=text website/ || (echo; \
 		echo "Unexpected mispelling found in website files."; \
 		echo "To automatically fix the misspelling, run 'make website-lint-fix' and commit the changes."; \
 		exit 1)
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli website/docs/ || (echo; \
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli website/docs/ || (echo; \
 		echo "Unexpected issues found in website Markdown files."; \
 		echo "To apply any automatic fixes, run 'make website-lint-fix' and commit the changes."; \
 		exit 1)
@@ -147,7 +184,19 @@ website-lint:
 website-lint-fix:
 	@echo "==> Applying automatic website linter fixes..."
 	@misspell -w -source=text website/
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-.PHONY: awsproviderlint build gen golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck
+semgrep:
+	@echo "==> Running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+
+semall:
+	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
+	@semgrep -c .semgrep.yml
+	@semgrep -c .semgrep-service-name0.yml
+	@semgrep -c .semgrep-service-name1.yml
+	@semgrep -c .semgrep-service-name2.yml
+	@semgrep -c .semgrep-service-name3.yml
+
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep

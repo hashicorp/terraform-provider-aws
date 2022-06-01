@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_rest_api_policy"
 description: |-
@@ -16,7 +16,7 @@ Provides an API Gateway REST API Policy.
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "test" {
   name = "example-rest-api"
 }
@@ -34,7 +34,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
         "AWS": "*"
       },
       "Action": "execute-api:Invoke",
-      "Resource": "${aws_api_gateway_rest_api.test.arn}",
+      "Resource": "${aws_api_gateway_rest_api.test.execution_arn}",
       "Condition": {
         "IpAddress": {
           "aws:SourceIp": "123.123.123.123/32"
@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.
+`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.,
 
 ```
 $ terraform import aws_api_gateway_rest_api_policy.example 12345abcde
