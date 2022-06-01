@@ -36,12 +36,12 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasBasicConfig(aliasName, description, message),
+				Config: testAccAliasConfig_basic(aliasName, description, message),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
@@ -59,7 +59,7 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAliasBasicConfig(uAliasName, uDescription, uMessage),
+				Config: testAccAliasConfig_basic(uAliasName, uDescription, uMessage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/.+`)),
@@ -87,12 +87,12 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasBasicTags1Config(aliasName, "key1", "value1"),
+				Config: testAccAliasConfig_basicTags1(aliasName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,7 +105,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAliasBasicTags2Config(aliasName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAliasConfig_basicTags2(aliasName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -114,7 +114,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAliasBasicTags1Config(aliasName, "key2", "value2"),
+				Config: testAccAliasConfig_basicTags1(aliasName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -126,6 +126,10 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 }
 
 func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.Alias
 
 	rString := sdkacctest.RandString(8)
@@ -160,12 +164,12 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasAllFieldsConfig(aliasName, description,
+				Config: testAccAliasConfig_allFields(aliasName, description,
 					fleetName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
@@ -202,12 +206,12 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasBasicConfig(aliasName, description, message),
+				Config: testAccAliasConfig_basic(aliasName, description, message),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasDisappears(&conf),
@@ -238,7 +242,7 @@ func testAccCheckAliasExists(n string, res *gamelift.Alias) resource.TestCheckFu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Alias ID is set")
+			return fmt.Errorf("No GameLift Alias ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -252,7 +256,7 @@ func testAccCheckAliasExists(n string, res *gamelift.Alias) resource.TestCheckFu
 		a := out.Alias
 
 		if *a.AliasId != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Alias not found")
+			return fmt.Errorf("GameLift Alias not found")
 		}
 
 		*res = *a
@@ -273,10 +277,10 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 			AliasId: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
-			return fmt.Errorf("Gamelift Alias still exists")
+			return fmt.Errorf("GameLift Alias still exists")
 		}
 
-		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			return nil
 		}
 
@@ -286,7 +290,7 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAliasBasicConfig(aliasName, description, message string) string {
+func testAccAliasConfig_basic(aliasName, description, message string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
   name        = "%s"
@@ -300,7 +304,7 @@ resource "aws_gamelift_alias" "test" {
 `, aliasName, description, message)
 }
 
-func testAccAliasBasicTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAliasConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
   name        = %[1]q
@@ -318,7 +322,7 @@ resource "aws_gamelift_alias" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAliasBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAliasConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
   name        = %[1]q
@@ -337,7 +341,7 @@ resource "aws_gamelift_alias" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAliasAllFieldsConfig(aliasName, description,
+func testAccAliasConfig_allFields(aliasName, description,
 	fleetName, launchPath, params, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
@@ -351,5 +355,5 @@ resource "aws_gamelift_alias" "test" {
 }
 %s
 `, aliasName, description,
-		testAccFleetBasicConfig(fleetName, launchPath, params, bucketName, key, roleArn))
+		testAccFleetConfig_basic(fleetName, launchPath, params, bucketName, key, roleArn))
 }

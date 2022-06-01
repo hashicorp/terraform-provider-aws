@@ -251,7 +251,7 @@ func resourceSecretVersionDelete(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
 			_, err := conn.UpdateSecretVersionStage(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					return nil
 				}
 				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {

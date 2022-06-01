@@ -131,7 +131,7 @@ func TestAccS3BucketWebsiteConfiguration_Redirect(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_RoutingRule_ConditionAndRedirect(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_website_configuration.test"
 
@@ -142,7 +142,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_OptionalRedirection(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRule_OptionalRedirection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
@@ -152,6 +152,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 						"redirect.#":                         "1",
 						"redirect.0.replace_key_prefix_with": "documents/",
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
 			{
@@ -160,7 +161,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectErrors(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectErrors(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
@@ -170,6 +171,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 						"redirect.#":                         "1",
 						"redirect.0.replace_key_prefix_with": "report-404",
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
 			{
@@ -178,7 +180,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectToPage(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectToPage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
@@ -188,6 +190,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 						"redirect.#":                    "1",
 						"redirect.0.replace_key_with":   "errorpage.html",
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
 			{
@@ -199,7 +202,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 	})
 }
 
-func TestAccS3BucketWebsiteConfiguration_RoutingRules_MultipleRules(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_RoutingRule_MultipleRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_website_configuration.test"
 
@@ -210,7 +213,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_MultipleRules(t *testing.T
 		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_MultipleRules(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRule_MultipleRules(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "2"),
@@ -226,6 +229,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_MultipleRules(t *testing.T
 						"redirect.#":                    "1",
 						"redirect.0.replace_key_with":   "errorpage.html",
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
 			{
@@ -243,7 +247,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_MultipleRules(t *testing.T
 	})
 }
 
-func TestAccS3BucketWebsiteConfiguration_RoutingRules_RedirectOnly(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_RoutingRule_RedirectOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_website_configuration.test"
 
@@ -254,7 +258,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_RedirectOnly(t *testing.T)
 		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectOnly(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
@@ -263,12 +267,252 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_RedirectOnly(t *testing.T)
 						"redirect.0.protocol":         s3.ProtocolHttps,
 						"redirect.0.replace_key_with": "errorpage.html",
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_ConditionAndRedirect(rName, "documents/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirectWithEmptyString(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_ConditionAndRedirect(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_RoutingRules_updateConditionAndRedirect(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_ConditionAndRedirect(rName, "documents/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
+				),
+			},
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_ConditionAndRedirect(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_RoutingRuleToRoutingRules(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRule_OptionalRedirection(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
+				),
+			},
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_RoutingRules_ConditionAndRedirect(rName, "documents/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentNoChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsite(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.0.index_document", "index.html"),
+				),
+			},
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithIndexDocumentNoChange(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentWithChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsite(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.0.index_document", "index.html"),
+				),
+			},
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithIndexDocumentWithChange(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "other.html"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleNoChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsiteAndRoutingRules(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttrSet(bucketResourceName, "website.0.routing_rules"),
+				),
+			},
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithRoutingRuleNoChange(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleWithChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsiteAndRoutingRules(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttrSet(bucketResourceName, "website.0.routing_rules"),
+				),
+			},
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithRoutingRuleWithChange(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.protocol", s3.ProtocolHttps),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.replace_key_with", "errorpage.html"),
+				),
 			},
 		},
 	})
@@ -420,7 +664,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketWebsiteConfigurationConfig_RoutingRules_OptionalRedirection(rName string) string {
+func testAccBucketWebsiteConfigurationConfig_RoutingRule_OptionalRedirection(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -455,9 +699,9 @@ resource "aws_s3_bucket_website_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectErrors(rName string) string {
+func testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectErrors(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -492,7 +736,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 `, rName))
 }
 
-func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectToPage(rName string) string {
+func testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectToPage(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -527,7 +771,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectOnly(rName string) string {
+func testAccBucketWebsiteConfigurationConfig_RoutingRule_RedirectOnly(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -559,7 +803,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 `, rName)
 }
 
-func testAccBucketWebsiteConfigurationConfig_RoutingRules_MultipleRules(rName string) string {
+func testAccBucketWebsiteConfigurationConfig_RoutingRule_MultipleRules(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -595,6 +839,152 @@ resource "aws_s3_bucket_website_configuration" "test" {
       key_prefix_equals = "docs/"
     }
     redirect {
+      replace_key_with = "errorpage.html"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketWebsiteConfigurationConfig_RoutingRules_ConditionAndRedirect(bucketName, replaceKeyPrefixWith string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+
+  routing_rules = <<EOF
+[
+  {
+    "Condition": {
+      "KeyPrefixEquals": "docs/"
+    },
+    "Redirect": {
+      "ReplaceKeyPrefixWith": %[2]q
+    }
+  }
+]
+EOF
+}
+`, bucketName, replaceKeyPrefixWith)
+}
+
+func testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithIndexDocumentNoChange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+`, rName)
+}
+
+func testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithIndexDocumentWithChange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  index_document {
+    suffix = "other.html"
+  }
+}
+`, rName)
+}
+
+func testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithRoutingRuleNoChange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+
+  routing_rule {
+    condition {
+      key_prefix_equals = "docs/"
+    }
+    redirect {
+      replace_key_prefix_with = "documents/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithRoutingRuleWithChange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "bucket" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+
+  routing_rule {
+    redirect {
+      protocol         = "https"
       replace_key_with = "errorpage.html"
     }
   }

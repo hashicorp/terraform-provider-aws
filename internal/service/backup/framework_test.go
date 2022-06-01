@@ -14,7 +14,36 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
-func TestAccBackupFramework_basic(t *testing.T) {
+func TestAccBackupFramework_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			"basic":                        testAccBackupFramework_basic,
+			"disappears":                   testAccBackupFramework_disappears,
+			"UpdateTags":                   testAccBackupFramework_updateTags,
+			"UpdateControlScope":           testAccBackupFramework_updateControlScope,
+			"UpdateControlInputParameters": testAccBackupFramework_updateControlInputParameters,
+			"UpdateControls":               testAccBackupFramework_updateControls,
+		},
+		"DataSource": {
+			"basic":           testAccBackupFrameworkDataSource_basic,
+			"ControlScopeTag": testAccBackupFrameworkDataSource_controlScopeTag,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccBackupFramework_basic(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -22,11 +51,11 @@ func TestAccBackupFramework_basic(t *testing.T) {
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, originalDescription),
@@ -75,18 +104,18 @@ func TestAccBackupFramework_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupFramework_updateTags(t *testing.T) {
+func testAccBackupFramework_updateTags(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
 	resourceName := "aws_backup_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),
@@ -162,7 +191,7 @@ func TestAccBackupFramework_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccBackupFramework_updateControlScope(t *testing.T) {
+func testAccBackupFramework_updateControlScope(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -171,11 +200,11 @@ func TestAccBackupFramework_updateControlScope(t *testing.T) {
 	updatedControlScopeTagValue := ""
 	resourceName := "aws_backup_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),
@@ -274,7 +303,7 @@ func TestAccBackupFramework_updateControlScope(t *testing.T) {
 	})
 }
 
-func TestAccBackupFramework_updateControlInputParameters(t *testing.T) {
+func testAccBackupFramework_updateControlInputParameters(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -283,11 +312,11 @@ func TestAccBackupFramework_updateControlInputParameters(t *testing.T) {
 	updatedRequiredRetentionDays := "34"
 	resourceName := "aws_backup_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
@@ -356,18 +385,18 @@ func TestAccBackupFramework_updateControlInputParameters(t *testing.T) {
 	})
 }
 
-func TestAccBackupFramework_updateControls(t *testing.T) {
+func testAccBackupFramework_updateControls(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
 	resourceName := "aws_backup_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),
@@ -434,18 +463,18 @@ func TestAccBackupFramework_updateControls(t *testing.T) {
 	})
 }
 
-func TestAccBackupFramework_disappears(t *testing.T) {
+func testAccBackupFramework_disappears(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "disappears"
 	resourceName := "aws_backup_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFrameworkDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupFrameworkConfig_basic(rName, description),

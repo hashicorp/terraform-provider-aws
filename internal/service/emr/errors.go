@@ -1,5 +1,7 @@
 package emr
 
 const (
-	ErrCodeClusterNotFound = "ClusterNotFound"
+	ErrCodeClusterNotFound           = "ClusterNotFound"
+	ErrCodeUnknownOperationException = "UnknownOperationException"
+	ErrCodeValidationException       = "ValidationException"
 )

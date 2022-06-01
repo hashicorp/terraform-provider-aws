@@ -5,6 +5,14 @@ import (
 	"os"
 )
 
+const (
+	// Default provider root logger name.
+	DefaultProviderRootLoggerName string = "provider"
+
+	// Default SDK root logger name.
+	DefaultSDKRootLoggerName string = "sdk"
+)
+
 // loggerKey defines context keys for locating loggers in context.Context
 // it's a private type to make sure no other packages can override the key
 type loggerKey string
@@ -14,13 +22,31 @@ const (
 	// logger for writing logs from within provider code.
 	ProviderRootLoggerKey loggerKey = "provider"
 
+	// ProviderRootLoggerOptionsKey is the loggerKey that will hold the root
+	// logger options when the root provider logger is created. This is to
+	// assist creating subsystem loggers, as most options cannot be fetched and
+	// a logger does not provide set methods for these options.
+	ProviderRootLoggerOptionsKey loggerKey = "provider-options"
+
 	// SDKRootLoggerKey is the loggerKey that will hold the root logger for
 	// writing logs from with SDKs.
 	SDKRootLoggerKey loggerKey = "sdk"
 
+	// SDKRootLoggerOptionsKey is the loggerKey that will hold the root
+	// logger options when the SDK provider logger is created. This is to
+	// assist creating subsystem loggers, as most options cannot be fetched and
+	// a logger does not provide set methods for these options.
+	SDKRootLoggerOptionsKey loggerKey = "sdk-options"
+
 	// SinkKey is the loggerKey that will hold the logging sink used for
 	// test frameworks.
 	SinkKey loggerKey = ""
+
+	// SinkOptionsKey is the loggerKey that will hold the sink
+	// logger options when the SDK provider logger is created. This is to
+	// assist creating subsystem loggers, as most options cannot be fetched and
+	// a logger does not provide set methods for these options.
+	SinkOptionsKey loggerKey = "sink-options"
 )
 
 var (

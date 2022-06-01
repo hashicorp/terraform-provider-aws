@@ -753,7 +753,7 @@ func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] ElasticTranscoder Preset (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

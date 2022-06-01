@@ -96,7 +96,7 @@ To expand on the data handling that occurs specifically within the Terraform AWS
 
 To further understand the necessary data conversions used throughout the Terraform AWS Provider codebase between AWS Go SDK types and the Terraform Plugin SDK, the following table can be referenced for most scenarios:
 
-<!-- markdownlint-disable MD033 --->
+<!-- markdownlint-disable no-inline-html --->
 
 | AWS API Model | AWS Go SDK | Terraform Plugin SDK | Terraform Language/State |
 |---------------|------------|----------------------|--------------------------|
@@ -109,7 +109,7 @@ To further understand the necessary data conversions used throughout the Terrafo
 | `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) | `list(object(any))` |
 | `timestamp` | `*time.Time` | `TypeString` (typically RFC3339 formatted) | `string` |
 
-<!-- markdownlint-enable MD033 --->
+<!-- markdownlint-enable no-inline-html --->
 
 You may notice there are type encoding differences the AWS Go SDK and Terraform Plugin SDK:
 
@@ -461,9 +461,9 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok {
-    t, _ := time.Parse(time.RFC3339, v.(string))
+    v, _ := time.Parse(time.RFC3339, v.(string))
 
-    input.AttributeName = aws.Time(t)
+    input.AttributeName = aws.Time(v)
 }
 ```
 
@@ -529,8 +529,8 @@ To read:
 func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
-    if v, ok := tfMap["nested_attribute_name"].(int); ok && v != 0.0 {
-        apiObject.NestedAttributeName = aws.Float64(float64(v))
+    if v, ok := tfMap["nested_attribute_name"].(float64); ok && v != 0.0 {
+        apiObject.NestedAttributeName = aws.Float64(v)
     }
 
     // ...
@@ -619,7 +619,7 @@ To read:
 func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
-    if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
+    if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
         apiObject.NestedAttributeName = expandStructure(v[0].(map[string]interface{}))
     }
 
@@ -806,9 +806,9 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
-        t, _ := time.Parse(time.RFC3339, v.(string))
+        v, _ := time.Parse(time.RFC3339, v)
 
-        apiObject.NestedAttributeName = aws.Time(t)
+        apiObject.NestedAttributeName = aws.Time(v)
     }
 
     // ...

@@ -1,9 +1,8 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -174,7 +173,7 @@ func FindRoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 	return output.Role, nil
 }
 
-func FindVirtualMfaDevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
+func FindVirtualMFADevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
 	input := &iam.ListVirtualMFADevicesInput{}
 
 	output, err := conn.ListVirtualMFADevices(input)
@@ -283,10 +282,66 @@ func FindSigningCertificate(conn *iam.IAM, userName, certId string) (*iam.Signin
 	return cert, nil
 }
 
-func urlFromOpenIDConnectProviderArn(arn string) (string, error) {
-	parts := strings.SplitN(arn, "/", 2)
-	if len(parts) != 2 {
-		return "", fmt.Errorf("error reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
+func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
+	input := &iam.GetSAMLProviderInput{
+		SAMLProviderArn: aws.String(arn),
 	}
-	return parts[1], nil
+
+	output, err := conn.GetSAMLProviderWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
+	accessKeys, err := FindAccessKeys(ctx, conn, username)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, accessKey := range accessKeys {
+		if aws.StringValue(accessKey.AccessKeyId) == id {
+			return accessKey, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
+func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
+	var accessKeys []*iam.AccessKeyMetadata
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+	err := conn.ListAccessKeysPages(input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		accessKeys = append(accessKeys, page.AccessKeyMetadata...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	return accessKeys, err
 }

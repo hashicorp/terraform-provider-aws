@@ -123,7 +123,7 @@ func resourcePrivateDNSNamespaceRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.GetNamespace(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
 			d.SetId("")
 			return nil
 		}

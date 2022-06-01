@@ -56,7 +56,7 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.GetRepository(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
 			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return fmt.Errorf("Resource codecommit repository not found for %s", repositoryName)

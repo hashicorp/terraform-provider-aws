@@ -24,7 +24,7 @@ func waitWorkspaceCreated(conn *managedgrafana.ManagedGrafana, id string, timeou
 	return nil, err
 }
 
-func waitWorkspaceUpdated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
+func waitWorkspaceUpdated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{managedgrafana.WorkspaceStatusUpdating},
 		Target:  []string{managedgrafana.WorkspaceStatusActive},
@@ -52,6 +52,40 @@ func waitWorkspaceDeleted(conn *managedgrafana.ManagedGrafana, id string, timeou
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*managedgrafana.WorkspaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLicenseAssociationCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{managedgrafana.WorkspaceStatusUpgrading},
+		Target:  []string{managedgrafana.WorkspaceStatusActive},
+		Refresh: statusWorkspaceStatus(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*managedgrafana.WorkspaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitWorkspaceSamlConfigurationCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.SamlAuthentication, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{managedgrafana.SamlConfigurationStatusNotConfigured},
+		Target:  []string{managedgrafana.SamlConfigurationStatusConfigured},
+		Refresh: statusWorkspaceSamlConfiguration(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*managedgrafana.SamlAuthentication); ok {
 		return output, err
 	}
 

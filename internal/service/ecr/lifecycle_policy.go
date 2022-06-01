@@ -166,10 +166,10 @@ func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.DeleteLifecyclePolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 			return nil
 		}
 		return err

@@ -154,15 +154,15 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("dns_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DnsConfig = expandServiceDiscoveryDnsConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.DnsConfig = expandDNSConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("health_check_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.HealthCheckConfig = expandHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("health_check_custom_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.HealthCheckCustomConfig = expandServiceDiscoveryHealthCheckCustomConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.HealthCheckCustomConfig = expandHealthCheckCustomConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("namespace_id"); ok {
@@ -205,13 +205,13 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	arn := aws.StringValue(service.Arn)
 	d.Set("arn", arn)
 	d.Set("description", service.Description)
-	if err := d.Set("dns_config", flattenServiceDiscoveryDnsConfig(service.DnsConfig)); err != nil {
+	if err := d.Set("dns_config", flattenDNSConfig(service.DnsConfig)); err != nil {
 		return fmt.Errorf("error setting dns_config: %w", err)
 	}
-	if err := d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(service.HealthCheckConfig)); err != nil {
+	if err := d.Set("health_check_config", flattenHealthCheckConfig(service.HealthCheckConfig)); err != nil {
 		return fmt.Errorf("error setting health_check_config: %w", err)
 	}
-	if err := d.Set("health_check_custom_config", flattenServiceDiscoveryHealthCheckCustomConfig(service.HealthCheckCustomConfig)); err != nil {
+	if err := d.Set("health_check_custom_config", flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig)); err != nil {
 		return fmt.Errorf("error setting health_check_custom_config: %w", err)
 	}
 	d.Set("name", service.Name)
@@ -249,11 +249,11 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("dns_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Service.DnsConfig = expandServiceDiscoveryDnsConfigChange(v.([]interface{})[0].(map[string]interface{}))
+			input.Service.DnsConfig = expandDNSConfigChange(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("health_check_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Service.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
+			input.Service.HealthCheckConfig = expandHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		output, err := conn.UpdateService(input)
@@ -295,7 +295,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			for _, instance := range page.Instances {
-				err := deregisterServiceDiscoveryInstance(conn, d.Id(), aws.StringValue(instance.Id))
+				err := deregisterInstance(conn, d.Id(), aws.StringValue(instance.Id))
 
 				if err != nil {
 					log.Printf("[ERROR] %s", err)
@@ -335,7 +335,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandServiceDiscoveryDnsConfig(configured map[string]interface{}) *servicediscovery.DnsConfig {
+func expandDNSConfig(configured map[string]interface{}) *servicediscovery.DnsConfig {
 	result := &servicediscovery.DnsConfig{}
 
 	result.NamespaceId = aws.String(configured["namespace_id"].(string))
@@ -357,7 +357,7 @@ func expandServiceDiscoveryDnsConfig(configured map[string]interface{}) *service
 	return result
 }
 
-func flattenServiceDiscoveryDnsConfig(config *servicediscovery.DnsConfig) []map[string]interface{} {
+func flattenDNSConfig(config *servicediscovery.DnsConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -365,17 +365,17 @@ func flattenServiceDiscoveryDnsConfig(config *servicediscovery.DnsConfig) []map[
 	result := map[string]interface{}{}
 
 	if config.NamespaceId != nil {
-		result["namespace_id"] = *config.NamespaceId
+		result["namespace_id"] = aws.StringValue(config.NamespaceId)
 	}
 	if config.RoutingPolicy != nil {
-		result["routing_policy"] = *config.RoutingPolicy
+		result["routing_policy"] = aws.StringValue(config.RoutingPolicy)
 	}
 	if config.DnsRecords != nil {
 		drs := make([]map[string]interface{}, 0)
 		for _, v := range config.DnsRecords {
 			dr := map[string]interface{}{}
-			dr["ttl"] = *v.TTL
-			dr["type"] = *v.Type
+			dr["ttl"] = aws.Int64Value(v.TTL)
+			dr["type"] = aws.StringValue(v.Type)
 			drs = append(drs, dr)
 		}
 		result["dns_records"] = drs
@@ -388,7 +388,7 @@ func flattenServiceDiscoveryDnsConfig(config *servicediscovery.DnsConfig) []map[
 	return []map[string]interface{}{result}
 }
 
-func expandServiceDiscoveryDnsConfigChange(configured map[string]interface{}) *servicediscovery.DnsConfigChange {
+func expandDNSConfigChange(configured map[string]interface{}) *servicediscovery.DnsConfigChange {
 	result := &servicediscovery.DnsConfigChange{}
 
 	dnsRecords := configured["dns_records"].([]interface{})
@@ -406,7 +406,7 @@ func expandServiceDiscoveryDnsConfigChange(configured map[string]interface{}) *s
 	return result
 }
 
-func expandServiceDiscoveryHealthCheckConfig(configured map[string]interface{}) *servicediscovery.HealthCheckConfig {
+func expandHealthCheckConfig(configured map[string]interface{}) *servicediscovery.HealthCheckConfig {
 	if len(configured) < 1 {
 		return nil
 	}
@@ -425,20 +425,20 @@ func expandServiceDiscoveryHealthCheckConfig(configured map[string]interface{}) 
 	return result
 }
 
-func flattenServiceDiscoveryHealthCheckConfig(config *servicediscovery.HealthCheckConfig) []map[string]interface{} {
+func flattenHealthCheckConfig(config *servicediscovery.HealthCheckConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 	result := map[string]interface{}{}
 
 	if config.FailureThreshold != nil {
-		result["failure_threshold"] = *config.FailureThreshold
+		result["failure_threshold"] = aws.Int64Value(config.FailureThreshold)
 	}
 	if config.ResourcePath != nil {
-		result["resource_path"] = *config.ResourcePath
+		result["resource_path"] = aws.StringValue(config.ResourcePath)
 	}
 	if config.Type != nil {
-		result["type"] = *config.Type
+		result["type"] = aws.StringValue(config.Type)
 	}
 
 	if len(result) < 1 {
@@ -448,7 +448,7 @@ func flattenServiceDiscoveryHealthCheckConfig(config *servicediscovery.HealthChe
 	return []map[string]interface{}{result}
 }
 
-func expandServiceDiscoveryHealthCheckCustomConfig(configured map[string]interface{}) *servicediscovery.HealthCheckCustomConfig {
+func expandHealthCheckCustomConfig(configured map[string]interface{}) *servicediscovery.HealthCheckCustomConfig {
 	if len(configured) < 1 {
 		return nil
 	}
@@ -461,14 +461,14 @@ func expandServiceDiscoveryHealthCheckCustomConfig(configured map[string]interfa
 	return result
 }
 
-func flattenServiceDiscoveryHealthCheckCustomConfig(config *servicediscovery.HealthCheckCustomConfig) []map[string]interface{} {
+func flattenHealthCheckCustomConfig(config *servicediscovery.HealthCheckCustomConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 	result := map[string]interface{}{}
 
 	if config.FailureThreshold != nil {
-		result["failure_threshold"] = *config.FailureThreshold
+		result["failure_threshold"] = aws.Int64Value(config.FailureThreshold)
 	}
 
 	if len(result) < 1 {
@@ -478,7 +478,7 @@ func flattenServiceDiscoveryHealthCheckCustomConfig(config *servicediscovery.Hea
 	return []map[string]interface{}{result}
 }
 
-func deregisterServiceDiscoveryInstance(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
+func deregisterInstance(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
 	input := &servicediscovery.DeregisterInstanceInput{
 		InstanceId: aws.String(instanceID),
 		ServiceId:  aws.String(serviceID),

@@ -261,7 +261,7 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 						"grantee.0.type": s3.TypeGroup,
 						"permission":     s3.BucketLogsPermissionFullControl,
 					}),
-					testAccCheckBucketLoggingTargetGrantGranteeUri(resourceName),
+					testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName),
 				),
 			},
 			{
@@ -279,7 +279,7 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 						"grantee.0.type": s3.TypeGroup,
 						"permission":     s3.BucketLogsPermissionRead,
 					}),
-					testAccCheckBucketLoggingTargetGrantGranteeUri(resourceName),
+					testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName),
 				),
 			},
 			{
@@ -292,6 +292,70 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLogging_migrate_loggingNoChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_logging.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLogging(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttr(bucketResourceName, "logging.0.target_prefix", "log/"),
+				),
+			},
+			{
+				Config: testAccBucketLogging_Migrate_LoggingConfig(bucketName, "log/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLoggingExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_logging.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLogging(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttr(bucketResourceName, "logging.0.target_prefix", "log/"),
+				),
+			},
+			{
+				Config: testAccBucketLogging_Migrate_LoggingConfig(bucketName, "tmp/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLoggingExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttr(resourceName, "target_prefix", "tmp/"),
 				),
 			},
 		},
@@ -377,7 +441,7 @@ func testAccCheckBucketLoggingExists(resourceName string) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckBucketLoggingTargetGrantGranteeUri(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		uri := fmt.Sprintf("http://acs.%s/groups/s3/LogDelivery", acctest.PartitionDNSSuffix())
 		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
@@ -560,4 +624,33 @@ resource "aws_s3_bucket_logging" "test" {
   }
 }
 `, rName, permission)
+}
+
+func testAccBucketLogging_Migrate_LoggingConfig(rName, targetPrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "%[1]s-log"
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  bucket = aws_s3_bucket.log_bucket.id
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_logging" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = %[2]q
+}
+`, rName, targetPrefix)
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccSigningCertificate_basic(t *testing.T) {
+func TestAccIAMSigningCertificate_basic(t *testing.T) {
 	var cred iam.SigningCertificate
 
 	resourceName := "aws_iam_signing_certificate.test"
@@ -23,10 +23,10 @@ func TestAccSigningCertificate_basic(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningCertificateBasicConfig(rName, certificate),
@@ -47,7 +47,7 @@ func TestAccSigningCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccSigningCertificate_status(t *testing.T) {
+func TestAccIAMSigningCertificate_status(t *testing.T) {
 	var cred iam.SigningCertificate
 
 	resourceName := "aws_iam_signing_certificate.test"
@@ -56,10 +56,10 @@ func TestAccSigningCertificate_status(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningCertificateConfigStatus(rName, "Inactive", certificate),
@@ -91,7 +91,7 @@ func TestAccSigningCertificate_status(t *testing.T) {
 	})
 }
 
-func TestAccSigningCertificate_disappears(t *testing.T) {
+func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	var cred iam.SigningCertificate
 	resourceName := "aws_iam_signing_certificate.test"
 
@@ -100,10 +100,10 @@ func TestAccSigningCertificate_disappears(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningCertificateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningCertificateBasicConfig(rName, certificate),

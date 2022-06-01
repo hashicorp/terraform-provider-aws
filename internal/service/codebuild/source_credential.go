@@ -109,7 +109,7 @@ func resourceSourceCredentialDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := conn.DeleteSourceCredentials(deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CodeBuild Source Credentials(%s): %w", d.Id(), err)

@@ -117,7 +117,7 @@ func resourceUsagePlanKeyDelete(d *schema.ResourceData, meta interface{}) error 
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 		KeyId:       aws.String(d.Get("key_id").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

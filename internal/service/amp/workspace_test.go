@@ -21,10 +21,10 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPWorkspaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
@@ -58,10 +58,10 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 func TestAccAMPWorkspace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPWorkspaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPWorkspaceWithoutAliasConfig(),
@@ -80,10 +80,10 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMPWorkspaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMPWorkspaceWithTagsConfig(rInt),
@@ -171,7 +171,7 @@ func testAccCheckAMPWorkspaceDestroy(s *terraform.State) error {
 		_, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

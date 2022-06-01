@@ -82,7 +82,7 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, getInput)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -116,11 +116,6 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.UpdateVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.Errorf("error updating Chime Voice Connector group (%s): %s", d.Id(), err)
 	}
 
@@ -141,7 +136,7 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.DeleteVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			return nil
 		}

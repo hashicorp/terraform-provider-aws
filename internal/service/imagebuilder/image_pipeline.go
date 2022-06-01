@@ -129,6 +129,14 @@ func ResourceImagePipeline() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
+						"timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(3, 100),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]{2,}(?:\/[a-zA-z0-9-_+]+)*`), "")),
+						},
 					},
 				},
 			},
@@ -402,6 +410,10 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
+	if v, ok := tfMap["timezone"].(string); ok && v != "" {
+		apiObject.Timezone = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -436,6 +448,10 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 
 	if v := apiObject.ScheduleExpression; v != nil {
 		tfMap["schedule_expression"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Timezone; v != nil {
+		tfMap["timezone"] = aws.StringValue(v)
 	}
 
 	return tfMap

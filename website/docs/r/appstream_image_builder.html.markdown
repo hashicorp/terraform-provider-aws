@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_image_builder"
 description: |-
@@ -14,7 +14,7 @@ Provides an AppStream image builder.
 
 ```terraform
 resource "aws_appstream_image_builder" "test_fleet" {
-  name                           = "Image Builder Name"
+  name                           = "Name"
   description                    = "Description of a ImageBuilder"
   display_name                   = "Display name of a ImageBuilder"
   enable_default_internet_access = false

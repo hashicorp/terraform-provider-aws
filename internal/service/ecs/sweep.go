@@ -167,7 +167,7 @@ func sweepServices(region string) error {
 					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
 					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
 
-					if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
+					if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
 						continue
 					}
 

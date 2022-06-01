@@ -258,9 +258,9 @@ func serverCertificateUpdateTags(conn *iam.IAM, identifier string, oldTagsMap in
 	return nil
 }
 
-// virtualMfaUpdateTags updates IAM Virtual MFA Device tags.
+// virtualMFAUpdateTags updates IAM Virtual MFA Device tags.
 // The identifier is the Virtual MFA Device ARN.
-func virtualMfaUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func virtualMFAUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

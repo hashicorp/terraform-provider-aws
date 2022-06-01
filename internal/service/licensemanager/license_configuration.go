@@ -130,7 +130,7 @@ func resourceLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
 			log.Printf("[WARN] License Manager license configuration (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -203,7 +203,7 @@ func resourceLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteLicenseConfiguration(opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting License Manager license configuration: %s", err)

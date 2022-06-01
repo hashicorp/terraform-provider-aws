@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_ce_cost_category
+```
+
+```release-note:new-data-source
+aws_ce_cost_category
+```
+
+```release-note:new-data-source
+aws_ce_tags
+```

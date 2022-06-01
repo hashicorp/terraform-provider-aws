@@ -1,7 +1,7 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
-page_title: "AWS: aws_s3_bucket_server_side_encryption configuration"
+page_title: "AWS: aws_s3_bucket_server_side_encryption_configuration"
 description: |-
   Provides a S3 bucket server-side encryption configuration resource.
 ---
@@ -64,13 +64,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 bucket server-side encryption configuration can be imported using the `bucket` e.g.,
+S3 bucket server-side encryption configuration can be imported in one of two ways.
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider,
+the S3 server-side encryption configuration resource should be imported using the `bucket` e.g.,
 
 ```
 $ terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name
 ```
 
-In addition, S3 bucket server-side encryption configuration can be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider,
+the S3 bucket server-side encryption configuration resource should be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name,123456789012

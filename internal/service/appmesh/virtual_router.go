@@ -219,7 +219,7 @@ func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_date", resp.VirtualRouter.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualRouter.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualRouter.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshVirtualRouterSpec(resp.VirtualRouter.Spec))
+	err = d.Set("spec", flattenVirtualRouterSpec(resp.VirtualRouter.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -285,7 +285,7 @@ func resourceVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

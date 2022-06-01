@@ -92,7 +92,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("price_class", distributionConfig.PriceClass)
 	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
 
-	err = d.Set("default_cache_behavior", flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior))
+	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
 		return err
 	}
@@ -166,10 +166,6 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	}
 
 	return nil
-}
-
-func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) []interface{} {
-	return []interface{}{flattenCloudFrontDefaultCacheBehavior(dcb)}
 }
 
 func expandCacheBehaviors(lst []interface{}) *cloudfront.CacheBehaviors {
@@ -312,7 +308,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	return cb
 }
 
-func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
+func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
 	m := map[string]interface{}{
 		"cache_policy_id":            aws.StringValue(dcb.CachePolicyId),
 		"compress":                   aws.BoolValue(dcb.Compress),
@@ -388,13 +384,13 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["function_association"] = FlattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
-		m["max_ttl"] = int(*cb.MaxTTL)
+		m["max_ttl"] = int(aws.Int64Value(cb.MaxTTL))
 	}
 	if cb.SmoothStreaming != nil {
 		m["smooth_streaming"] = aws.BoolValue(cb.SmoothStreaming)
 	}
 	if cb.DefaultTTL != nil {
-		m["default_ttl"] = int(*cb.DefaultTTL)
+		m["default_ttl"] = int(aws.Int64Value(cb.DefaultTTL))
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(cb.AllowedMethods)
@@ -1153,10 +1149,10 @@ func FlattenCustomErrorResponse(er *cloudfront.CustomErrorResponse) map[string]i
 	m := make(map[string]interface{})
 	m["error_code"] = int(aws.Int64Value(er.ErrorCode))
 	if er.ErrorCachingMinTTL != nil {
-		m["error_caching_min_ttl"] = int(*er.ErrorCachingMinTTL)
+		m["error_caching_min_ttl"] = int(aws.Int64Value(er.ErrorCachingMinTTL))
 	}
 	if er.ResponseCode != nil {
-		m["response_code"], _ = strconv.Atoi(*er.ResponseCode)
+		m["response_code"], _ = strconv.Atoi(aws.StringValue(er.ResponseCode))
 	}
 	if er.ResponsePagePath != nil {
 		m["response_page_path"] = aws.StringValue(er.ResponsePagePath)
@@ -1306,20 +1302,20 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenCloudfrontActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+func flattenActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
 	if atkg == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(atkg.Enabled),
-		"items":   flattenCloudfrontKGKeyPairIds(atkg.Items),
+		"items":   flattenKGKeyPairIds(atkg.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+func flattenKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
 	result := make([]interface{}, 0, len(keyPairIds))
 
 	for _, keyPairId := range keyPairIds {
@@ -1334,20 +1330,20 @@ func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []inte
 	return result
 }
 
-func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
+func flattenActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
 	if ats == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(ats.Enabled),
-		"items":   flattenCloudfrontSigners(ats.Items),
+		"items":   flattenSigners(ats.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontSigners(signers []*cloudfront.Signer) []interface{} {
+func flattenSigners(signers []*cloudfront.Signer) []interface{} {
 	result := make([]interface{}, 0, len(signers))
 
 	for _, signer := range signers {

@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_user"
 description: |-
@@ -15,7 +15,7 @@ Provides an AppStream user.
 ```terraform
 resource "aws_appstream_user" "example" {
   authentication_type = "USERPOOL"
-  user_name           = "EMAIL ADDRESS"
+  user_name           = "EMAIL"
   first_name          = "FIRST NAME"
   last_name           = "LAST NAME"
 }

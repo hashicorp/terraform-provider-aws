@@ -15,10 +15,10 @@ import (
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
-func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
+func TestAccDSDirectory_basic(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,12 +27,12 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig(domainName),
+				Config: testAccDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
@@ -50,10 +50,10 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
+func TestAccDSDirectory_tags(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,12 +62,12 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryTagsConfig(domainName),
+				Config: testAccDirectoryConfig_tags(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -84,7 +84,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryUpdateTagsConfig(domainName),
+				Config: testAccDirectoryConfig_updateTags(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -94,7 +94,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryRemoveTagsConfig(domainName),
+				Config: testAccDirectoryConfig_removeTags(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,20 +105,20 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
+func TestAccDSDirectory_microsoft(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_microsoft(domainName),
+				Config: testAccDirectoryConfig_microsoft(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionEnterprise),
@@ -136,20 +136,20 @@ func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
+func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard(domainName),
+				Config: testAccDirectoryConfig_microsoftStandard(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionStandard),
@@ -167,10 +167,10 @@ func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
+func TestAccDSDirectory_connector(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,12 +179,12 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_connector(domainName),
+				Config: testAccDirectoryConfig_connector(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
@@ -203,11 +203,11 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
+func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -216,16 +216,16 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withAlias(domainName, alias),
+				Config: testAccDirectoryConfig_alias(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
-					testAccCheckServiceDirectorySso(resourceName, false),
+					testAccCheckServiceDirectorySSO(resourceName, false),
 				),
 			},
 			{
@@ -237,26 +237,26 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso(domainName, alias),
+				Config: testAccDirectoryConfig_sso(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
-					testAccCheckServiceDirectorySso(resourceName, true),
+					testAccCheckServiceDirectorySSO(resourceName, true),
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(domainName, alias),
+				Config: testAccDirectoryConfig_ssoModified(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
-					testAccCheckServiceDirectorySso(resourceName, false),
+					testAccCheckServiceDirectorySSO(resourceName, false),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
+func testAccCheckDirectoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -269,7 +269,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 		}
 		out, err := conn.DescribeDirectories(&input)
 
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			continue
 		}
 
@@ -285,10 +285,10 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
+func TestAccDSDirectory_disappears(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -297,12 +297,12 @@ func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig(domainName),
+				Config: testAccDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
@@ -377,7 +377,7 @@ func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFun
 	}
 }
 
-func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.TestCheckFunc {
+func testAccCheckServiceDirectorySSO(name string, ssoEnabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -406,9 +406,9 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 	}
 }
 
-func testAccDirectoryServiceDirectoryConfig(domain string) string {
+func testAccDirectoryConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -424,9 +424,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryTagsConfig(domain string) string {
+func testAccDirectoryConfig_tags(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -447,9 +447,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryUpdateTagsConfig(domain string) string {
+func testAccDirectoryConfig_updateTags(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -471,9 +471,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryRemoveTagsConfig(domain string) string {
+func testAccDirectoryConfig_removeTags(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -493,9 +493,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_connector(domain string) string {
+func testAccDirectoryConfig_connector(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -525,9 +525,9 @@ resource "aws_directory_service_directory" "base" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_microsoft(domain string) string {
+func testAccDirectoryConfig_microsoft(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -543,9 +543,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_microsoftStandard(domain string) string {
+func testAccDirectoryConfig_microsoftStandard(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -562,9 +562,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withAlias(domain, alias string) string {
+func testAccDirectoryConfig_alias(rName, domain, alias string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -581,9 +581,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso(domain, alias string) string {
+func testAccDirectoryConfig_sso(rName, domain, alias string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name       = %[1]q
@@ -601,9 +601,9 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso_modified(domain, alias string) string {
+func testAccDirectoryConfig_ssoModified(rName, domain, alias string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name       = %[1]q

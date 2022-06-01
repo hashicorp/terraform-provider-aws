@@ -290,7 +290,7 @@ func resourceEndpointConfigurationCreate(d *schema.ResourceData, meta interface{
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
-		ProductionVariants: expandSagemakerProductionVariants(d.Get("production_variants").([]interface{})),
+		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -302,11 +302,11 @@ func resourceEndpointConfigurationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("data_capture_config"); ok {
-		createOpts.DataCaptureConfig = expandSagemakerDataCaptureConfig(v.([]interface{}))
+		createOpts.DataCaptureConfig = expandDataCaptureConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("async_inference_config"); ok {
-		createOpts.AsyncInferenceConfig = expandSagemakerEndpointConfigAsyncInferenceConfig(v.([]interface{}))
+		createOpts.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
@@ -344,17 +344,17 @@ func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting production_variants for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("data_capture_config", flattenSagemakerDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
+	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
 		return fmt.Errorf("error setting data_capture_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("async_inference_config", flattenSagemakerEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
+	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
 		return fmt.Errorf("error setting async_inference_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -378,7 +378,7 @@ func resourceEndpointConfigurationUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
 		}
 	}
 	return resourceEndpointConfigurationRead(d, meta)
@@ -405,7 +405,7 @@ func resourceEndpointConfigurationDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func expandSagemakerProductionVariants(configured []interface{}) []*sagemaker.ProductionVariant {
+func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionVariant {
 	containers := make([]*sagemaker.ProductionVariant, 0, len(configured))
 
 	for _, lRaw := range configured {
@@ -455,7 +455,7 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 	return result
 }
 
-func expandSagemakerDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureConfig {
+func expandDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -465,7 +465,7 @@ func expandSagemakerDataCaptureConfig(configured []interface{}) *sagemaker.DataC
 	c := &sagemaker.DataCaptureConfig{
 		InitialSamplingPercentage: aws.Int64(int64(m["initial_sampling_percentage"].(int))),
 		DestinationS3Uri:          aws.String(m["destination_s3_uri"].(string)),
-		CaptureOptions:            expandSagemakerCaptureOptions(m["capture_options"].([]interface{})),
+		CaptureOptions:            expandCaptureOptions(m["capture_options"].([]interface{})),
 	}
 
 	if v, ok := m["enable_capture"]; ok {
@@ -477,13 +477,13 @@ func expandSagemakerDataCaptureConfig(configured []interface{}) *sagemaker.DataC
 	}
 
 	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
-		c.CaptureContentTypeHeader = expandSagemakerCaptureContentTypeHeader(v[0].(map[string]interface{}))
+		c.CaptureContentTypeHeader = expandCaptureContentTypeHeader(v[0].(map[string]interface{}))
 	}
 
 	return c
 }
 
-func flattenSagemakerDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []map[string]interface{} {
+func flattenDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []map[string]interface{} {
 	if dataCaptureConfig == nil {
 		return []map[string]interface{}{}
 	}
@@ -491,7 +491,7 @@ func flattenSagemakerDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureC
 	cfg := map[string]interface{}{
 		"initial_sampling_percentage": aws.Int64Value(dataCaptureConfig.InitialSamplingPercentage),
 		"destination_s3_uri":          aws.StringValue(dataCaptureConfig.DestinationS3Uri),
-		"capture_options":             flattenSagemakerCaptureOptions(dataCaptureConfig.CaptureOptions),
+		"capture_options":             flattenCaptureOptions(dataCaptureConfig.CaptureOptions),
 	}
 
 	if dataCaptureConfig.EnableCapture != nil {
@@ -503,13 +503,13 @@ func flattenSagemakerDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureC
 	}
 
 	if dataCaptureConfig.CaptureContentTypeHeader != nil {
-		cfg["capture_content_type_header"] = flattenSagemakerCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader)
+		cfg["capture_content_type_header"] = flattenCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func expandSagemakerCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
+func expandCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
 	containers := make([]*sagemaker.CaptureOption, 0, len(configured))
 
 	for _, lRaw := range configured {
@@ -524,7 +524,7 @@ func expandSagemakerCaptureOptions(configured []interface{}) []*sagemaker.Captur
 	return containers
 }
 
-func flattenSagemakerCaptureOptions(list []*sagemaker.CaptureOption) []map[string]interface{} {
+func flattenCaptureOptions(list []*sagemaker.CaptureOption) []map[string]interface{} {
 	containers := make([]map[string]interface{}, 0, len(list))
 
 	for _, lRaw := range list {
@@ -536,7 +536,7 @@ func flattenSagemakerCaptureOptions(list []*sagemaker.CaptureOption) []map[strin
 	return containers
 }
 
-func expandSagemakerCaptureContentTypeHeader(m map[string]interface{}) *sagemaker.CaptureContentTypeHeader {
+func expandCaptureContentTypeHeader(m map[string]interface{}) *sagemaker.CaptureContentTypeHeader {
 	c := &sagemaker.CaptureContentTypeHeader{}
 
 	if v, ok := m["csv_content_types"].(*schema.Set); ok && v.Len() > 0 {
@@ -550,7 +550,7 @@ func expandSagemakerCaptureContentTypeHeader(m map[string]interface{}) *sagemake
 	return c
 }
 
-func flattenSagemakerCaptureContentTypeHeader(contentTypeHeader *sagemaker.CaptureContentTypeHeader) []map[string]interface{} {
+func flattenCaptureContentTypeHeader(contentTypeHeader *sagemaker.CaptureContentTypeHeader) []map[string]interface{} {
 	if contentTypeHeader == nil {
 		return []map[string]interface{}{}
 	}
@@ -568,7 +568,7 @@ func flattenSagemakerCaptureContentTypeHeader(contentTypeHeader *sagemaker.Captu
 	return []map[string]interface{}{l}
 }
 
-func expandSagemakerEndpointConfigAsyncInferenceConfig(configured []interface{}) *sagemaker.AsyncInferenceConfig {
+func expandEndpointConfigAsyncInferenceConfig(configured []interface{}) *sagemaker.AsyncInferenceConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -578,17 +578,17 @@ func expandSagemakerEndpointConfigAsyncInferenceConfig(configured []interface{})
 	c := &sagemaker.AsyncInferenceConfig{}
 
 	if v, ok := m["client_config"].([]interface{}); ok && len(v) > 0 {
-		c.ClientConfig = expandSagemakerEndpointConfigClientConfig(v)
+		c.ClientConfig = expandEndpointConfigClientConfig(v)
 	}
 
 	if v, ok := m["output_config"].([]interface{}); ok && len(v) > 0 {
-		c.OutputConfig = expandSagemakerEndpointConfigOutputConfig(v)
+		c.OutputConfig = expandEndpointConfigOutputConfig(v)
 	}
 
 	return c
 }
 
-func expandSagemakerEndpointConfigClientConfig(configured []interface{}) *sagemaker.AsyncInferenceClientConfig {
+func expandEndpointConfigClientConfig(configured []interface{}) *sagemaker.AsyncInferenceClientConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -604,7 +604,7 @@ func expandSagemakerEndpointConfigClientConfig(configured []interface{}) *sagema
 	return c
 }
 
-func expandSagemakerEndpointConfigOutputConfig(configured []interface{}) *sagemaker.AsyncInferenceOutputConfig {
+func expandEndpointConfigOutputConfig(configured []interface{}) *sagemaker.AsyncInferenceOutputConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -620,13 +620,13 @@ func expandSagemakerEndpointConfigOutputConfig(configured []interface{}) *sagema
 	}
 
 	if v, ok := m["notification_config"].([]interface{}); ok && len(v) > 0 {
-		c.NotificationConfig = expandSagemakerEndpointConfigNotificationConfig(v)
+		c.NotificationConfig = expandEndpointConfigNotificationConfig(v)
 	}
 
 	return c
 }
 
-func expandSagemakerEndpointConfigNotificationConfig(configured []interface{}) *sagemaker.AsyncInferenceNotificationConfig {
+func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker.AsyncInferenceNotificationConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -646,7 +646,7 @@ func expandSagemakerEndpointConfigNotificationConfig(configured []interface{}) *
 	return c
 }
 
-func flattenSagemakerEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
+func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -654,17 +654,17 @@ func flattenSagemakerEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncI
 	cfg := map[string]interface{}{}
 
 	if config.ClientConfig != nil {
-		cfg["client_config"] = flattenSagemakerEndpointConfigClientConfig(config.ClientConfig)
+		cfg["client_config"] = flattenEndpointConfigClientConfig(config.ClientConfig)
 	}
 
 	if config.OutputConfig != nil {
-		cfg["output_config"] = flattenSagemakerEndpointConfigOutputConfig(config.OutputConfig)
+		cfg["output_config"] = flattenEndpointConfigOutputConfig(config.OutputConfig)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func flattenSagemakerEndpointConfigClientConfig(config *sagemaker.AsyncInferenceClientConfig) []map[string]interface{} {
+func flattenEndpointConfigClientConfig(config *sagemaker.AsyncInferenceClientConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -678,7 +678,7 @@ func flattenSagemakerEndpointConfigClientConfig(config *sagemaker.AsyncInference
 	return []map[string]interface{}{cfg}
 }
 
-func flattenSagemakerEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputConfig) []map[string]interface{} {
+func flattenEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -692,13 +692,13 @@ func flattenSagemakerEndpointConfigOutputConfig(config *sagemaker.AsyncInference
 	}
 
 	if config.NotificationConfig != nil {
-		cfg["notification_config"] = flattenSagemakerEndpointConfigNotificationConfig(config.NotificationConfig)
+		cfg["notification_config"] = flattenEndpointConfigNotificationConfig(config.NotificationConfig)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func flattenSagemakerEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNotificationConfig) []map[string]interface{} {
+func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNotificationConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

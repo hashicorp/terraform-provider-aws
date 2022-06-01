@@ -58,7 +58,7 @@ resource "aws_connect_queue" "test" {
   description           = "Example Description"
   hours_of_operation_id = "12345678-1234-1234-1234-123456789012"
 
-  outbound_caller_config = {
+  outbound_caller_config {
     outbound_caller_id_name      = "example"
     outbound_caller_id_number_id = "12345678-abcd-1234-abcd-123456789012"
     outbound_flow_id             = "87654321-defg-1234-defg-987654321234"

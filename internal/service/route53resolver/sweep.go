@@ -168,7 +168,7 @@ func sweepEndpoints(region string) error {
 			_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
 				ResolverEndpointId: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -575,7 +575,7 @@ func sweepRuleAssociations(region string) error {
 				ResolverRuleId: resolverRuleAssociation.ResolverRuleId,
 				VPCId:          resolverRuleAssociation.VPCId,
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if sweep.SkipSweepError(err) {
@@ -635,7 +635,7 @@ func sweepRules(region string) error {
 			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 				ResolverRuleId: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
