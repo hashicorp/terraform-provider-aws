@@ -43,7 +43,7 @@ func ResourceClusterIamRoles() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"iam_roles": {
+			"iam_role_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -68,7 +68,7 @@ func resourceClusterIamRolesCreate(d *schema.ResourceData, meta interface{}) err
 		input.DefaultIamRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_roles"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("iam_role_arns"); ok && v.(*schema.Set).Len() > 0 {
 		input.AddIamRoles = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -111,7 +111,7 @@ func resourceClusterIamRolesRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
-	d.Set("iam_roles", aws.StringValueSlice(roleARNs))
+	d.Set("iam_role_arns", aws.StringValueSlice(roleARNs))
 
 	return nil
 }
@@ -119,7 +119,7 @@ func resourceClusterIamRolesRead(d *schema.ResourceData, meta interface{}) error
 func resourceClusterIamRolesUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
-	o, n := d.GetChange("iam_roles")
+	o, n := d.GetChange("iam_role_arns")
 	if o == nil {
 		o = new(schema.Set)
 	}
@@ -157,7 +157,7 @@ func resourceClusterIamRolesDelete(d *schema.ResourceData, meta interface{}) err
 
 	input := &redshift.ModifyClusterIamRolesInput{
 		ClusterIdentifier: aws.String(d.Id()),
-		RemoveIamRoles:    flex.ExpandStringSet(d.Get("iam_roles").(*schema.Set)),
+		RemoveIamRoles:    flex.ExpandStringSet(d.Get("iam_role_arns").(*schema.Set)),
 		DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 	}
 

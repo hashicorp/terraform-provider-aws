@@ -26,7 +26,7 @@ func TestAccRedshiftClusterIamRoles_basic(t *testing.T) {
 				Config: testAccClusterIamRolesConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
 			{
@@ -38,14 +38,14 @@ func TestAccRedshiftClusterIamRoles_basic(t *testing.T) {
 				Config: testAccClusterIamRolesConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterIamRolesConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
 		},
@@ -143,7 +143,7 @@ func testAccClusterIamRolesConfigBasic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterIamRolesConfigBase(rName), `
 resource "aws_redshift_cluster_iam_roles" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
-  iam_roles          = [aws_iam_role.ec2.arn]
+  iam_role_arns      = [aws_iam_role.ec2.arn]
 }
 `)
 }
@@ -152,7 +152,7 @@ func testAccClusterIamRolesConfigUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccClusterIamRolesConfigBase(rName), `
 resource "aws_redshift_cluster_iam_roles" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
-  iam_roles          = [aws_iam_role.ec2.arn, aws_iam_role.lambda.arn]
+  iam_role_arns      = [aws_iam_role.ec2.arn, aws_iam_role.lambda.arn]
 }
 `)
 }
