@@ -333,6 +333,41 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
+			"redshift_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket_folder": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"encryption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      encryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
+						},
+						"server_side_encryption_kms_key_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"s3_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -472,8 +507,8 @@ func ResourceEndpoint() *schema.Resource {
 						"encryption_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      s3SettingsEncryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
+							Default:      encryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 						},
 						"external_table_definition": {
 							Type:     schema.TypeString,
@@ -723,7 +758,9 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameRedshift:
-		var settings = &dms.RedshiftSettings{}
+		var settings = &dms.RedshiftSettings{
+			DatabaseName: aws.String(d.Get("database_name").(string)),
+		}
 
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
@@ -737,7 +774,30 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-		settings.DatabaseName = aws.String(d.Get("database_name").(string))
+
+		if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
+				settings.BucketFolder = aws.String(v)
+			}
+
+			if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+				settings.BucketName = aws.String(v)
+			}
+
+			if v, ok := tfMap["encryption_mode"].(string); ok && v != "" {
+				settings.EncryptionMode = aws.String(v)
+			}
+
+			if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok && v != "" {
+				settings.ServerSideEncryptionKmsKeyId = aws.String(v)
+			}
+
+			if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+				settings.ServiceAccessRoleArn = aws.String(v)
+			}
+		}
 
 		input.RedshiftSettings = settings
 	case engineNameSQLServer:
@@ -1004,7 +1064,8 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		case engineNameRedshift:
 			if d.HasChanges(
-				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+				"username", "password", "server_name", "port", "database_name",
+				"redshift_settings", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
 				if _, ok := d.GetOk("secrets_manager_arn"); ok {
 					input.RedshiftSettings = &dms.RedshiftSettings{
@@ -1024,6 +1085,30 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					// Update connection info in top-level namespace as well
 					expandTopLevelConnectionInfoModify(d, input)
+
+					if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+						tfMap := v.([]interface{})[0].(map[string]interface{})
+
+						if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
+							input.RedshiftSettings.BucketFolder = aws.String(v)
+						}
+
+						if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+							input.RedshiftSettings.BucketName = aws.String(v)
+						}
+
+						if v, ok := tfMap["encryption_mode"].(string); ok && v != "" {
+							input.RedshiftSettings.EncryptionMode = aws.String(v)
+						}
+
+						if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok && v != "" {
+							input.RedshiftSettings.ServerSideEncryptionKmsKeyId = aws.String(v)
+						}
+
+						if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+							input.RedshiftSettings.ServiceAccessRoleArn = aws.String(v)
+						}
+					}
 				}
 			}
 		case engineNameSQLServer:
@@ -1189,7 +1274,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	case engineNameElasticsearch, engineNameOpenSearch:
 		if err := d.Set("elasticsearch_settings", flattenOpenSearchSettings(endpoint.ElasticsearchSettings)); err != nil {
-			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
+			return fmt.Errorf("setting elasticsearch_settings: %w", err)
 		}
 	case engineNameKafka:
 		if endpoint.KafkaSettings != nil {
@@ -1198,14 +1283,14 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
 
 			if err := d.Set("kafka_settings", []interface{}{tfMap}); err != nil {
-				return fmt.Errorf("error setting kafka_settings: %w", err)
+				return fmt.Errorf("setting kafka_settings: %w", err)
 			}
 		} else {
 			d.Set("kafka_settings", nil)
 		}
 	case engineNameKinesis:
 		if err := d.Set("kinesis_settings", []interface{}{flattenKinesisSettings(endpoint.KinesisSettings)}); err != nil {
-			return fmt.Errorf("error setting kinesis_settings: %w", err)
+			return fmt.Errorf("setting kinesis_settings: %w", err)
 		}
 	case engineNameMongodb:
 		if endpoint.MongoDbSettings != nil {
@@ -1219,7 +1304,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
 		if err := d.Set("mongodb_settings", flattenMongoDBSettings(endpoint.MongoDbSettings)); err != nil {
-			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
+			return fmt.Errorf("setting mongodb_settings: %w", err)
 		}
 	case engineNameOracle:
 		if endpoint.OracleSettings != nil {
@@ -1242,6 +1327,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("secrets_manager_arn", endpoint.RedshiftSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+		if err := d.Set("redshift_settings", flattenRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
+			return fmt.Errorf("setting redshift_settings: %w", err)
 		}
 	case engineNameSQLServer:
 		if endpoint.MicrosoftSQLServerSettings != nil {
@@ -1555,6 +1643,22 @@ func flattenMongoDBSettings(settings *dms.MongoDbSettings) []map[string]interfac
 		"extract_doc_id":      aws.StringValue(settings.ExtractDocId),
 		"docs_to_investigate": aws.StringValue(settings.DocsToInvestigate),
 		"auth_source":         aws.StringValue(settings.AuthSource),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"bucket_folder":                     aws.StringValue(settings.BucketFolder),
+		"bucket_name":                       aws.StringValue(settings.BucketName),
+		"encryption_mode":                   aws.StringValue(settings.EncryptionMode),
+		"server_side_encryption_kms_key_id": aws.StringValue(settings.ServerSideEncryptionKmsKeyId),
+		"service_access_role_arn":           aws.StringValue(settings.ServiceAccessRoleArn),
 	}
 
 	return []map[string]interface{}{m}

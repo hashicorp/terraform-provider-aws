@@ -1367,6 +1367,7 @@ func TestAccDMSEndpoint_Redshift_secretID(t *testing.T) {
 
 func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
+	iamRoleResourceName := "aws_iam_role.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1380,17 +1381,24 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
 				),
 			},
 			{
 				Config: testAccEndpointConfig_redshiftUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
-					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.service_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", "bucket_folder"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_S3"),
 				),
 			},
 			{
@@ -2928,6 +2936,49 @@ resource "aws_redshift_cluster" "test" {
   automated_snapshot_retention_period = 0
   skip_final_snapshot                 = true
 }
+
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {"Service": "dms.${data.aws_partition.current.dns_suffix}"},
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "s3:CreateBucket",
+      "s3:ListBucket",
+      "s3:DeleteBucket",
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy"
+    ]
+    resources = ["*"]
+  }
+}
 `, rName))
 }
 
@@ -2954,28 +3005,6 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_redshiftUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "redshift"
-  server_name                 = aws_redshift_cluster.test.dns_name
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  extra_connection_attributes = "key=value;"
-
-  tags = {
-    Name   = %[1]q
-    Update = "updated"
-    Add    = "added"
-  }
-}
-`, rName))
-}
-
 func testAccEndpointConfig_redshiftSecretID(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
@@ -2992,6 +3021,35 @@ resource "aws_dms_endpoint" "test" {
     Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redshift"
+  server_name                 = aws_redshift_cluster.test.dns_name
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  extra_connection_attributes = "key=value;"
+
+  redshift_settings {
+    service_access_role_arn = aws_iam_role.test.arn
+    bucket_name             = "bucket_name"
+    bucket_folder           = "bucket_folder"
+    encryption_mode         = "SSE_S3"
+  }
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
   }
 }
 `, rName))
