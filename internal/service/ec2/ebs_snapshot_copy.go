@@ -102,27 +102,31 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	request := &ec2.CopySnapshotInput{
+	input := &ec2.CopySnapshotInput{
 		SourceRegion:      aws.String(d.Get("source_region").(string)),
 		SourceSnapshotId:  aws.String(d.Get("source_snapshot_id").(string)),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
 	}
+
 	if v, ok := d.GetOk("description"); ok {
-		request.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("encrypted"); ok {
-		request.Encrypted = aws.Bool(v.(bool))
+		input.Encrypted = aws.Bool(v.(bool))
 	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		request.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	res, err := conn.CopySnapshot(request)
+	output, err := conn.CopySnapshot(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EBS Snapshot Copy: %w", err)
 	}
 
-	d.SetId(aws.StringValue(res.SnapshotId))
+	d.SetId(aws.StringValue(output.SnapshotId))
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
@@ -143,12 +147,13 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 		})
 
 		if err != nil {
-			return fmt.Errorf("error setting EBS Snapshot Copy (%s) Storage Tier: %w", d.Id(), err)
+			return fmt.Errorf("setting EBS Snapshot Copy (%s) Storage Tier: %w", d.Id(), err)
 		}
 
 		_, err = WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute)
+
 		if err != nil {
-			return fmt.Errorf("Error waiting for EBS Snapshot Copy (%s) Storage Tier to be archived: %w", d.Id(), err)
+			return fmt.Errorf("waiting for EBS Snapshot Copy (%s) Storage Tier archive: %w", d.Id(), err)
 		}
 	}
 
