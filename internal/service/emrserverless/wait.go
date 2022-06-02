@@ -45,7 +45,7 @@ func waitApplicationCreated(conn *emrserverless.EMRServerless, id string) (*emrs
 
 func waitApplicationTerminated(conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{emrserverless.ApplicationStateCreated},
+		Pending:    emrserverless.ApplicationState_Values(),
 		Target:     []string{},
 		Refresh:    statusApplication(conn, id),
 		Timeout:    ApplicationDeletedTimeout,
