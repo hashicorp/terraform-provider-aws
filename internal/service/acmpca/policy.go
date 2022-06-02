@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -20,20 +21,12 @@ func ResourcePolicy() *schema.Resource {
 		Read:   resourcePolicyRead,
 		Update: resourcePolicyPut,
 		Delete: resourcePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("resource_arn", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -44,6 +37,11 @@ func ResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
+			"resource_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -51,19 +49,26 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	resourceArn := d.Get("resource_arn").(string)
-	input := &acmpca.PutPolicyInput{
-		ResourceArn: aws.String(resourceArn),
-		Policy:      aws.String(d.Get("policy").(string)),
-	}
-
-	_, err := conn.PutPolicy(input)
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("error putting policy on %s: %w", d.Get("resource_arn").(string), err)
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
 
-	d.SetId(resourceArn)
+	resourceARN := d.Get("resource_arn").(string)
+	input := &acmpca.PutPolicyInput{
+		Policy:      aws.String(policy),
+		ResourceArn: aws.String(resourceARN),
+	}
+
+	log.Printf("[DEBUG] Putting ACM PCA Policy: %s", input)
+	_, err = conn.PutPolicy(input)
+
+	if err != nil {
+		return fmt.Errorf("putting ACM PCA Policy (%s): %w", resourceARN, err)
+	}
+
+	d.SetId(resourceARN)
 
 	return resourcePolicyRead(d, meta)
 }
@@ -71,29 +76,20 @@ func resourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	getPolicyInput := &acmpca.GetPolicyInput{
-		ResourceArn: aws.String(d.Id()),
-	}
+	policy, err := FindPolicyByARN(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading ACM PCA Policy: %s", getPolicyInput)
-
-	policyOutput, err := conn.GetPolicy(getPolicyInput)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading ACM PCA Policy (%s): %w", d.Id(), err)
 	}
 
-	if policyOutput == nil {
-		return fmt.Errorf("error reading ACM PCA Policy (%s): empty response", d.Id())
-	}
-
-	d.Set("policy", policyOutput.Policy)
+	d.Set("policy", policy)
+	d.Set("resource_arn", d.Id())
 
 	return nil
 }
@@ -101,10 +97,10 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	input := &acmpca.DeletePolicyInput{
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-	}
-	_, err := conn.DeletePolicy(input)
+	log.Printf("[DEBUG] Deleting ACM PCA Policy: %s", d.Id())
+	_, err := conn.DeletePolicy(&acmpca.DeletePolicyInput{
+		ResourceArn: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
 		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestAlreadyProcessedException) ||
@@ -112,8 +108,9 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidRequestException, "Self-signed policy can not be revoked") {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting ACM PCA Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting ACM PCA Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

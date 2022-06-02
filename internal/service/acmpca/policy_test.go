@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccACMPCAPolicy_Basic(t *testing.T) {
@@ -46,46 +46,39 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &acmpca.GetPolicyInput{
-			ResourceArn: aws.String(rs.Primary.ID),
+		_, err := tfacmpca.FindPolicyByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		output, err := conn.GetPolicy(input)
-		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		if err != nil {
 			return err
 		}
 
-		if output != nil {
-			return fmt.Errorf("ACM PCA Policy (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("ACM PCA Policy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ACM PCA Policy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
-		input := &acmpca.GetPolicyInput{
-			ResourceArn: aws.String(rs.Primary.ID),
-		}
 
-		output, err := conn.GetPolicy(input)
+		_, err := tfacmpca.FindPolicyByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
-		}
-
-		if output == nil || output.Policy == nil {
-			return fmt.Errorf("ACM PCA Policy %q does not exist", rs.Primary.ID)
 		}
 
 		return nil
