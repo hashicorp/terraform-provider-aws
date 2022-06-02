@@ -192,6 +192,9 @@ data "aws_rds_orderable_db_instance" "test" {
 resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
   name               = %[1]q
+
+  # ensure IAM role is created just before association to exercise IAM eventual consistency
+  depends_on = [aws_db_instance.test]
 }
 
 data "aws_iam_policy_document" "rds_assume_role_policy" {

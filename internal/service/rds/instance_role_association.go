@@ -22,6 +22,11 @@ const (
 	dbInstanceRoleStatusPending = "PENDING"
 )
 
+const (
+	dbInstanceRoleAssociationCreatedTimeout = 10 * time.Minute
+	dbInstanceRoleAssociationDeletedTimeout = 10 * time.Minute
+)
+
 func ResourceInstanceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInstanceRoleAssociationCreate,
@@ -65,9 +70,20 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 		RoleArn:              aws.String(roleArn),
 	}
 
-	log.Printf("[DEBUG] RDS DB Instance (%s) IAM Role associating: %s", dbInstanceIdentifier, roleArn)
-	_, err := conn.AddRoleToDBInstance(input)
-
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+		var err error
+		_, err = conn.AddRoleToDBInstance(input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.AddRoleToDBInstance(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error associating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
 	}
@@ -176,8 +192,7 @@ func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleA
 		Pending: []string{dbInstanceRoleStatusPending},
 		Target:  []string{dbInstanceRoleStatusActive},
 		Refresh: statusDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
-		Timeout: 5 * time.Minute,
-		Delay:   5 * time.Second,
+		Timeout: dbInstanceRoleAssociationCreatedTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for RDS DB Instance (%s) IAM Role association: %s", dbInstanceIdentifier, roleArn)
@@ -194,8 +209,7 @@ func WaitForDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, ro
 		},
 		Target:  []string{},
 		Refresh: statusDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
-		Timeout: 5 * time.Minute,
-		Delay:   5 * time.Second,
+		Timeout: dbInstanceRoleAssociationDeletedTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for RDS DB Instance (%s) IAM Role disassociation: %s", dbInstanceIdentifier, roleArn)
