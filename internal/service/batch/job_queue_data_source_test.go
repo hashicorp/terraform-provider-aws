@@ -16,9 +16,9 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobQueueDataSourceConfigBasic(rName),
@@ -42,9 +42,9 @@ func TestAccBatchJobQueueDataSource_schedulingPolicy(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobQueueDataSourceConfigSchedulingPolicy(rName),

@@ -135,11 +135,11 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("posix_user"); ok {
-		input.PosixUser = expandEfsAccessPointPosixUser(v.([]interface{}))
+		input.PosixUser = expandAccessPointPOSIXUser(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("root_directory"); ok {
-		input.RootDirectory = expandEfsAccessPointRootDirectory(v.([]interface{}))
+		input.RootDirectory = expandAccessPointRootDirectory(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating EFS Access Point: %#v", input)
@@ -210,11 +210,11 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", ap.AccessPointArn)
 	d.Set("owner_id", ap.OwnerId)
 
-	if err := d.Set("posix_user", flattenEfsAccessPointPosixUser(ap.PosixUser)); err != nil {
+	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
 		return fmt.Errorf("error setting posix user: %w", err)
 	}
 
-	if err := d.Set("root_directory", flattenEfsAccessPointRootDirectory(ap.RootDirectory)); err != nil {
+	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 
@@ -265,7 +265,7 @@ func hasEmptyAccessPoints(aps *efs.DescribeAccessPointsOutput) bool {
 	return true
 }
 
-func expandEfsAccessPointPosixUser(pUser []interface{}) *efs.PosixUser {
+func expandAccessPointPOSIXUser(pUser []interface{}) *efs.PosixUser {
 	if len(pUser) < 1 || pUser[0] == nil {
 		return nil
 	}
@@ -284,7 +284,7 @@ func expandEfsAccessPointPosixUser(pUser []interface{}) *efs.PosixUser {
 	return posixUser
 }
 
-func expandEfsAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
+func expandAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
 	if len(rDir) < 1 || rDir[0] == nil {
 		return nil
 	}
@@ -298,13 +298,13 @@ func expandEfsAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
 	}
 
 	if v, ok := m["creation_info"]; ok {
-		rootDir.CreationInfo = expandEfsAccessPointRootDirectoryCreationInfo(v.([]interface{}))
+		rootDir.CreationInfo = expandAccessPointRootDirectoryCreationInfo(v.([]interface{}))
 	}
 
 	return rootDir
 }
 
-func expandEfsAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *efs.CreationInfo {
+func expandAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *efs.CreationInfo {
 	if len(cInfo) < 1 || cInfo[0] == nil {
 		return nil
 	}
@@ -320,7 +320,7 @@ func expandEfsAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *efs.Cre
 	return creationInfo
 }
 
-func flattenEfsAccessPointPosixUser(posixUser *efs.PosixUser) []interface{} {
+func flattenAccessPointPOSIXUser(posixUser *efs.PosixUser) []interface{} {
 	if posixUser == nil {
 		return []interface{}{}
 	}
@@ -334,20 +334,20 @@ func flattenEfsAccessPointPosixUser(posixUser *efs.PosixUser) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenEfsAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
+func flattenAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
 	if rDir == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"path":          aws.StringValue(rDir.Path),
-		"creation_info": flattenEfsAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
+		"creation_info": flattenAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenEfsAccessPointRootDirectoryCreationInfo(cInfo *efs.CreationInfo) []interface{} {
+func flattenAccessPointRootDirectoryCreationInfo(cInfo *efs.CreationInfo) []interface{} {
 	if cInfo == nil {
 		return []interface{}{}
 	}

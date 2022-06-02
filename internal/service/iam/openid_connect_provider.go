@@ -120,7 +120,7 @@ func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{})
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	out, err := conn.GetOpenIDConnectProvider(input)
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

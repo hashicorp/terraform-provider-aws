@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
+func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_endpoint_connection_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -27,7 +27,7 @@ func TestAccEC2VPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckVpcEndpointConnectionAccepterDestroy,
+		CheckDestroy:      testAccCheckVPCEndpointConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName),
@@ -45,7 +45,7 @@ func TestAccEC2VPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcEndpointConnectionAccepterDestroy(s *terraform.State) error {
+func testAccCheckVPCEndpointConnectionAccepterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,10 +34,10 @@ func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 	keyError := regexp.MustCompile(`key must not be empty`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig:   func() {},
@@ -59,10 +59,10 @@ func TestAccS3BucketObject_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -92,10 +92,10 @@ func TestAccS3BucketObject_source(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectSourceConfig(rName, source),
@@ -121,10 +121,10 @@ func TestAccS3BucketObject_content(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -153,10 +153,10 @@ func TestAccS3BucketObject_etagEncryption(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -184,10 +184,10 @@ func TestAccS3BucketObject_contentBase64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -221,10 +221,10 @@ func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -266,10 +266,10 @@ func TestAccS3BucketObject_withContentCharacteristics(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_withContentCharacteristics(rName, source),
@@ -292,10 +292,10 @@ func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_nonVersioned(rName, sourceInitial),
@@ -327,10 +327,10 @@ func TestAccS3BucketObject_updates(t *testing.T) {
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, false, sourceInitial),
@@ -385,10 +385,10 @@ func TestAccS3BucketObject_updateSameFile(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, false, filename),
@@ -423,10 +423,10 @@ func TestAccS3BucketObject_updatesWithVersioning(t *testing.T) {
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, true, sourceInitial),
@@ -468,10 +468,10 @@ func TestAccS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateableViaAccessPoint(rName, s3.BucketVersioningStatusEnabled, sourceInitial),
@@ -504,10 +504,10 @@ func TestAccS3BucketObject_kms(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -538,10 +538,10 @@ func TestAccS3BucketObject_sse(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -569,10 +569,10 @@ func TestAccS3BucketObject_acl(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", "private"),
@@ -620,10 +620,10 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_withMetadata(rName, "key1", "value1", "key2", "value2"),
@@ -667,10 +667,10 @@ func TestAccS3BucketObject_storageClass(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -731,10 +731,10 @@ func TestAccS3BucketObject_tags(t *testing.T) {
 	key := "test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -803,10 +803,10 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 	key := "/test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -875,10 +875,10 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 	key := "/////test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -940,10 +940,10 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 	key := "first//second///third//"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
@@ -1004,10 +1004,10 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_noObjectLockLegalHold(rName, "stuff"),
@@ -1052,10 +1052,10 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_withObjectLockLegalHold(rName, "stuff", "ON"),
@@ -1089,10 +1089,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_noObjectLockRetention(rName, "stuff"),
@@ -1140,10 +1140,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 	retainUntilDate3 := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_withObjectLockRetention(rName, "stuff", retainUntilDate1),
@@ -1198,10 +1198,10 @@ func TestAccS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_objectBucketKeyEnabled(rName, "stuff"),
@@ -1221,10 +1221,10 @@ func TestAccS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_bucketBucketKeyEnabled(rName, "stuff"),
@@ -1244,10 +1244,10 @@ func TestAccS3BucketObject_defaultBucketSSE(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketObjectDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_defaultBucketSSE(rName, "stuff"),
@@ -1391,13 +1391,13 @@ func testAccCheckBucketObjectExists(n string, obj *s3.GetObjectOutput) resource.
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			var err error
 			out, err = conn.GetObject(input)
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "NoSuchKey" {
-					return resource.RetryableError(
-						fmt.Errorf("getting object %s, retrying: %w", rs.Primary.Attributes["bucket"], err),
-					)
-				}
+
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
+				return resource.RetryableError(
+					fmt.Errorf("getting object %s, retrying: %w", rs.Primary.Attributes["bucket"], err),
+				)
 			}
+
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}

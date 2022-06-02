@@ -191,6 +191,7 @@ func init() {
 			"aws_elastic_beanstalk_environment",
 			"aws_cloud9_environment_ec2",
 			"aws_cloudhsm_v2_cluster",
+			"aws_codestarconnections_host",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
 			"aws_dms_replication_instance",
@@ -208,6 +209,7 @@ func init() {
 			"aws_fsx_ontap_file_system",
 			"aws_fsx_openzfs_file_system",
 			"aws_fsx_windows_file_system",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_memorydb_subnet_group",
@@ -215,6 +217,7 @@ func init() {
 			"aws_msk_cluster",
 			"aws_network_interface",
 			"aws_networkfirewall_firewall",
+			"aws_opensearch_domain",
 			"aws_redshift_cluster",
 			"aws_route53_resolver_endpoint",
 			"aws_sagemaker_notebook_instance",
@@ -2313,9 +2316,9 @@ func sweepIPAMPoolCIDRs(region string) error {
 				}
 
 				for _, v := range page.IpamPoolCidrs {
-					r := ResourceVPCIpamPoolCidr()
+					r := ResourceIPAMPoolCIDR()
 					d := r.Data(nil)
-					d.SetId(encodeIpamPoolCidrId(aws.StringValue(v.Cidr), poolID))
+					d.SetId(encodeIPAMPoolCIDRId(aws.StringValue(v.Cidr), poolID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -2368,7 +2371,7 @@ func sweepIPAMPools(region string) error {
 		}
 
 		for _, v := range page.IpamPools {
-			r := ResourceVPCIpamPool()
+			r := ResourceIPAMPool()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamPoolId))
 
@@ -2418,7 +2421,7 @@ func sweepIPAMScopes(region string) error {
 				continue
 			}
 
-			r := ResourceVPCIpamScope()
+			r := ResourceIPAMScope()
 			d := r.Data(nil)
 			d.SetId(scopeID)
 
@@ -2461,7 +2464,7 @@ func sweepIPAMs(region string) error {
 		}
 
 		for _, v := range page.Ipams {
-			r := ResourceVPCIpam()
+			r := ResourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamId))
 

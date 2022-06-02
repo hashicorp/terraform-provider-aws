@@ -11,17 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53Domains_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"RegisteredDomain": {
-			"tags":           testAccRoute53DomainsRegisteredDomain_tags,
-			"autoRenew":      testAccRoute53DomainsRegisteredDomain_autoRenew,
-			"contacts":       testAccRoute53DomainsRegisteredDomain_contacts,
-			"contactPrivacy": testAccRoute53DomainsRegisteredDomain_contactPrivacy,
-			"nameservers":    testAccRoute53DomainsRegisteredDomain_nameservers,
-			"transferLock":   testAccRoute53DomainsRegisteredDomain_transferLock,
+			"tags":           testAccRegisteredDomain_tags,
+			"autoRenew":      testAccRegisteredDomain_autoRenew,
+			"contacts":       testAccRegisteredDomain_contacts,
+			"contactPrivacy": testAccRegisteredDomain_contactPrivacy,
+			"nameservers":    testAccRegisteredDomain_nameservers,
+			"transferLock":   testAccRegisteredDomain_transferLock,
 		},
 	}
 
@@ -38,8 +39,8 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 	}
 }
 
-func testAccPreCheckRoute53Domains(t *testing.T) {
-	acctest.PreCheckPartitionHasService(conns.Route53DomainsEndpointID, t)
+func testAccPreCheck(t *testing.T) {
+	acctest.PreCheckPartitionHasService(names.Route53DomainsEndpointID, t)
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsConn
 
@@ -56,7 +57,7 @@ func testAccPreCheckRoute53Domains(t *testing.T) {
 	}
 }
 
-func testAccRoute53DomainsRegisteredDomain_tags(t *testing.T) {
+func testAccRegisteredDomain_tags(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -66,10 +67,10 @@ func testAccRoute53DomainsRegisteredDomain_tags(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfigTags1(domainName, "key1", "value1"),
@@ -97,7 +98,7 @@ func testAccRoute53DomainsRegisteredDomain_tags(t *testing.T) {
 	})
 }
 
-func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
+func testAccRegisteredDomain_autoRenew(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -107,10 +108,10 @@ func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainAutoRenewConfig(domainName, false),
@@ -128,7 +129,7 @@ func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
 	})
 }
 
-func testAccRoute53DomainsRegisteredDomain_contacts(t *testing.T) {
+func testAccRegisteredDomain_contacts(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -138,10 +139,10 @@ func testAccRoute53DomainsRegisteredDomain_contacts(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainContactsConfig(domainName),
@@ -231,7 +232,7 @@ func testAccRoute53DomainsRegisteredDomain_contacts(t *testing.T) {
 	})
 }
 
-func testAccRoute53DomainsRegisteredDomain_contactPrivacy(t *testing.T) {
+func testAccRegisteredDomain_contactPrivacy(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -241,10 +242,10 @@ func testAccRoute53DomainsRegisteredDomain_contactPrivacy(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainContactPrivacyConfig(domainName, true, true, true),
@@ -266,7 +267,7 @@ func testAccRoute53DomainsRegisteredDomain_contactPrivacy(t *testing.T) {
 	})
 }
 
-func testAccRoute53DomainsRegisteredDomain_nameservers(t *testing.T) {
+func testAccRegisteredDomain_nameservers(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -276,10 +277,10 @@ func testAccRoute53DomainsRegisteredDomain_nameservers(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainNameserversConfig(domainName),
@@ -310,7 +311,7 @@ func testAccRoute53DomainsRegisteredDomain_nameservers(t *testing.T) {
 	})
 }
 
-func testAccRoute53DomainsRegisteredDomain_transferLock(t *testing.T) {
+func testAccRegisteredDomain_transferLock(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -320,10 +321,10 @@ func testAccRoute53DomainsRegisteredDomain_transferLock(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainTransferLockConfig(domainName, false),

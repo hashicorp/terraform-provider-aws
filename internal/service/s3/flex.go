@@ -431,6 +431,19 @@ func ExpandLifecycleRules(l []interface{}) ([]*s3.LifecycleRule, error) {
 			result.Filter = ExpandLifecycleRuleFilter(v)
 		}
 
+		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
+			// If neither the filter block nor the prefix are specified,
+			// apply the Default behavior from v3.x of the provider;
+			// otherwise, set the prefix as specified in Terraform.
+			if v == "" {
+				result.SetFilter(&s3.LifecycleRuleFilter{
+					Prefix: aws.String(v),
+				})
+			} else {
+				result.Prefix = aws.String(v)
+			}
+		}
+
 		if v, ok := tfMap["id"].(string); ok {
 			result.ID = aws.String(v)
 		}
@@ -441,10 +454,6 @@ func ExpandLifecycleRules(l []interface{}) ([]*s3.LifecycleRule, error) {
 
 		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
 			result.NoncurrentVersionTransitions = ExpandLifecycleRuleNoncurrentVersionTransitions(v.List())
-		}
-
-		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
-			result.Prefix = aws.String(v)
 		}
 
 		if v, ok := tfMap["status"].(string); ok && v != "" {
@@ -650,13 +659,13 @@ func ExpandReplicationRuleSourceSelectionCriteria(l []interface{}) *s3.SourceSel
 	}
 
 	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.SseKmsEncryptedObjects = ExpandSourceSelectionCriteriaSseKmsEncryptedObjects(v)
+		result.SseKmsEncryptedObjects = ExpandSourceSelectionCriteriaSSEKMSEncryptedObjects(v)
 	}
 
 	return result
 }
 
-func ExpandSourceSelectionCriteriaSseKmsEncryptedObjects(l []interface{}) *s3.SseKmsEncryptedObjects {
+func ExpandSourceSelectionCriteriaSSEKMSEncryptedObjects(l []interface{}) *s3.SseKmsEncryptedObjects {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1235,13 +1244,13 @@ func FlattenReplicationRuleSourceSelectionCriteria(ssc *s3.SourceSelectionCriter
 	}
 
 	if ssc.SseKmsEncryptedObjects != nil {
-		m["sse_kms_encrypted_objects"] = FlattenSourceSelectionCriteriaSseKmsEncryptedObjects(ssc.SseKmsEncryptedObjects)
+		m["sse_kms_encrypted_objects"] = FlattenSourceSelectionCriteriaSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
 	}
 
 	return []interface{}{m}
 }
 
-func FlattenSourceSelectionCriteriaSseKmsEncryptedObjects(objects *s3.SseKmsEncryptedObjects) []interface{} {
+func FlattenSourceSelectionCriteriaSSEKMSEncryptedObjects(objects *s3.SseKmsEncryptedObjects) []interface{} {
 	if objects == nil {
 		return []interface{}{}
 	}

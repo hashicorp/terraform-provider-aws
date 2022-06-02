@@ -23,10 +23,10 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 	resourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
@@ -67,10 +67,10 @@ func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 	resourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
@@ -90,10 +90,10 @@ func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 	resourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_Bucket_ARN(rName),
@@ -171,10 +171,10 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_policy(rName),
@@ -225,10 +225,10 @@ func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 	resourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_publicAccessBlock(rName),
@@ -265,10 +265,10 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointConfig_vpc(rName),

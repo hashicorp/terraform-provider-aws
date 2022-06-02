@@ -2,53 +2,7 @@ package plugintest
 
 import (
 	"fmt"
-	"os"
-	"testing"
 )
-
-// AcceptanceTest is a test guard that will produce a log and call SkipNow on
-// the given TestControl if the environment variable TF_ACC isn't set to
-// indicate that the caller wants to run acceptance tests.
-//
-// Call this immediately at the start of each acceptance test function to
-// signal that it may cost money and thus requires this opt-in enviromment
-// variable.
-//
-// For the purpose of this function, an "acceptance test" is any est that
-// reaches out to services that are not directly controlled by the test program
-// itself, particularly if those requests may lead to service charges. For any
-// system where it is possible and realistic to run a local instance of the
-// service for testing (e.g. in a daemon launched by the test program itself),
-// prefer to do this and _don't_ call AcceptanceTest, thus allowing tests to be
-// run more easily and without external cost by contributors.
-func AcceptanceTest(t TestControl) {
-	t.Helper()
-	if os.Getenv("TF_ACC") != "" {
-		t.Log("TF_ACC is not set")
-		t.SkipNow()
-	}
-}
-
-// LongTest is a test guard that will produce a log and call SkipNow on the
-// given TestControl if the test harness is currently running in "short mode".
-//
-// What is considered a "long test" will always be pretty subjective, but test
-// implementers should think of this in terms of what seems like it'd be
-// inconvenient to run repeatedly for quick feedback while testing a new feature
-// under development.
-//
-// When testing resource types that always take several minutes to complete
-// operations, consider having a single general test that covers the basic
-// functionality and then mark any other more specific tests as long tests so
-// that developers can quickly smoke-test a particular feature when needed
-// but can still run the full set of tests for a feature when needed.
-func LongTest(t TestControl) {
-	t.Helper()
-	if testing.Short() {
-		t.Log("skipping long test because of short mode")
-		t.SkipNow()
-	}
-}
 
 // TestControl is an interface requiring a subset of *testing.T which is used
 // by the test guards and helpers in this package. Most callers can simply
@@ -65,6 +19,7 @@ type TestControl interface {
 	Log(args ...interface{})
 	FailNow()
 	SkipNow()
+	Name() string
 }
 
 // testingT wraps a TestControl to recover some of the convenience behaviors

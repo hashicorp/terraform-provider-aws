@@ -116,7 +116,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metadata", upload.Metadata)
 	d.Set("arn", arn)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(arn, "upload", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}

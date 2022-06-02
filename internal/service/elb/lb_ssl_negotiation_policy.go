@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -124,16 +124,16 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "PolicyNotFound" {
-			// The policy is gone.
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) policy (%s) not found, removing from state", lbName, policyName)
 			d.SetId("")
 			return nil
-		} else if IsNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
+		} else if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", lbName)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving policy: %s", err)
+		return fmt.Errorf("error retrieving ELB Classic (%s) SSL Negotiation Policy: %w", lbName, err)
 	}
 
 	if len(getResp.PolicyDescriptions) != 1 {

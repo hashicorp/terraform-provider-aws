@@ -102,6 +102,78 @@ func TestAccS3BucketObjectLockConfiguration_update(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_ObjectLockEnabledWithDefaultRetention(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.mode", s3.ObjectLockRetentionModeCompliance),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
+				),
+			},
+			{
+				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", s3.ObjectLockRetentionModeCompliance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_ObjectLockEnabledNoDefaultRetention(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "0"),
+				),
+			},
+			{
+				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", s3.ObjectLockRetentionModeCompliance),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketObjectLockConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 

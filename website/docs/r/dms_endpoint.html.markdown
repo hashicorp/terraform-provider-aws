@@ -1,5 +1,5 @@
 ---
-subcategory: "Database Migration Service (DMS)"
+subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_endpoint"
 description: |-
@@ -44,7 +44,7 @@ The following arguments are required:
 
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpoint_type` - (Required) Type of endpoint. Valid values are `source`, `target`.
-* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `azuredb`, `db2`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`.
+* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `azuredb`, `db2`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
 * `kms_key_arn` - (Required when `engine_name` is `mongodb`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 
 The following arguments are optional:
@@ -60,7 +60,7 @@ The following arguments are optional:
 * `port` - (Optional) Port used by the endpoint database.
 * `s3_settings` - (Optional) Configuration block for S3 settings. See below.
 * `secrets_manager_access_role_arn` - (Optional) ARN of the IAM role that specifies AWS DMS as the trusted entity and has the required permissions to access the value in SecretsManagerSecret.
-* `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the SecretsManagerSecret that contains the endpoint connection details. Supported only for `engine_name` as `oracle` and `postgres`.
+* `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the SecretsManagerSecret that contains the endpoint connection details. Supported only for `engine_name` as `aurora`, `mariadb`, `mysql`, `oracle`, `postgres`, `redshift` or `sqlserver`.
 * `server_name` - (Optional) Host name of the server.
 * `service_access_role` - (Optional) ARN used by the service access IAM role for dynamodb endpoints.
 * `ssl_mode` - (Optional, Default: none) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`
@@ -108,7 +108,7 @@ The following arguments are optional:
 * `include_partition_value` - (Optional) Shows the partition value within the Kinesis message output, unless the partition type is schema-table-type. Default is `false`.
 * `include_table_alter_operations` - (Optional) Includes any data definition language (DDL) operations that change the table in the control data. Default is `false`.
 * `include_transaction_details` - (Optional) Provides detailed transaction information from the source database. Default is `false`.
-* `message_format` - (Optional) Output format for the records created. Default is `json`. Valid values are `json` and `json_unformatted` (a single line with no tab).
+* `message_format` - (Optional) Output format for the records created. Default is `json`. Valid values are `json` and `json-unformatted` (a single line with no tab).
 * `partition_include_schema_table` - (Optional) Prefixes schema and table names to partition values, when the partition type is primary-key-type. Default is `false`.
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to write to the Kinesis data stream.
 * `stream_arn` - (Optional) ARN of the Kinesis data stream.

@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group"
 description: |-
@@ -221,6 +221,45 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
+### Mixed Instances Policy with Attribute-based Instance Type Selection
+
+As an alternative to manually choosing instance types when creating a mixed instances group, you can specify a set of instance attributes that describe your compute requirements.
+
+```terraform
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = data.aws_ami.example.id
+  instance_type = "c5.large"
+}
+
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.example.id
+      }
+
+      override {
+        instance_requirements {
+          memory_mib {
+            min = 1000
+          }
+
+          vcpu_count {
+            min = 4
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ### Interpolated tags
 
 ```terraform
@@ -325,9 +364,13 @@ resource "aws_autoscaling_group" "example" {
   min_size           = 1
 
   warm_pool {
-    pool_state                  = "Stopped"
+    pool_state                  = "Hibernated"
     min_size                    = 1
     max_group_prepared_capacity = 10
+
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
 }
 ```
@@ -344,6 +387,7 @@ The following arguments are supported:
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `availability_zones` - (Optional) A list of one or more availability zones for the group. Used for EC2-Classic, attaching a network interface via id from a launch template and default subnets when not specified with `vpc_zone_identifier` argument. Conflicts with `vpc_zone_identifier`.
 * `capacity_rebalance` - (Optional) Indicates whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
+* `context` - (Optional) Reserved.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
 * `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. See [Launch Template](#launch_template) below for more details.
@@ -391,9 +435,11 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
   all attached load balancers on both create and update operations. (Takes
   precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `protect_from_scale_in` (Optional) Allows setting instance protection. The
-   Auto Scaling Group will not select instances with this setting for termination
-   during scale in events.
+* `protect_from_scale_in` (Optional) Indicates whether newly launched instances
+  are automatically protected from termination by Amazon EC2 Auto Scaling when
+  scaling in. For more information about preventing instances from terminating
+  on scale in, see [Using instance scale-in protection](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-instance-protection.html)
+  in the Amazon EC2 Auto Scaling User Guide.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 * `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
 * `instance_refresh` - (Optional) If this block is configured, start an
@@ -450,8 +496,110 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `instance_requirements` - (Optional) Override the instance type in the Launch Template with instance types that satisfy the requirements.
 * `launch_template_specification` - (Optional) Override the instance launch template specification in the Launch Template.
 * `weighted_capacity` - (Optional) The number of capacity units, which gives the instance type a proportional weight to other instance types.
+
+###### mixed_instances_policy launch_template override instance_requirements
+
+This configuration block supports the following:
+
+~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+
+* `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum. Set to `0` to exclude instance types with accelerators.
+* `accelerator_manufacturers` - (Optional) List of accelerator manufacturer names. Default is any manufacturer.
+
+    ```
+    Valid names:
+      * amazon-web-services
+      * amd
+      * nvidia
+      * xilinx
+    ```
+
+* `accelerator_names` - (Optional) List of accelerator names. Default is any acclerator.
+
+    ```
+    Valid names:
+      * a100            - NVIDIA A100 GPUs
+      * v100            - NVIDIA V100 GPUs
+      * k80             - NVIDIA K80 GPUs
+      * t4              - NVIDIA T4 GPUs
+      * m60             - NVIDIA M60 GPUs
+      * radeon-pro-v520 - AMD Radeon Pro V520 GPUs
+      * vu9p            - Xilinx VU9P FPGAs
+    ```
+
+* `accelerator_total_memory_mib` - (Optional) Block describing the minimum and maximum total memory of the accelerators. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `accelerator_types` - (Optional) List of accelerator types. Default is any accelerator type.
+
+    ```
+    Valid types:
+      * fpga
+      * gpu
+      * inference
+    ```
+
+* `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
+
+    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+
+    ```
+    Valid names:
+      * amazon-web-services
+      * amd
+      * intel
+    ```
+
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `instance_generations` - (Optional) List of instance generation names. Default is any generation.
+
+    ```
+    Valid names:
+      * current  - Recommended for best performance.
+      * previous - For existing applications optimized for older instance types.
+    ```
+
+* `local_storage` - (Optional) Indicate whether instance types with local storage volumes are `included`, `excluded`, or `required`. Default is `included`.
+* `local_storage_types` - (Optional) List of local storage type names. Default any storage type.
+
+    ```
+    Value names:
+      * hdd - hard disk drive
+      * ssd - solid state drive
+    ```
+
+* `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
+* `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
+    * `min` - (Required) Minimum.
+    * `max` - (Optional) Maximum.
+* `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
+
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
+* `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
+* `total_local_storage_gb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
+* `vcpu_count` - (Required) Block describing the minimum and maximum number of vCPUs. Default is no maximum.
+    * `min` - (Required) Minimum.
+    * `max` - (Optional) Maximum.
 
 ### tag and tags
 
@@ -493,9 +641,16 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default) or Running.
+* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 * `min_size` - (Optional) Specifies the minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
+* `instance_reuse_policy` - (Optional) Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in. The default is to terminate instances in the Auto Scaling group when the group scales in.
 * `max_group_prepared_capacity` - (Optional) Specifies the total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+
+##### instance_reuse_policy
+
+This configuration block supports the following:
+
+* `reuse_on_scale_in` - (Optional) Specifies whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
 
 ## Attributes Reference
 

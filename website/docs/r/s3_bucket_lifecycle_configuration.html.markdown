@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_lifecycle_configuration"
 description: |-
@@ -21,6 +21,27 @@ For more information see the Amazon S3 User Guide on [`Lifecycle Configuration E
 ~> **NOTE:** S3 Buckets only support a single lifecycle configuration. Declaring multiple `aws_s3_bucket_lifecycle_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
 ## Example Usage
+
+### With neither a filter nor prefix specified
+
+The Lifecycle rule applies to a subset of objects based on the key name prefix (`""`).
+
+This configuration is intended to replicate the default behavior of the `lifecycle_rule`
+parameter in the Terraform AWS Provider `aws_s3_bucket` resource prior to `v4.0`.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
 
 ### Specifying an empty filter
 
@@ -343,7 +364,12 @@ The following arguments are supported:
 
 ### rule
 
-~> **NOTE:** The `filter` argument, while Optional, is required if the `rule` configuration block does not contain a `prefix`. Since `prefix` is deprecated by Amazon S3 and will be removed in the next major version of the Terraform AWS Provider, we recommend users specify `filter`.
+~> **NOTE:** The `filter` argument, while Optional, is required if the `rule` configuration block does not contain a `prefix` **and** you intend to override the default behavior of setting the rule to filter objects with the empty string prefix (`""`).
+Since `prefix` is deprecated by Amazon S3 and will be removed in the next major version of the Terraform AWS Provider, we recommend users either specify `filter` or leave both `filter` and `prefix` unspecified.
+
+~> **NOTE:** A rule cannot be updated from having a filter (via either the `rule.filter` parameter or when neither `rule.filter` and `rule.prefix` are specified) to only having a prefix via the `rule.prefix` parameter.
+
+~> **NOTE** Terraform cannot distinguish a difference between configurations that use `rule.filter {}` and configurations that neither use `rule.filter` nor `rule.prefix`, so a rule cannot be updated from applying to all objects in the bucket via `rule.filter {}` to applying to a subset of objects based on the key prefix `""` and vice versa.
 
 The `rule` configuration block supports the following arguments:
 
@@ -373,7 +399,7 @@ The `expiration` configuration block supports the following arguments:
 
 ### filter
 
-~> **NOTE:** The `filter` configuration block must have exactly one of `prefix`, `tag`, `and`, `object_size_greater_than` or `object_size_less_than` specified.
+~> **NOTE:** The `filter` configuration block must either be specified as the empty configuration block (`filter {}`) or with exactly one of `prefix`, `tag`, `and`, `object_size_greater_than` or `object_size_less_than` specified.
 
 The `filter` configuration block supports the following arguments:
 

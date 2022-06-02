@@ -65,7 +65,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	input := &identitystore.ListUsersInput{
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		Filters:         expandIdentityStoreFilters(d.Get("filter").(*schema.Set).List()),
+		Filters:         expandFilters(d.Get("filter").(*schema.Set).List()),
 	}
 
 	var results []*identitystore.User

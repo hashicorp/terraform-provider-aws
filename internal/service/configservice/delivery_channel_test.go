@@ -20,10 +20,10 @@ func testAccDeliveryChannel_basic(t *testing.T) {
 	expectedBucketName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryChannelConfig_basic(rInt),
@@ -46,10 +46,10 @@ func testAccDeliveryChannel_allParams(t *testing.T) {
 	expectedBucketName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryChannelConfig_allParams(rInt),
@@ -73,10 +73,10 @@ func testAccDeliveryChannel_importBasic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryChannelConfig_basic(rInt),

@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_replication_configuration"
 description: |-
@@ -110,6 +110,8 @@ resource "aws_s3_bucket" "source" {
 }
 
 resource "aws_s3_bucket_acl" "source_bucket_acl" {
+  provider = aws.central
+
   bucket = aws_s3_bucket.source.id
   acl    = "private"
 }
@@ -124,6 +126,7 @@ resource "aws_s3_bucket_versioning" "source" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
+  provider = aws.central
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.source]
 
@@ -131,8 +134,12 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
 
   rule {
-    id     = "foobar"
-    prefix = "foo"
+    id = "foobar"
+
+    filter {
+      prefix = "foo"
+    }
+
     status = "Enabled"
 
     destination {
@@ -160,12 +167,12 @@ resource "aws_s3_bucket_versioning" "east" {
 }
 
 resource "aws_s3_bucket" "west" {
-  provider = west
+  provider = aws.west
   bucket   = "tf-test-bucket-west-12345"
 }
 
 resource "aws_s3_bucket_versioning" "west" {
-  provider = west
+  provider = aws.west
 
   bucket = aws_s3_bucket.west.id
   versioning_configuration {
@@ -181,8 +188,12 @@ resource "aws_s3_bucket_replication_configuration" "east_to_west" {
   bucket = aws_s3_bucket.east.id
 
   rule {
-    id     = "foobar"
-    prefix = "foo"
+    id = "foobar"
+
+    filter {
+      prefix = "foo"
+    }
+
     status = "Enabled"
 
     destination {
@@ -193,6 +204,7 @@ resource "aws_s3_bucket_replication_configuration" "east_to_west" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "west_to_east" {
+  provider = aws.west
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.west]
 
@@ -200,8 +212,12 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
   bucket = aws_s3_bucket.west.id
 
   rule {
-    id     = "foobar"
-    prefix = "foo"
+    id = "foobar"
+
+    filter {
+      prefix = "foo"
+    }
+
     status = "Enabled"
 
     destination {
@@ -218,7 +234,7 @@ The following arguments are supported:
 
 * `bucket` - (Required) The name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
-* `rule` - (Required) Set of configuration blocks describing the rules managing the replication [documented below](#rule).
+* `rule` - (Required) List of configuration blocks describing the rules managing the replication [documented below](#rule).
 * `token` - (Optional) A token to allow replication to be enabled on an Object Lock-enabled bucket. You must contact AWS support for the bucket's "Object Lock token".
 For more details, see [Using S3 Object Lock with replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html#object-lock-managing-replication).
 
@@ -228,6 +244,9 @@ For more details, see [Using S3 Object Lock with replication](https://docs.aws.a
 
 ~> **NOTE:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 
+~> **NOTE:** The `existing_object_replication` parameter is not supported by Amazon S3 at this time and should not be included in your `rule` configurations. Specifying this parameter will result in `MalformedXML` errors.
+To replicate existing objects, please refer to the [Replicating existing objects with S3 Batch Replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-batch-replication-batch.html) documentation in the Amazon S3 User Guide.
+
 The `rule` configuration block supports the following arguments:
 
 * `delete_marker_replication` - (Optional) Whether delete markers are replicated. This argument is only valid with V2 replication configurations (i.e., when `filter` is used)[documented below](#delete_marker_replication).
@@ -235,7 +254,7 @@ The `rule` configuration block supports the following arguments:
 * `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations [documented below](#existing_object_replication).
 * `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter). If not specified, the `rule` will default to using `prefix`.
 * `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
-* `prefix` - (Optional, Conflicts with `filter`) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length. Defaults to an empty string (`""`) if `filter` is not specified.
+* `prefix` - (Optional, Conflicts with `filter`, **Deprecated**) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length. Defaults to an empty string (`""`) if `filter` is not specified.
 * `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria [documented below](#source_selection_criteria).
 * `status` - (Required) The status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".

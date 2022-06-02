@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -91,7 +92,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 						"filter": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MaxItems: 1,
+							// If neither the filter block nor the prefix parameter in the rule are specified,
+							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
+							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
+							// require diff suppression.
+							DiffSuppressFunc: suppressMissingFilterConfigurationBlock,
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"and": {
@@ -267,9 +273,9 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
@@ -372,9 +378,9 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
-	})
+	}, ErrCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
 		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
@@ -414,4 +420,27 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	return nil
+}
+
+// suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
+// filter configuration block and one returned from the S3 API.
+// To work around the issue, https://github.com/hashicorp/terraform-plugin-sdk/issues/743,
+// this method only looks for changes in the "filter.#" value and not its nested fields
+// which are incorrectly suppressed when using the verify.SuppressMissingOptionalConfigurationBlock method.
+func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, "filter.#") {
+		o, n := d.GetChange(k)
+		oVal, nVal := o.(int), n.(int)
+
+		if oVal == 1 && nVal == 0 {
+			return true
+		}
+
+		if oVal == 1 && nVal == 1 {
+			return old == "1" && new == "0"
+		}
+
+		return false
+	}
+	return false
 }

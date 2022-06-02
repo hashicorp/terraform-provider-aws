@@ -13,6 +13,8 @@ Provides a Redshift Cluster Resource.
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
+~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `default_iam_role_arn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `default_iam_role_arn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
+
 ## Example Usage
 
 ```terraform
@@ -36,6 +38,7 @@ The following arguments are supported:
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.
   If you do not provide a name, Amazon Redshift will create a default database called `dev`.
+* `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
 * `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user.
@@ -51,13 +54,15 @@ The following arguments are supported:
   Format: ddd:hh24:mi-ddd:hh24:mi
 * `cluster_parameter_group_name` - (Optional) The name of the parameter group to be associated with this cluster.
 * `automated_snapshot_retention_period` - (Optional) The number of days that automated snapshots are retained. If the value is 0, automated snapshots are disabled. Even if automated snapshots are disabled, you can still create manual snapshots when you want with create-cluster-snapshot. Default is 1.
-* `port` - (Optional) The port number on which the cluster accepts incoming connections.
+* `port` - (Optional) The port number on which the cluster accepts incoming connections. Valid values are between `1115` and `65535`.
   The cluster is accessible only via the JDBC and ODBC connection strings.
   Part of the connection string requires the port on which the cluster will listen for incoming connections.
-  Default port is 5439.
+  Default port is `5439`.
 * `cluster_version` - (Optional) The version of the Amazon Redshift engine software that you want to deploy on the cluster.
   The version selected runs on all the nodes in the cluster.
-* `allow_version_upgrade` - (Optional) If true , major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. Default is true
+* `allow_version_upgrade` - (Optional) If true , major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. Default is `true`.
+* `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `aqua_configuration_status` - (Optional) The value represents how the cluster is configured to use AQUA (Advanced Query Accelerator) after the cluster is restored. Possible values are `enabled`, `disabled`, and `auto`. Requires Cluster reboot.
 * `number_of_nodes` - (Optional) The number of compute nodes in the cluster. This parameter is required when the ClusterType parameter is specified as multi-node. Default is 1.
 * `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `true`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
@@ -71,6 +76,8 @@ The following arguments are supported:
 * `owner_account` - (Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot.
 * `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
 * `logging` - (Optional) Logging, documented below.
+* `maintenance_track_name` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
+* `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -91,6 +98,8 @@ The following arguments are supported:
 * `bucket_name` - (Optional, required when `enable` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
 For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
+* `log_destination_type` - (Optional) The log destination type. An enum with possible values of `s3` and `cloudwatch`.
+* `log_exports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`.
 
 #### `snapshot_copy`
 

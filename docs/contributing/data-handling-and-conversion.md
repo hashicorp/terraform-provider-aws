@@ -461,9 +461,9 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok {
-    t, _ := time.Parse(time.RFC3339, v.(string))
+    v, _ := time.Parse(time.RFC3339, v.(string))
 
-    input.AttributeName = aws.Time(t)
+    input.AttributeName = aws.Time(v)
 }
 ```
 
@@ -529,8 +529,8 @@ To read:
 func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
-    if v, ok := tfMap["nested_attribute_name"].(int); ok && v != 0.0 {
-        apiObject.NestedAttributeName = aws.Float64(float64(v))
+    if v, ok := tfMap["nested_attribute_name"].(float64); ok && v != 0.0 {
+        apiObject.NestedAttributeName = aws.Float64(v)
     }
 
     // ...
@@ -619,7 +619,7 @@ To read:
 func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
-    if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
+    if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
         apiObject.NestedAttributeName = expandStructure(v[0].(map[string]interface{}))
     }
 
@@ -806,9 +806,9 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
-        t, _ := time.Parse(time.RFC3339, v.(string))
+        v, _ := time.Parse(time.RFC3339, v)
 
-        apiObject.NestedAttributeName = aws.Time(t)
+        apiObject.NestedAttributeName = aws.Time(v)
     }
 
     // ...

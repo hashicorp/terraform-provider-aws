@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,10 +29,10 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig(rInt),
@@ -74,10 +74,10 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 	resourceName := "aws_rds_cluster_endpoint.reader"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointTags1Config(rInt, "key1", "value1"),
@@ -170,11 +170,8 @@ func testAccCheckClusterEndpointDestroyWithProvider(s *terraform.State, provider
 			}
 		}
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "DBClusterNotFoundFault" {
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+			continue
 		}
 
 		return err

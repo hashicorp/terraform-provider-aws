@@ -170,7 +170,7 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("properties", flattenIoTThingTypeProperties(out.ThingTypeProperties)); err != nil {
+	if err := d.Set("properties", flattenThingTypeProperties(out.ThingTypeProperties)); err != nil {
 		return fmt.Errorf("error setting properties: %s", err)
 	}
 

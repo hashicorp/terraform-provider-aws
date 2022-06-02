@@ -23,10 +23,10 @@ import (
 
 func ResourceFindingsFilter() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2FindingsFilterCreate,
-		ReadWithoutTimeout:   resourceMacie2FindingsFilterRead,
-		UpdateWithoutTimeout: resourceMacie2FindingsFilterUpdate,
-		DeleteWithoutTimeout: resourceMacie2FindingsFilterDelete,
+		CreateWithoutTimeout: resourceFindingsFilterCreate,
+		ReadWithoutTimeout:   resourceFindingsFilterRead,
+		UpdateWithoutTimeout: resourceFindingsFilterUpdate,
+		DeleteWithoutTimeout: resourceFindingsFilterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -127,7 +127,7 @@ func ResourceFindingsFilter() *schema.Resource {
 	}
 }
 
-func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -180,10 +180,10 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.StringValue(output.Id))
 
-	return resourceMacie2FindingsFilterRead(ctx, d, meta)
+	return resourceFindingsFilterRead(ctx, d, meta)
 }
 
-func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -226,7 +226,7 @@ func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateFindingsFilterInput{
@@ -261,10 +261,10 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
 	}
 
-	return resourceMacie2FindingsFilterRead(ctx, d, meta)
+	return resourceFindingsFilterRead(ctx, d, meta)
 }
 
-func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.DeleteFindingsFilterInput{

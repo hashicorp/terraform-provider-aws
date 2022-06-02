@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCDataSource_basic(t *testing.T) {
+func TestAccVPCDataSource_basic(t *testing.T) {
 	rInt1 := sdkacctest.RandIntRange(1, 128)
 	rInt2 := sdkacctest.RandIntRange(128, 254)
 	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)
@@ -23,12 +23,12 @@ func TestAccEC2VPCDataSource_basic(t *testing.T) {
 	ds4ResourceName := "data.aws_vpc.by_filter"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDataSourceConfig(rName, cidr),
+				Config: testAccVPCDataSourceConfig_basic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", vpcResourceName, "arn"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
@@ -61,18 +61,18 @@ func TestAccEC2VPCDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
+func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	dataSourceName := "data.aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName),
+				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
 				),
@@ -81,7 +81,7 @@ func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
-func testAccVPCDataSourceConfig(rName, cidr string) string {
+func testAccVPCDataSourceConfig_basic(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = %[2]q
@@ -116,7 +116,7 @@ data "aws_vpc" "by_filter" {
 `, rName, cidr)
 }
 
-func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName string) string {
+func testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

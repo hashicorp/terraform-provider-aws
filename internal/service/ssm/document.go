@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
+	documentPermissionsBatchLimit = 20
 )
 
 func ResourceDocument() *schema.Resource {
@@ -220,7 +220,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok {
-		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+		docInput.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
@@ -267,14 +267,14 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeDocumentOutput, err := conn.DescribeDocument(describeDocumentInput)
 
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
-		log.Printf("[WARN] SSM Document not found so removing from state")
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
+		return fmt.Errorf("error describing SSM Document (%s): %w", d.Id(), err)
 	}
 
 	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
@@ -288,13 +288,19 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	getDocumentOutput, err := conn.GetDocument(getDocumentInput)
-
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument, ssm.ErrCodeInvalidDocumentVersion) {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting SSM Document (%s): %w", d.Id(), err)
 	}
 
-	if getDocumentOutput == nil {
-		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	if !d.IsNewResource() && getDocumentOutput == nil {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	doc := describeDocumentOutput.Document
@@ -342,16 +348,16 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 		param := make(map[string]interface{})
 
 		if dp.DefaultValue != nil {
-			param["default_value"] = *dp.DefaultValue
+			param["default_value"] = aws.StringValue(dp.DefaultValue)
 		}
 		if dp.Description != nil {
-			param["description"] = *dp.Description
+			param["description"] = aws.StringValue(dp.Description)
 		}
 		if dp.Name != nil {
-			param["name"] = *dp.Name
+			param["name"] = aws.StringValue(dp.Name)
 		}
 		if dp.Type != nil {
-			param["type"] = *dp.Type
+			param["type"] = aws.StringValue(dp.Type)
 		}
 		params = append(params, param)
 	}
@@ -455,7 +461,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
+func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 	if len(a) == 0 {
 		return nil
 	}
@@ -549,16 +555,13 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 		return nil, fmt.Errorf("Error setting permissions for SSM document: %s", err)
 	}
 
-	var account_ids = make([]string, len(resp.AccountIds))
-	for i := 0; i < len(resp.AccountIds); i++ {
-		account_ids[i] = *resp.AccountIds[i]
-	}
-
 	ids := ""
-	if len(account_ids) == 1 {
-		ids = account_ids[0]
-	} else if len(account_ids) > 1 {
-		ids = strings.Join(account_ids, ",")
+	accountIds := aws.StringValueSlice(resp.AccountIds)
+
+	if len(accountIds) == 1 {
+		ids = accountIds[0]
+	} else if len(accountIds) > 1 {
+		ids = strings.Join(accountIds, ",")
 	}
 
 	if ids == "" {
@@ -604,12 +607,12 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 
 	if accountIdsToAdd != nil {
 
-		accountIdsToAddBatch := make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
-		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT+1)
+		accountIdsToAddBatch := make([]string, 0, documentPermissionsBatchLimit)
+		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdsToAdd {
-			if len(accountIdsToAddBatch) == SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT {
+			if len(accountIdsToAddBatch) == documentPermissionsBatchLimit {
 				accountIdsToAddBatches = append(accountIdsToAddBatches, accountIdsToAddBatch)
-				accountIdsToAddBatch = make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+				accountIdsToAddBatch = make([]string, 0, documentPermissionsBatchLimit)
 			}
 			accountIdsToAddBatch = append(accountIdsToAddBatch, accountId.(string))
 		}
@@ -629,12 +632,12 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 
 	if accountIdstoRemove != nil {
 
-		accountIdsToRemoveBatch := make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
-		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT+1)
+		accountIdsToRemoveBatch := make([]string, 0, documentPermissionsBatchLimit)
+		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdstoRemove {
-			if len(accountIdsToRemoveBatch) == SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT {
+			if len(accountIdsToRemoveBatch) == documentPermissionsBatchLimit {
 				accountIdsToRemoveBatches = append(accountIdsToRemoveBatches, accountIdsToRemoveBatch)
-				accountIdsToRemoveBatch = make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+				accountIdsToRemoveBatch = make([]string, 0, documentPermissionsBatchLimit)
 			}
 			accountIdsToRemoveBatch = append(accountIdsToRemoveBatch, accountId.(string))
 		}
@@ -676,8 +679,8 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 		updateDocInput.VersionName = aws.String(v.(string))
 	}
 
-	if d.HasChange("attachments_source") {
-		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
+	if v, ok := d.GetOk("attachments_source"); ok {
+		updateDocInput.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	newDefaultVersion := d.Get("default_version").(string)
@@ -694,7 +697,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error updating SSM document: %s", err)
 	} else {
 		log.Printf("[INFO] Updating the default version to the new version %s: %s", newDefaultVersion, d.Id())
-		newDefaultVersion = *updated.DocumentDescription.DocumentVersion
+		newDefaultVersion = aws.StringValue(updated.DocumentDescription.DocumentVersion)
 	}
 
 	updateDefaultInput := &ssm.UpdateDocumentDefaultVersionInput{

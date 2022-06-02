@@ -114,7 +114,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", cluster.VpcId)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("cluster_state", cluster.State)
-	if err := d.Set("cluster_certificates", readCloudHsmV2ClusterCertificates(cluster)); err != nil {
+	if err := d.Set("cluster_certificates", readClusterCertificates(cluster)); err != nil {
 		return fmt.Errorf("error setting cluster_certificates: %w", err)
 	}
 

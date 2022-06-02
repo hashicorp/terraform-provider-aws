@@ -136,7 +136,7 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 
 	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, "vpc-endpoint-service"),
+		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, "vpc-endpoint-service"),
 	}
 	if v, ok := d.GetOk("private_dns_name"); ok {
 		req.PrivateDnsName = aws.String(v.(string))
@@ -254,12 +254,12 @@ func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading VPC Endpoint Service permissions (%s): %s", d.Id(), err.Error())
 	}
 
-	err = d.Set("allowed_principals", flattenVpcEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
+	err = d.Set("allowed_principals", flattenVPCEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
 	if err != nil {
 		return fmt.Errorf("error setting allowed_principals: %s", err)
 	}
 
-	err = d.Set("private_dns_name_configuration", flattenPrivateDnsNameConfiguration(svcCfg.PrivateDnsNameConfiguration))
+	err = d.Set("private_dns_name_configuration", flattenPrivateDNSNameConfiguration(svcCfg.PrivateDnsNameConfiguration))
 	if err != nil {
 		return fmt.Errorf("error setting private_dns_name_configuration: %w", err)
 	}
@@ -267,7 +267,7 @@ func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
+func flattenPrivateDNSNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
 	if privateDnsNameConfiguration == nil {
 		return nil
 	}
@@ -313,10 +313,10 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 			modifyCfgReq.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
 		}
 
-		setVpcEndpointServiceUpdateLists(d, "gateway_load_balancer_arns",
+		setVPCEndpointServiceUpdateLists(d, "gateway_load_balancer_arns",
 			&modifyCfgReq.AddGatewayLoadBalancerArns, &modifyCfgReq.RemoveGatewayLoadBalancerArns)
 
-		setVpcEndpointServiceUpdateLists(d, "network_load_balancer_arns",
+		setVPCEndpointServiceUpdateLists(d, "network_load_balancer_arns",
 			&modifyCfgReq.AddNetworkLoadBalancerArns, &modifyCfgReq.RemoveNetworkLoadBalancerArns)
 
 		log.Printf("[DEBUG] Modifying VPC Endpoint Service configuration: %#v", modifyCfgReq)
@@ -334,7 +334,7 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 			ServiceId: aws.String(d.Id()),
 		}
 
-		setVpcEndpointServiceUpdateLists(d, "allowed_principals",
+		setVPCEndpointServiceUpdateLists(d, "allowed_principals",
 			&modifyPermReq.AddAllowedPrincipals, &modifyPermReq.RemoveAllowedPrincipals)
 
 		log.Printf("[DEBUG] Modifying VPC Endpoint Service permissions: %#v", modifyPermReq)
@@ -363,7 +363,7 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 
 	output, err := conn.DeleteVpcEndpointServiceConfigurations(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointServiceIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIDNotFound) {
 		return nil
 	}
 
@@ -379,7 +379,7 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if err := waitForVpcEndpointServiceDeletion(conn, d.Id()); err != nil {
+	if err := waitForVPCEndpointServiceDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 VPC Endpoint Service (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -426,7 +426,7 @@ func vpcEndpointServiceWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2)
 	return nil
 }
 
-func waitForVpcEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
+func waitForVPCEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
 		Target:     []string{ec2.ServiceStateDeleted},
@@ -441,7 +441,7 @@ func waitForVpcEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
 	return err
 }
 
-func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
+func setVPCEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
 	if d.HasChange(key) {
 		o, n := d.GetChange(key)
 		os := o.(*schema.Set)
@@ -459,7 +459,7 @@ func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 	}
 }
 
-func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
+func flattenVPCEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
 	vPrincipals := []interface{}{}
 
 	for _, allowedPrincipal := range allowedPrincipals {

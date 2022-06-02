@@ -22,13 +22,13 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBasicConfig(rName),
+				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
@@ -60,6 +60,7 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
@@ -84,13 +85,13 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBasicConfig(rName),
+				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmwaa.ResourceEnvironment(), resourceName),
@@ -108,13 +109,13 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentAirflowConfigurationOptionsConfig(rName, "1", "16"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, "1", "16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -128,7 +129,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentAirflowConfigurationOptionsConfig(rName, "2", "32"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, "2", "32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -137,7 +138,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvironmentBasicConfig(rName),
+				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "0"),
@@ -154,13 +155,13 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentLoggingConfigurationConfig(rName, "true", mwaa.LoggingLevelCritical),
+				Config: testAccEnvironmentConfig_logging(rName, "true", mwaa.LoggingLevelCritical),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -197,7 +198,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentLoggingConfigurationConfig(rName, "false", mwaa.LoggingLevelInfo),
+				Config: testAccEnvironmentConfig_logging(rName, "false", mwaa.LoggingLevelInfo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -239,13 +240,13 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentFullConfig(rName),
+				Config: testAccEnvironmentConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -287,6 +288,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "plugins_s3_path", "plugins.zip"),
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_path", "requirements.txt"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
@@ -314,13 +316,13 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	s3ObjectResourceName := "aws_s3_object.plugins"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentPluginsS3ObjectVersionConfig(rName, "test"),
+				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
@@ -332,7 +334,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentPluginsS3ObjectVersionConfig(rName, "test-updated"),
+				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
@@ -593,7 +595,7 @@ POLICY
 `, rName)
 }
 
-func testAccEnvironmentBasicConfig(rName string) string {
+func testAccEnvironmentConfig_basic(rName string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
@@ -610,7 +612,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName)
 }
 
-func testAccEnvironmentAirflowConfigurationOptionsConfig(rName, retries, parallelism string) string {
+func testAccEnvironmentConfig_airflowOptions(rName, retries, parallelism string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
@@ -632,7 +634,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName, retries, parallelism)
 }
 
-func testAccEnvironmentLoggingConfigurationConfig(rName, logEnabled, logLevel string) string {
+func testAccEnvironmentConfig_logging(rName, logEnabled, logLevel string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
@@ -677,7 +679,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName, logEnabled, logLevel)
 }
 
-func testAccEnvironmentFullConfig(rName string) string {
+func testAccEnvironmentConfig_full(rName string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
@@ -729,6 +731,7 @@ resource "aws_mwaa_environment" "test" {
 
   plugins_s3_path                 = aws_s3_object.plugins.key
   requirements_s3_path            = aws_s3_object.requirements.key
+  schedulers                      = 1
   source_bucket_arn               = aws_s3_bucket.test.arn
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"
@@ -787,7 +790,7 @@ resource "aws_s3_object" "requirements" {
 `, rName)
 }
 
-func testAccEnvironmentPluginsS3ObjectVersionConfig(rName, content string) string {
+func testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, content string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key

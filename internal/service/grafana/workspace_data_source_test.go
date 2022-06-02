@@ -9,16 +9,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
+func testAccWorkspaceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	dataSourceName := "data.aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      nil,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceDataSourceConfig(rName),
@@ -42,6 +42,7 @@ func testAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "saml_configuration_status", dataSourceName, "saml_configuration_status"),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", dataSourceName, "stack_set_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
 		},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,13 +41,13 @@ func ResourceTableItem() *schema.Resource {
 			"item": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateDynamoDbTableItem,
+				ValidateFunc: validateTableItem,
 			},
 		},
 	}
 }
 
-func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []error) {
+func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 	_, err := ExpandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
@@ -82,7 +83,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	rangeKey := d.Get("range_key").(string)
-	id := buildDynamoDbTableItemId(tableName, hashKey, rangeKey, attributes)
+	id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
 
 	d.SetId(id)
 
@@ -148,7 +149,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		id := buildDynamoDbTableItemId(tableName, hashKey, rangeKey, attributes)
+		id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
 		d.SetId(id)
 	}
 
@@ -193,12 +194,12 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 
 	// The record exists, now test if it differs from what is desired
 	if !reflect.DeepEqual(result.Item, attributes) {
-		itemAttrs, err := flattenDynamoDBTableItemAttributes(result.Item)
+		itemAttrs, err := flattenTableItemAttributes(result.Item)
 		if err != nil {
 			return err
 		}
 		d.Set("item", itemAttrs)
-		id := buildDynamoDbTableItemId(tableName, hashKey, rangeKey, result.Item)
+		id := buildTableItemID(tableName, hashKey, rangeKey, result.Item)
 		d.SetId(id)
 	}
 
@@ -227,22 +228,34 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 
 func BuildExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
 	names := map[string]*string{}
+
 	for key := range attrs {
-		names["#a_"+key] = aws.String(key)
+		names["#a_"+cleanKeyName(key)] = aws.String(key)
 	}
 
+	log.Printf("[DEBUG] ExpressionAttributeNames: %+v", names)
 	return names
+}
+
+func cleanKeyName(key string) string {
+	reg, err := regexp.Compile("[^a-zA-Z]+")
+	if err != nil {
+		log.Printf("[ERROR] clean keyname errored %v", err)
+	}
+	return reg.ReplaceAllString(key, "")
 }
 
 func BuildProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
 	keys := []string{}
+
 	for key := range attrs {
-		keys = append(keys, key)
+		keys = append(keys, cleanKeyName(key))
 	}
+	log.Printf("[DEBUG] ProjectionExpressions: %+v", strings.Join(keys, ", #a_"))
 	return aws.String("#a_" + strings.Join(keys, ", #a_"))
 }
 
-func buildDynamoDbTableItemId(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
+func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
 	id := []string{tableName, hashKey}
 
 	if hashVal, ok := attrs[hashKey]; ok {
@@ -265,6 +278,5 @@ func BuildTableItemqueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey s
 	if rangeKey != "" {
 		queryKey[rangeKey] = attrs[rangeKey]
 	}
-
 	return queryKey
 }

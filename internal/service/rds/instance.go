@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -176,7 +175,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(ExportableLogType_Values(), false),
+					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
 			"endpoint": {
@@ -396,6 +395,11 @@ func ResourceInstance() *schema.Resource {
 						},
 
 						"source_db_instance_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"source_db_instance_automated_backups_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -840,7 +844,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
 		// Retry for IAM eventual consistency
-		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
@@ -1707,7 +1711,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.StorageType = aws.String(d.Get("storage_type").(string))
 		requestUpdate = true
 
-		if *req.StorageType == "io1" {
+		if aws.StringValue(req.StorageType) == storageTypeIO1 {
 			req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		}
 	}
@@ -1990,6 +1994,10 @@ func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointIn
 
 	if v, ok := tfMap["source_db_instance_identifier"].(string); ok && v != "" {
 		input.SourceDBInstanceIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["source_db_instance_automated_backups_arn"].(string); ok && v != "" {
+		input.SourceDBInstanceAutomatedBackupsArn = aws.String(v)
 	}
 
 	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {

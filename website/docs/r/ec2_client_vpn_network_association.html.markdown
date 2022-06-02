@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPN (Client)"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_network_association"
 description: |-
