@@ -643,6 +643,25 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+	case engineNameAuroraPostgresql, engineNamePostgres:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			expandTopLevelConnectionInfo(d, input)
+		}
 	case engineNameDynamoDB:
 		input.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
@@ -693,25 +712,6 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		} else {
 			input.OracleSettings = &dms.OracleSettings{
-				Username:     aws.String(d.Get("username").(string)),
-				Password:     aws.String(d.Get("password").(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int64(int64(d.Get("port").(int))),
-				DatabaseName: aws.String(d.Get("database_name").(string)),
-			}
-
-			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
-		}
-	case engineNamePostgres:
-		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-				DatabaseName:                aws.String(d.Get("database_name").(string)),
-			}
-		} else {
-			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
 				Username:     aws.String(d.Get("username").(string)),
 				Password:     aws.String(d.Get("password").(string)),
 				ServerName:   aws.String(d.Get("server_name").(string)),
@@ -882,6 +882,30 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
+		case engineNameAuroraPostgresql, engineNamePostgres:
+			if d.HasChanges(
+				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+				"secrets_manager_arn") {
+				if _, ok := d.GetOk("secrets_manager_arn"); ok {
+					input.PostgreSQLSettings = &dms.PostgreSQLSettings{
+						DatabaseName:                aws.String(d.Get("database_name").(string)),
+						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+					}
+				} else {
+					input.PostgreSQLSettings = &dms.PostgreSQLSettings{
+						Username:     aws.String(d.Get("username").(string)),
+						Password:     aws.String(d.Get("password").(string)),
+						ServerName:   aws.String(d.Get("server_name").(string)),
+						Port:         aws.Int64(int64(d.Get("port").(int))),
+						DatabaseName: aws.String(d.Get("database_name").(string)),
+					}
+					input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
+
+					// Update connection info in top-level namespace as well
+					expandTopLevelConnectionInfoModify(d, input)
+				}
+			}
 		case engineNameDynamoDB:
 			if d.HasChange("service_access_role") {
 				input.DynamoDbSettings = &dms.DynamoDbSettings{
@@ -973,30 +997,6 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 						DatabaseName: aws.String(d.Get("database_name").(string)),
 					}
 					input.EngineName = aws.String(engineName) // Must be included (should be 'oracle')
-
-					// Update connection info in top-level namespace as well
-					expandTopLevelConnectionInfoModify(d, input)
-				}
-			}
-		case engineNamePostgres:
-			if d.HasChanges(
-				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
-				"secrets_manager_arn") {
-				if _, ok := d.GetOk("secrets_manager_arn"); ok {
-					input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-						DatabaseName:                aws.String(d.Get("database_name").(string)),
-						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-					}
-				} else {
-					input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-						Username:     aws.String(d.Get("username").(string)),
-						Password:     aws.String(d.Get("password").(string)),
-						ServerName:   aws.String(d.Get("server_name").(string)),
-						Port:         aws.Int64(int64(d.Get("port").(int))),
-						DatabaseName: aws.String(d.Get("database_name").(string)),
-					}
-					input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
 
 					// Update connection info in top-level namespace as well
 					expandTopLevelConnectionInfoModify(d, input)
@@ -1170,6 +1170,17 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+	case engineNameAuroraPostgresql, engineNamePostgres:
+		if endpoint.PostgreSQLSettings != nil {
+			d.Set("username", endpoint.PostgreSQLSettings.Username)
+			d.Set("server_name", endpoint.PostgreSQLSettings.ServerName)
+			d.Set("port", endpoint.PostgreSQLSettings.Port)
+			d.Set("database_name", endpoint.PostgreSQLSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.PostgreSQLSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.PostgreSQLSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
 	case engineNameDynamoDB:
 		if endpoint.DynamoDbSettings != nil {
 			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
@@ -1218,17 +1229,6 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("database_name", endpoint.OracleSettings.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", endpoint.OracleSettings.SecretsManagerAccessRoleArn)
 			d.Set("secrets_manager_arn", endpoint.OracleSettings.SecretsManagerSecretId)
-		} else {
-			flattenTopLevelConnectionInfo(d, endpoint)
-		}
-	case engineNamePostgres:
-		if endpoint.PostgreSQLSettings != nil {
-			d.Set("username", endpoint.PostgreSQLSettings.Username)
-			d.Set("server_name", endpoint.PostgreSQLSettings.ServerName)
-			d.Set("port", endpoint.PostgreSQLSettings.Port)
-			d.Set("database_name", endpoint.PostgreSQLSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.PostgreSQLSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.PostgreSQLSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
