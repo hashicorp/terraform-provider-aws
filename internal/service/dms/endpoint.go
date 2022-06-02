@@ -659,24 +659,31 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	case engineNameKinesis:
 		input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
 	case engineNameMongodb:
-		input.MongoDbSettings = &dms.MongoDbSettings{
-			Username:     aws.String(d.Get("username").(string)),
-			Password:     aws.String(d.Get("password").(string)),
-			ServerName:   aws.String(d.Get("server_name").(string)),
-			Port:         aws.Int64(int64(d.Get("port").(int))),
-			DatabaseName: aws.String(d.Get("database_name").(string)),
-			KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
+		var settings = &dms.MongoDbSettings{}
 
-			AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
-			AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
-			NestingLevel:      aws.String(d.Get("mongodb_settings.0.nesting_level").(string)),
-			ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
-			DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
-			AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+		} else {
+			settings.Username = aws.String(d.Get("username").(string))
+			settings.Password = aws.String(d.Get("password").(string))
+			settings.ServerName = aws.String(d.Get("server_name").(string))
+			settings.Port = aws.Int64(int64(d.Get("port").(int)))
+
+			// Set connection info in top-level namespace as well
+			expandTopLevelConnectionInfo(d, input)
 		}
 
-		// Set connection info in top-level namespace as well
-		expandTopLevelConnectionInfo(d, input)
+		settings.DatabaseName = aws.String(d.Get("database_name").(string))
+		settings.KmsKeyId = aws.String(d.Get("kms_key_arn").(string))
+		settings.AuthType = aws.String(d.Get("mongodb_settings.0.auth_type").(string))
+		settings.AuthMechanism = aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string))
+		settings.NestingLevel = aws.String(d.Get("mongodb_settings.0.nesting_level").(string))
+		settings.ExtractDocId = aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string))
+		settings.DocsToInvestigate = aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string))
+		settings.AuthSource = aws.String(d.Get("mongodb_settings.0.auth_source").(string))
+
+		input.MongoDbSettings = settings
 	case engineNameOracle:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.OracleSettings = &dms.OracleSettings{
@@ -909,26 +916,43 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "mongodb_settings.0.auth_type",
 				"mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id",
-				"mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source") {
-				input.MongoDbSettings = &dms.MongoDbSettings{
-					Username:     aws.String(d.Get("username").(string)),
-					Password:     aws.String(d.Get("password").(string)),
-					ServerName:   aws.String(d.Get("server_name").(string)),
-					Port:         aws.Int64(int64(d.Get("port").(int))),
-					DatabaseName: aws.String(d.Get("database_name").(string)),
-					KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
+				"mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source", "secrets_manager_access_role_arn",
+				"secrets_manager_arn") {
+				if _, ok := d.GetOk("secrets_manager_arn"); ok {
+					input.MongoDbSettings = &dms.MongoDbSettings{
+						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+						DatabaseName:                aws.String(d.Get("database_name").(string)),
+						KmsKeyId:                    aws.String(d.Get("kms_key_arn").(string)),
 
-					AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
-					AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
-					NestingLevel:      aws.String(d.Get("mongodb_settings.0.nesting_level").(string)),
-					ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
-					DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
-					AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
+						AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
+						AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
+						NestingLevel:      aws.String(d.Get("mongodb_settings.0.nesting_level").(string)),
+						ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
+						DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
+						AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
+					}
+				} else {
+					input.MongoDbSettings = &dms.MongoDbSettings{
+						Username:     aws.String(d.Get("username").(string)),
+						Password:     aws.String(d.Get("password").(string)),
+						ServerName:   aws.String(d.Get("server_name").(string)),
+						Port:         aws.Int64(int64(d.Get("port").(int))),
+						DatabaseName: aws.String(d.Get("database_name").(string)),
+						KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
+
+						AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
+						AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
+						NestingLevel:      aws.String(d.Get("mongodb_settings.0.nesting_level").(string)),
+						ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
+						DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
+						AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
+					}
+					input.EngineName = aws.String(engineName)
+
+					// Update connection info in top-level namespace as well
+					expandTopLevelConnectionInfoModify(d, input)
 				}
-				input.EngineName = aws.String(engineName)
-
-				// Update connection info in top-level namespace as well
-				expandTopLevelConnectionInfoModify(d, input)
 			}
 		case engineNameOracle:
 			if d.HasChanges(
@@ -1178,6 +1202,8 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("server_name", endpoint.MongoDbSettings.ServerName)
 			d.Set("port", endpoint.MongoDbSettings.Port)
 			d.Set("database_name", endpoint.MongoDbSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.MongoDbSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.MongoDbSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}

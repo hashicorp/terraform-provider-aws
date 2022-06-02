@@ -553,6 +553,33 @@ func TestAccDMSEndpoint_MongoDB_basic(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_MongoDB_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mongoDBSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
 // TestAccDMSEndpoint_MongoDB_update validates engine-specific
 // configured fields and extra_connection_attributes now set in the resource
 // per https://github.com/hashicorp/terraform-provider-aws/issues/8009
@@ -2179,6 +2206,34 @@ resource "aws_dms_endpoint" "test" {
   }
 }
 `, rName)
+}
+
+func testAccEndpointConfig_mongoDBSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "mongodb"
+  database_name                   = "tftest"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  mongodb_settings {
+    auth_type           = "password"
+    auth_mechanism      = "default"
+    nesting_level       = "none"
+    extract_doc_id      = "false"
+    docs_to_investigate = "1000"
+    auth_source         = "admin"
+  }
+}
+`, rName))
 }
 
 func testAccEndpointConfig_mongoDBUpdate(rName string) string {
