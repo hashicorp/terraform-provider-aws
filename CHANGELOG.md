@@ -3,15 +3,19 @@
 FEATURES:
 
 * **New Data Source:** `aws_redshift_cluster_credentials` ([#25092](https://github.com/hashicorp/terraform-provider-aws/issues/25092))
+* **New Resource:** `aws_acmpca_policy` ([#25109](https://github.com/hashicorp/terraform-provider-aws/issues/25109))
 * **New Resource:** `aws_redshift_cluster_iam_roles` ([#25096](https://github.com/hashicorp/terraform-provider-aws/issues/25096))
 * **New Resource:** `aws_redshift_hsm_configuration` ([#25093](https://github.com/hashicorp/terraform-provider-aws/issues/25093))
 * **New Resource:** `aws_redshiftdata_statement` ([#25104](https://github.com/hashicorp/terraform-provider-aws/issues/25104))
 
 ENHANCEMENTS:
 
+* resource/aws_dms_endpoint: Add `redshift_settings` configuration block ([#21846](https://github.com/hashicorp/terraform-provider-aws/issues/21846))
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `aurora-postgresql` and `mongodb` engines ([#23691](https://github.com/hashicorp/terraform-provider-aws/issues/23691))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `aurora`, `mariadb` and `mysql` engines ([#24846](https://github.com/hashicorp/terraform-provider-aws/issues/24846))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `redshift` engine ([#25080](https://github.com/hashicorp/terraform-provider-aws/issues/25080))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `sqlserver` engine ([#22646](https://github.com/hashicorp/terraform-provider-aws/issues/22646))
+* resource/aws_guardduty_detector: Add `kubernetes` attribute to the `datasources` configuration block ([#22859](https://github.com/hashicorp/terraform-provider-aws/issues/22859))
 * resource/aws_redshift_cluster: The `default_iam_role_arn` argument is now Computed ([#25096](https://github.com/hashicorp/terraform-provider-aws/issues/25096))
 
 BUG FIXES:
