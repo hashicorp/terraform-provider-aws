@@ -100,9 +100,10 @@ func ResourceApplication() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"network_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_group_ids": {
