@@ -640,9 +640,11 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			request.MongoDbSettings = &dms.MongoDbSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
 				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-				DatabaseName:                aws.String(d.Get("database_name").(string)),
 
-				KmsKeyId: aws.String(d.Get("kms_key_arn").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+				KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 				AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 				AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
@@ -900,9 +902,11 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 				request.MongoDbSettings = &dms.MongoDbSettings{
 					SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
 					SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-					DatabaseName:                aws.String(d.Get("database_name").(string)),
 
-					KmsKeyId: aws.String(d.Get("kms_key_arn").(string)),
+					ServerName:   aws.String(d.Get("server_name").(string)),
+					Port:         aws.Int64(int64(d.Get("port").(int))),
+					DatabaseName: aws.String(d.Get("database_name").(string)),
+					KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 					AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 					AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
