@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,6 +40,10 @@ func ResourceVaultPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -47,13 +52,19 @@ func ResourceVaultPolicy() *schema.Resource {
 func resourceVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(name),
-		Policy:          aws.String(d.Get("policy").(string)),
+		Policy:          aws.String(policy),
 	}
 
-	_, err := conn.PutBackupVaultAccessPolicy(input)
+	_, err = conn.PutBackupVaultAccessPolicy(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating Backup Vault Policy (%s): %w", name, err)
@@ -81,7 +92,20 @@ func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("backup_vault_arn", output.BackupVaultArn)
 	d.Set("backup_vault_name", output.BackupVaultName)
-	d.Set("policy", output.Policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(output.Policy))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }

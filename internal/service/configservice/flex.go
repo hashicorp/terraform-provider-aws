@@ -97,12 +97,21 @@ func expandRuleScope(l []interface{}) *configservice.Scope {
 func expandRuleSource(configured []interface{}) *configservice.Source {
 	cfg := configured[0].(map[string]interface{})
 	source := configservice.Source{
-		Owner:            aws.String(cfg["owner"].(string)),
-		SourceIdentifier: aws.String(cfg["source_identifier"].(string)),
+		Owner: aws.String(cfg["owner"].(string)),
 	}
+
+	if v, ok := cfg["source_identifier"].(string); ok && v != "" {
+		source.SourceIdentifier = aws.String(v)
+	}
+
 	if details, ok := cfg["source_detail"]; ok {
 		source.SourceDetails = expandRuleSourceDetails(details.(*schema.Set))
 	}
+
+	if v, ok := cfg["custom_policy_details"].([]interface{}); ok && len(v) > 0 {
+		source.CustomPolicyDetails = expandRuleSourceCustomPolicyDetails(v)
+	}
+
 	return &source
 }
 
@@ -127,6 +136,17 @@ func expandRuleSourceDetails(configured *schema.Set) []*configservice.SourceDeta
 	}
 
 	return results
+}
+
+func expandRuleSourceCustomPolicyDetails(configured []interface{}) *configservice.CustomPolicyDetails {
+	cfg := configured[0].(map[string]interface{})
+	source := configservice.CustomPolicyDetails{
+		PolicyRuntime:          aws.String(cfg["policy_runtime"].(string)),
+		PolicyText:             aws.String(cfg["policy_text"].(string)),
+		EnableDebugLogDelivery: aws.Bool(cfg["enable_debug_log_delivery"].(bool)),
+	}
+
+	return &source
 }
 
 func flattenAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
@@ -164,11 +184,11 @@ func flattenRecordingGroup(g *configservice.RecordingGroup) []map[string]interfa
 	m := make(map[string]interface{}, 1)
 
 	if g.AllSupported != nil {
-		m["all_supported"] = *g.AllSupported
+		m["all_supported"] = aws.BoolValue(g.AllSupported)
 	}
 
 	if g.IncludeGlobalResourceTypes != nil {
-		m["include_global_resource_types"] = *g.IncludeGlobalResourceTypes
+		m["include_global_resource_types"] = aws.BoolValue(g.IncludeGlobalResourceTypes)
 	}
 
 	if g.ResourceTypes != nil && len(g.ResourceTypes) > 0 {
@@ -183,16 +203,16 @@ func flattenRuleScope(scope *configservice.Scope) []interface{} {
 
 	m := make(map[string]interface{})
 	if scope.ComplianceResourceId != nil {
-		m["compliance_resource_id"] = *scope.ComplianceResourceId
+		m["compliance_resource_id"] = aws.StringValue(scope.ComplianceResourceId)
 	}
 	if scope.ComplianceResourceTypes != nil {
 		m["compliance_resource_types"] = flex.FlattenStringSet(scope.ComplianceResourceTypes)
 	}
 	if scope.TagKey != nil {
-		m["tag_key"] = *scope.TagKey
+		m["tag_key"] = aws.StringValue(scope.TagKey)
 	}
 	if scope.TagValue != nil {
-		m["tag_value"] = *scope.TagValue
+		m["tag_value"] = aws.StringValue(scope.TagValue)
 	}
 
 	items = append(items, m)
@@ -202,11 +222,28 @@ func flattenRuleScope(scope *configservice.Scope) []interface{} {
 func flattenRuleSource(source *configservice.Source) []interface{} {
 	var result []interface{}
 	m := make(map[string]interface{})
-	m["owner"] = *source.Owner
-	m["source_identifier"] = *source.SourceIdentifier
+	m["owner"] = aws.StringValue(source.Owner)
+	m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
+
+	if source.CustomPolicyDetails != nil {
+		m["custom_policy_details"] = flattenRuleSourceCustomPolicyDetails(source.CustomPolicyDetails)
+	}
+
 	if len(source.SourceDetails) > 0 {
 		m["source_detail"] = schema.NewSet(ruleSourceDetailsHash, flattenRuleSourceDetails(source.SourceDetails))
 	}
+
+	result = append(result, m)
+	return result
+}
+
+func flattenRuleSourceCustomPolicyDetails(source *configservice.CustomPolicyDetails) []interface{} {
+	var result []interface{}
+	m := make(map[string]interface{})
+	m["policy_runtime"] = aws.StringValue(source.PolicyRuntime)
+	m["policy_text"] = aws.StringValue(source.PolicyText)
+	m["enable_debug_log_delivery"] = aws.BoolValue(source.EnableDebugLogDelivery)
+
 	result = append(result, m)
 	return result
 }
@@ -216,13 +253,13 @@ func flattenRuleSourceDetails(details []*configservice.SourceDetail) []interface
 	for _, d := range details {
 		m := make(map[string]interface{})
 		if d.MessageType != nil {
-			m["message_type"] = *d.MessageType
+			m["message_type"] = aws.StringValue(d.MessageType)
 		}
 		if d.EventSource != nil {
-			m["event_source"] = *d.EventSource
+			m["event_source"] = aws.StringValue(d.EventSource)
 		}
 		if d.MaximumExecutionFrequency != nil {
-			m["maximum_execution_frequency"] = *d.MaximumExecutionFrequency
+			m["maximum_execution_frequency"] = aws.StringValue(d.MaximumExecutionFrequency)
 		}
 
 		items = append(items, m)
@@ -235,7 +272,7 @@ func flattenSnapshotDeliveryProperties(p *configservice.ConfigSnapshotDeliveryPr
 	m := make(map[string]interface{})
 
 	if p.DeliveryFrequency != nil {
-		m["delivery_frequency"] = *p.DeliveryFrequency
+		m["delivery_frequency"] = aws.StringValue(p.DeliveryFrequency)
 	}
 
 	return []map[string]interface{}{m}

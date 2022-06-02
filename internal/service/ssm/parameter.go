@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +21,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
-	ssmParameterCreationValidationTimeout = 2 * time.Minute
+	parameterCreationValidationTimeout = 2 * time.Minute
 )
 
 func ResourceParameter() *schema.Resource {
@@ -101,13 +101,16 @@ func ResourceParameter() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
 			// In the case of Advanced to Intelligent-Tiering, a ValidationException is not thrown
 			// but rather no change occurs without resource re-creation
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
+			}),
+			customdiff.ComputedIf("version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("value")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -187,7 +190,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var resp *ssm.GetParameterOutput
-	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
+	err := resource.Retry(parameterCreationValidationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetParameter(input)
 
@@ -237,7 +240,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing SSM parameter (%s): %w", d.Id(), err)
 	}
 
-	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
+	if !d.IsNewResource() && (describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil) {
 		log.Printf("[WARN] SSM Parameter %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

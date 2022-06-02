@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_service_account"
 description: |-
@@ -18,8 +18,15 @@ data "aws_elb_service_account" "main" {}
 
 resource "aws_s3_bucket" "elb_logs" {
   bucket = "my-elb-tf-test-bucket"
-  acl    = "private"
+}
 
+resource "aws_s3_bucket_acl" "elb_logs_acl" {
+  bucket = aws_s3_bucket.elb_logs.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "allow_elb_logging" {
+  bucket = aws_s3_bucket.elb_logs.id
   policy = <<POLICY
 {
   "Id": "Policy",

@@ -1,16 +1,18 @@
 package cognitoidp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceResourceServer() *schema.Resource {
@@ -118,19 +120,24 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeResourceServer(params)
 
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Cognito Resource Server %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if resp == nil || resp.ResourceServer == nil {
-		log.Printf("[WARN] Cognito Resource Server %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)
@@ -197,7 +204,7 @@ func resourceResourceServerDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err = conn.DeleteResourceServer(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Resource Server: %s", err)

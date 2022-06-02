@@ -20,20 +20,20 @@ const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[
 func TestAccEventsAPIDestination_basic(t *testing.T) {
 	var v1, v2, v3 eventbridge.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	invocationEndpoint := "https://www.hashicorp.com/"
+	invocationEndpoint := "https://example.com/"
 	httpMethod := "GET"
 
 	nameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	invocationEndpointModified := "https://www.hashicorp.com/products/terraform"
+	invocationEndpointModified := "https://example.com/modified"
 	httpMethodModified := "POST"
 
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig(
@@ -89,13 +89,13 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 func TestAccEventsAPIDestination_optional(t *testing.T) {
 	var v1, v2, v3 eventbridge.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	invocationEndpoint := "https://www.hashicorp.com/"
+	invocationEndpoint := "https://example.com/"
 	httpMethod := "GET"
 	description := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationRateLimitPerSecond := 10
 
 	nameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	invocationEndpointModified := "https://www.hashicorp.com/products/terraform"
+	invocationEndpointModified := "https://example.com/modified"
 	httpMethodModified := "POST"
 	descriptionModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationRateLimitPerSecondModified := 12
@@ -103,10 +103,10 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_optional(
@@ -173,16 +173,16 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	var v eventbridge.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	invocationEndpoint := "https://www.hashicorp.com/"
+	invocationEndpoint := "https://example.com/"
 	httpMethod := "GET"
 
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig(

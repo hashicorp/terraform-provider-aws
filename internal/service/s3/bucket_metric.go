@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -221,16 +221,15 @@ func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	if metricsFilter.And != nil {
-		and := *metricsFilter.And
+	if and := metricsFilter.And; and != nil {
 		if and.Prefix != nil {
-			m["prefix"] = *and.Prefix
+			m["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
 			m["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
-		m["prefix"] = *metricsFilter.Prefix
+		m["prefix"] = aws.StringValue(metricsFilter.Prefix)
 	} else if metricsFilter.Tag != nil {
 		tags := []*s3.Tag{
 			metricsFilter.Tag,

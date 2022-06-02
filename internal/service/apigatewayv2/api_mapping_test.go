@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -34,7 +34,7 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
 		"basic":         testAccAPIMapping_basic,
 		"disappears":    testAccAPIMapping_disappears,
-		"ApiMappingKey": testAccAPIMapping_ApiMappingKey,
+		"ApiMappingKey": testAccAPIMapping_key,
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -46,10 +46,10 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 
 func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: "# Dummy config.",
@@ -71,10 +71,10 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateArn *string)
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIMappingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
@@ -99,10 +99,10 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	resourceName := "aws_apigatewayv2_api_mapping.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIMappingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
@@ -116,7 +116,7 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	})
 }
 
-func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	var domainName string
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"
@@ -124,10 +124,10 @@ func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn 
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIMappingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.domainName"),
@@ -191,7 +191,7 @@ func testAccCheckAPIMappingDestroy(s *terraform.State) error {
 			ApiMappingId: aws.String(rs.Primary.ID),
 			DomainName:   aws.String(rs.Primary.Attributes["domain_name"]),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

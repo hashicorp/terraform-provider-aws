@@ -25,9 +25,9 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityNotificationTopicDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIdentityNotificationTopicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_basic, domain),
@@ -119,11 +119,11 @@ func testAccCheckIdentityNotificationTopicExists(n string) resource.TestCheckFun
 		var headersIncluded bool
 		switch notificationType {
 		case ses.NotificationTypeBounce:
-			headersIncluded = *response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled
+			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled)
 		case ses.NotificationTypeComplaint:
-			headersIncluded = *response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled
+			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled)
 		case ses.NotificationTypeDelivery:
-			headersIncluded = *response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled
+			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled)
 		}
 
 		if headersIncluded != headersExpected {

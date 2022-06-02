@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -113,7 +114,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(activatedRule) > 0 {
 		noActivatedRules := []interface{}{}
 
-		err := updateWafRuleGroupResourceWR(d.Id(), noActivatedRules, activatedRule, conn, region)
+		err := updateRuleGroupResourceWR(d.Id(), noActivatedRules, activatedRule, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
 		}
@@ -133,7 +134,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -173,7 +174,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("activated_rule", FlattenWAFActivatedRules(rResp.ActivatedRules))
+	d.Set("activated_rule", tfwaf.FlattenActivatedRules(rResp.ActivatedRules))
 	d.Set("name", resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
@@ -188,7 +189,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("activated_rule")
 		oldRules, newRules := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWafRuleGroupResourceWR(d.Id(), oldRules, newRules, conn, region)
+		err := updateRuleGroupResourceWR(d.Id(), oldRules, newRules, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
 		}
@@ -218,7 +219,7 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
 	if len(oldRules) > 0 {
 		noRules := []interface{}{}
-		err := updateWafRuleGroupResourceWR(id, oldRules, noRules, conn, region)
+		err := updateRuleGroupResourceWR(id, oldRules, noRules, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Regional Rule Group Predicates: %s", err)
 		}
@@ -239,13 +240,13 @@ func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFReg
 	return nil
 }
 
-func updateWafRuleGroupResourceWR(id string, oldRules, newRules []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRuleGroupResourceWR(id string, oldRules, newRules []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,
 			RuleGroupId: aws.String(id),
-			Updates:     diffWafRuleGroupActivatedRules(oldRules, newRules),
+			Updates:     tfwaf.DiffRuleGroupActivatedRules(oldRules, newRules),
 		}
 
 		return conn.UpdateRuleGroup(req)

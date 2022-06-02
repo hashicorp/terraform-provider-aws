@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -75,7 +76,13 @@ func ResourceAccessPoint() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"public_access_block_configuration": {
 				Type:             schema.TypeList,
@@ -153,7 +160,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfiguration = expandVpcConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating S3 Access Point: %s", input)
@@ -177,11 +184,17 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(resourceID)
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+		}
+
 		input := &s3control.PutAccessPointPolicyInput{
 			AccountId: aws.String(accountID),
 			Name:      aws.String(name),
-			Policy:    aws.String(v.(string)),
+			Policy:    aws.String(policy),
 		}
 
 		log.Printf("[DEBUG] Creating S3 Access Point policy: %s", input)
@@ -269,7 +282,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_access_block_configuration", nil)
 	}
 	if output.VpcConfiguration != nil {
-		if err := d.Set("vpc_configuration", []interface{}{flattenVpcConfiguration(output.VpcConfiguration)}); err != nil {
+		if err := d.Set("vpc_configuration", []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
 			return fmt.Errorf("error setting vpc_configuration: %w", err)
 		}
 	} else {
@@ -278,14 +291,21 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 
 	policy, status, err := FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
 
-	if err == nil {
+	if err == nil && policy != "" {
 		if s3OnOutposts {
 			d.Set("has_public_access_policy", false)
 		} else {
 			d.Set("has_public_access_policy", status.IsPublic)
 		}
-		d.Set("policy", policy)
-	} else if tfresource.NotFound(err) {
+
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+
+		if err != nil {
+			return err
+		}
+
+		d.Set("policy", policyToSet)
+	} else if policy == "" || tfresource.NotFound(err) {
 		d.Set("has_public_access_policy", false)
 		d.Set("policy", nil)
 	} else {
@@ -305,15 +325,21 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok {
+		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+			policy, err := structure.NormalizeJsonString(v.(string))
+
+			if err != nil {
+				return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+			}
+
 			input := &s3control.PutAccessPointPolicyInput{
 				AccountId: aws.String(accountID),
 				Name:      aws.String(name),
-				Policy:    aws.String(v.(string)),
+				Policy:    aws.String(policy),
 			}
 
 			log.Printf("[DEBUG] Updating S3 Access Point policy: %s", input)
-			_, err := conn.PutAccessPointPolicy(input)
+			_, err = conn.PutAccessPointPolicy(input)
 
 			if err != nil {
 				return fmt.Errorf("error updating S3 Access Point (%s) policy: %w", d.Id(), err)
@@ -403,7 +429,7 @@ func AccessPointParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, accessPointResourceIDSeparator)
 }
 
-func expandVpcConfiguration(tfMap map[string]interface{}) *s3control.VpcConfiguration {
+func expandVPCConfiguration(tfMap map[string]interface{}) *s3control.VpcConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -417,7 +443,7 @@ func expandVpcConfiguration(tfMap map[string]interface{}) *s3control.VpcConfigur
 	return apiObject
 }
 
-func flattenVpcConfiguration(apiObject *s3control.VpcConfiguration) map[string]interface{} {
+func flattenVPCConfiguration(apiObject *s3control.VpcConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

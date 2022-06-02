@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,7 +109,7 @@ func sweepBudgets(region string) error {
 				AccountId:  aws.String(accountID),
 				BudgetName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
 				continue
 			}
 			if err != nil {

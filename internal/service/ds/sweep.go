@@ -21,8 +21,11 @@ func init() {
 		Name: "aws_directory_service_directory",
 		F:    sweepDirectories,
 		Dependencies: []string{
+			"aws_appstream_directory_config",
+			"aws_connect_instance",
 			"aws_db_instance",
 			"aws_ec2_client_vpn_endpoint",
+			"aws_fsx_ontap_storage_virtual_machine",
 			"aws_fsx_windows_file_system",
 			"aws_transfer_server",
 			"aws_workspaces_directory",

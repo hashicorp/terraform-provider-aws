@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -130,7 +130,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 		ConfigurationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
 			log.Printf("[WARN] MQ Configuration %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

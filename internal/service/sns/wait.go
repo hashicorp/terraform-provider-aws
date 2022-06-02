@@ -13,35 +13,40 @@ const (
 	subscriptionDeleteTimeout              = 2 * time.Minute
 )
 
-func waitSubscriptionConfirmed(conn *sns.SNS, id, expectedValue string, timeout time.Duration) (*sns.GetSubscriptionAttributesOutput, error) {
+func waitSubscriptionConfirmed(conn *sns.SNS, arn string, timeout time.Duration) (map[string]string, error) {
 	stateConf := &resource.StateChangeConf{
-		Target:  []string{expectedValue},
-		Refresh: statusSubscriptionPendingConfirmation(conn, id),
+		Pending: []string{"true"},
+		Target:  []string{"false"},
+		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*sns.GetSubscriptionAttributesOutput); ok {
+	if output, ok := outputRaw.(map[string]string); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitSubscriptionDeleted(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
+func waitSubscriptionDeleted(conn *sns.SNS, arn string) (map[string]string, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"false", "true"},
 		Target:  []string{},
-		Refresh: statusSubscriptionPendingConfirmation(conn, id),
+		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: subscriptionDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*sns.GetSubscriptionAttributesOutput); ok {
+	if output, ok := outputRaw.(map[string]string); ok {
 		return output, err
 	}
 
 	return nil, err
 }
+
+const (
+	topicPutAttributeTimeout = 2 * time.Minute
+)

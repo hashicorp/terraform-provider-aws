@@ -17,9 +17,9 @@ func TestAccECRImageDataSource_ecrImage(t *testing.T) {
 	resourceByDigest := "data.aws_ecr_image.by_digest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckImageDataSourceConfig(registry, repo, tag),

@@ -1,23 +1,25 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	// Maximum amount of time to wait for Config service eventual consistency on deletion
-	configRemediationConfigurationDeletionTimeout = 2 * time.Minute
+	remediationConfigurationDeletionTimeout = 2 * time.Minute
 )
 
 func ResourceRemediationConfiguration() *schema.Resource {
@@ -82,11 +84,53 @@ func ResourceRemediationConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"automatic": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"execution_controls": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ssm_controls": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"concurrent_execution_rate_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 100),
+									},
+									"error_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 100),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"maximum_automatic_attempts": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 25),
+			},
+			"retry_attempt_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 2678000),
+			},
 		},
 	}
 }
 
-func expandConfigRemediationConfigurationParameters(configured *schema.Set) (map[string]*configservice.RemediationParameterValue, error) {
+func expandRemediationConfigurationParameters(configured *schema.Set) (map[string]*configservice.RemediationParameterValue, error) {
 	results := make(map[string]*configservice.RemediationParameterValue)
 
 	for _, item := range configured.List() {
@@ -114,6 +158,40 @@ func expandConfigRemediationConfigurationParameters(configured *schema.Set) (map
 	return results, nil
 }
 
+func expandRemediationConfigurationExecutionControlsConfig(v map[string]interface{}) (ret *configservice.ExecutionControls, err error) {
+	if w, ok := v["ssm_controls"]; ok {
+		x := w.([]interface{})
+		if len(x) > 0 {
+			ssmControls, err := expandRemediationConfigurationSSMControlsConfig(x[0].(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			ret = &configservice.ExecutionControls{
+				SsmControls: ssmControls,
+			}
+			return ret, nil
+		}
+	}
+	return nil, fmt.Errorf("expected 'ssm_controls' in execution controls configuration")
+}
+
+func expandRemediationConfigurationSSMControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
+	ret = &configservice.SsmControls{}
+	p := false
+	if concurrentExecutionRatePercentage, ok := v["concurrent_execution_rate_percentage"]; ok {
+		p = true
+		ret.ConcurrentExecutionRatePercentage = aws.Int64(int64(concurrentExecutionRatePercentage.(int)))
+	}
+	if errorPercentage, ok := v["error_percentage"]; ok {
+		p = true
+		ret.ErrorPercentage = aws.Int64(int64(errorPercentage.(int)))
+	}
+	if !p {
+		return nil, fmt.Errorf("'concurrent_execution_rate_percentage' or 'error_percentage' must be provided in ssm_controls")
+	}
+	return ret, nil
+}
+
 func flattenRemediationConfigurationParameters(parameters map[string]*configservice.RemediationParameterValue) []interface{} {
 	var items []interface{}
 
@@ -133,6 +211,29 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 	return items
 }
 
+func flattenRemediationConfigurationExecutionControlsConfig(controls *configservice.ExecutionControls) []interface{} {
+	if controls == nil {
+		return nil
+	}
+	return []interface{}{map[string]interface{}{
+		"ssm_controls": flattenRemediationConfigurationSSMControlsConfig(controls.SsmControls),
+	}}
+}
+
+func flattenRemediationConfigurationSSMControlsConfig(controls *configservice.SsmControls) []interface{} {
+	if controls == nil {
+		return nil
+	}
+	m := make(map[string]interface{})
+	if controls.ConcurrentExecutionRatePercentage != nil {
+		m["concurrent_execution_rate_percentage"] = controls.ConcurrentExecutionRatePercentage
+	}
+	if controls.ErrorPercentage != nil {
+		m["error_percentage"] = controls.ErrorPercentage
+	}
+	return []interface{}{m}
+}
+
 func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
@@ -142,7 +243,7 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("parameter"); ok {
-		params, err := expandConfigRemediationConfigurationParameters(v.(*schema.Set))
+		params, err := expandRemediationConfigurationParameters(v.(*schema.Set))
 		if err != nil {
 			return err
 		}
@@ -160,7 +261,26 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("target_version"); ok {
 		remediationConfigurationInput.TargetVersion = aws.String(v.(string))
 	}
-
+	if v, ok := d.GetOk("automatic"); ok {
+		remediationConfigurationInput.Automatic = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("maximum_automatic_attempts"); ok {
+		remediationConfigurationInput.MaximumAutomaticAttempts = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("retry_attempt_seconds"); ok {
+		remediationConfigurationInput.RetryAttemptSeconds = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("execution_controls"); ok {
+		executionControlsConfigs := v.([]interface{})
+		if len(executionControlsConfigs) == 1 {
+			w := executionControlsConfigs[0].(map[string]interface{})
+			controls, err := expandRemediationConfigurationExecutionControlsConfig(w)
+			if err != nil {
+				return err
+			}
+			remediationConfigurationInput.ExecutionControls = controls
+		}
+	}
 	input := configservice.PutRemediationConfigurationsInput{
 		RemediationConfigurations: []*configservice.RemediationConfiguration{&remediationConfigurationInput},
 	}
@@ -182,20 +302,26 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
+		log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigRuleException, "") {
-			log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
-	if numberOfRemediationConfigurations < 1 {
+	if !d.IsNewResource() && numberOfRemediationConfigurations < 1 {
 		log.Printf("[WARN] No Remediation Configuration for Config Rule %q (no remediation configuration found)", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
@@ -208,6 +334,11 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("target_type", remediationConfiguration.TargetType)
 	d.Set("target_version", remediationConfiguration.TargetVersion)
 	d.Set("parameter", flattenRemediationConfigurationParameters(remediationConfiguration.Parameters))
+	d.Set("automatic", remediationConfiguration.Automatic)
+	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
+	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
+	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
+	d.Set("execution_controls", flattenRemediationConfigurationExecutionControlsConfig(remediationConfiguration.ExecutionControls))
 	d.SetId(aws.StringValue(remediationConfiguration.ConfigRuleName))
 
 	return nil
@@ -227,7 +358,7 @@ func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting AWS Config remediation configurations for rule %q", name)
-	err := resource.Retry(configRemediationConfigurationDeletionTimeout, func() *resource.RetryError {
+	err := resource.Retry(remediationConfigurationDeletionTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRemediationConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {

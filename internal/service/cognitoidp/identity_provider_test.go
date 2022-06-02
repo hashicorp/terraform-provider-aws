@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,10 +21,10 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_basic(userPoolName),
@@ -82,10 +82,10 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderIDPIdentifierConfig(userPoolName, "test"),
@@ -118,10 +118,10 @@ func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_basic(userPoolName),
@@ -141,10 +141,10 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfig_basic(userPoolName),
@@ -177,7 +177,7 @@ func testAccCheckIdentityProviderDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err

@@ -24,6 +24,11 @@ import (
 // is used to set the zone_id attribute.
 const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
+// cloudFrontCNRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
+// This is used to set the zone_id attribute.
+// ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
+const cloudFrontCNRoute53ZoneID = "Z3RFFRIM2A3IF5"
+
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
 // complex structures which are necessary to properly build the
@@ -87,7 +92,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("price_class", distributionConfig.PriceClass)
 	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
 
-	err = d.Set("default_cache_behavior", flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior))
+	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
 		return err
 	}
@@ -100,7 +105,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		d.Set("caller_reference", distributionConfig.CallerReference)
 	}
 	if distributionConfig.Comment != nil {
-		if *distributionConfig.Comment != "" {
+		if aws.StringValue(distributionConfig.Comment) != "" {
 			d.Set("comment", distributionConfig.Comment)
 		}
 	}
@@ -147,13 +152,13 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 			return err
 		}
 	}
-	if *distributionConfig.Origins.Quantity > 0 {
+	if aws.Int64Value(distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
 			return err
 		}
 	}
-	if *distributionConfig.OriginGroups.Quantity > 0 {
+	if aws.Int64Value(distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
 			return err
@@ -161,10 +166,6 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	}
 
 	return nil
-}
-
-func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) []interface{} {
-	return []interface{}{flattenCloudFrontDefaultCacheBehavior(dcb)}
 }
 
 func expandCacheBehaviors(lst []interface{}) *cloudfront.CacheBehaviors {
@@ -307,7 +308,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	return cb
 }
 
-func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
+func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
 	m := map[string]interface{}{
 		"cache_policy_id":            aws.StringValue(dcb.CachePolicyId),
 		"compress":                   aws.BoolValue(dcb.Compress),
@@ -383,13 +384,13 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["function_association"] = FlattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
-		m["max_ttl"] = int(*cb.MaxTTL)
+		m["max_ttl"] = int(aws.Int64Value(cb.MaxTTL))
 	}
 	if cb.SmoothStreaming != nil {
-		m["smooth_streaming"] = *cb.SmoothStreaming
+		m["smooth_streaming"] = aws.BoolValue(cb.SmoothStreaming)
 	}
 	if cb.DefaultTTL != nil {
-		m["default_ttl"] = int(*cb.DefaultTTL)
+		m["default_ttl"] = int(aws.Int64Value(cb.DefaultTTL))
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(cb.AllowedMethods)
@@ -398,7 +399,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["cached_methods"] = FlattenCachedMethods(cb.AllowedMethods.CachedMethods)
 	}
 	if cb.PathPattern != nil {
-		m["path_pattern"] = *cb.PathPattern
+		m["path_pattern"] = aws.StringValue(cb.PathPattern)
 	}
 	return m
 }
@@ -1148,13 +1149,13 @@ func FlattenCustomErrorResponse(er *cloudfront.CustomErrorResponse) map[string]i
 	m := make(map[string]interface{})
 	m["error_code"] = int(aws.Int64Value(er.ErrorCode))
 	if er.ErrorCachingMinTTL != nil {
-		m["error_caching_min_ttl"] = int(*er.ErrorCachingMinTTL)
+		m["error_caching_min_ttl"] = int(aws.Int64Value(er.ErrorCachingMinTTL))
 	}
 	if er.ResponseCode != nil {
-		m["response_code"], _ = strconv.Atoi(*er.ResponseCode)
+		m["response_code"], _ = strconv.Atoi(aws.StringValue(er.ResponseCode))
 	}
 	if er.ResponsePagePath != nil {
-		m["response_page_path"] = *er.ResponsePagePath
+		m["response_page_path"] = aws.StringValue(er.ResponsePagePath)
 	}
 	return m
 }
@@ -1285,36 +1286,36 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	m := make(map[string]interface{})
 
 	if vc.IAMCertificateId != nil {
-		m["iam_certificate_id"] = *vc.IAMCertificateId
-		m["ssl_support_method"] = *vc.SSLSupportMethod
+		m["iam_certificate_id"] = aws.StringValue(vc.IAMCertificateId)
+		m["ssl_support_method"] = aws.StringValue(vc.SSLSupportMethod)
 	}
 	if vc.ACMCertificateArn != nil {
-		m["acm_certificate_arn"] = *vc.ACMCertificateArn
-		m["ssl_support_method"] = *vc.SSLSupportMethod
+		m["acm_certificate_arn"] = aws.StringValue(vc.ACMCertificateArn)
+		m["ssl_support_method"] = aws.StringValue(vc.SSLSupportMethod)
 	}
 	if vc.CloudFrontDefaultCertificate != nil {
-		m["cloudfront_default_certificate"] = *vc.CloudFrontDefaultCertificate
+		m["cloudfront_default_certificate"] = aws.BoolValue(vc.CloudFrontDefaultCertificate)
 	}
 	if vc.MinimumProtocolVersion != nil {
-		m["minimum_protocol_version"] = *vc.MinimumProtocolVersion
+		m["minimum_protocol_version"] = aws.StringValue(vc.MinimumProtocolVersion)
 	}
 	return []interface{}{m}
 }
 
-func flattenCloudfrontActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+func flattenActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
 	if atkg == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(atkg.Enabled),
-		"items":   flattenCloudfrontKGKeyPairIds(atkg.Items),
+		"items":   flattenKGKeyPairIds(atkg.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+func flattenKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
 	result := make([]interface{}, 0, len(keyPairIds))
 
 	for _, keyPairId := range keyPairIds {
@@ -1329,20 +1330,20 @@ func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []inte
 	return result
 }
 
-func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
+func flattenActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
 	if ats == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(ats.Enabled),
-		"items":   flattenCloudfrontSigners(ats.Items),
+		"items":   flattenSigners(ats.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontSigners(signers []*cloudfront.Signer) []interface{} {
+func flattenSigners(signers []*cloudfront.Signer) []interface{} {
 	result := make([]interface{}, 0, len(signers))
 
 	for _, signer := range signers {

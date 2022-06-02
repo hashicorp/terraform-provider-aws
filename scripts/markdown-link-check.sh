@@ -3,7 +3,13 @@
 # Local script runner for recursive markdown-link-check
 # Based on: https://github.com/gaurav-nelson/github-action-markdown-link-check/blob/master/entrypoint.sh
 
-if [ -z "$(docker image list -q markdown-link-check)" ]; then
+link_check_container="markdown-link-check"
+
+if [ "${LINK_CHECK_CONTAINER}" != "" ]; then
+  link_check_container="${LINK_CHECK_CONTAINER}"
+fi
+
+if [ -z "$(docker image list -q ${link_check_container})" ]; then
   echo "This script requires the markdown-link-check Docker image."
   echo ""
   echo "More information: https://github.com/tcort/markdown-link-check"
@@ -21,7 +27,7 @@ docker run --rm -i -t \
   -v $(pwd):/github/workspace:ro \
   -w /github/workspace \
   --entrypoint /usr/bin/find \
-  markdown-link-check \
+  "${link_check_container}" \
   docs -type f -name "*.md" -exec /src/markdown-link-check --config .markdownlinkcheck.json --quiet --verbose {} \; \
   | tee -a "${output_file}"
 
@@ -29,7 +35,7 @@ docker run --rm -i -t \
   -v $(pwd):/github/workspace:ro \
   -w /github/workspace \
   --entrypoint /usr/bin/find \
-  markdown-link-check \
+  "${link_check_container}" \
   website \( -type f -name "*.md" -or -name "*.markdown" \) -exec /src/markdown-link-check --config .markdownlinkcheck.json --quiet --verbose {} \; \
   | tee -a "${output_file}"
 

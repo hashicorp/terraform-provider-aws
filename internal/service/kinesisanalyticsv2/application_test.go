@@ -22,10 +22,10 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigBasicFlinkApplication(rName, "FLINK-1_6"),
@@ -211,10 +211,10 @@ func TestAccKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigBasicSQLApplication(rName),
@@ -251,10 +251,10 @@ func TestAccKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigBasicSQLApplication(rName),
@@ -274,10 +274,10 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigTags1(rName, "key1", "value1"),
@@ -323,10 +323,10 @@ func TestAccKinesisAnalyticsV2Application_ApplicationCode_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigApplicationCodeConfiguration(rName, "SELECT 1;\n"),
@@ -407,10 +407,10 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_add(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigBasicSQLApplication(rName),
@@ -470,10 +470,10 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_delete(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigCloudWatchLoggingOptions(rName, 0),
@@ -534,10 +534,10 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_update(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigCloudWatchLoggingOptions(rName, 0),
@@ -595,14 +595,14 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3ObjectResourceName := "aws_s3_object.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigEnvironmentProperties(rName),
@@ -613,7 +613,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -674,7 +674,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -743,7 +743,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -791,15 +791,15 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObject1ResourceName := "aws_s3_bucket_object.test.0"
-	s3BucketObject2ResourceName := "aws_s3_bucket_object.test.1"
+	s3Object1ResourceName := "aws_s3_object.test.0"
+	s3Object2ResourceName := "aws_s3_object.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, ""),
@@ -810,8 +810,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObject1ResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObject1ResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object1ResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object1ResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -858,8 +858,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObject2ResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObject2ResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object2ResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object2ResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -912,15 +912,15 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObject1ResourceName := "aws_s3_bucket_object.test.0"
-	s3BucketObject2ResourceName := "aws_s3_bucket_object.test.1"
+	s3Object1ResourceName := "aws_s3_object.test.0"
+	s3Object2ResourceName := "aws_s3_object.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName),
@@ -931,8 +931,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObject1ResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObject1ResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object1ResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object1ResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -993,8 +993,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObject2ResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObject2ResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object2ResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object2ResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "true"),
@@ -1064,15 +1064,15 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3ObjectResourceName := "aws_s3_object.test"
 	snapshotResourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_LATEST_SNAPSHOT", "", false),
@@ -1083,7 +1083,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
@@ -1147,7 +1147,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
@@ -1194,7 +1194,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 			{
@@ -1212,7 +1212,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
@@ -1264,7 +1264,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "3"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 			{
@@ -1276,7 +1276,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
@@ -1323,7 +1323,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "4"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 		},
@@ -1335,14 +1335,14 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCre
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3ObjectResourceName := "aws_s3_object.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "true"),
@@ -1353,8 +1353,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCre
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3ObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -1411,14 +1411,14 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3ObjectResourceName := "aws_s3_object.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "false"),
@@ -1429,8 +1429,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3ObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -1483,8 +1483,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3ObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -1535,8 +1535,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3ObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -1583,15 +1583,15 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObject1ResourceName := "aws_s3_bucket_object.test.0"
-	s3BucketObject2ResourceName := "aws_s3_bucket_object.test.1"
+	s3Object1ResourceName := "aws_s3_object.test.0"
+	s3Object2ResourceName := "aws_s3_object.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "true"),
@@ -1602,8 +1602,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObject1ResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObject1ResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object1ResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object1ResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -1660,8 +1660,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObject2ResourceName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3BucketObject2ResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3Object2ResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", s3Object2ResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", "false"),
@@ -1715,10 +1715,10 @@ func TestAccKinesisAnalyticsV2Application_ServiceExecutionRole_update(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigBasicSQLApplicationPlusDescription(rName),
@@ -1777,10 +1777,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_add(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
@@ -1888,10 +1888,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_update(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationInput(rName),
@@ -2028,10 +2028,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_add(t *t
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationInput(rName),
@@ -2167,10 +2167,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_delete(t
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
@@ -2307,10 +2307,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_update(t
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
@@ -2452,10 +2452,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationMultiple_update(t *testi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, "", ""),
@@ -2643,10 +2643,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationOutput_update(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationOutput(rName),
@@ -2791,10 +2791,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_add(
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
@@ -2895,10 +2895,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_dele
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
@@ -2999,10 +2999,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_upda
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
@@ -3126,10 +3126,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onCreat
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName, true),
@@ -3206,10 +3206,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onUpdat
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName, false),
@@ -3405,10 +3405,10 @@ func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, "true", "LAST_STOPPED_POINT"),
@@ -3592,15 +3592,15 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3ObjectResourceName := "aws_s3_object.test.0"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigVPCConfigurationNotSpecified(rName),
@@ -3611,7 +3611,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -3659,7 +3659,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -3716,15 +3716,15 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3ObjectResourceName := "aws_s3_object.test.0"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigVPCConfiguration(rName),
@@ -3735,7 +3735,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -3787,7 +3787,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -3840,15 +3840,15 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3ObjectResourceName := "aws_s3_object.test.0"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigVPCConfiguration(rName),
@@ -3859,7 +3859,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -3911,7 +3911,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -3968,15 +3968,15 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3ObjectResourceName := "aws_s3_object.test"
 	snapshotResourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_LATEST_SNAPSHOT", "", false),
@@ -3987,7 +3987,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
@@ -4050,7 +4050,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.bucket_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3BucketObjectResourceName, "key"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.file_key", s3ObjectResourceName, "key"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "ZIPFILE"),
@@ -4179,7 +4179,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccApplicationConfigBaseServiceExecutionIamRole(rName string) string {
+func testAccApplicationConfig_baseServiceExecutionIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   count = 2
@@ -4260,7 +4260,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   count = 2
 
   bucket = aws_s3_bucket.test.bucket
@@ -4341,7 +4341,7 @@ resource "aws_security_group" "test" {
 
 func testAccApplicationConfigBasicFlinkApplication(rName, runtimeEnvironment string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4353,7 +4353,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigBasicSQLApplication(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4365,7 +4365,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigBasicSQLApplicationPlusDescription(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4378,7 +4378,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigBasicSQLApplicationServiceExecutionRoleUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4391,7 +4391,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigApplicationCodeConfiguration(rName, textContent string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4413,7 +4413,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -4440,7 +4440,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4453,7 +4453,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -4487,7 +4487,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4500,7 +4500,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -4540,7 +4540,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigEnvironmentPropertiesNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4553,7 +4553,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -4570,7 +4570,7 @@ func testAccApplicationConfigFlinkApplicationConfiguration(rName, startApplicati
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4583,8 +4583,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[0].key
-          object_version = aws_s3_bucket_object.test[0].version_id
+          file_key       = aws_s3_object.test[0].key
+          object_version = aws_s3_object.test[0].version_id
         }
       }
 
@@ -4626,7 +4626,7 @@ func testAccApplicationConfigFlinkApplicationConfigurationUpdated(rName, startAp
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4639,8 +4639,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[1].key
-          object_version = aws_s3_bucket_object.test[1].version_id
+          file_key       = aws_s3_object.test[1].key
+          object_version = aws_s3_object.test[1].version_id
         }
       }
 
@@ -4678,7 +4678,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4691,8 +4691,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[0].key
-          object_version = aws_s3_bucket_object.test[0].version_id
+          file_key       = aws_s3_object.test[0].key
+          object_version = aws_s3_object.test[0].version_id
         }
       }
 
@@ -4753,7 +4753,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigFlinkApplicationConfigurationEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4766,8 +4766,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[1].key
-          object_version = aws_s3_bucket_object.test[1].version_id
+          file_key       = aws_s3_object.test[1].key
+          object_version = aws_s3_object.test[1].version_id
         }
       }
 
@@ -4841,7 +4841,7 @@ func testAccApplicationConfigStartSnapshotableFlinkApplication(rName, applicatio
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -4849,7 +4849,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = "flink-app.jar"
   source = "test-fixtures/flink-app.jar"
@@ -4875,7 +4875,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test.key
+          file_key   = aws_s3_object.test.key
         }
       }
 
@@ -4931,7 +4931,7 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 
 func testAccApplicationConfigStopSnapshotableFlinkApplication(rName string, forceStop bool) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -4939,7 +4939,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = "flink-app.jar"
   source = "test-fixtures/flink-app.jar"
@@ -4965,7 +4965,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test.key
+          file_key   = aws_s3_object.test.key
         }
       }
 
@@ -5012,7 +5012,7 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5035,7 +5035,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationInput(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5086,7 +5086,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationInputUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5149,7 +5149,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName string, lambdaIndex int) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5215,7 +5215,7 @@ func testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, startApp
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -5316,7 +5316,7 @@ func testAccApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, s
 	}
 
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5441,7 +5441,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationOutput(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5478,7 +5478,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationOutputUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5527,7 +5527,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5579,7 +5579,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationReferenceDataSourceUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5639,7 +5639,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5696,7 +5696,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5712,7 +5712,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5729,7 +5729,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigVPCConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseVPC(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
@@ -5743,7 +5743,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -5761,7 +5761,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigVPCConfigurationUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseVPC(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
@@ -5775,7 +5775,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -5793,7 +5793,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
 func testAccApplicationConfigVPCConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		testAccApplicationConfigBaseVPC(rName),
 		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
@@ -5807,7 +5807,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 

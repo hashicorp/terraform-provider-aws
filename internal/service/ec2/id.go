@@ -7,70 +7,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-const clientVpnAuthorizationRuleIDSeparator = ","
-
-func ClientVPNAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID string) string {
-	parts := []string{endpointID, targetNetworkCidr}
-	if accessGroupID != "" {
-		parts = append(parts, accessGroupID)
-	}
-	id := strings.Join(parts, clientVpnAuthorizationRuleIDSeparator)
-	return id
-}
-
-func ClientVPNAuthorizationRuleParseID(id string) (string, string, string, error) {
-	parts := strings.Split(id, clientVpnAuthorizationRuleIDSeparator)
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], "", nil
-	}
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
-	}
-
-	return "", "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected endpoint-id"+clientVpnAuthorizationRuleIDSeparator+
-			"target-network-cidr or endpoint-id"+clientVpnAuthorizationRuleIDSeparator+"target-network-cidr"+
-			clientVpnAuthorizationRuleIDSeparator+"group-id", id)
-}
-
-const clientVpnNetworkAssociationIDSeparator = ","
-
-func ClientVPNNetworkAssociationCreateID(endpointID, associationID string) string {
-	parts := []string{endpointID, associationID}
-	id := strings.Join(parts, clientVpnNetworkAssociationIDSeparator)
-	return id
-}
-
-func ClientVPNNetworkAssociationParseID(id string) (string, string, error) {
-	parts := strings.Split(id, clientVpnNetworkAssociationIDSeparator)
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected endpoint-id"+clientVpnNetworkAssociationIDSeparator+
-			"association-id", id)
-}
-
-const clientVpnRouteIDSeparator = ","
-
-func ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr string) string {
-	parts := []string{endpointID, targetSubnetID, destinationCidr}
-	id := strings.Join(parts, clientVpnRouteIDSeparator)
-	return id
-}
-
-func ClientVPNRouteParseID(id string) (string, string, string, error) {
-	parts := strings.Split(id, clientVpnRouteIDSeparator)
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
-	}
-
-	return "", "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected endpoint-id"+clientVpnRouteIDSeparator+
-			"target-subnet-id"+clientVpnRouteIDSeparator+"destination-cidr-block", id)
-}
-
 const managedPrefixListEntryIDSeparator = ","
 
 func ManagedPrefixListEntryCreateID(prefixListID, cidrBlock string) string {
@@ -115,6 +51,10 @@ func TransitGatewayPrefixListReferenceParseID(id string) (string, string, error)
 
 func VPCEndpointRouteTableAssociationCreateID(vpcEndpointID, routeTableID string) string {
 	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(routeTableID))
+}
+
+func VPCEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID string) string {
+	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(securityGroupID))
 }
 
 func VPCEndpointSubnetAssociationCreateID(vpcEndpointID, subnetID string) string {

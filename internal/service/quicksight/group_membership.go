@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -111,8 +111,8 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
 
-	if !found {
-		log.Printf("[WARN] QuickSight User-group membership %s is not found, removing from state", d.Id())
+	if !d.IsNewResource() && !found {
+		log.Printf("[WARN] QuickSight User-group membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -141,7 +141,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return diag.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)

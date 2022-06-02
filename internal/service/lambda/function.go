@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,7 +27,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
-const awsMutexLambdaKey = `aws_lambda_function`
+const keyMutex = `aws_lambda_function`
 
 const FunctionVersionLatest = "$LATEST"
 
@@ -142,6 +142,22 @@ func ResourceFunction() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(512, 10240),
 						},
 					},
 				},
@@ -339,6 +355,11 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
+const (
+	functionPutConcurrencyTimeout  = 1 * time.Minute
+	functionExtraThrottlingTimeout = 9 * time.Minute
+)
+
 func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	packageType := d.Get("package_type")
 	_, handlerOk := d.GetOk("handler")
@@ -381,7 +402,8 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
-		d.HasChange("environment")
+		d.HasChange("environment") ||
+		d.HasChange("ephemeral_storage")
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -412,8 +434,8 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		// Grab an exclusive lock so that we're only reading one function into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
+		conns.GlobalMutexKV.Lock(keyMutex)
+		defer conns.GlobalMutexKV.Unlock(keyMutex)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("unable to load %q: %w", filename.(string), err)
@@ -481,12 +503,20 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
+		ephemeralStorage := v.([]interface{})
+		configMap := ephemeralStorage[0].(map[string]interface{})
+		params.EphemeralStorage = &lambda.EphemeralStorage{
+			Size: aws.Int64(int64(configMap["size"].(int))),
+		}
+	}
+
 	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
-		params.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+		params.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
-		params.ImageConfig = expandLambdaImageConfigs(v.([]interface{}))
+		params.ImageConfig = expandImageConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
@@ -530,7 +560,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(lambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -553,6 +583,11 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -569,7 +604,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating Lambda Function (1): %w", err)
 		}
 
-		err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
+		err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -595,7 +630,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(d.Get("function_name").(string))
 
-	if err := waitForLambdaFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %w", d.Id(), err)
 	}
 
@@ -608,7 +643,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		err := resource.Retry(lambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
+		err := resource.Retry(functionPutConcurrencyTimeout, func() *resource.RetryError {
 			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 
 			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
@@ -751,7 +786,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting signing job arn for Lambda Function: %w", err)
 	}
 
-	fileSystemConfigs := flattenLambdaFileSystemConfigs(function.FileSystemConfigs)
+	fileSystemConfigs := flattenFileSystemConfigs(function.FileSystemConfigs)
 	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
 	if err := d.Set("file_system_config", fileSystemConfigs); err != nil {
 		return fmt.Errorf("error setting file system config for Lambda Function (%s): %w", d.Id(), err)
@@ -786,10 +821,16 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_config for Lambda Function (%s): %w", d.Id(), err)
 	}
 
-	environment := flattenLambdaEnvironment(function.Environment)
+	environment := flattenEnvironment(function.Environment)
 	log.Printf("[INFO] Setting Lambda %s environment %#v from API", d.Id(), environment)
 	if err := d.Set("environment", environment); err != nil {
 		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
+	}
+
+	ephemeralStorage := flattenEphemeralStorage(function.EphemeralStorage)
+	log.Printf("[INFO] Setting Lambda %s ephemeralStorage %#v from API", d.Id(), ephemeralStorage)
+	if err := d.Set("ephemeral_storage", ephemeralStorage); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage for Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
@@ -805,7 +846,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// Assume `PassThrough` on partitions that don't support tracing config
 	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
-		tracingConfigMode = *function.TracingConfig.Mode
+		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
 	}
 	d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
@@ -828,8 +869,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 			if lastPage {
 				last := p.Versions[len(p.Versions)-1]
-				lastVersion = *last.Version
-				lastQualifiedArn = *last.FunctionArn
+				lastVersion = aws.StringValue(last.Version)
+				lastQualifiedArn = aws.StringValue(last.FunctionArn)
 				return false
 			}
 			return true
@@ -842,22 +883,22 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
+	invokeArn := functionInvokeARN(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+	if partition := meta.(*conns.AWSClient).Partition; partition != endpoints.AwsPartitionID {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) and ap-southeast-3 (Jakarta) region
 	// and returns ambiguous error codes (e.g. AccessDeniedException)
 	// so we cannot just ignore the error as would typically.
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if meta.(*conns.AWSClient).Region == endpoints.ApNortheast3RegionID {
+	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.ApSoutheast3RegionID {
 		return nil
 	}
 
@@ -983,20 +1024,28 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("description") {
 		configReq.Description = aws.String(d.Get("description").(string))
 	}
-
+	if d.HasChange("ephemeral_storage") {
+		ephemeralStorage := d.Get("ephemeral_storage").([]interface{})
+		if len(ephemeralStorage) == 1 {
+			configMap := ephemeralStorage[0].(map[string]interface{})
+			configReq.EphemeralStorage = &lambda.EphemeralStorage{
+				Size: aws.Int64(int64(configMap["size"].(int))),
+			}
+		}
+	}
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
 	}
 	if d.HasChange("file_system_config") {
 		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
 		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
-			configReq.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+			configReq.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 		}
 	}
 	if d.HasChange("image_config") {
 		configReq.ImageConfig = &lambda.ImageConfig{}
 		if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
-			configReq.ImageConfig = expandLambdaImageConfigs(v.([]interface{}))
+			configReq.ImageConfig = expandImageConfigs(v.([]interface{}))
 		}
 	}
 	if d.HasChange("memory_size") {
@@ -1074,7 +1123,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(lambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1097,6 +1146,11 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 				return resource.RetryableError(err)
 			}
 
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+				return resource.RetryableError(err)
+			}
+
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
@@ -1114,7 +1168,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// Allow more time for EC2 throttling
-			err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+			err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -1138,7 +1192,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 		}
 	}
@@ -1160,8 +1214,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Grab an exclusive lock so that we're only reading one function into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
+			conns.GlobalMutexKV.Lock(keyMutex)
+			defer conns.GlobalMutexKV.Unlock(keyMutex)
 			file, err := loadFileContent(v.(string))
 			if err != nil {
 				return fmt.Errorf("unable to load %q: %w", v.(string), err)
@@ -1188,7 +1242,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
 		}
 
-		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) code update: %w", d.Id(), err)
 		}
 	}
@@ -1228,7 +1282,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(lambdaFunctionPublishTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 
@@ -1287,7 +1341,7 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	return variables
 }
 
-func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
+func functionInvokeARN(functionArn string, meta interface{}) string {
 	return arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
@@ -1297,7 +1351,7 @@ func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
 	}.String()
 }
 
-func refreshLambdaFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+func refreshFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetFunctionInput{
 			FunctionName: aws.String(functionName),
@@ -1323,7 +1377,7 @@ func refreshLambdaFunctionLastUpdateStatus(conn *lambda.Lambda, functionName str
 	}
 }
 
-func refreshLambdaFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+func refreshFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetFunctionInput{
 			FunctionName: aws.String(functionName),
@@ -1349,11 +1403,11 @@ func refreshLambdaFunctionState(conn *lambda.Lambda, functionName string) resour
 	}
 }
 
-func waitForLambdaFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+func waitForFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.StatePending},
 		Target:  []string{lambda.StateActive},
-		Refresh: refreshLambdaFunctionState(conn, functionName),
+		Refresh: refreshFunctionState(conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1363,11 +1417,11 @@ func waitForLambdaFunctionCreation(conn *lambda.Lambda, functionName string, tim
 	return err
 }
 
-func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.LastUpdateStatusInProgress},
 		Target:  []string{lambda.LastUpdateStatusSuccessful},
-		Refresh: refreshLambdaFunctionLastUpdateStatus(conn, functionName),
+		Refresh: refreshFunctionLastUpdateStatus(conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1377,7 +1431,7 @@ func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeo
 	return err
 }
 
-func flattenLambdaEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
+func flattenEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1391,19 +1445,19 @@ func flattenLambdaEnvironment(apiObject *lambda.EnvironmentResponse) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
+func flattenFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
 		f := make(map[string]interface{})
-		f["arn"] = *fsc.Arn
-		f["local_mount_path"] = *fsc.LocalMountPath
+		f["arn"] = aws.StringValue(fsc.Arn)
+		f["local_mount_path"] = aws.StringValue(fsc.LocalMountPath)
 
 		results = append(results, f)
 	}
 	return results
 }
 
-func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemConfig {
+func expandFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemConfig {
 	fileSystemConfigs := make([]*lambda.FileSystemConfig, 0, len(fscMaps))
 	for _, fsc := range fscMaps {
 		fscMap := fsc.(map[string]interface{})
@@ -1429,7 +1483,7 @@ func FlattenImageConfig(response *lambda.ImageConfigResponse) []map[string]inter
 	return []map[string]interface{}{settings}
 }
 
-func expandLambdaImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
+func expandImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
 	imageConfig := &lambda.ImageConfig{}
 	// only one image_config block is allowed
 	if len(imageConfigMaps) == 1 && imageConfigMaps[0] != nil {
@@ -1443,4 +1497,15 @@ func expandLambdaImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}
 	return imageConfig
+}
+
+func flattenEphemeralStorage(response *lambda.EphemeralStorage) []map[string]interface{} {
+	if response == nil {
+		return nil
+	}
+
+	m := make(map[string]interface{})
+	m["size"] = aws.Int64Value(response.Size)
+
+	return []map[string]interface{}{m}
 }

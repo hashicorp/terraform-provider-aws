@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_acl"
 description: |-
@@ -16,6 +16,10 @@ provides both a standalone [Network ACL Rule](network_acl_rule.html) resource an
 defined in-line. At this time you cannot use a Network ACL with in-line rules
 in conjunction with any Network ACL Rule resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
+
+~> **NOTE on Network ACLs and Network ACL Associations:** Terraform provides both a standalone [network ACL association](network_acl_association.html)
+resource and a network ACL resource with a `subnet_ids` attribute. Do not use the same subnet ID in both a network ACL
+resource and a network ACL association resource. Doing so will cause a conflict of associations and will overwrite the association.
 
 ## Example Usage
 

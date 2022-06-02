@@ -145,49 +145,52 @@ func sweepDistributions(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
-
-	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
-
 	input := &cloudfront.ListDistributionsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
 	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
-		distributionSummaries = append(distributionSummaries, page.DistributionList.Items...)
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DistributionList.Items {
+			id := aws.StringValue(v.Id)
+
+			output, err := FindDistributionByID(conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceDistribution()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
 		return !lastPage
 	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing CloudFront Distributions: %s", err)
-	}
 
-	if len(distributionSummaries) == 0 {
-		log.Print("[DEBUG] No CloudFront Distributions to sweep")
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, distributionSummary := range distributionSummaries {
-		distributionID := aws.StringValue(distributionSummary.Id)
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Distributions (%s): %w", region, err)
+	}
 
-		if aws.BoolValue(distributionSummary.Enabled) {
-			log.Printf("[WARN] Skipping deletion of enabled CloudFront Distribution: %s", distributionID)
-			continue
-		}
+	err = sweep.SweepOrchestrator(sweepResources)
 
-		output, err := conn.GetDistribution(&cloudfront.GetDistributionInput{
-			Id: aws.String(distributionID),
-		})
-		if err != nil {
-			return fmt.Errorf("Error reading CloudFront Distribution %s: %s", distributionID, err)
-		}
-
-		_, err = conn.DeleteDistribution(&cloudfront.DeleteDistributionInput{
-			Id:      aws.String(distributionID),
-			IfMatch: output.ETag,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting CloudFront Distribution %s: %s", distributionID, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Distributions (%s): %w", region, err)
 	}
 
 	return nil

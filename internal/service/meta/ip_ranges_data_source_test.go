@@ -17,9 +17,9 @@ import (
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPRangesConfig,
@@ -27,6 +27,8 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
+					resource.TestCheckResourceAttr("data.aws_ip_ranges.none", "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ip_ranges.none", "ipv6_cidr_blocks.#", "0"),
 				),
 			},
 		},
@@ -35,9 +37,9 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 
 func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPRangesURLConfig,
@@ -162,6 +164,11 @@ const testAccIPRangesConfig = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
+}
+
+data "aws_ip_ranges" "none" {
+  regions  = ["mars-1"]
+  services = ["blueorigin"]
 }
 `
 

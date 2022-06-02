@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.AddListenerCertificates(params)
 
 		// Retry for IAM Server Certificate eventual consistency
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
 			return resource.RetryableError(err)
 		}
 
@@ -151,10 +151,10 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error removing LB Listener Certificate: %w", err)

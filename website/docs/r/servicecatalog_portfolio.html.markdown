@@ -36,6 +36,16 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the Service Catalog Portfolio.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_servicecatalog_portfolio` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `30 minutes`)
+- `delete` - (Default `30 minutes`)
+
 ## Import
 
 Service Catalog Portfolios can be imported using the `service catalog portfolio id`, e.g.,
