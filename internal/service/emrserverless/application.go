@@ -49,8 +49,8 @@ func ResourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					return strings.ToLower(v.(string))
+				StateFunc: func(val interface{}) string {
+					return strings.ToLower(val.(string))
 				},
 			},
 		},
@@ -133,7 +133,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", application.Arn)
 	d.Set("name", application.Name)
-	d.Set("type", application.Type)
+	d.Set("type", strings.ToLower(aws.StringValue(application.Type)))
 
 	tags := KeyValueTags(application.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
