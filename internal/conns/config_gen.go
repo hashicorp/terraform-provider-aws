@@ -112,6 +112,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
@@ -399,6 +400,7 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		ELBV2Conn:                        elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ELBV2])})),
 		EMRConn:                          emr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.EMR])})),
 		EMRContainersConn:                emrcontainers.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.EMRContainers])})),
+		EMRServerlessConn:                emrserverless.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.EMRServerless])})),
 		ElastiCacheConn:                  elasticache.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ElastiCache])})),
 		ElasticBeanstalkConn:             elasticbeanstalk.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ElasticBeanstalk])})),
 		ElasticInferenceConn:             elasticinference.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ElasticInference])})),
