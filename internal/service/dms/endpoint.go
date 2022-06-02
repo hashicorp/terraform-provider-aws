@@ -327,44 +327,6 @@ func ResourceEndpoint() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"redshift_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_folder": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"bucket_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"encryption_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsEncryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
-						},
-						"server_side_encryption_kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: verify.ValidARN,
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
 			"s3_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -519,20 +481,6 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Set connection info in top-level namespace as well
-		request.Username = aws.String(d.Get("username").(string))
-		request.Password = aws.String(d.Get("password").(string))
-		request.ServerName = aws.String(d.Get("server_name").(string))
-		request.Port = aws.Int64(int64(d.Get("port").(int)))
-		request.DatabaseName = aws.String(d.Get("database_name").(string))
-	case engineNameRedshift:
-		request.RedshiftSettings = &dms.RedshiftSettings{
-			BucketFolder:                 aws.String(d.Get("redshift_settings.0.bucket_folder").(string)),
-			BucketName:                   aws.String(d.Get("redshift_settings.0.bucket_name").(string)),
-			EncryptionMode:               aws.String(d.Get("redshift_settings.0.encryption_mode").(string)),
-			ServerSideEncryptionKmsKeyId: aws.String(d.Get("redshift_settings.0.server_side_encryption_kms_key_id").(string)),
-			ServiceAccessRoleArn:         aws.String(d.Get("redshift_settings.0.service_access_role_arn").(string)),
-		}
-
 		request.Username = aws.String(d.Get("username").(string))
 		request.Password = aws.String(d.Get("password").(string))
 		request.ServerName = aws.String(d.Get("server_name").(string))
@@ -771,28 +719,6 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			hasChanges = true
 		}
-	case engineNameRedshift:
-		if d.HasChanges(
-			"username", "password", "server_name", "port", "database_name",
-			"redshift_settings.0.bucket_folder", "redshift_settings.0.bucket_name", "redshift_settings.0.encryption_mode",
-			"redshift_settings.0.server_side_encryption_kms_key_id", "redshift_settings.0.service_access_role_arn") {
-			request.RedshiftSettings = &dms.RedshiftSettings{
-				BucketFolder:                 aws.String(d.Get("redshift_settings.0.bucket_folder").(string)),
-				BucketName:                   aws.String(d.Get("redshift_settings.0.bucket_name").(string)),
-				EncryptionMode:               aws.String(d.Get("redshift_settings.0.encryption_mode").(string)),
-				ServerSideEncryptionKmsKeyId: aws.String(d.Get("redshift_settings.0.server_side_encryption_kms_key_id").(string)),
-				ServiceAccessRoleArn:         aws.String(d.Get("redshift_settings.0.service_access_role_arn").(string)),
-			}
-			request.EngineName = aws.String(engineName)
-
-			request.Username = aws.String(d.Get("username").(string))
-			request.Password = aws.String(d.Get("password").(string))
-			request.ServerName = aws.String(d.Get("server_name").(string))
-			request.Port = aws.Int64(int64(d.Get("port").(int)))
-			request.DatabaseName = aws.String(d.Get("database_name").(string))
-
-			hasChanges = true
-		}
 	case engineNameS3:
 		if d.HasChanges(
 			"s3_settings.0.service_access_role_arn", "s3_settings.0.external_table_definition",
@@ -962,14 +888,6 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 		if err := d.Set("mongodb_settings", flattenDmsMongoDbSettings(endpoint.MongoDbSettings)); err != nil {
 			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
-		}
-	case "redshift":
-		d.Set("database_name", endpoint.DatabaseName)
-		d.Set("port", endpoint.Port)
-		d.Set("server_name", endpoint.ServerName)
-		d.Set("username", endpoint.Username)
-		if err := d.Set("redshift_settings", flattenDmsRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
-			return fmt.Errorf("Error setting redshift_settings for DMS: %s", err)
 		}
 	case "s3":
 		if err := d.Set("s3_settings", flattenDmsS3Settings(endpoint.S3Settings)); err != nil {
@@ -1272,22 +1190,6 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 		"extract_doc_id":      aws.StringValue(settings.ExtractDocId),
 		"docs_to_investigate": aws.StringValue(settings.DocsToInvestigate),
 		"auth_source":         aws.StringValue(settings.AuthSource),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenDmsRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interface{} {
-	if settings == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"bucket_folder":                     aws.StringValue(settings.BucketFolder),
-		"bucket_name":                       aws.StringValue(settings.BucketName),
-		"encryption_mode":                   aws.StringValue(settings.EncryptionMode),
-		"server_side_encryption_kms_key_id": aws.StringValue(settings.ServerSideEncryptionKmsKeyId),
-		"service_access_role_arn":           aws.StringValue(settings.ServiceAccessRoleArn),
 	}
 
 	return []map[string]interface{}{m}

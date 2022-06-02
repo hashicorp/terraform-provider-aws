@@ -62,7 +62,6 @@ The following arguments are supported:
 * `mongodb_settings` - (Optional) Configuration block with MongoDB settings. Detailed below.
 * `password` - (Optional) The password to be used to login to the endpoint database.
 * `port` - (Optional) The port used by the endpoint database.
-* `redshift_settings` - (Optional) Configuration block with Redshift settings. Detailed below.
 * `s3_settings` - (Optional) Configuration block with S3 settings. Detailed below.
 * `server_name` - (Optional) The host name of the server.
 * `service_access_role` - (Optional) The Amazon Resource Name (ARN) used by the service access IAM role for dynamodb endpoints.
@@ -154,18 +153,6 @@ The `s3_settings` configuration block supports the following arguments:
 * `parquet_version` - (Optional) The version of the .parquet file format. Defaults to `parquet-1-0`. Valid values are `parquet-1-0` and `parquet-2-0`.
 * `server_side_encryption_kms_key_id` - (Optional) If you set encryptionMode to `SSE_KMS`, set this parameter to the Amazon Resource Name (ARN) for the AWS KMS key.
 * `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket.
-
-### redshift_settings Arguments
-
--> Additional information can be found in the [Using Amazon Redshift as a Target for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html).
-
-The `redshift_settings` configuration block supports the following arguments:
-
-* `bucket_folder` - (Optional) Custom S3 Bucket Object prefix for intermediate storage.
-* `bucket_name` - (Optional) Custom S3 Bucket name for intermediate storage.
-* `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your intermediate .csv object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
-* `server_side_encryption_kms_key_id` - (Optional) If you set encryptionMode to `SSE_KMS`, set this parameter to the Amazon Resource Name (ARN) for the AWS KMS key.
-* `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket for intermediate storage.
 
 ## Attributes Reference
 
