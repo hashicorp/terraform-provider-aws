@@ -932,7 +932,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 				}
 
-				// Update connection info in top-level namespace as well
+				// Set connection info in top-level namespace as well
 				request.Username = aws.String(d.Get("username").(string))
 				request.Password = aws.String(d.Get("password").(string))
 				request.ServerName = aws.String(d.Get("server_name").(string))
