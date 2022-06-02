@@ -156,7 +156,7 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(true),
+				Config: testAccDetectorConfigDatasourcesKubernetesAuditLogs(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -170,7 +170,7 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(false),
+				Config: testAccDetectorConfigDatasourcesKubernetesAuditLogs(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -192,7 +192,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesAll(true, false),
+				Config: testAccDetectorConfigDatasourcesAll(true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -208,7 +208,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesAll(true, true),
+				Config: testAccDetectorConfigDatasourcesAll(true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -219,7 +219,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesAll(false, false),
+				Config: testAccDetectorConfigDatasourcesAll(false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -230,7 +230,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyDetectorConfigDatasourcesAll(false, true),
+				Config: testAccDetectorConfigDatasourcesAll(false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -354,7 +354,7 @@ resource "aws_guardduty_detector" "test" {
 `, enable)
 }
 
-func testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(enable bool) string {
+func testAccDetectorConfigDatasourcesKubernetesAuditLogs(enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   datasources {
@@ -368,7 +368,7 @@ resource "aws_guardduty_detector" "test" {
 `, enable)
 }
 
-func testAccGuardDutyDetectorConfigDatasourcesAll(enableK8s, enableS3 bool) string {
+func testAccDetectorConfigDatasourcesAll(enableK8s, enableS3 bool) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   datasources {
