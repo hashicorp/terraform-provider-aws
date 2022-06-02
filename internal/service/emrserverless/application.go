@@ -134,6 +134,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", application.Arn)
 	d.Set("name", application.Name)
 	d.Set("type", strings.ToLower(aws.StringValue(application.Type)))
+	d.Set("release_label", application.ReleaseLabel)
 
 	tags := KeyValueTags(application.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
