@@ -931,7 +931,6 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
 					AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 				}
-				request.EngineName = aws.String(engineName)
 
 				// Update connection info in top-level namespace as well
 				request.Username = aws.String(d.Get("username").(string))
