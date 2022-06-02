@@ -195,6 +195,38 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574
+func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProvisionedProductDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				ExpectError: regexp.MustCompile(`unexpected state 'TAINTED', wanted target 'AVAILABLE'`),
+			},
+			{
+				// Check we can still run a complete plan after the previous update error
+				Config:   testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCheckProvisionedProductDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
@@ -380,6 +412,28 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   provisioning_parameters {
     key   = "LeaveMeEmpty"
     value = ""
+  }
+}
+`, rName, vpcCidr))
+}
+
+func testAccProvisionedProductConfig_updateTainted(rName, domain, email, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+		fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                       = %[1]q
+  product_id                 = aws_servicecatalog_product.test.id
+  provisioning_artifact_name = %[1]q
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = %[2]q
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = "NotEmpty"
   }
 }
 `, rName, vpcCidr))
