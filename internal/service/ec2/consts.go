@@ -212,6 +212,10 @@ const (
 )
 
 const (
+	DefaultSnapshotImportRoleName = "vmimport"
+)
+
+const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
 )

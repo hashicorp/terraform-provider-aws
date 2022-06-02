@@ -2309,7 +2309,7 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 	return err
 }
 
-func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
+func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.SnapshotTaskDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			EBSSnapshotImportStateActive,
@@ -2320,7 +2320,7 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 		},
 		Target:  []string{EBSSnapshotImportStateCompleted},
 		Refresh: StatusEBSSnapshotImport(conn, importTaskID),
-		Timeout: 60 * time.Minute,
+		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
 

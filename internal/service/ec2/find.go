@@ -4500,6 +4500,76 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, service
 	return output, nil
 }
 
+func FindImportSnapshotTasks(conn *ec2.EC2, input *ec2.DescribeImportSnapshotTasksInput) ([]*ec2.ImportSnapshotTask, error) {
+	var output []*ec2.ImportSnapshotTask
+
+	err := conn.DescribeImportSnapshotTasksPages(input, func(page *ec2.DescribeImportSnapshotTasksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ImportSnapshotTasks {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidConversionTaskIdMalformed, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindImportSnapshotTask(conn *ec2.EC2, input *ec2.DescribeImportSnapshotTasksInput) (*ec2.ImportSnapshotTask, error) {
+	output, err := FindImportSnapshotTasks(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].SnapshotTaskDetail == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindImportSnapshotTaskByID(conn *ec2.EC2, id string) (*ec2.ImportSnapshotTask, error) {
+	input := &ec2.DescribeImportSnapshotTasksInput{
+		ImportTaskIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindImportSnapshotTask(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ImportTaskId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindSnapshots(conn *ec2.EC2, input *ec2.DescribeSnapshotsInput) ([]*ec2.Snapshot, error) {
 	var output []*ec2.Snapshot
 
