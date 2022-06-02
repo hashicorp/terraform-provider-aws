@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindCertificateAuthorityByARN returns the certificate authority corresponding to the specified ARN.
@@ -52,4 +53,29 @@ func FindCertificateAuthorityCertificateByARN(conn *acmpca.ACMPCA, arn string) (
 	}
 
 	return output, nil
+}
+
+func FindPolicyByARN(conn *acmpca.ACMPCA, arn string) (string, error) {
+	input := &acmpca.GetPolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetPolicy(input)
+
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return "", &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.Policy == nil {
+		return "", tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValue(output.Policy), nil
 }
