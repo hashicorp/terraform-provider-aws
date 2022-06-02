@@ -4640,35 +4640,67 @@ func FindSnapshotByID(conn *ec2.EC2, id string) (*ec2.Snapshot, error) {
 	return output, nil
 }
 
-func FindSnapshotTierStatusByID(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
-	filters := map[string]string{
-		"snapshot-id": id,
-	}
+func FindFindSnapshotTierStatuses(conn *ec2.EC2, input *ec2.DescribeSnapshotTierStatusInput) ([]*ec2.SnapshotTierStatus, error) {
+	var output []*ec2.SnapshotTierStatus
 
-	input := &ec2.DescribeSnapshotTierStatusInput{
-		Filters: BuildAttributeFilterList(filters),
-	}
-
-	output, err := conn.DescribeSnapshotTierStatus(input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	err := conn.DescribeSnapshotTierStatusPages(input, func(page *ec2.DescribeSnapshotTierStatusOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-	}
+
+		for _, v := range page.SnapshotTierStatuses {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.SnapshotTierStatuses) == 0 || output.SnapshotTierStatuses[0] == nil {
+	return output, nil
+}
+
+func FindFindSnapshotTierStatus(conn *ec2.EC2, input *ec2.DescribeSnapshotTierStatusInput) (*ec2.SnapshotTierStatus, error) {
+	output, err := FindFindSnapshotTierStatuses(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.SnapshotTierStatuses); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.SnapshotTierStatuses[0], nil
+	return output[0], nil
+}
+
+func FindSnapshotTierStatusBySnapshotID(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+	input := &ec2.DescribeSnapshotTierStatusInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"snapshot-id": id,
+		}),
+	}
+
+	output, err := FindFindSnapshotTierStatus(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.SnapshotId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

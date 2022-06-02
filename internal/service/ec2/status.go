@@ -1157,7 +1157,7 @@ func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEn
 
 func StatusSnapshotStorageTier(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotTierStatusByID(conn, id)
+		output, err := FindSnapshotTierStatusBySnapshotID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
