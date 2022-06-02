@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
@@ -96,14 +96,12 @@ func testAccCheckInstanceRoleAssociationExists(resourceName string, dbInstanceRo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		role, err := tfrds.DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
-
+		role, err := tfrds.DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("RDS DB Instance IAM Role Association not found")
+		}
 		if err != nil {
 			return err
-		}
-
-		if role == nil {
-			return fmt.Errorf("RDS DB Instance IAM Role Association not found")
 		}
 
 		if aws.StringValue(role.Status) != "ACTIVE" {
@@ -130,18 +128,12 @@ func testAccCheckInstanceRoleAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
 
-		dbInstanceRole, err := tfrds.DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		dbInstanceRole, err := tfrds.DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		if tfresource.NotFound(err) {
 			continue
 		}
-
 		if err != nil {
 			return err
-		}
-
-		if dbInstanceRole == nil {
-			continue
 		}
 
 		return fmt.Errorf("RDS DB Instance (%s) IAM Role (%s) association still exists in non-deleted (%s) state", dbInstanceIdentifier, roleArn, aws.StringValue(dbInstanceRole.Status))
@@ -166,7 +158,7 @@ func testAccCheckInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, d
 			return err
 		}
 
-		return tfrds.WaitForInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
+		return tfrds.WaitForDbInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
 	}
 }
 

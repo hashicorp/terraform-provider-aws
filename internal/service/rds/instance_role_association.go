@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Constants not currently provided by the AWS Go SDK
 const (
-	instanceRoleStatusActive  = "ACTIVE"
-	instanceRoleStatusDeleted = "DELETED"
-	instanceRoleStatusPending = "PENDING"
+	dbInstanceRoleStatusActive  = "ACTIVE"
+	dbInstanceRoleStatusPending = "PENDING"
 )
 
 func ResourceInstanceRoleAssociation() *schema.Resource {
@@ -90,9 +90,9 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading resource ID: %w", err)
 	}
 
-	dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
+	dbInstanceRole, err := DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
 		d.SetId("")
 		return nil
@@ -100,12 +100,6 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 
 	if err != nil {
 		return fmt.Errorf("error reading RDS DB Instance (%s) IAM Role (%s) association: %w", dbInstanceIdentifier, roleArn, err)
-	}
-
-	if dbInstanceRole == nil {
-		log.Printf("[WARN] RDS DB Instance (%s) IAM Role (%s) association not found, removing from state", dbInstanceIdentifier, roleArn)
-		d.SetId("")
-		return nil
 	}
 
 	d.Set("db_instance_identifier", dbInstanceIdentifier)
@@ -145,7 +139,7 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error disassociating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
 	}
 
-	if err := WaitForInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
+	if err := WaitForDbInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %w", dbInstanceIdentifier, roleArn, err)
 	}
 
@@ -162,60 +156,26 @@ func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func DescribeInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
-	input := &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(dbInstanceIdentifier),
-	}
-
-	log.Printf("[DEBUG] Describing RDS DB Instance: %s", input)
-	output, err := conn.DescribeDBInstances(input)
-
+func DescribeDbInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
+	dbInstance, err := FindDBInstanceByID(conn, dbInstanceIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
-	var dbInstance *rds.DBInstance
-
-	for _, outputDbInstance := range output.DBInstances {
-		if aws.StringValue(outputDbInstance.DBInstanceIdentifier) == dbInstanceIdentifier {
-			dbInstance = outputDbInstance
-			break
-		}
-	}
-
-	if dbInstance == nil {
-		return nil, nil
-	}
-
-	var dbInstanceRole *rds.DBInstanceRole
-
 	for _, associatedRole := range dbInstance.AssociatedRoles {
 		if aws.StringValue(associatedRole.RoleArn) == roleArn {
-			dbInstanceRole = associatedRole
-			break
+			return associatedRole, nil
 		}
 	}
 
-	return dbInstanceRole, nil
+	return nil, &tfresource.EmptyResultError{}
 }
 
 func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{instanceRoleStatusPending},
-		Target:  []string{instanceRoleStatusActive},
-		Refresh: func() (interface{}, string, error) {
-			dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			if dbInstanceRole == nil {
-				return nil, instanceRoleStatusPending, nil
-			}
-
-			return dbInstanceRole, aws.StringValue(dbInstanceRole.Status), nil
-		},
+		Pending: []string{dbInstanceRoleStatusPending},
+		Target:  []string{dbInstanceRoleStatusActive},
+		Refresh: statusDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
 		Timeout: 5 * time.Minute,
 		Delay:   5 * time.Second,
 	}
@@ -226,30 +186,14 @@ func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleA
 	return err
 }
 
-func WaitForInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func WaitForDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			instanceRoleStatusActive,
-			instanceRoleStatusPending,
+			dbInstanceRoleStatusActive,
+			dbInstanceRoleStatusPending,
 		},
-		Target: []string{instanceRoleStatusDeleted},
-		Refresh: func() (interface{}, string, error) {
-			dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
-
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-				return &rds.DBInstanceRole{}, instanceRoleStatusDeleted, nil
-			}
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			if dbInstanceRole != nil {
-				return dbInstanceRole, aws.StringValue(dbInstanceRole.Status), nil
-			}
-
-			return &rds.DBInstanceRole{}, instanceRoleStatusDeleted, nil
-		},
+		Target:  []string{},
+		Refresh: statusDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
 		Timeout: 5 * time.Minute,
 		Delay:   5 * time.Second,
 	}
@@ -258,4 +202,20 @@ func WaitForInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, role
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func statusDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		dbInstanceRole, err := DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return dbInstanceRole, aws.StringValue(dbInstanceRole.Status), nil
+	}
 }
