@@ -45,7 +45,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 }
 
 data "aws_service_discovery_http_namespace" "test" {
-  name         = aws_service_discovery_http_namespace.test.name
+  name = aws_service_discovery_http_namespace.test.name
 }
 `, rName)
 }
