@@ -2358,7 +2358,7 @@ const (
 	ebsSnapshotArchivedTimeout = 60 * time.Minute
 )
 
-func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SnapshotTierStatus, error) {
+func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SnapshotTierStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{TargetStorageTierStandard},
 		Target:  []string{ec2.TargetStorageTierArchive},
