@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -843,10 +844,16 @@ func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
+			},
+			{
 				Config:  testAccEBSVolumeConfig_finalSnapshot(rName),
 				Destroy: true,
-				Check:   resource.ComposeTestCheckFunc(
-				//testAccCheckEbsSnapshotExists(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeFinalSnapshotExists(&v),
 				),
 			},
 		},
@@ -897,6 +904,36 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckVolumeFinalSnapshotExists(v *ec2.Volume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.EC2Conn
+
+		input := &ec2.DescribeSnapshotsInput{
+			Filters: tfec2.BuildAttributeFilterList(map[string]string{
+				"volume-id": aws.StringValue(v.VolumeId),
+				"status":    ec2.SnapshotStateCompleted,
+			}),
+		}
+
+		output, err := tfec2.FindSnapshot(conn, input)
+
+		if err != nil {
+			return err
+		}
+
+		r := tfec2.ResourceEBSSnapshot()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(output.SnapshotId))
+
+		if err := r.Delete(d, client); err != nil {
+			return err
+		}
 
 		return nil
 	}
@@ -1332,7 +1369,7 @@ resource "aws_ebs_volume" "test" {
 
 func testAccEBSVolumeConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_ebs_volume" "source" {
+resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 10
   final_snapshot    = true

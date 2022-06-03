@@ -119,6 +119,7 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
+	log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
 		func() (interface{}, error) {
 			return conn.CreateSnapshot(input)
