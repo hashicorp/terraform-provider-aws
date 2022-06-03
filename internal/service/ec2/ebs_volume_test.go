@@ -43,9 +43,10 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -93,9 +94,10 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_attachedUpdateSize(rName),
@@ -129,9 +131,10 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_updateSize(rName),
@@ -165,9 +168,10 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_updateType(rName),
@@ -201,9 +205,10 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_iopsIo1Updated(rName),
@@ -237,9 +242,10 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_iopsIo2Updated(rName),
@@ -275,9 +281,10 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -302,9 +309,10 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -360,9 +368,10 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_tags2("key1", "value1updated", "key2", "value2"),
@@ -406,9 +415,10 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -435,9 +445,10 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -478,9 +489,10 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -516,9 +528,10 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -554,9 +567,10 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", "200"),
@@ -610,9 +624,10 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "600"),
@@ -666,9 +681,10 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp2", "", ""),
@@ -722,9 +738,10 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "gp3", "4000", "125"),
@@ -779,9 +796,10 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -818,9 +836,10 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
