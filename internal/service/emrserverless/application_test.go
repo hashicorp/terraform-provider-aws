@@ -34,7 +34,35 @@ func TestAccEMRApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.6.0"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEMRApplication_network(t *testing.T) {
+	var application emrserverless.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_network(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 				),
 			},
 			{
@@ -169,6 +197,41 @@ resource "aws_emrserverless_application" "test" {
   type          = "hive"
 }
 `, rName)
+}
+
+func testAccApplicationConfig_network(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Allow all inbound traffic"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.6.0"
+  type          = "hive"
+
+  network_configuration {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.test[*].id
+  }
+}
+`, rName))
 }
 
 func testAccApplicationConfig_tags1(rName, tagKey1, tagValue1 string) string {
