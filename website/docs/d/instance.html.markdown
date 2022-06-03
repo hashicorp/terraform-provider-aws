@@ -93,6 +93,10 @@ interpolation.
 * `private_dns` - The private DNS name assigned to the Instance. Can only be
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC.
+* `private_dns_name_options` - The options for the instance hostname.
+    * `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+    * `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+    * `hostname_type` - The type of hostname for EC2 instances.
 * `private_ip` - The private IP address assigned to the Instance.
 * `secondary_private_ips` - The secondary private IPv4 addresses assigned to the instance's primary network interface (eth0) in a VPC.
 * `public_dns` - The public DNS name assigned to the Instance. For EC2-VPC, this

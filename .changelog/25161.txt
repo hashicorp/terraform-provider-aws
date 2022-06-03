@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `private_dns_name_options` argument
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `private_dns_name_options` attribute
+```

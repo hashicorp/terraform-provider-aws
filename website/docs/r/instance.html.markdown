@@ -123,6 +123,7 @@ The following arguments are supported:
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `placement_group` - (Optional) Placement Group to start the instance in.
 * `placement_partition_number` - (Optional) The number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
+* `private_dns_name_options` - (Optional) The options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `private_ip` - (Optional) Private IP address to associate with the instance in a VPC.
 * `root_block_device` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
 * `secondary_private_ips` - (Optional) A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e., referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
@@ -264,6 +265,14 @@ Each `network_interface` block supports the following:
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
 * `network_card_index` - (Optional) Integer index of the network card. Limited by instance type. The default index is `0`.
 * `network_interface_id` - (Required) ID of the network interface to attach.
+
+### Private DNS Name Options
+
+The `private_dns_name_options` block supports the following:
+
+* `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+* `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+* `hostname_type` - The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
 ### Launch Template Specification
 

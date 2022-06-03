@@ -256,6 +256,26 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"private_dns_name_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_resource_name_dns_aaaa_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"enable_resource_name_dns_a_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"hostname_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"public_dns": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -436,6 +456,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("outpost_arn", instance.OutpostArn)
+	d.Set("private_dns_name_options", instance.PrivateDnsNameOptions)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("public_dns", instance.PublicDnsName)
