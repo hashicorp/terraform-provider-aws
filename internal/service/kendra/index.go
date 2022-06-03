@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -405,10 +406,6 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	// region and accountId used to construct the ARN - not returned by API
-	region := meta.(*conns.AWSClient).Region
-	accountId := meta.(*conns.AWSClient).AccountID
-
 	id := d.Id()
 
 	resp, err := conn.DescribeIndexWithContext(ctx, &kendra.DescribeIndexInput{
@@ -429,7 +426,15 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(fmt.Errorf("error getting Kendra Index (%s): empty response", d.Id()))
 	}
 
-	d.Set("arn", fmt.Sprintf("arn:aws:kendra:%s:%s:index/%s", region, accountId, id))
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "kendra",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("index/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("description", resp.Description)
 	d.Set("edition", resp.Edition)
