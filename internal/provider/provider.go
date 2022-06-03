@@ -846,6 +846,7 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_product":               servicecatalog.DataSourceProduct(),
 
 			"aws_service_discovery_dns_namespace": servicediscovery.DataSourceDNSNamespace(),
+			"aws_service_discovery_service":       servicediscovery.DataSourceService(),
 
 			"aws_servicequotas_service":       servicequotas.DataSourceService(),
 			"aws_servicequotas_service_quota": servicequotas.DataSourceServiceQuota(),
