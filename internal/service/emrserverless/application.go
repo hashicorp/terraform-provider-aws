@@ -71,6 +71,54 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"initial_capacity": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"initial_capacity_config": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"worker_configuration": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cpu": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"disk": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"memory": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"worker_count": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+						"initial_capacity_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"maximum_capacity": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -160,6 +208,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
+		input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -203,6 +255,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
+			input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -257,6 +313,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("auto_stop_configuration", []interface{}{flattenAutoStopConfig(application.AutoStopConfiguration)}); err != nil {
 		return fmt.Errorf("setting auto_stop_configuration: %w", err)
+	}
+
+	if err := d.Set("initial_capacity", flattenInitialCapacity(application.InitialCapacity)); err != nil {
+		return fmt.Errorf("setting initial_capacity: %w", err)
 	}
 
 	if err := d.Set("maximum_capacity", []interface{}{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
@@ -446,6 +506,131 @@ func flattenNetworkConfiguration(apiObject *emrserverless.NetworkConfiguration) 
 
 	if v := apiObject.SubnetIds; v != nil {
 		tfMap["subnet_ids"] = flex.FlattenStringSet(v)
+	}
+
+	return tfMap
+}
+
+func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialCapacityConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	configs := make(map[string]*emrserverless.InitialCapacityConfig)
+
+	for _, tfMapRaw := range tfMap.List() {
+
+		config, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := config["initial_capacity_config"].([]interface{}); ok && len(v) > 0 {
+			configs[config["initial_capacity_type"].(string)] = expandInitialCapacityConfig(v[0].(map[string]interface{}))
+		}
+	}
+
+	return configs
+}
+
+func flattenInitialCapacity(apiObject map[string]*emrserverless.InitialCapacityConfig) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	tfMap := map[string]interface{}{}
+
+	for capacityType, config := range apiObject {
+
+		if config != nil {
+			tfMap["initial_capacity_type"] = capacityType
+			tfMap["initial_capacity_config"] = flattenInitialCapacityConfig(config)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandInitialCapacityConfig(tfMap map[string]interface{}) *emrserverless.InitialCapacityConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &emrserverless.InitialCapacityConfig{}
+
+	if v, ok := tfMap["worker_count"].(int); ok {
+		apiObject.WorkerCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["worker_configuration"].([]interface{}); ok && v[0] != nil {
+		apiObject.WorkerConfiguration = expandWorkerResourceConfig(v[0].(map[string]interface{}))
+	}
+
+	return nil
+}
+
+func flattenInitialCapacityConfig(apiObject *emrserverless.InitialCapacityConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.WorkerCount; v != nil {
+		tfMap["worker_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.WorkerConfiguration; v != nil {
+		tfMap["worker_configuration"] = flattenWorkerResourceConfig(v)
+	}
+
+	return tfMap
+}
+
+func expandWorkerResourceConfig(tfMap map[string]interface{}) *emrserverless.WorkerResourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &emrserverless.WorkerResourceConfig{}
+
+	if v, ok := tfMap["cpu"].(string); ok && v != "" {
+		apiObject.Cpu = aws.String(v)
+	}
+
+	if v, ok := tfMap["disk"].(string); ok && v != "" {
+		apiObject.Disk = aws.String(v)
+	}
+
+	if v, ok := tfMap["memory"].(string); ok && v != "" {
+		apiObject.Memory = aws.String(v)
+	}
+
+	return nil
+}
+
+func flattenWorkerResourceConfig(apiObject *emrserverless.WorkerResourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Cpu; v != nil {
+		tfMap["cpu"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Disk; v != nil {
+		tfMap["disk"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Memory; v != nil {
+		tfMap["memory"] = aws.StringValue(v)
 	}
 
 	return tfMap
