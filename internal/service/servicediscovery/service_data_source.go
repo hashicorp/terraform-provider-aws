@@ -158,7 +158,7 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	service, err := FindServiceByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -25,23 +25,27 @@ func ResourceHTTPNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validNamespaceName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
+			"http_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validNamespaceName,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -113,9 +117,10 @@ func resourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := aws.StringValue(resp.Namespace.Arn)
-	d.Set("name", resp.Namespace.Name)
-	d.Set("description", resp.Namespace.Description)
 	d.Set("arn", arn)
+	d.Set("description", resp.Namespace.Description)
+	d.Set("http_name", resp.Namespace.Properties.HttpProperties.HttpName)
+	d.Set("name", resp.Namespace.Name)
 
 	tags, err := ListTags(conn, arn)
 
