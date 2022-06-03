@@ -189,14 +189,14 @@ func resourceEmailIdentityDKIMRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("public_key", base64.StdEncoding.EncodeToString(pubKey))
 		d.Set("current_signing_key_length", fmt.Sprintf("RSA_%d_BIT", rsaKey.N.BitLen()))
 	} else {
-		d.Set("current_signing_key_length", aws.StringValue(response.DkimAttributes.CurrentSigningKeyLength))
+		d.Set("current_signing_key_length", response.DkimAttributes.CurrentSigningKeyLength)
 	}
 
 	d.Set("origin", origin)
 	d.Set("dkim_tokens", aws.StringValueSlice(response.DkimAttributes.Tokens))
-	d.Set("next_signing_key_length", aws.StringValue(response.DkimAttributes.NextSigningKeyLength))
-	d.Set("signing_enabled", aws.BoolValue(response.DkimAttributes.SigningEnabled))
-	d.Set("status", aws.StringValue(response.DkimAttributes.Status))
+	d.Set("next_signing_key_length", response.DkimAttributes.NextSigningKeyLength)
+	d.Set("signing_enabled", response.DkimAttributes.SigningEnabled)
+	d.Set("status", response.DkimAttributes.Status)
 	return nil
 }
 
@@ -228,7 +228,7 @@ func resourceEmailIdentityDKIMUpdate(d *schema.ResourceData, meta interface{}) e
 		update = true
 	}
 
-	if d.HasChange("private_key") || d.HasChange("selector") {
+	if d.HasChanges("private_key", "selector") {
 		privateKey := d.Get("private_key").(string)
 		selector := d.Get("selector").(string)
 		if privateKey != "" && selector != "" {

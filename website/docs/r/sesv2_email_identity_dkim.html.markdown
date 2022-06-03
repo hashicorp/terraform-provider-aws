@@ -1,5 +1,5 @@
 ---
-subcategory: "SES (Simple Email)"
+subcategory: "SESv2 (Simple Email V2)"
 layout: "aws"
 page_title: "AWS: aws_sesv2_email_identity_dkim"
 description: |-
@@ -59,7 +59,7 @@ resource "aws_sesv2_email_identity" "example" {
 }
 
 resource "aws_sesv2_email_dkim" "example" {
-  identity = aws_sesv2_email_identity.example.identity
+  identity                = aws_sesv2_email_identity.example.identity
   next_signing_key_length = "RSA_2048_BIT"
 }
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "SES (Simple Email)"
+subcategory: "SESv2 (Simple Email V2)"
 layout: "aws"
 page_title: "AWS: aws_sesv2_email_identity"
 description: |-

@@ -95,7 +95,7 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("origin", origin)
 	d.Set("dkim_tokens", tokens)
-	d.Set("identity_type", aws.StringValue(response.IdentityType))
+	d.Set("identity_type", response.IdentityType)
 
 	arn := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
