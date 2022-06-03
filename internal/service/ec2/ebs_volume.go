@@ -191,7 +191,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Volume(%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EBS Volume (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
