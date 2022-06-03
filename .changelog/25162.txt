@@ -1,5 +1,8 @@
 ```release-note:new-data-source
 aws_service_discovery_service
+```
+
+```release-note:new-data-source
 aws_service_discovery_http_namespace
 ```
 
