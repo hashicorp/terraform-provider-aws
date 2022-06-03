@@ -154,7 +154,7 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("updating EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
 		}
 
-		if _, err := WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute); err != nil {
+		if _, err := waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
 			return fmt.Errorf("waiting for EBS Snapshot (%s) Storage Tier archive: %w", d.Id(), err)
 		}
 	}
@@ -225,7 +225,7 @@ func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("updating EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
 			}
 
-			if _, err := WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute); err != nil {
+			if _, err := waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
 				return fmt.Errorf("waiting for EBS Snapshot (%s) Storage Tier archive: %w", d.Id(), err)
 			}
 		} else {

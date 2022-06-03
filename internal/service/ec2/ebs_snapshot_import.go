@@ -250,7 +250,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("setting EBS Snapshot Import (%s) Storage Tier: %w", d.Id(), err)
 		}
 
-		_, err = WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute)
+		_, err = waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for EBS Snapshot Import (%s) Storage Tier archive: %w", d.Id(), err)

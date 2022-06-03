@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -150,7 +149,7 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("setting EBS Snapshot Copy (%s) Storage Tier: %w", d.Id(), err)
 		}
 
-		_, err = WaitEBSSnapshotTierArchive(conn, d.Id(), 60*time.Minute)
+		_, err = waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for EBS Snapshot Copy (%s) Storage Tier archive: %w", d.Id(), err)
