@@ -22,6 +22,21 @@ resource "aws_emrserverless_application" "example" {
 }
 ```
 
+### Maximum Capacity Usage
+
+```terraform
+resource "aws_emrserverless_application" "example" {
+  name          = "example"
+  release_label = "emr-6.6.0"
+  type          = "hive"
+
+  maximum_capacity {
+    cpu    = "2 vCPU"
+    memory = "10 GB"	
+  }  
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:

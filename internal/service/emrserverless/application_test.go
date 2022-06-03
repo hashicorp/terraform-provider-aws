@@ -35,6 +35,7 @@ func TestAccEMRApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -42,6 +43,40 @@ func TestAccEMRApplication_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEMRApplication_maxCapacity(t *testing.T) {
+	var application emrserverless.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_maxCapacity(rName, "2 vCPU"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_maxCapacity(rName, "4 vCPU"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
+				),
 			},
 		},
 	})
@@ -197,6 +232,21 @@ resource "aws_emrserverless_application" "test" {
   type          = "hive"
 }
 `, rName)
+}
+
+func testAccApplicationConfig_maxCapacity(rName, cpu string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.6.0"
+  type          = "hive"
+
+  maximum_capacity {
+    cpu    = %[2]q
+    memory = "10 GB"	
+  }
+}
+`, rName, cpu)
 }
 
 func testAccApplicationConfig_network(rName string) string {
