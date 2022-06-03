@@ -1,4 +1,9 @@
 ## 4.18.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ebs_volume: Add `final_snapshot` argument ([#21916](https://github.com/hashicorp/terraform-provider-aws/issues/21916))
+
 ## 4.17.1 (June  3, 2022)
 
 BUG FIXES:
