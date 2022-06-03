@@ -406,6 +406,43 @@ func testAccCheckServiceDirectorySSO(name string, ssoEnabled bool) resource.Test
 	}
 }
 
+func TestAccDSDirectoryNumberDomainControllerCount(t *testing.T) {
+	var ds directoryservice.DirectoryDescription
+	resourceName := "aws_directory_service_directory.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+	domainCount := "3"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_domainControllersModified(rName, domainName, domainCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_controller_count", domainCount),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
 func testAccDirectoryConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
@@ -618,5 +655,25 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 `, domain, alias),
+	)
+}
+
+func testAccDirectoryConfig_domainControllersModified(rName, domain string, domain_controller_count string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name                    = %[1]q
+  password                = "SuperSecretPassw0rd"
+  type                    = "MicrosoftAD"
+  size                    = "Large"
+  domain_controller_count = %[2]q
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+`, domain, domain_controller_count),
 	)
 }
