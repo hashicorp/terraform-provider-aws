@@ -212,12 +212,20 @@ const (
 )
 
 const (
+	DefaultSnapshotImportRoleName = "vmimport"
+)
+
+const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
 )
 
 const (
 	SriovNetSupportSimple = "simple"
+)
+
+const (
+	TargetStorageTierStandard = "standard"
 )
 
 func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
