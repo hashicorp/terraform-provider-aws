@@ -1,4 +1,9 @@
 ## 4.17.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ram_resource_share: Fix regression in v4.17.0 where `permission_arns` would get clobbered if already set ([#25158](https://github.com/hashicorp/terraform-provider-aws/issues/25158))
+
 ## 4.17.0 (June  3, 2022)
 
 FEATURES:
