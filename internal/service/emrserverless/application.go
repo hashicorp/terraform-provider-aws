@@ -571,7 +571,7 @@ func expandInitialCapacityConfig(tfMap map[string]interface{}) *emrserverless.In
 		apiObject.WorkerConfiguration = expandWorkerResourceConfig(v[0].(map[string]interface{}))
 	}
 
-	return nil
+	return apiObject
 }
 
 func flattenInitialCapacityConfig(apiObject *emrserverless.InitialCapacityConfig) map[string]interface{} {
@@ -611,7 +611,7 @@ func expandWorkerResourceConfig(tfMap map[string]interface{}) *emrserverless.Wor
 		apiObject.Memory = aws.String(v)
 	}
 
-	return nil
+	return apiObject
 }
 
 func flattenWorkerResourceConfig(apiObject *emrserverless.WorkerResourceConfig) map[string]interface{} {
