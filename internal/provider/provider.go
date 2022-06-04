@@ -1040,7 +1040,8 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_cost_category": ce.ResourceCostCategory(),
+			"aws_ce_anomaly_monitor": ce.ResourceAnomalyMonitor(),
+			"aws_ce_cost_category":   ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
