@@ -102,7 +102,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 
 	resp, err := conn.GetAnomalyMonitorsWithContext(ctx, &costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{d.Id()})})
 
-	if len(resp.AnomalyMonitors) < 1 {
+	if len(resp.AnomalyMonitors) < 1 && !d.IsNewResource() {
 		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id())
 		d.SetId("")
 		return nil
@@ -133,7 +133,6 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", anomalyMonitor.MonitorName)
 	d.Set("type", anomalyMonitor.MonitorType)
 
-	// return diag.Errorf("String is: %s", string(specificationToJson))
 	return nil
 }
 
