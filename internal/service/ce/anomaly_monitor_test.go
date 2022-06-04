@@ -217,16 +217,15 @@ resource "aws_ce_anomaly_monitor" "test" {
 {
 	"And": null,
 	"CostCategories": null,
-	"Dimensions": {
-		"Key": "LINKED_ACCOUNT",
-		"MatchOptions": null,
-		"Values": [
-			"060232822672"
-		]
-	},
+	"Dimensions": null,
 	"Not": null,
 	"Or": null,
-	"Tags": null
+	"Tags": {
+		"Key": "CostCenter",
+		"Values": [
+			"10000"
+		]
+	}
 }
 JSON
 }
