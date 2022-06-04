@@ -114,20 +114,23 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 
 	anomalyMonitor := resp.AnomalyMonitors[0]
 
-	specificationToJson, err := json.Marshal(anomalyMonitor.MonitorSpecification)
-	if err != nil {
-		return diag.Errorf("Error parsing specification response: %s", err)
-	}
-	specificationToSet, err := structure.NormalizeJsonString(string(specificationToJson))
+	if anomalyMonitor.MonitorSpecification != nil {
+		specificationToJson, err := json.Marshal(anomalyMonitor.MonitorSpecification)
+		if err != nil {
+			return diag.Errorf("Error parsing specification response: %s", err)
+		}
+		specificationToSet, err := structure.NormalizeJsonString(string(specificationToJson))
 
-	if err != nil {
-		return diag.Errorf("Specification (%s) is invalid JSON: %s", specificationToSet, err)
+		if err != nil {
+			return diag.Errorf("Specification (%s) is invalid JSON: %s", specificationToSet, err)
+		}
+
+		d.Set("specification", specificationToSet)
 	}
 
 	d.Set("arn", anomalyMonitor.MonitorArn)
 	d.Set("dimension", anomalyMonitor.MonitorDimension)
 	d.Set("name", anomalyMonitor.MonitorName)
-	d.Set("specification", specificationToSet)
 	d.Set("type", anomalyMonitor.MonitorType)
 
 	// return diag.Errorf("String is: %s", string(specificationToJson))
