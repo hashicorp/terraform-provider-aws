@@ -200,7 +200,7 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 func testAccAnomalyMonitorConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
+  name      = %[1]q
   type      = "DIMENSIONAL"
   dimension = "SERVICE"
 }
@@ -210,10 +210,10 @@ resource "aws_ce_anomaly_monitor" "test" {
 func testAccAnomalyMonitorConfig_Custom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-	name = %[1]q
-	type = "CUSTOM"
-  
-	specification = <<JSON
+  name = %[1]q
+  type = "CUSTOM"
+
+  specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
