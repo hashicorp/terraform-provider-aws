@@ -40,8 +40,6 @@ func TestAccEMRApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -117,7 +115,7 @@ func TestAccEMRApplication_maxCapacity(t *testing.T) {
 					testAccCheckApplicationExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "2 vCPU"),
-					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memomry", "10 GB"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memory", "10 GB"),
 				),
 			},
 			{
@@ -131,7 +129,7 @@ func TestAccEMRApplication_maxCapacity(t *testing.T) {
 					testAccCheckApplicationExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "4 vCPU"),
-					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memomry", "10 GB")),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memory", "10 GB")),
 			},
 		},
 	})
