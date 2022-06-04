@@ -304,8 +304,8 @@ resource "aws_emrserverless_application" "test" {
       worker_configuration {
         cpu    = %[2]q
         memory = "10 GB"
-	  }
-	}
+      }
+    }
   }
 }
 `, rName, cpu)
