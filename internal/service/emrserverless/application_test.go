@@ -243,7 +243,7 @@ resource "aws_emrserverless_application" "test" {
 
   maximum_capacity {
     cpu    = %[2]q
-    memory = "10 GB"	
+    memory = "10 GB"
   }
 }
 `, rName, cpu)
