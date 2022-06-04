@@ -38,8 +38,8 @@ resource "aws_emrserverless_application" "example" {
       worker_configuration {
         cpu    = "2 vCPU"
         memory = "10 GB"
-	  }
-	}
+    }
+  }
 }
 ```
 
@@ -54,7 +54,7 @@ resource "aws_emrserverless_application" "example" {
   maximum_capacity {
     cpu    = "2 vCPU"
     memory = "10 GB"
-  } 
+  }
 }
 ```
 
