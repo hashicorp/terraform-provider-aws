@@ -41,7 +41,7 @@ resource "aws_emrserverless_application" "example" {
       }
     }
   }
-} 
+}
 ```
 
 ### Maximum Capacity Usage
