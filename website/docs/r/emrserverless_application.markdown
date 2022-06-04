@@ -22,6 +22,27 @@ resource "aws_emrserverless_application" "example" {
 }
 ```
 
+### Initial Capacity Usage
+
+```terraform
+resource "aws_emrserverless_application" "example" {
+  name          = "example"
+  release_label = "emr-6.6.0"
+  type          = "hive"
+
+  initial_capacity {
+    initial_capacity_type = "HiveDriver"
+
+    initial_capacity_config {
+      worker_count = 1
+      worker_configuration {
+        cpu    = "2 vCPU"
+        memory = "10 GB"
+	  }
+	}
+}
+```
+
 ### Maximum Capacity Usage
 
 ```terraform
@@ -63,7 +84,7 @@ The following arguments are required:
 ### initial_capacity Arguments
 
 * `initial_capacity_config` - (Optional) The initial capacity configuration per worker.
-* `initial_capacity_type` - (Required) The type of the initial capacity.
+* `initial_capacity_type` - (Required) The worker type for an analytics framework. For Spark applications, the key can either be set to `Driver` or `Executor`. For Hive applications, it can be set to `HiveDriver` or `TezTask`.
 
 ### maximum_capacity Arguments
 

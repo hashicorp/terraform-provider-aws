@@ -70,6 +70,12 @@ func TestAccEMRApplication_initialCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_type", "HiveDriver"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.cpu", "2 vCPU"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.memory", "10 GB"),
 				),
 			},
 			{
@@ -82,6 +88,12 @@ func TestAccEMRApplication_initialCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_type", "HiveDriver"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.cpu", "4 vCPU"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.memory", "10 GB"),
 				),
 			},
 		},
@@ -287,13 +299,13 @@ resource "aws_emrserverless_application" "test" {
   type          = "hive"
 
   initial_capacity {
-    initial_capacity_type = "DRIVER"
+    initial_capacity_type = "HiveDriver"
 
     initial_capacity_config {
       worker_count = 1
       worker_configuration {
         cpu    = %[2]q
-        memory = "10 GB" 
+        memory = "10 GB"
 	  }
 	}
   }

@@ -97,6 +97,7 @@ func ResourceApplication() *schema.Resource {
 												"disk": {
 													Type:     schema.TypeString,
 													Optional: true,
+													Computed: true,
 												},
 												"memory": {
 													Type:     schema.TypeString,
@@ -106,8 +107,9 @@ func ResourceApplication() *schema.Resource {
 										},
 									},
 									"worker_count": {
-										Type:     schema.TypeInt,
-										Required: true,
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 1000000),
 									},
 								},
 							},
@@ -269,6 +271,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
+		log.Printf("[DEBUG] Updating EMR Serveless Application: %#v", input)
 		_, err := conn.UpdateApplication(input)
 		if err != nil {
 			return fmt.Errorf("error updating EMR Serveless Application: %w", err)
@@ -526,8 +529,10 @@ func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialC
 			continue
 		}
 
-		if v, ok := config["initial_capacity_config"].([]interface{}); ok && len(v) > 0 {
-			configs[config["initial_capacity_type"].(string)] = expandInitialCapacityConfig(v[0].(map[string]interface{}))
+		if v, ok := config["initial_capacity_type"].(string); ok && v != "" {
+			if conf, ok := config["initial_capacity_config"].([]interface{}); ok && len(conf) > 0 {
+				configs[v] = expandInitialCapacityConfig(conf[0].(map[string]interface{}))
+			}
 		}
 	}
 
@@ -541,16 +546,16 @@ func flattenInitialCapacity(apiObject map[string]*emrserverless.InitialCapacityC
 
 	var tfList []interface{}
 
-	tfMap := map[string]interface{}{}
-
 	for capacityType, config := range apiObject {
 
-		if config != nil {
-			tfMap["initial_capacity_type"] = capacityType
-			tfMap["initial_capacity_config"] = flattenInitialCapacityConfig(config)
+		if config == nil {
+			continue
 		}
 
-		tfList = append(tfList, tfMap)
+		tfList = append(tfList, map[string]interface{}{
+			"initial_capacity_type":   capacityType,
+			"initial_capacity_config": []interface{}{flattenInitialCapacityConfig(config)},
+		})
 	}
 
 	return tfList
@@ -586,7 +591,7 @@ func flattenInitialCapacityConfig(apiObject *emrserverless.InitialCapacityConfig
 	}
 
 	if v := apiObject.WorkerConfiguration; v != nil {
-		tfMap["worker_configuration"] = flattenWorkerResourceConfig(v)
+		tfMap["worker_configuration"] = []interface{}{flattenWorkerResourceConfig(v)}
 	}
 
 	return tfMap
