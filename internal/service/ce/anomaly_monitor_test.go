@@ -222,6 +222,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Or": null,
 	"Tags": {
 		"Key": "CostCenter",
+		"MatchOptions": null,
 		"Values": [
 			"10000"
 		]
