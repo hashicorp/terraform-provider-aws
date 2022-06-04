@@ -32,8 +32,8 @@ resource "aws_emrserverless_application" "example" {
 
   maximum_capacity {
     cpu    = "2 vCPU"
-    memory = "10 GB"	
-  }  
+    memory = "10 GB"
+  } 
 }
 ```
 
