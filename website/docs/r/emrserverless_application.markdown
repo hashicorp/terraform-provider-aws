@@ -38,9 +38,10 @@ resource "aws_emrserverless_application" "example" {
       worker_configuration {
         cpu    = "2 vCPU"
         memory = "10 GB"
+      }
     }
   }
-}
+} 
 ```
 
 ### Maximum Capacity Usage
