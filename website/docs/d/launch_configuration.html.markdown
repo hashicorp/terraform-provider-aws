@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
 description: |-
@@ -12,7 +12,7 @@ Provides information about a Launch Configuration.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_launch_configuration" "ubuntu" {
   name = "test-launch-config"
 }
@@ -29,11 +29,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the launch configuration.
+* `arn` - The Amazon Resource Name of the launch configuration.
 * `name` - The Name of the launch configuration.
 * `image_id` - The EC2 Image ID of the instance.
 * `instance_type` - The Instance Type of the instance to launch.
 * `iam_instance_profile` - The IAM Instance Profile to associate with launched instances.
 * `key_name` - The Key Name that should be used for the instance.
+* `metadata_options` - The metadata options for the instance.
+    * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
+    * `http_tokens` - If session tokens are required: `optional`, `required`.
+    * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `security_groups` - A list of associated Security Group IDS.
 * `associate_public_ip_address` - Whether a Public IP address is associated with the instance.
 * `vpc_classic_link_id` - The ID of a ClassicLink-enabled VPC.
@@ -52,6 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 * `delete_on_termination` - Whether the EBS Volume will be deleted on instance termination.
 * `encrypted` - Whether the volume is Encrypted.
 * `iops` - The provisioned IOPs of the volume.
+* `throughput` - The Throughput of the volume.
 * `volume_size` - The Size of the volume.
 * `volume_type` - The Type of the volume.
 
@@ -59,11 +65,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `delete_on_termination` - Whether the EBS Volume will be deleted on instance termination.
 * `device_name` - The Name of the device.
+* `encrypted` - Whether the volume is Encrypted.
 * `iops` - The provisioned IOPs of the volume.
+* `no_device` - Whether the device in the block device mapping of the AMI is suppressed.
 * `snapshot_id` - The Snapshot ID of the mount.
+* `throughput` - The Throughput of the volume.
 * `volume_size` - The Size of the volume.
 * `volume_type` - The Type of the volume.
-* `encrypted` - Whether the volume is Encrypted.
 
 `ephemeral_block_device` is exported with the following attributes:
 

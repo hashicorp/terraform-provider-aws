@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_service: Retry when using the `wait_for_steady_state` parameter and `ResourceNotReady` errors are returned from the AWS API
+```
+
+```release-note:bug
+resource/aws_ecs_service: Wait for service to reach an active state after create and update operations
+```

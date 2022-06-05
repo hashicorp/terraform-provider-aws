@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route_table_association"
 description: |-
@@ -13,14 +13,14 @@ internet gateway or virtual private gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_route_table_association" "a" {
   subnet_id      = aws_subnet.foo.id
   route_table_id = aws_route_table.bar.id
 }
 ```
 
-```hcl
+```terraform
 resource "aws_route_table_association" "b" {
   gateway_id     = aws_internet_gateway.foo.id
   route_table_id = aws_route_table.bar.id
@@ -51,7 +51,7 @@ is already associated, will result in an error (e.g.,
 rtb-4176657279 conflicts with an existing association`) unless you first
 import the original association.
 
-EC2 Route Table Associations can be imported using the sassociated resource ID and Route Table ID
+EC2 Route Table Associations can be imported using the associated resource ID and Route Table ID
 separated by a forward slash (`/`).
 
 For example with EC2 Subnets:

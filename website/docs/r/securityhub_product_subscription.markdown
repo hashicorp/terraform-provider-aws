@@ -10,17 +10,15 @@ description: |-
 
 Subscribes to a Security Hub product.
 
-~> **NOTE:** This AWS service is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_securityhub_account" "example" {}
 
 data "aws_region" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
-  depends_on  = ["aws_securityhub_account.example"]
+  depends_on  = [aws_securityhub_account.example]
   product_arn = "arn:aws:securityhub:${data.aws_region.current.name}:733251395267:product/alertlogic/althreatmanagement"
 }
 ```
@@ -67,13 +65,13 @@ Currently available products (remember to replace `${var.region}` as appropriate
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of a resource that represents your subscription to the product that generates the findings that you want to import into Security Hub.
 
 ## Import
 
-Security Hub product subscriptions can be imported in the form `product_arn,arn`, e.g.
+Security Hub product subscriptions can be imported in the form `product_arn,arn`, e.g.,
 
 ```sh
 $ terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
