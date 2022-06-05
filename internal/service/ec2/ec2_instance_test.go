@@ -961,6 +961,59 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_disableAPIStop(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	checkDisableApiStop := func(expected bool) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+			r, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+				InstanceId: v.InstanceId,
+				Attribute:  aws.String("disableApiStop"),
+			})
+			if err != nil {
+				return err
+			}
+			got := *r.DisableApiStop.Value
+			if got != expected {
+				return fmt.Errorf("expected: %t, got: %t", expected, got)
+			}
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					checkDisableApiStop(true),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					checkDisableApiStop(false),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -5485,6 +5538,24 @@ resource "aws_instance" "test" {
   maintenance_options {
     auto_recovery = %[2]q
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, val))
+}
+
+func testAccInstanceConfig_disableAPIStop(rName string, val bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type           = "t2.small"
+  subnet_id               = aws_subnet.test.id
+  disable_api_stop        = %[2]t
 
   tags = {
     Name = %[1]q

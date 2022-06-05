@@ -146,6 +146,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Computed: true,

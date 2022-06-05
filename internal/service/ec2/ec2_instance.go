@@ -157,6 +157,11 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -773,6 +778,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
+		DisableApiStop:                    instanceOpts.DisableAPIStop,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
 		EnclaveOptions:                    instanceOpts.EnclaveOptions,
@@ -1128,6 +1134,16 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn.String())
 
 	// Instance attributes
+	{
+		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
+			InstanceId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
+		}
+		d.Set("disable_api_stop", attr.DisableApiStop.Value)
+	}
 	{
 		if isSnowballEdgeInstance(d.Id()) {
 			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
@@ -1511,6 +1527,14 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("disable_api_stop") && !d.IsNewResource() {
+		err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool))
+
+		if err != nil {
+			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiStop, err)
+		}
+	}
+
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
 		if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
 			return err
@@ -1744,8 +1768,32 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
+	if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
+		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+	}
+
 	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func disableInstanceAPIStop(conn *ec2.EC2, id string, disableAPIStop bool) error {
+	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+		DisableApiStop: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(disableAPIStop),
+		},
+		InstanceId: aws.String(id),
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
+		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
 	}
 
 	return nil
@@ -2408,6 +2456,7 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 type awsInstanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
 	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
+	DisableAPIStop                    *bool
 	DisableAPITermination             *bool
 	EBSOptimized                      *bool
 	Monitoring                        *ec2.RunInstancesMonitoringEnabled
@@ -2439,6 +2488,7 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &awsInstanceOpts{
+		DisableAPIStop:        aws.Bool(d.Get("disable_api_stop").(bool)),
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),

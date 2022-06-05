@@ -50,6 +50,10 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -513,6 +517,16 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 
 	// Lookup and Set Instance Attributes
+	{
+		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+			Attribute:  aws.String("disableApiStop"),
+			InstanceId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return err
+		}
+		d.Set("disable_api_stop", attr.DisableApiStop.Value)
+	}
 	{
 		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
 			Attribute:  aws.String("disableApiTermination"),
