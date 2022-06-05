@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_app_cookie_stickiness_policy"
 description: |-
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Application cookie stickiness policies can be imported using the ELB name, port, and policy name separated by colons (`:`), e.g.
+Application cookie stickiness policies can be imported using the ELB name, port, and policy name separated by colons (`:`), e.g.,
 
 ```sh
 $ terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy

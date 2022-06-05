@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route_table"
 description: |-
@@ -35,16 +35,15 @@ the separate resource.
 resource "aws_route_table" "example" {
   vpc_id = aws_vpc.example.id
 
-  route = [
-    {
-      cidr_block = "10.0.1.0/24"
-      gateway_id = aws_internet_gateway.example.id
-    },
-    {
-      ipv6_cidr_block        = "::/0"
-      egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
-    }
-  ]
+  route {
+    cidr_block = "10.0.1.0/24"
+    gateway_id = aws_internet_gateway.example.id
+  }
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
+  }
 
   tags = {
     Name = "example"
@@ -89,9 +88,10 @@ One of the following destination arguments must be supplied:
 One of the following target arguments must be supplied:
 
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
+* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
-* `instance_id` - (Optional) Identifier of an EC2 instance.
+* `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
@@ -112,6 +112,14 @@ attribute once the route resource is created.
 * `arn` - The ARN of the route table.
 * `owner_id` - The ID of the AWS account that owns the route table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
+- `delete` - (Default `5 minutes`) Used for route deletion
 
 ## Import
 

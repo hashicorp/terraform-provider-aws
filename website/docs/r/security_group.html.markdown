@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group"
 description: |-
@@ -31,26 +31,22 @@ resource "aws_security_group" "allow_tls" {
   description = "Allow TLS inbound traffic"
   vpc_id      = aws_vpc.main.id
 
-  ingress = [
-    {
-      description      = "TLS from VPC"
-      from_port        = 443
-      to_port          = 443
-      protocol         = "tcp"
-      cidr_blocks      = [aws_vpc.main.cidr_block]
-      ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
-    }
-  ]
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = [aws_vpc.main.cidr_block]
+    ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
+  }
 
-  egress = [
-    {
-      from_port        = 0
-      to_port          = 0
-      protocol         = "-1"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = ["::/0"]
-    }
-  ]
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
 
   tags = {
     Name = "allow_tls"
@@ -64,15 +60,13 @@ resource "aws_security_group" "allow_tls" {
 resource "aws_security_group" "example" {
   # ... other configuration ...
 
-  egress = [
-    {
-      from_port        = 0
-      to_port          = 0
-      protocol         = "-1"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = ["::/0"]
-    }
-  ]
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
 }
 ```
 
@@ -87,14 +81,12 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 resource "aws_security_group" "example" {
   # ... other configuration ...
 
-  egress = [
-    {
-      from_port       = 0
-      to_port         = 0
-      protocol        = "-1"
-      prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
-    }
-  ]
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
+  }
 }
 
 resource "aws_vpc_endpoint" "my_endpoint" {
@@ -103,6 +95,24 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 ```
 
 You can also find a specific Prefix List using the `aws_prefix_list` data source.
+
+### Change of name or name-prefix value
+
+Security Group's Name [cannot be edited after the resource is created](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/working-with-security-groups.html#creating-security-group). In fact, the `name` and `name-prefix` arguments force the creation of a new Security Group resource when they change value. In that case, Terraform first deletes the existing Security Group resource and then it creates a new one. If the existing Security Group is associated to a Network Interface resource, the deletion cannot complete. The reason is that Network Interface resources cannot be left with no Security Group attached and the new one is not yet available at that point.
+
+It is required to invert the default behavior of Terraform. That is, first the new Security Group resource must be created, then associated to possible Network Interface resources and finally the old Security Group can be detached and deleted. To force this behavior, you must set the [create_before_destroy](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy) property:
+
+```terraform
+resource "aws_security_group" "sg_with_changeable_name" {
+  name = "changeable-name"
+  # ... other configuration ...
+
+  lifecycle {
+    # Necessary if changing 'name' or 'name_prefix' properties.
+    create_before_destroy = true
+  }
+}
+```
 
 ## Argument Reference
 
@@ -174,7 +184,7 @@ configuration options:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.
+Security Groups can be imported using the `security group id`, e.g.,
 
 ```
 $ terraform import aws_security_group.elb_sg sg-903004f8

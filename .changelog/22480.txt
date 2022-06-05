@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_fsx_openzfs_file_system: Fix crash with nil `root_volume_configuration.nfs_exports` value
+```
+
+```release-note:bug
+resource/aws_fsx_openzfs_file_system: Change `root_volume_configuration.copy_tags_to_snapshots` to ForceNew
+```

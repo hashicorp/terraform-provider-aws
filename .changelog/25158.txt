@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ram_resource_share: Fix regression in v4.17.0 where `permission_arns` would get clobbered if already set
+```

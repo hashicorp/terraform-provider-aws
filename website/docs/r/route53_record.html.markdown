@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_record"
 description: |-
@@ -25,7 +25,7 @@ resource "aws_route53_record" "www" {
 ```
 
 ### Weighted routing policy
-Other routing policies are configured similarly. See [AWS Route53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html) for details.
+Other routing policies are configured similarly. See [Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html) for details.
 
 ```terraform
 resource "aws_route53_record" "www-dev" {
@@ -58,7 +58,7 @@ resource "aws_route53_record" "www-live" {
 ```
 
 ### Alias record
-See [related part of AWS Route53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
+See [related part of Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
 to understand differences between alias and non-alias records.
 
 TTL for all alias records is [60 seconds](https://aws.amazon.com/route53/faqs/#dns_failover_do_i_need_to_adjust),
@@ -123,8 +123,8 @@ The following arguments are supported:
 * `name` - (Required) The name of the record.
 * `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
-* `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g. `"first255characters\"\"morecharacters"`).
-* `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `failover`, `geolocation`, `latency`, or `weighted` routing policies documented below.
+* `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g., `"first255characters\"\"morecharacters"`).
+* `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `failover`, `geolocation`, `latency`, `multivalue_answer`, or `weighted` routing policies documented below.
 * `health_check_id` - (Optional) The health check the record should be associated with.
 * `alias` - (Optional) An alias block. Conflicts with `ttl` & `records`.
   Alias record documented below.
@@ -171,7 +171,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Records can be imported using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`). e.g.
+Route53 Records can be imported using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`)E.g.,
 
 ```
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS

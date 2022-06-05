@@ -58,7 +58,7 @@ No additional attributes are exported.
 
 ## Import
 
-Pinpoint APNs VoIP Channel can be imported using the `application-id`, e.g.
+Pinpoint APNs VoIP Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_apns_voip_channel.apns_voip application-id

@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_alias"
 description: |-
-  Provides a Gamelift Alias resource.
+  Provides a GameLift Alias resource.
 ---
 
 # Resource: aws_gamelift_alias
 
-Provides a Gamelift Alias resource.
+Provides a GameLift Alias resource.
 
 ## Example Usage
 
@@ -37,9 +37,9 @@ The following arguments are supported:
 
 #### `routing_strategy`
 
-* `fleet_id` - (Optional) ID of the Gamelift Fleet to point the alias to.
+* `fleet_id` - (Optional) ID of the GameLift Fleet to point the alias to.
 * `message` - (Optional) Message text to be used with the `TERMINAL` routing strategy.
-* `type` - (Required) Type of routing strategy. e.g. `SIMPLE` or `TERMINAL`
+* `type` - (Required) Type of routing strategyE.g., `SIMPLE` or `TERMINAL`
 
 ## Attributes Reference
 
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Gamelift Aliases can be imported using the ID, e.g.
+GameLift Aliases can be imported using the ID, e.g.,
 
 ```
 $ terraform import aws_gamelift_alias.example <alias-id>

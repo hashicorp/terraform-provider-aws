@@ -18,7 +18,7 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_codeartifact_domain" "example" {
-  domain         = "example.com"
+  domain         = "example"
   encryption_key = aws_kms_key.example.arn
 }
 
@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Repository Permissions Policies can be imported using the CodeArtifact Repository ARN, e.g.
+CodeArtifact Repository Permissions Policies can be imported using the CodeArtifact Repository ARN, e.g.,
 
 ```
 $ terraform import aws_codeartifact_repository_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763

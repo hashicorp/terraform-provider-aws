@@ -135,7 +135,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic Beanstalk Environments can be imported using the `id`, e.g.
+Elastic Beanstalk Environments can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j

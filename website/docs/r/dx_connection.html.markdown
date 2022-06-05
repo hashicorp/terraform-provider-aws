@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect connections can be imported using the `connection id`, e.g.
+Direct Connect connections can be imported using the `connection id`, e.g.,
 
 ```
 $ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3

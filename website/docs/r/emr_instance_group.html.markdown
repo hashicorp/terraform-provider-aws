@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_instance_group"
 description: |-
@@ -80,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR task instance group can be imported using their EMR Cluster id and Instance Group id separated by a forward-slash `/`, e.g.
+EMR task instance group can be imported using their EMR Cluster id and Instance Group id separated by a forward-slash `/`, e.g.,
 
 ```
 $ terraform import aws_emr_instance_group.task_greoup j-123456ABCDEF/ig-15EK4O09RZLNR

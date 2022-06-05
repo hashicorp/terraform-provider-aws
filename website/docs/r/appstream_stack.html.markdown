@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_stack"
 description: |-
@@ -91,7 +91,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appstream_stack` can be imported using the id, e.g.
+`aws_appstream_stack` can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_appstream_stack.example stackID

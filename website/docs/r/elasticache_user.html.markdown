@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache users can be imported using the `user_id`, e.g.
+ElastiCache users can be imported using the `user_id`, e.g.,
 
 ```
 $ terraform import aws_elasticache_user.my_user userId1

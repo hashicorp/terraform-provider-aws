@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_registry_policy"
 description: |-
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Registry Policy can be imported using the registry id, e.g.
+ECR Registry Policy can be imported using the registry id, e.g.,
 
 ```
 $ terraform import aws_ecr_registry_policy.example 123456789012

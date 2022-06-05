@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_response_headers_policy: Add `server_timing_headers_config` argument
+```
+
+```release-note:enhancement
+datasource/aws_cloudfront_response_headers_policy: Add `server_timing_headers_config` attribute
+```

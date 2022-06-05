@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_parameter_group"
 description: |-
@@ -38,6 +38,8 @@ The following arguments are supported:
 
 Parameter blocks support the following:
 
+~> **NOTE:** These arguments take a `string` representation of their values.
+
 * `name` - (Required) The name of the documentDB parameter.
 * `value` - (Required) The value of the documentDB parameter.
 * `apply_method` - (Optional) Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
@@ -52,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DocumentDB Cluster Parameter Groups can be imported using the `name`, e.g.
+DocumentDB Cluster Parameter Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster_parameter_group.cluster_pg production-pg-1
