@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 func TestAccDataSyncLocationEFS_basic(t *testing.T) {
@@ -51,6 +52,34 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncLocationEFS_access(t *testing.T) {
+	var locationEfs1 datasync.DescribeLocationEfsOutput
+	resourceName := "aws_datasync_location_efs.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLocationEFSDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationEFSConfigAccess(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
+					resource.TestCheckResourceAttrPair(resourceName, "access_point_arn", "aws_efs_access_point.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "in_transit_cncryption", "TLS1_2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"efs_file_system_arn"},
+			},
+		},
+	})
+}
+
 func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
@@ -65,7 +94,8 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 				Config: testAccLocationEFSConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
-					testAccCheckLocationEFSDisappears(&locationEfs1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -201,20 +231,6 @@ func testAccCheckLocationEFSExists(resourceName string, locationEfs *datasync.De
 	}
 }
 
-func testAccCheckLocationEFSDisappears(location *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-
-		input := &datasync.DeleteLocationInput{
-			LocationArn: location.LocationArn,
-		}
-
-		_, err := conn.DeleteLocation(input)
-
-		return err
-	}
-}
-
 func testAccCheckLocationEFSNotRecreated(i, j *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
@@ -321,4 +337,23 @@ resource "aws_datasync_location_efs" "test" {
   }
 }
 `, key1, value1, key2, value2)
+}
+
+func testAccLocationEFSConfigAccess() string {
+	return testAccLocationEFSBaseConfig() + `
+resource "aws_efs_access_point" "test" {
+  file_system_id = aws_efs_file_system.test.id
+}
+
+resource "aws_datasync_location_efs" "test" {
+  efs_file_system_arn   = aws_efs_mount_target.test.file_system_arn
+  access_point_arn      = aws_efs_access_point.test.arn
+  in_transit_cncryption = "TLS1_2"
+
+  ec2_config {
+    security_group_arns = [aws_security_group.test.arn]
+    subnet_arn          = aws_subnet.test.arn
+  }
+}
+`
 }
