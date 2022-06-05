@@ -4572,28 +4572,29 @@ func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 		client := acctest.Provider.Meta().(*conns.AWSClient)
 		conn := client.EC2Conn
 
-		for _, bd := range instance.BlockDeviceMappings {
-			if bd.Ebs != nil && bd.Ebs.VolumeId != nil {
-				name := aws.StringValue(bd.DeviceName)
-				volID := aws.StringValue(bd.Ebs.VolumeId)
+		for _, v := range instance.BlockDeviceMappings {
+			if v.Ebs != nil && v.Ebs.VolumeId != nil {
+				deviceName := aws.StringValue(v.DeviceName)
 				instanceID := aws.StringValue(instance.InstanceId)
+				volumeID := aws.StringValue(v.Ebs.VolumeId)
 
-				// Make sure in correct state before detaching
-				if err := tfec2.WaitVolumeAttachmentAttached(conn, name, volID, instanceID); err != nil {
+				// Make sure in correct state before detaching.
+				if _, err := tfec2.WaitVolumeAttachmentCreated(conn, volumeID, instanceID, deviceName, 5*time.Minute); err != nil {
 					return err
 				}
 
 				r := tfec2.ResourceVolumeAttachment()
 				d := r.Data(nil)
-				d.Set("device_name", name)
-				d.Set("volume_id", volID)
+				d.Set("device_name", deviceName)
 				d.Set("instance_id", instanceID)
+				d.Set("volume_id", volumeID)
 
 				if err := r.Delete(d, client); err != nil {
 					return err
 				}
 			}
 		}
+
 		return nil
 	}
 }

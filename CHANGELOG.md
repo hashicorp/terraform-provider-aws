@@ -1,24 +1,44 @@
-## 4.17.0 (Unreleased)
+## 4.18.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ebs_volume: Add `final_snapshot` argument ([#21916](https://github.com/hashicorp/terraform-provider-aws/issues/21916))
+
+## 4.17.1 (June  3, 2022)
+
+BUG FIXES:
+
+* resource/aws_ram_resource_share: Fix regression in v4.17.0 where `permission_arns` would get clobbered if already set ([#25158](https://github.com/hashicorp/terraform-provider-aws/issues/25158))
+
+## 4.17.0 (June  3, 2022)
 
 FEATURES:
 
 * **New Data Source:** `aws_redshift_cluster_credentials` ([#25092](https://github.com/hashicorp/terraform-provider-aws/issues/25092))
+* **New Resource:** `aws_acmpca_policy` ([#25109](https://github.com/hashicorp/terraform-provider-aws/issues/25109))
 * **New Resource:** `aws_redshift_cluster_iam_roles` ([#25096](https://github.com/hashicorp/terraform-provider-aws/issues/25096))
 * **New Resource:** `aws_redshift_hsm_configuration` ([#25093](https://github.com/hashicorp/terraform-provider-aws/issues/25093))
 * **New Resource:** `aws_redshiftdata_statement` ([#25104](https://github.com/hashicorp/terraform-provider-aws/issues/25104))
 
 ENHANCEMENTS:
 
+* resource/aws_dms_endpoint: Add `redshift_settings` configuration block ([#21846](https://github.com/hashicorp/terraform-provider-aws/issues/21846))
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `aurora-postgresql` and `mongodb` engines ([#23691](https://github.com/hashicorp/terraform-provider-aws/issues/23691))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `aurora`, `mariadb` and `mysql` engines ([#24846](https://github.com/hashicorp/terraform-provider-aws/issues/24846))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `redshift` engine ([#25080](https://github.com/hashicorp/terraform-provider-aws/issues/25080))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `sqlserver` engine ([#22646](https://github.com/hashicorp/terraform-provider-aws/issues/22646))
+* resource/aws_guardduty_detector: Add `kubernetes` attribute to the `datasources` configuration block ([#22859](https://github.com/hashicorp/terraform-provider-aws/issues/22859))
+* resource/aws_ram_resource_share: Add `permission_arns` argument. ([#25113](https://github.com/hashicorp/terraform-provider-aws/issues/25113))
 * resource/aws_redshift_cluster: The `default_iam_role_arn` argument is now Computed ([#25096](https://github.com/hashicorp/terraform-provider-aws/issues/25096))
 
 BUG FIXES:
 
 * data-source/aws_launch_configuration: Correct data type for `ebs_block_device.throughput` and `root_block_device.throughput` attributes ([#25097](https://github.com/hashicorp/terraform-provider-aws/issues/25097))
+* resource/aws_db_instance_role_association: Extend timeout to 10 minutes ([#25145](https://github.com/hashicorp/terraform-provider-aws/issues/25145))
 * resource/aws_ebs_volume: Fix to preserve `iops` when changing EBS volume type (`io1`, `io2`, `gp3`) ([#23280](https://github.com/hashicorp/terraform-provider-aws/issues/23280))
 * resource/aws_launch_configuration: Honor associate_public_ip_address = false ([#17695](https://github.com/hashicorp/terraform-provider-aws/issues/17695))
+* resource/aws_rds_cluster_role_association: Extend timeout to 10 minutes ([#25145](https://github.com/hashicorp/terraform-provider-aws/issues/25145))
+* resource/aws_servicecatalog_provisioned_product: Correctly handle resources in a `TAINTED` state ([#25130](https://github.com/hashicorp/terraform-provider-aws/issues/25130))
 
 ## 4.16.0 (May 27, 2022)
 

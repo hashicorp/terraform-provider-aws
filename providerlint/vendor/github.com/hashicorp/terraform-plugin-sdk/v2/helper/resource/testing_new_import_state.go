@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testStepNewImportState(ctx context.Context, t testing.T, c TestCase, helper *plugintest.Helper, wd *plugintest.WorkingDir, step TestStep, cfg string) error {
+func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest.Helper, wd *plugintest.WorkingDir, step TestStep, cfg string, providers *providerFactories) error {
 	t.Helper()
 
 	spewConf := spew.NewDefaultConfig()
@@ -33,10 +33,7 @@ func testStepNewImportState(ctx context.Context, t testing.T, c TestCase, helper
 			return err
 		}
 		return nil
-	}, wd, providerFactories{
-		legacy:  c.ProviderFactories,
-		protov5: c.ProtoV5ProviderFactories,
-		protov6: c.ProtoV6ProviderFactories})
+	}, wd, providers)
 	if err != nil {
 		t.Fatalf("Error getting state: %s", err)
 	}
@@ -100,20 +97,14 @@ func testStepNewImportState(ctx context.Context, t testing.T, c TestCase, helper
 
 	err = runProviderCommand(ctx, t, func() error {
 		return importWd.Init(ctx)
-	}, importWd, providerFactories{
-		legacy:  c.ProviderFactories,
-		protov5: c.ProtoV5ProviderFactories,
-		protov6: c.ProtoV6ProviderFactories})
+	}, importWd, providers)
 	if err != nil {
 		t.Fatalf("Error running init: %s", err)
 	}
 
 	err = runProviderCommand(ctx, t, func() error {
 		return importWd.Import(ctx, step.ResourceName, importId)
-	}, importWd, providerFactories{
-		legacy:  c.ProviderFactories,
-		protov5: c.ProtoV5ProviderFactories,
-		protov6: c.ProtoV6ProviderFactories})
+	}, importWd, providers)
 	if err != nil {
 		return err
 	}
@@ -125,10 +116,7 @@ func testStepNewImportState(ctx context.Context, t testing.T, c TestCase, helper
 			return err
 		}
 		return nil
-	}, importWd, providerFactories{
-		legacy:  c.ProviderFactories,
-		protov5: c.ProtoV5ProviderFactories,
-		protov6: c.ProtoV6ProviderFactories})
+	}, importWd, providers)
 	if err != nil {
 		t.Fatalf("Error getting state: %s", err)
 	}

@@ -909,6 +909,7 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate":                       acmpca.ResourceCertificate(),
 			"aws_acmpca_certificate_authority":             acmpca.ResourceCertificateAuthority(),
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
+			"aws_acmpca_policy":                            acmpca.ResourcePolicy(),
 
 			"aws_prometheus_workspace":                amp.ResourceWorkspace(),
 			"aws_prometheus_alert_manager_definition": amp.ResourceAlertManagerDefinition(),
