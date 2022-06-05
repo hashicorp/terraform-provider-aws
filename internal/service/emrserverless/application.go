@@ -195,10 +195,11 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := &emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(resource.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(name),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -226,20 +227,76 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
+	log.Printf("[DEBUG] Creating EMR Serveless Application: %s", input)
 	result, err := conn.CreateApplication(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating EMR Serveless Application: %w", err)
+		return fmt.Errorf("creating EMR Serveless Application (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(result.ApplicationId))
 
-	_, err = waitApplicationCreated(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error waiting for EMR Serveless Application (%s) to create: %w", d.Id(), err)
+	if _, err := waitApplicationCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for EMR Serveless Application (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceApplicationRead(d, meta)
+}
+
+func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EMRServerlessConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	application, err := FindApplicationByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EMR Serverless Application (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading EMR Serverless Application (%s): %w", d.Id(), err)
+	}
+
+	d.Set("arn", application.Arn)
+	d.Set("name", application.Name)
+	d.Set("release_label", application.ReleaseLabel)
+	d.Set("type", strings.ToLower(aws.StringValue(application.Type)))
+
+	if err := d.Set("auto_start_configuration", []interface{}{flattenAutoStartConfig(application.AutoStartConfiguration)}); err != nil {
+		return fmt.Errorf("setting auto_start_configuration: %w", err)
+	}
+
+	if err := d.Set("auto_stop_configuration", []interface{}{flattenAutoStopConfig(application.AutoStopConfiguration)}); err != nil {
+		return fmt.Errorf("setting auto_stop_configuration: %w", err)
+	}
+
+	if err := d.Set("initial_capacity", flattenInitialCapacity(application.InitialCapacity)); err != nil {
+		return fmt.Errorf("setting initial_capacity: %w", err)
+	}
+
+	if err := d.Set("maximum_capacity", []interface{}{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
+		return fmt.Errorf("setting maximum_capacity: %w", err)
+	}
+
+	if err := d.Set("network_configuration", []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+		return fmt.Errorf("setting network_configuration: %w", err)
+	}
+
+	tags := KeyValueTags(application.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("setting tags_all: %w", err)
+	}
+
+	return nil
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -271,10 +328,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating EMR Serveless Application: %#v", input)
+		log.Printf("[DEBUG] Updating EMR Serveless Application: %s", input)
 		_, err := conn.UpdateApplication(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating EMR Serveless Application: %w", err)
+			return fmt.Errorf("updating EMR Serveless Application (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -282,89 +340,31 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating EMR Serverless Application (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EMR Serverless Application (%s) tags: %w", d.Id(), err)
 		}
 	}
 
 	return resourceApplicationRead(d, meta)
 }
 
-func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRServerlessConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	application, err := FindApplicationByID(conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EMR Serverless Application (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	log.Printf("[INFO] Deleting EMR Serverless Application: %s", d.Id())
+	_, err := conn.DeleteApplication(&emrserverless.DeleteApplicationInput{
+		ApplicationId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, emrserverless.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EMR Serverless Application (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EMR Serverless Application (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", application.Arn)
-	d.Set("name", application.Name)
-	d.Set("type", strings.ToLower(aws.StringValue(application.Type)))
-	d.Set("release_label", application.ReleaseLabel)
-
-	if err := d.Set("auto_start_configuration", []interface{}{flattenAutoStartConfig(application.AutoStartConfiguration)}); err != nil {
-		return fmt.Errorf("setting auto_start_configuration: %w", err)
-	}
-
-	if err := d.Set("auto_stop_configuration", []interface{}{flattenAutoStopConfig(application.AutoStopConfiguration)}); err != nil {
-		return fmt.Errorf("setting auto_stop_configuration: %w", err)
-	}
-
-	if err := d.Set("initial_capacity", flattenInitialCapacity(application.InitialCapacity)); err != nil {
-		return fmt.Errorf("setting initial_capacity: %w", err)
-	}
-
-	if err := d.Set("maximum_capacity", []interface{}{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
-		return fmt.Errorf("setting maximum_capacity: %w", err)
-	}
-
-	if err := d.Set("network_configuration", []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
-		return fmt.Errorf("setting network_configuration: %w", err)
-	}
-
-	tags := KeyValueTags(application.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRServerlessConn
-
-	request := &emrserverless.DeleteApplicationInput{
-		ApplicationId: aws.String(d.Id()),
-	}
-
-	log.Printf("[INFO] Deleting EMR Serverless Application: %s", d.Id())
-	_, err := conn.DeleteApplication(request)
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, emrserverless.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting EMR Serverless Application (%s): %w", d.Id(), err)
-	}
-
-	_, err = waitApplicationTerminated(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error waiting for EMR Serveless Application (%s) to terminated: %w", d.Id(), err)
+	if _, err := waitApplicationTerminated(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for EMR Serveless Application (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
