@@ -47,6 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the app monitor.
 * `id` - TThe Amazon Resource Name (ARN) specifying the app monitor.
+* `cw_log_group` - The name of the log group where the copies are stored.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

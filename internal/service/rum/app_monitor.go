@@ -96,6 +96,10 @@ func ResourceAppMonitor() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"cw_log_group": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -174,6 +178,7 @@ func resourceAppMonitorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain", appMon.Domain)
 
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
+	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
 
 	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
 		return fmt.Errorf("error setting app_monitor_configuration for CloudWatch RUM App Monitor (%s): %w", d.Id(), err)

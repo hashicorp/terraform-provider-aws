@@ -44,6 +44,20 @@ func TestAccAppMonitor_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAppMonitorConfig_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
 		},
 	})
 }
@@ -170,6 +184,16 @@ func testAccAppMonitorConfig_basic(rName string) string {
 resource "aws_cloudwatchrum_app_monitor" "test" {
   name   = %[1]q
   domain = "localhost"
+}
+`, rName)
+}
+
+func testAccAppMonitorConfig_updated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatchrum_app_monitor" "test" {
+  name           = %[1]q
+  domain         = "localhost"
+  cw_log_enabled = true
 }
 `, rName)
 }
