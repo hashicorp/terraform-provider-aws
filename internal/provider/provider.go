@@ -148,6 +148,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
@@ -1112,6 +1113,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
 			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
+
+			"aws_cloudwatchrum_app_monitor": rum.ResourceAppMonitor(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
