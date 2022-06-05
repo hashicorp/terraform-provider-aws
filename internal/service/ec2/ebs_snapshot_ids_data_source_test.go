@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
-	datasourceName := "data.aws_ebs_snapshot_ids.test"
+	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,8 +22,8 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", "0"),
-					resource.TestCheckTypeSetElemAttrPair(datasourceName, "ids.*", "aws_ebs_snapshot.test", "id"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", "id"),
 				),
 			},
 		},
@@ -31,7 +31,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
-	datasourceName := "data.aws_ebs_snapshot_ids.test"
+	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	resource1Name := "aws_ebs_snapshot.a"
 	resource2Name := "aws_ebs_snapshot.b"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,9 +44,9 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_sorted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", resource2Name, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", resource1Name, "id"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.1", resource1Name, "id"),
 				),
 			},
 		},

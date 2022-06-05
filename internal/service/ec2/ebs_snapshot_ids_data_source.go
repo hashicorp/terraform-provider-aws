@@ -60,7 +60,7 @@ func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) erro
 	snapshots, err := FindSnapshots(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EBS Snapshots: %w", err)
+		return fmt.Errorf("reading EBS Snapshots: %w", err)
 	}
 
 	sort.Slice(snapshots, func(i, j int) bool {
