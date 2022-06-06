@@ -71,12 +71,20 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	switch d.Get("type").(string) {
 	case costexplorer.MonitorTypeDimensional:
+		if _, ok := d.GetOk("specification"); ok {
+			return diag.Errorf("If Monitor Type is %s, specification attrribute is not used", costexplorer.MonitorTypeDimensional)
+		}
+
 		if v, ok := d.GetOk("dimension"); ok {
 			input.AnomalyMonitor.MonitorDimension = aws.String(v.(string))
 		} else {
-			return diag.Errorf("If Monitor Type is \"DIMENSIONAL\", dimension attrribute is required")
+			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeDimensional)
 		}
 	case costexplorer.MonitorTypeCustom:
+		if _, ok := d.GetOk("dimension"); ok {
+			return diag.Errorf("If Monitor Type is %s, dimension attrribute is not used", costexplorer.MonitorTypeCustom)
+		}
+
 		if v, ok := d.GetOk("specification"); ok {
 			expression := costexplorer.Expression{}
 
@@ -87,7 +95,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			input.AnomalyMonitor.MonitorSpecification = &expression
 
 		} else {
-			return diag.Errorf("If Monitor Type is \"CUSTOM\", dimension attrribute is required")
+			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeCustom)
 		}
 	}
 
