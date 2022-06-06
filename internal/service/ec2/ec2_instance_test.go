@@ -5552,10 +5552,10 @@ func testAccInstanceConfig_disableAPIStop(rName string, val bool) string {
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami                     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type           = "t2.small"
-  subnet_id               = aws_subnet.test.id
-  disable_api_stop        = %[2]t
+  ami              = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type    = "t2.small"
+  subnet_id        = aws_subnet.test.id
+  disable_api_stop = %[2]t
 
   tags = {
     Name = %[1]q
