@@ -278,6 +278,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 		}
 
+		// Retrieve the value set in the config directly to counteract the DiffSuppressFunc above
 		tier := d.GetRawConfig().GetAttr("tier")
 		if tier.IsKnown() && !tier.IsNull() {
 			paramInput.Tier = aws.String(tier.AsString())
