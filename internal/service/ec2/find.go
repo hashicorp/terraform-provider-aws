@@ -4640,6 +4640,48 @@ func FindSnapshotByID(conn *ec2.EC2, id string) (*ec2.Snapshot, error) {
 	return output, nil
 }
 
+func FindSnapshotAttribute(conn *ec2.EC2, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
+	output, err := conn.DescribeSnapshotAttribute(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn *ec2.EC2, snapshotID, accountID string) (*ec2.CreateVolumePermission, error) {
+	input := &ec2.DescribeSnapshotAttributeInput{
+		Attribute:  aws.String(ec2.SnapshotAttributeNameCreateVolumePermission),
+		SnapshotId: aws.String(snapshotID),
+	}
+
+	output, err := FindSnapshotAttribute(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.CreateVolumePermissions {
+		if aws.StringValue(v.UserId) == accountID {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{LastRequest: input}
+}
+
 func FindFindSnapshotTierStatuses(conn *ec2.EC2, input *ec2.DescribeSnapshotTierStatusInput) ([]*ec2.SnapshotTierStatus, error) {
 	var output []*ec2.SnapshotTierStatus
 
