@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudWatch RUM"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_rum_app_monitor"
+page_title: "AWS: aws_rum_app_monitor"
 description: |-
   Provides a CloudWatch RUM App Monitor resource.
 ---
 
-# Resource: aws_cloudwatch_rum_app_monitor
+# Resource: aws_rum_app_monitor
 
 Provides a CloudWatch RUM App Monitor resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_rum_app_monitor" "example" {
+resource "aws_rum_app_monitor" "example" {
   name   = "example"
   domain = "localhost"
 }
@@ -55,5 +55,5 @@ In addition to all arguments above, the following attributes are exported:
 Cloudwatch RUM App Monitor can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_rum_app_monitor.example example
+$ terraform import aws_rum_app_monitor.example example
 ```

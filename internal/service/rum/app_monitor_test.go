@@ -18,7 +18,7 @@ import (
 func TestAccAppMonitor_basic(t *testing.T) {
 	var appMon cloudwatchrum.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_rum_app_monitor.test"
+	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -65,7 +65,7 @@ func TestAccAppMonitor_basic(t *testing.T) {
 func TestAccAppMonitor_tags(t *testing.T) {
 	var appMon cloudwatchrum.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_rum_app_monitor.test"
+	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -110,7 +110,7 @@ func TestAccAppMonitor_tags(t *testing.T) {
 func TestAccAppMonitor_disappears(t *testing.T) {
 	var appMon cloudwatchrum.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_rum_app_monitor.test"
+	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -135,7 +135,7 @@ func testAccCheckAppMonitorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_rum_app_monitor" {
+		if rs.Type != "aws_rum_app_monitor" {
 			continue
 		}
 
@@ -181,7 +181,7 @@ func testAccCheckAppMonitorExists(n string, appMon *cloudwatchrum.AppMonitor) re
 
 func testAccAppMonitorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_rum_app_monitor" "test" {
+resource "aws_rum_app_monitor" "test" {
   name   = %[1]q
   domain = "localhost"
 }
@@ -190,7 +190,7 @@ resource "aws_cloudwatch_rum_app_monitor" "test" {
 
 func testAccAppMonitorConfig_updated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_rum_app_monitor" "test" {
+resource "aws_rum_app_monitor" "test" {
   name           = %[1]q
   domain         = "localhost"
   cw_log_enabled = true
@@ -200,7 +200,7 @@ resource "aws_cloudwatch_rum_app_monitor" "test" {
 
 func testAccAppMonitorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_rum_app_monitor" "test" {
+resource "aws_rum_app_monitor" "test" {
   name   = %[1]q
   domain = "localhost"
 
@@ -213,7 +213,7 @@ resource "aws_cloudwatch_rum_app_monitor" "test" {
 
 func testAccAppMonitorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_rum_app_monitor" "test" {
+resource "aws_rum_app_monitor" "test" {
   name   = %[1]q
   domain = "localhost"
 

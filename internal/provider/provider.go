@@ -1114,7 +1114,7 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
-			"aws_cloudwatch_rum_app_monitor": rum.ResourceAppMonitor(),
+			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
