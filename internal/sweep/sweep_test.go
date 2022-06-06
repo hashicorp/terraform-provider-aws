@@ -65,6 +65,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"

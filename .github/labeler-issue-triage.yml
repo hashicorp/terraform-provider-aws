@@ -237,6 +237,8 @@ service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emrcontainers_'
+service/emrserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emrserverless_'
 service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:

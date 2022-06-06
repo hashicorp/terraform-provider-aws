@@ -174,6 +174,7 @@ provider "aws" {
   <li><code>elbv2</code> (or <code>elasticloadbalancingv2</code>)</li>
   <li><code>emr</code></li>
   <li><code>emrcontainers</code></li>
+  <li><code>emrserverless</code></li>
   <li><code>events</code> (or <code>eventbridge</code> or <code>cloudwatchevents</code>)</li>
   <li><code>evidently</code> (or <code>cloudwatchevidently</code>)</li>
   <li><code>finspace</code></li>
