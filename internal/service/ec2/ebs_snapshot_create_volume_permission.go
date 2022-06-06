@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -19,6 +20,8 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 		Create: resourceSnapshotCreateVolumePermissionCreate,
 		Read:   resourceSnapshotCreateVolumePermissionRead,
 		Delete: resourceSnapshotCreateVolumePermissionDelete,
+
+		CustomizeDiff: resourceSnapshotCreateVolumePermissionCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -134,6 +137,26 @@ func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta i
 
 	if err != nil {
 		return fmt.Errorf("waiting for EBS Snapshot CreateVolumePermission delete (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceSnapshotCreateVolumePermissionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.Id() == "" {
+		if snapshotID := diff.Get("snapshot_id").(string); snapshotID != "" {
+			conn := meta.(*conns.AWSClient).EC2Conn
+
+			snapshot, err := FindSnapshotByID(conn, snapshotID)
+
+			if err != nil {
+				return fmt.Errorf("reading EBS Snapshot (%s): %w", snapshotID, err)
+			}
+
+			if accountID := diff.Get("account_id").(string); aws.StringValue(snapshot.OwnerId) == accountID {
+				return fmt.Errorf("AWS Account (%s) owns EBS Snapshot (%s)", accountID, snapshotID)
+			}
+		}
 	}
 
 	return nil

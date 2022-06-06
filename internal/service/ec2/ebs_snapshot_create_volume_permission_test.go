@@ -2,6 +2,7 @@ package ec2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -62,6 +63,23 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSnapshotCreateVolumePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccSnapshotCreateVolumePermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEBSSnapshotCreateVolumePermissionConfig_snapshotOwner(rName),
+				ExpectError: regexp.MustCompile(`owns EBS Snapshot`),
 			},
 		},
 	})
@@ -151,6 +169,35 @@ resource "aws_ebs_snapshot" "test" {
 data "aws_caller_identity" "test" {
   provider = "awsalternate"
 }
+
+resource "aws_snapshot_create_volume_permission" "test" {
+  snapshot_id = aws_ebs_snapshot.test.id
+  account_id  = data.aws_caller_identity.test.account_id
+}
+`, rName))
+}
+
+func testAccEBSSnapshotCreateVolumePermissionConfig_snapshotOwner(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_caller_identity" "test" {}
 
 resource "aws_snapshot_create_volume_permission" "test" {
   snapshot_id = aws_ebs_snapshot.test.id
