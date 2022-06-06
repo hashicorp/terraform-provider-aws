@@ -19,9 +19,9 @@ import (
 
 // TestAccCEAnomalyMonitor_dimensionalserial limits the number of parallel tests run with a type of DIMENSIONAL to 1.
 // This is required as AWS only allows 1 Anomaly Monitor with a type of DIMENSIONAL per AWS account.
-func TestAccCEAnomalyMonitor_dimensionalserial(t *testing.T) {
+func TestAccCEAnomalyMonitor_Dimensional_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
-		"ContainerService": {
+		"AnomalyMonitor": {
 			"basic":      testAccAnomalyMonitor_basic,
 			"disappears": testAccAnomalyMonitor_disappears,
 			"name":       testAccAnomalyMonitor_Name,
@@ -44,7 +44,7 @@ func TestAccCEAnomalyMonitor_dimensionalserial(t *testing.T) {
 
 func testAccAnomalyMonitor_basic(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -70,8 +70,8 @@ func testAccAnomalyMonitor_basic(t *testing.T) {
 
 func testAccAnomalyMonitor_Name(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -138,7 +138,7 @@ func TestAccCEAnomalyMonitor_Type(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -164,7 +164,7 @@ func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 
 func testAccAnomalyMonitor_Tags(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -208,7 +208,7 @@ func testAccAnomalyMonitor_Tags(t *testing.T) {
 
 func testAccAnomalyMonitor_disappears(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -238,13 +238,13 @@ func testAccCheckAnomalyMonitorExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Lightsail Database ID is set")
+			return fmt.Errorf("No Cost Explorer Anomaly Monitor is set")
 		}
 
 		resp, err := conn.GetAnomalyMonitors(&costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{rs.Primary.ID})})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("Error describing Cost Explorer Anomaly Monitor: %s", err.Error())
 		}
 
 		if resp == nil || len(resp.AnomalyMonitors) < 1 {
