@@ -108,7 +108,7 @@ func testAccCEAnomalyMonitor_Name(t *testing.T) {
 	})
 }
 
-func testAccCEAnomalyMonitor_Custom(t *testing.T) {
+func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
