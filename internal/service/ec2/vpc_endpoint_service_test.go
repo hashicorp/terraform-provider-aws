@@ -68,9 +68,8 @@ func TestAccVPCEndpointService_ipTypes(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_ipTypes(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv6"),
 				),
 			},
 			{
@@ -471,7 +470,7 @@ resource "aws_vpc_endpoint_service" "test" {
     aws_lb.test1.arn,
   ]
 
-  supported_ip_address_types = ["ipv4", "ipv6"]
+  supported_ip_address_types = ["ipv4"]
 }
 `)
 }
