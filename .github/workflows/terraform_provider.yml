@@ -34,11 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     - uses: actions/cache@v3
       continue-on-error: true
       id: cache-go-pkg-mod
@@ -62,12 +60,10 @@ jobs:
       with:
         path: terraform-plugin-dir
         key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
       uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
       name: go env
@@ -128,11 +124,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
@@ -159,11 +153,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
@@ -195,11 +187,9 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
@@ -281,11 +271,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
@@ -311,11 +299,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
@@ -340,11 +326,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
@@ -376,11 +360,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
       - uses: actions/setup-go@v3
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
       # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
