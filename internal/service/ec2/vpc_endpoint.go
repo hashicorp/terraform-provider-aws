@@ -65,6 +65,11 @@ func ResourceVPCEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ec2.IpAddressType_Values(), false),
+			},
 			"network_interface_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -176,6 +181,10 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		req.PolicyDocument = aws.String(policy)
 	}
 
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		req.IpAddressType = aws.String(v.(string))
+	}
+
 	setVPCEndpointCreateList(d, "route_table_ids", &req.RouteTableIds)
 	setVPCEndpointCreateList(d, "subnet_ids", &req.SubnetIds)
 	setVPCEndpointCreateList(d, "security_group_ids", &req.SecurityGroupIds)
@@ -234,6 +243,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("service_name", serviceName)
 	d.Set("state", vpce.State)
 	d.Set("vpc_id", vpce.VpcId)
+	d.Set("ip_address_type", vpce.IpAddressType)
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
