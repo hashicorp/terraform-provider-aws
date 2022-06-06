@@ -1287,6 +1287,9 @@ func flattenSoftwareTokenMFAConfiguration(apiObject *cognitoidentityprovider.Sof
 }
 
 func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *cognitoidentityprovider.AccountRecoverySettingType {
+	if len(config) == 0 {
+		return nil
+	}
 	configs := &cognitoidentityprovider.AccountRecoverySettingType{}
 
 	mechs := make([]*cognitoidentityprovider.RecoveryOptionType, 0)
@@ -1316,7 +1319,7 @@ func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *
 }
 
 func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider.AccountRecoverySettingType) []interface{} {
-	if config == nil {
+	if config == nil || len(config.RecoveryMechanisms) == 0 {
 		return nil
 	}
 
