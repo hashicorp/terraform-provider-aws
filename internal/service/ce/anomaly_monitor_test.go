@@ -3,6 +3,7 @@ package ce_test
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,7 +23,7 @@ func TestAccAnomalyMonitor_dimensionalserial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ContainerService": {
 			"basic":      testAccAnomalyMonitor_basic,
-			"disappears": testAccCEAnomalyMonitor_disappears,
+			"disappears": testAccAnomalyMonitor_disappears,
 			"name":       testAccAnomalyMonitor_Name,
 		},
 	}
@@ -43,6 +44,8 @@ func TestAccAnomalyMonitor_dimensionalserial(t *testing.T) {
 func testAccAnomalyMonitor_basic(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	dimensionValue := "SERVICE"
+	dimensionBadValue := "BADVALUE"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -51,7 +54,11 @@ func testAccAnomalyMonitor_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig(rName),
+				Config:      testAccAnomalyMonitorConfig(rName, dimensionBadValue),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected dimension to be one of \[SERVICE\], got %s`, dimensionBadValue)),
+			},
+			{
+				Config: testAccAnomalyMonitorConfig(rName, dimensionValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -70,6 +77,8 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	dimensionValue := "SERVICE"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -77,7 +86,7 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig(rName),
+				Config: testAccAnomalyMonitorConfig(rName, dimensionValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -89,7 +98,7 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalyMonitorConfig(rName2),
+				Config: testAccAnomalyMonitorConfig(rName2, dimensionValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -125,7 +134,7 @@ func TestAccAnomalyMonitor_Custom(t *testing.T) {
 	})
 }
 
-func testAccCEAnomalyMonitor_disappears(t *testing.T) {
+func testAccAnomalyMonitor_disappears(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -136,7 +145,7 @@ func testAccCEAnomalyMonitor_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig(rName),
+				Config: testAccAnomalyMonitorConfig(rName, "SERVICE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceAnomalyMonitor(), resourceName),
@@ -197,14 +206,14 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 
 }
 
-func testAccAnomalyMonitorConfig(rName string) string {
+func testAccAnomalyMonitorConfig(rName string, dimension string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name      = %[1]q
   type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  dimension = %[2]q
 }
-`, rName)
+`, rName, dimension)
 }
 
 func testAccAnomalyMonitorConfig_Custom(rName string) string {

@@ -1,0 +1,76 @@
+---
+subcategory: "CE (Cost Explorer)"
+layout: "aws"
+page_title: "AWS: aws_ce_anomaly_monitor"
+description: |-
+  Provides a CE Cost Anomaly Monitor
+---
+
+# Resource: aws_ce_anomaly_monitor
+
+Provides a CE Cost Category.
+
+## Example Usage
+
+There are two main types of a Cost Anomaly Monitor: `DIMENSIONAL` and `CUSTOM`.
+
+### Dimensional Example
+
+```terraform
+resource "aws_ce_anomaly_monitor" "service_monitor" {
+  name      = "AWSServiceMonitor"
+  type      = "DIMENSIONAL"
+  dimension = "SERVICE"
+}
+```
+
+### Custom Example
+
+```terraform
+resource "aws_ce_anomaly_monitor" "test" {
+  name = "AWSCustomAnomalyMonitor"
+  type = "CUSTOM"
+
+  specification = <<JSON
+{
+	"And": null,
+	"CostCategories": null,
+	"Dimensions": null,
+	"Not": null,
+	"Or": null,
+	"Tags": {
+		"Key": "CostCenter",
+		"MatchOptions": null,
+		"Values": [
+			"10000"
+		]
+	}
+}
+JSON
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `name` - (Required) The name of the monitor.
+* `type` - (Required) The possible type values. Valid Values: `DIMENSIONAL` | `CUSTOM`.
+* `dimension` - (Required, if `type` is `DIMENSIONAL`) The dimensions to evaluate. Valid Values: `SERVICE`.
+* `specification` - (Required, if `type` is `CUSTOM`) Is valid JSON representation for the [Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html) object.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - ARN of the cost category.
+* `id` - Unique ID of the cost category. Same as `arn`.
+
+
+## Import
+
+`aws_ce_anomaly_monitor` can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_ce_anomaly_monitor.example costAnomalyARN
+```

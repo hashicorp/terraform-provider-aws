@@ -3,6 +3,7 @@ package ce
 import (
 	"context"
 	"encoding/json"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
@@ -31,14 +32,17 @@ func ResourceAnomalyMonitor() *schema.Resource {
 				Computed: true,
 			},
 			"dimension": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SERVICE"}, false),
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 1024),
+					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
 			},
 			"specification": {
 				Type:             schema.TypeString,
@@ -47,9 +51,10 @@ func ResourceAnomalyMonitor() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DIMENSIONAL", "CUSTOM"}, false),
 			},
 		},
 	}
@@ -102,7 +107,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 
 	resp, err := conn.GetAnomalyMonitorsWithContext(ctx, &costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{d.Id()})})
 
-	if len(resp.AnomalyMonitors) < 1 && !d.IsNewResource() {
+	if !d.IsNewResource() && len(resp.AnomalyMonitors) < 1 {
 		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id())
 		d.SetId("")
 		return nil
