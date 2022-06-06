@@ -13,16 +13,29 @@ Provides a ApplicationInsights Application resource.
 ## Example Usage
 
 ```terraform
-resource "aws_applicationinsights_application" "some" {
-  name                 = "some-application"
-  artifact_s3_location = "s3://some-bucket/"
-  execution_role_arn   = "some-role"
-  handler              = "exports.handler"
-  zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+resource "aws_applicationinsights_application" "example" {
+  resource_group_name = aws_resourcegroups_group.example.name
+}
 
-  schedule {
-    expression = "rate(0 minute)"
+resource "aws_resourcegroups_group" "example" {
+  name = "example"
+
+  resource_query {
+    query = <<JSON
+	{
+		"ResourceTypeFilters": [
+		  "AWS::EC2::Instance"
+		],
+		"TagFilters": [
+		  {
+			"Key": "Stage",
+			"Values": [
+			  "Test"
+			]
+		  }
+		]
+	  }
+JSON
   }
 }
 ```
