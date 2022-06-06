@@ -47,6 +47,7 @@ The following arguments are supported:
 * `network_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Network Load Balancers for the endpoint service.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `private_dns_name` - (Optional) The private DNS name for the service.
+* `supported_ip_address_types` - (Optional) The supported IP address types. The possible values are `ipv4` and `ipv6`.
 
 ## Attributes Reference
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -121,6 +122,15 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"supported_ip_address_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"ipv4", "ipv6"}, false),
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -151,6 +161,12 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("network_load_balancer_arns"); ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
 			req.NetworkLoadBalancerArns = flex.ExpandStringSet(v)
+		}
+	}
+
+	if v, ok := d.GetOk("supported_ip_address_types"); ok {
+		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+			req.SupportedIpAddressTypes = flex.ExpandStringSet(v)
 		}
 	}
 
@@ -223,6 +239,10 @@ func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) er
 
 	if err := d.Set("gateway_load_balancer_arns", flex.FlattenStringSet(svcCfg.GatewayLoadBalancerArns)); err != nil {
 		return fmt.Errorf("error setting gateway_load_balancer_arns: %w", err)
+	}
+
+	if err := d.Set("supported_ip_address_types", flex.FlattenStringSet(svcCfg.SupportedIpAddressTypes)); err != nil {
+		return fmt.Errorf("error setting supported_ip_address_types: %w", err)
 	}
 
 	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
@@ -318,6 +338,9 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 
 		setVPCEndpointServiceUpdateLists(d, "network_load_balancer_arns",
 			&modifyCfgReq.AddNetworkLoadBalancerArns, &modifyCfgReq.RemoveNetworkLoadBalancerArns)
+
+		setVPCEndpointServiceUpdateLists(d, "supported_ip_address_types",
+			&modifyCfgReq.AddSupportedIpAddressTypes, &modifyCfgReq.RemoveSupportedIpAddressTypes)
 
 		log.Printf("[DEBUG] Modifying VPC Endpoint Service configuration: %#v", modifyCfgReq)
 		if _, err := conn.ModifyVpcEndpointServiceConfiguration(modifyCfgReq); err != nil {

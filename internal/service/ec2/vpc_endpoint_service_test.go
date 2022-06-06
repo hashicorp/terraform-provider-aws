@@ -38,7 +38,39 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpointService_ipTypes(t *testing.T) {
+	var svcCfg ec2.ServiceConfiguration
+	resourceName := "aws_vpc_endpoint_service.test"
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCEndpointServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointServiceConfig_ipTypes(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv6"),
 				),
 			},
 			{
@@ -424,6 +456,22 @@ resource "aws_vpc_endpoint_service" "test" {
   network_load_balancer_arns = [
     aws_lb.test1.arn,
   ]
+}
+`)
+}
+
+func testAccVPCEndpointServiceConfig_ipTypes(rName1, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEndpointServiceConfig_base(rName1, rName2),
+		`
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required = false
+
+  network_load_balancer_arns = [
+    aws_lb.test1.arn,
+  ]
+
+  supported_ip_address_types = ["ipv4", "ipv6"]
 }
 `)
 }
