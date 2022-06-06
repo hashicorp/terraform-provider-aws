@@ -1,9 +1,9 @@
 ---
-subcategory: "CloudWatch ApplicationInsights"
+subcategory: "CloudWatch Application Insights"
 layout: "aws"
 page_title: "AWS: aws_applicationinsights_application"
 description: |-
-  Provides a ApplicationInsights Application resource
+  Provides a CloudWatch Application Insights Application resource
 ---
 
 # Resource: aws_applicationinsights_application
