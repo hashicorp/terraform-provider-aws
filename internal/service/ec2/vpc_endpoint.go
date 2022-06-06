@@ -65,6 +65,20 @@ func ResourceVPCEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"dns_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dns_record_ip_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.DnsRecordIpType_Values(), false),
+						},
+					},
+				},
+			},
 			"ip_address_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -185,6 +199,10 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		req.IpAddressType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		req.DnsOptions = expandDNSOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	setVPCEndpointCreateList(d, "route_table_ids", &req.RouteTableIds)
 	setVPCEndpointCreateList(d, "subnet_ids", &req.SubnetIds)
 	setVPCEndpointCreateList(d, "security_group_ids", &req.SecurityGroupIds)
@@ -244,6 +262,10 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", vpce.State)
 	d.Set("vpc_id", vpce.VpcId)
 	d.Set("ip_address_type", vpce.IpAddressType)
+
+	if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+		return fmt.Errorf("error setting dns_options: %w", err)
+	}
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -335,9 +357,13 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChanges("policy", "route_table_ids", "subnet_ids", "security_group_ids", "private_dns_enabled") {
+	if d.HasChanges("policy", "route_table_ids", "subnet_ids", "security_group_ids", "private_dns_enabled", "ip_address_type") {
 		req := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("ip_address_type") {
+			req.IpAddressType = aws.String(d.Get("ip_address_type").(string))
 		}
 
 		if d.HasChange("policy") {
@@ -501,4 +527,32 @@ func flattenVPCEndpointSecurityGroupIds(groups []*ec2.SecurityGroupIdentifier) *
 	}
 
 	return schema.NewSet(schema.HashString, vSecurityGroupIds)
+}
+
+func expandDNSOptions(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	config := &ec2.DnsOptionsSpecification{}
+
+	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
+		config.DnsRecordIpType = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenDNSOptions(apiObject *ec2.DnsOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DnsRecordIpType; v != nil {
+		tfMap["dns_record_ip_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
