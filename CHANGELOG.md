@@ -1,8 +1,22 @@
 ## 4.18.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_emrserverless_application` ([#25144](https://github.com/hashicorp/terraform-provider-aws/issues/25144))
+
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_logs_groups: Make `log_group_name_prefix` optional ([#25187](https://github.com/hashicorp/terraform-provider-aws/issues/25187))
+* data-source/aws_cognito_user_pool_client: Add `enable_propagate_additional_user_context_data` argument ([#25181](https://github.com/hashicorp/terraform-provider-aws/issues/25181))
+* data-source/aws_ram_resource_share: Add `resource_share_status` argument. ([#25159](https://github.com/hashicorp/terraform-provider-aws/issues/25159))
+* resource/aws_cognito_user_pool_client: Add `enable_propagate_additional_user_context_data` argument ([#25181](https://github.com/hashicorp/terraform-provider-aws/issues/25181))
+* resource/aws_ebs_snapshot_copy: Add support for `timeouts` configuration block. ([#20912](https://github.com/hashicorp/terraform-provider-aws/issues/20912))
 * resource/aws_ebs_volume: Add `final_snapshot` argument ([#21916](https://github.com/hashicorp/terraform-provider-aws/issues/21916))
+* resource/aws_s3_bucket: Add error handling for `ErrCodeNotImplemented` and `ErrCodeXNotImplemented` errors when ready bucket information. ([#24764](https://github.com/hashicorp/terraform-provider-aws/issues/24764))
+
+BUG FIXES:
+
+* resource/aws_snapshot_create_volume_permission: Error if `account_id` is the snapshot's owner ([#12103](https://github.com/hashicorp/terraform-provider-aws/issues/12103))
 
 ## 4.17.1 (June  3, 2022)
 
