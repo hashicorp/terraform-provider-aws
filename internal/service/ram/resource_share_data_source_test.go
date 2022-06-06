@@ -59,30 +59,52 @@ func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
 	})
 }
 
+func TestAccRAMResourceShareDataSource_status(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ram_resource_share.test"
+	datasourceName := "data.aws_ram_resource_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceShareDataSourceConfig_Status(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "owning_account_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccResourceShareDataSourceConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "wrong" {
-  name = "%s-wrong"
+  name = "%[1]s-wrong"
 }
 
 resource "aws_ram_resource_share" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 data "aws_ram_resource_share" "test" {
   name           = aws_ram_resource_share.test.name
   resource_owner = "SELF"
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccResourceShareDataSourceConfig_Tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
-  name = "%s"
+  name = %[1]q
 
   tags = {
-    Name = "%s-Tags"
+    Name = "%[1]s-Tags"
   }
 }
 
@@ -92,10 +114,10 @@ data "aws_ram_resource_share" "test" {
 
   filter {
     name   = "Name"
-    values = ["%s-Tags"]
+    values = ["%[1]s-Tags"]
   }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 const testAccResourceShareDataSourceConfig_NonExistent = `
@@ -104,3 +126,17 @@ data "aws_ram_resource_share" "test" {
   resource_owner = "SELF"
 }
 `
+
+func testAccResourceShareDataSourceConfig_Status(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "test" {
+  name = "%s"
+}
+
+data "aws_ram_resource_share" "test" {
+  name                  = aws_ram_resource_share.test.name
+  resource_owner        = "SELF"
+  resource_share_status = "ACTIVE"
+}
+`, rName)
+}
