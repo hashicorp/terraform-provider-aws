@@ -68,6 +68,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			"dns_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
@@ -83,6 +84,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			"ip_address_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ec2.IpAddressType_Values(), false),
 			},
 			"network_interface_ids": {
