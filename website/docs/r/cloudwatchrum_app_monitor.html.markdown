@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch RUM RUM"
+subcategory: "CloudWatch RUM"
 layout: "aws"
 page_title: "AWS: aws_cloudwatchrum_app_monitor"
 description: |-
