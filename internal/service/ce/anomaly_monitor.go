@@ -179,7 +179,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("name") {
-		input.MonitorName = aws.String("Name")
+		input.MonitorName = aws.String(d.Get("Name").(string))
 		requestUpdate = true
 	}
 
