@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,18 +73,18 @@ func ResourceAnomalySubscription() *schema.Resource {
 					validation.StringLenBetween(1, 1024),
 					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
 			},
-			// "tags":     tftags.TagsSchema(),
-			// "tags_all": tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		// CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
-	// defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{
@@ -94,9 +96,9 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		},
 	}
 
-	// if len(tags) > 0 {
-	// 	input.ResourceTags = Tags(tags.IgnoreAWS())
-	// }
+	if len(tags) > 0 {
+		input.ResourceTags = Tags(tags.IgnoreAWS())
+	}
 
 	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
 
@@ -111,6 +113,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	resp, err := conn.GetAnomalySubscriptionsWithContext(ctx, &costexplorer.GetAnomalySubscriptionsInput{SubscriptionArnList: aws.StringSlice([]string{d.Id()})})
 
@@ -134,20 +137,20 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("threshold", anomalySubscription.Threshold)
 	d.Set("name", anomalySubscription.SubscriptionName)
 
-	// tags, err := ListTags(conn, aws.StringValue(anomalySubscription.MonitorArn))
+	tags, err := ListTags(conn, aws.StringValue(anomalySubscription.SubscriptionArn))
 
-	// if err != nil {
-	// 	return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
-	// }
+	if err != nil {
+		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+	}
 
-	// //lintignore:AWSR002
-	// if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-	// 	return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
-	// }
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+	}
 
-	// if err := d.Set("tags_all", tags.Map()); err != nil {
-	// 	return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
-	// }
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+	}
 
 	return nil
 }
@@ -171,13 +174,21 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("subscriber") {
-		input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").([]interface{}))
+		input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List())
 		requestUpdate = true
 	}
 
 	if d.HasChange("threshold") {
 		input.Threshold = aws.Float64(d.Get("threshold").(float64))
 		requestUpdate = true
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+		}
 	}
 
 	if requestUpdate {
