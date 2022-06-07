@@ -789,13 +789,13 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %q
 
   production_variants {
-    variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.test.name
+    variant_name = "variant-1"
+    model_name   = aws_sagemaker_model.test.name
 
     serverless_config {
       max_concurrency   = 1
       memory_size_in_mb = 1024
-	}
+    }
   }
 }
 `, rName)
