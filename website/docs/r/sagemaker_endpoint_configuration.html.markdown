@@ -43,16 +43,22 @@ The following arguments are supported:
 * `data_capture_config` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `async_inference_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
 
-The `production_variants` block supports:
+### production_variants
 
-* `initial_instance_count` - (Required) Initial number of instances used for auto-scaling.
-* `instance_type` (Required) - The type of instance to start.
+* `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
+* `instance_type` (Optional) - The type of instance to start.
 * `accelerator_type` (Optional) - The size of the Elastic Inference (EI) instance to use for the production variant.
-* `initial_variant_weight` (Optional) - Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to 1.0.
+* `initial_variant_weight` (Optional) - Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
 * `model_name` - (Required) The name of the model to use.
 * `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
+* `serverless_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
 
-The `data_capture_config` block supports:
+#### serverless_config
+
+* `max_concurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
+* `memory_size_in_mb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
+
+### data_capture_config
 
 * `initial_sampling_percentage` - (Required) Portion of data to capture. Should be between 0 and 100.
 * `destination_s3_uri` - (Required) The URL for S3 location where the captured data is stored.
@@ -61,31 +67,31 @@ The `data_capture_config` block supports:
 * `enable_capture` - (Optional) Flag to enable data capture. Defaults to `false`.
 * `capture_content_type_header` - (Optional) The content type headers to capture. Fields are documented below.
 
-The `capture_options` block supports:
+#### capture_options
 
 * `capture_mode` - (Required) Specifies the data to be captured. Should be one of `Input` or `Output`.
 
-The `capture_content_type_header` block supports:
+#### capture_content_type_header
 
 * `csv_content_types` - (Optional) The CSV content type headers to capture.
 * `json_content_types` - (Optional) The JSON content type headers to capture.
 
-The `async_inference_config` block supports:
+### async_inference_config
 
 * `output_config` - (Required) Specifies the configuration for asynchronous inference invocation outputs.
 * `client_config` - (Optional) Configures the behavior of the client used by Amazon SageMaker to interact with the model container during asynchronous inference.
 
-The `client_config` block supports:
+#### client_config
 
 * `max_concurrent_invocations_per_instance` - (Optional) The maximum number of concurrent requests sent by the SageMaker client to the model container. If no value is provided, Amazon SageMaker will choose an optimal value for you.
 
-The `output_config` block supports:
+#### output_config
 
 * `s3_output_path` - (Required) The Amazon S3 location to upload inference responses to.
 * `kms_key_id` - (Optional) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the asynchronous inference output in Amazon S3.
 * `notification_config` - (Optional) Specifies the configuration for notifications of inference results for asynchronous inference.
 
-The `notification_config` block supports:
+##### notification_config
 
 * `error_topic` - (Optional) Amazon SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.
 * `success_topic` - (Optional) Amazon SNS topic to post a notification to when inference completes successfully. If no topic is provided, no notification is sent on success.
