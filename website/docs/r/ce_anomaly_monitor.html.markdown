@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ce_anomaly_monitor
 
-Provides a CE Cost Category.
+Provides a CE Anomaly Monitor.
 
 ## Example Usage
 
