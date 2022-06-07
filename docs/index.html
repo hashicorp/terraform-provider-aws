@@ -75,42 +75,65 @@ layout: default
   <tr>
     <td>Add a newly released AWS Region</td>
     <td>New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround unecessary.</td>
-    <td><a href="add-a-new-region">Add a new Region</a></td>
+    <td>
+      <ul>
+        <a href="add-a-new-region">Add a new Region</a>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>Fix a bug, or make an enhancement to a resource or datasource</td>
     <td>These constitute the majority of pull requests submitted, and we try to merge these smaller features regardless of popularity during our internal gardening days.</td>
-    <td><a href="bugs-and-enhancements">Making small changes to existing resources.</a></td>
+    <td>
+      <ul>
+        <li><a href="bugs-and-enhancements">Making small changes to existing resources.</a></li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>Add Resource Name Generation Support</td>
     <td>Allow a resource, to either fully, or partially generate its own resource names. TODO:This can be useful.</td>
-    <td><a href="resource-name-generation.md"></a>Resource Name Generation</td>
+    <td>
+      <ul>
+        <li><a href="resource-name-generation.md">Resource Name Generation</a></li>
+      </ul>
+    </td>
   </tr>  
   <tr>
     <td>Add Tagging support for a Resource</td>
     <td>Many AWS resources allow [assigning metadata via tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) which can be enormously useful to manage and track cloud resources from a governance and cost perspective. Often though, resources are launched without tagging support, which can follow later. In this case taggins support will need to be explicitly added to those resources. Typically this support follows an established pattern so support is normally straightforward to add.</td>
-    <td><a href="resource-tagging.md">Add tag support for a resource.</a></td>
+    <td>
+      <ul>
+        <li><a href="resource-tagging.md">Add tag support for a resource.</a></li>
+      </ul>
+    </td>
   </tr>    
   <tr>
     <td>Add Import support for a Resource</td>
     <td>Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this may not have been done.</td>
-    <td><a href="resource-import.md">Add import support</a></td>
+    <td>
+      <ul>
+        <li><a href="resource-import.md">Add import support</a></li>
+      </ul>
+    </td>
   </tr>  
   <tr>
     <td>Registry Documentation Changes</td>
     <td>The provider documentation is displayed on the <a href="https://registry.terraform.io/providers/hashicorp/aws/latest">Terraform Registry</a> and is sourced and refreshed from the provider repository during the release process.</td>
     <td>
-      <li><a href="documentation-changes">How to modify provider documentation</a></li>
-    </li>
+      <ul>
+        <li><a href="documentation-changes">How to modify provider documentation</a></li>
+      </ul>
     </td>
   </tr>
   <tr>
     <td>Report a bug, or make a feature request</td>
     <td>In both cases follow the template laid out in the submission forms. Details are important, it can take a considerable amount of time for the maintainers to reprooduce issues. So bug reports without full reproductions are likely to be uninvestigated, or in some case closed.</td>
     <td>
-      <li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md">Report a Bug</a></li>
-      <li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md">Submit a Feature Request</a></li>
+      <ul>
+        <li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md">Report a Bug</a></li>
+        <li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md">Submit a Feature Request</a></li>
+      </ul>
     </td>
   </tr>  
 </tbody>
