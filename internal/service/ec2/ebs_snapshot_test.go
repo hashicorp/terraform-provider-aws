@@ -17,7 +17,7 @@ import (
 
 func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,15 +27,15 @@ func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotBasicConfig(rName),
+				Config: testAccEBSSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_tier", "standard"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -47,9 +47,9 @@ func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSSnapshot_storageTier(t *testing.T) {
+func TestAccEC2EBSSnapshot_disappears(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +59,30 @@ func TestAccEC2EBSSnapshot_storageTier(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotStorageTierConfig(rName, "archive"),
+				Config: testAccEBSSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSSnapshot_storageTier(t *testing.T) {
+	var v ec2.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotConfig_storageTier(rName, "archive"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
@@ -78,7 +101,7 @@ func TestAccEC2EBSSnapshot_outpost(t *testing.T) {
 	var v ec2.Snapshot
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ebs_snapshot.test"
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
@@ -87,7 +110,7 @@ func TestAccEC2EBSSnapshot_outpost(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotOutpostConfig(rName),
+				Config: testAccEBSSnapshotConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
@@ -104,7 +127,7 @@ func TestAccEC2EBSSnapshot_outpost(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,10 +137,10 @@ func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotBasicTags1Config(rName, "key1", "value1"),
+				Config: testAccEBSSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -127,19 +150,19 @@ func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEBSSnapshotBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccEBSSnapshotBasicTags1Config(rName, "key2", "value2"),
+				Config: testAccEBSSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -149,7 +172,7 @@ func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_withDescription(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -159,10 +182,10 @@ func TestAccEC2EBSSnapshot_withDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotWithDescriptionConfig(rName),
+				Config: testAccEBSSnapshotConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 				),
 			},
 			{
@@ -176,7 +199,7 @@ func TestAccEC2EBSSnapshot_withDescription(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_withKMS(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_snapshot.test"
 
@@ -187,7 +210,7 @@ func TestAccEC2EBSSnapshot_withKMS(t *testing.T) {
 		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotWithKMSConfig(rName),
+				Config: testAccEBSSnapshotConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -202,29 +225,6 @@ func TestAccEC2EBSSnapshot_withKMS(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSSnapshot_disappears(t *testing.T) {
-	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", sdkacctest.RandString(7))
-	resourceName := "aws_ebs_snapshot.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSSnapshotBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshot(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -233,11 +233,12 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EBS Snapshot ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		output, err := tfec2.FindSnapshotById(conn, rs.Primary.ID)
+
+		output, err := tfec2.FindSnapshotByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -257,7 +258,7 @@ func testAccCheckEBSSnapshotDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindSnapshotById(conn, rs.Primary.ID)
+		_, err := tfec2.FindSnapshotByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -286,35 +287,29 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSSnapshotBasicConfig(rName string) string {
+func testAccEBSSnapshotConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), `
 resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
-
-  timeouts {
-    create = "10m"
-    delete = "10m"
-  }
 }
 `)
 }
 
-func testAccEBSSnapshotStorageTierConfig(rName, tier string) string {
+func testAccEBSSnapshotConfig_storageTier(rName, tier string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot" "test" {
   volume_id    = aws_ebs_volume.test.id
-  storage_tier = %[1]q
+  storage_tier = %[2]q
 
-  timeouts {
-    create = "10m"
-    delete = "10m"
+  tags = {
+    Name = %[1]q
   }
 }
-`, tier))
+`, rName, tier))
 }
 
-func testAccEBSSnapshotOutpostConfig(rName string) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), `
+func testAccEBSSnapshotConfig_outpost(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {
@@ -325,61 +320,52 @@ resource "aws_ebs_snapshot" "test" {
   volume_id   = aws_ebs_volume.test.id
   outpost_arn = data.aws_outposts_outpost.test.arn
 
-  timeouts {
-    create = "10m"
-    delete = "10m"
-  }
-}
-`)
-}
-
-func testAccEBSSnapshotBasicTags1Config(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
   tags = {
-    Name = "%s"
-    "%s" = "%s"
+    Name = %[1]q
   }
-
-  timeouts {
-    create = "10m"
-    delete = "10m"
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccEBSSnapshotBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = "%s"
-    "%s" = "%s"
-    "%s" = "%s"
-  }
-
-  timeouts {
-    create = "10m"
-    delete = "10m"
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccEBSSnapshotWithDescriptionConfig(rName string) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
-resource "aws_ebs_snapshot" "test" {
-  volume_id   = aws_ebs_volume.test.id
-  description = %[1]q
 }
 `, rName))
 }
 
-func testAccEBSSnapshotWithKMSConfig(rName string) string {
+func testAccEBSSnapshotConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccEBSSnapshotConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccEBSSnapshotConfig_description(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot" "test" {
+  volume_id   = aws_ebs_volume.test.id
+  description = "test description"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccEBSSnapshotConfig_kms(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -402,6 +388,10 @@ resource "aws_ebs_volume" "test" {
 
 resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }

@@ -7,7 +7,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "skaff [resource]",
+	Use:   "skaff [resource|datasource]",
 	Short: "Create scaffolding for the Terraform AWS Provider",
 }
 

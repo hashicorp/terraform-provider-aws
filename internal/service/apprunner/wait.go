@@ -17,8 +17,8 @@ const (
 	CustomDomainAssociationCreateTimeout = 5 * time.Minute
 	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
 
-	VpcConnectorCreateTimeout = 2 * time.Minute
-	VpcConnectorDeleteTimeout = 2 * time.Minute
+	vpcConnectorCreateTimeout = 2 * time.Minute
+	vpcConnectorDeleteTimeout = 2 * time.Minute
 
 	ServiceCreateTimeout = 20 * time.Minute
 	ServiceDeleteTimeout = 20 * time.Minute
@@ -129,12 +129,12 @@ func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceA
 	return err
 }
 
-func WaitVpcConnectorActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+func waitVPCConnectorActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{VpcConnectorStatusActive},
-		Refresh: StatusVpcConnector(ctx, conn, arn),
-		Timeout: VpcConnectorCreateTimeout,
+		Target:  []string{apprunner.VpcConnectorStatusActive},
+		Refresh: StatusVPCConnector(ctx, conn, arn),
+		Timeout: vpcConnectorCreateTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -142,12 +142,12 @@ func WaitVpcConnectorActive(ctx context.Context, conn *apprunner.AppRunner, arn 
 	return err
 }
 
-func WaitVpcConnectorInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+func waitVPCConnectorInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{VpcConnectorStatusActive},
-		Target:  []string{VpcConnectorStatusInactive},
-		Refresh: StatusVpcConnector(ctx, conn, arn),
-		Timeout: VpcConnectorDeleteTimeout,
+		Pending: []string{apprunner.VpcConnectorStatusActive},
+		Target:  []string{apprunner.VpcConnectorStatusInactive},
+		Refresh: StatusVPCConnector(ctx, conn, arn),
+		Timeout: vpcConnectorDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

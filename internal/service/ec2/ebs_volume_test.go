@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -26,7 +27,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeConfig,
+				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -42,9 +43,10 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -61,7 +63,7 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeConfig,
+				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
@@ -84,7 +86,7 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSAttachedVolumeConfig(rName),
+				Config: testAccEBSVolumeConfig_attached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "10"),
@@ -92,12 +94,13 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSAttachedVolumeUpdateSizeConfig(rName),
+				Config: testAccEBSVolumeConfig_attachedUpdateSize(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "20"),
@@ -120,7 +123,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeBasicConfig(rName),
+				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
@@ -128,12 +131,13 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeUpdateSizeConfig(rName),
+				Config: testAccEBSVolumeConfig_updateSize(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "10"),
@@ -156,7 +160,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeBasicConfig(rName),
+				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
@@ -164,12 +168,13 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeUpdateTypeConfig(rName),
+				Config: testAccEBSVolumeConfig_updateType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "sc1"),
@@ -192,7 +197,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeWithIopsIo1Config(rName),
+				Config: testAccEBSVolumeConfig_iopsIo1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
@@ -200,12 +205,13 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeWithIopsIo1UpdatedConfig(rName),
+				Config: testAccEBSVolumeConfig_iopsIo1Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
@@ -228,7 +234,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeWithIopsIo2Config(rName),
+				Config: testAccEBSVolumeConfig_iopsIo2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
@@ -236,12 +242,13 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeWithIopsIo2UpdatedConfig(rName),
+				Config: testAccEBSVolumeConfig_iopsIo2Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
@@ -265,7 +272,7 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeWithKMSKeyConfig(rName),
+				Config: testAccEBSVolumeConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
@@ -274,9 +281,10 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -294,16 +302,17 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeWithNoIopsConfig(rName),
+				Config: testAccEBSVolumeConfig_noIOPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -318,7 +327,7 @@ func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEBSVolumeWithInvalidIopsForTypeConfig,
+				Config:      testAccEBSVolumeConfig_invalidIOPSForType,
 				ExpectError: regexp.MustCompile(`'iops' must not be set when 'type' is`),
 			},
 		},
@@ -333,7 +342,7 @@ func TestAccEC2EBSVolume_invalidThroughputForType(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEBSVolumeWithInvalidThroughputForTypeConfig,
+				Config:      testAccEBSVolumeConfig_invalidThroughputForType,
 				ExpectError: regexp.MustCompile(`'throughput' must not be set when 'type' is`),
 			},
 		},
@@ -351,7 +360,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeConfigTags1("key1", "value1"),
+				Config: testAccEBSVolumeConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -359,12 +368,13 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSVolumeConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -373,7 +383,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEBSVolumeConfigTags1("key2", "value2"),
+				Config: testAccEBSVolumeConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -396,7 +406,7 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeMultiAttachConfig(rName, "io1"),
+				Config: testAccEBSVolumeConfig_multiAttach(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
@@ -405,9 +415,10 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -425,7 +436,7 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeMultiAttachConfig(rName, "io2"),
+				Config: testAccEBSVolumeConfig_multiAttach(rName, "io2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
@@ -434,9 +445,10 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -450,7 +462,7 @@ func TestAccEC2EBSVolume_multiAttach_gp2(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccEBSVolumeWithInvalidMultiAttachEnabledForTypeConfig,
+				Config:      testAccEBSVolumeConfig_invalidMultiAttachEnabledForType,
 				ExpectError: regexp.MustCompile(`'multi_attach_enabled' must not be set when 'type' is`),
 			},
 		},
@@ -470,16 +482,17 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeOutpostConfig(rName),
+				Config: testAccEBSVolumeConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -497,7 +510,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "", ""),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -515,9 +528,10 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -535,7 +549,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "4000", "200"),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -553,12 +567,13 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "5000", "200"),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -591,7 +606,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "", "400"),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -609,12 +624,13 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "", "600"),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -647,7 +663,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "3000", "400"),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "3000", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -665,12 +681,13 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp2", "", ""),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp2", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -685,6 +702,63 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "io1", "4000", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "io1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
+			},
+			{
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "gp3", "4000", "125"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
 				),
 			},
 		},
@@ -704,7 +778,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSnapshotIDConfig(rName),
+				Config: testAccEBSVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -722,9 +796,10 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 		},
 	})
@@ -743,7 +818,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 		CheckDestroy:      testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeSnapshotIdAndSizeConfig(rName, 20),
+				Config: testAccEBSVolumeConfig_snapshotIdAndSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -761,9 +836,44 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeConfig_finalSnapshot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
+			},
+			{
+				Config:  testAccEBSVolumeConfig_finalSnapshot(rName),
+				Destroy: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeFinalSnapshotExists(&v),
+				),
 			},
 		},
 	})
@@ -818,7 +928,37 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 	}
 }
 
-var testAccEBSVolumeConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+func testAccCheckVolumeFinalSnapshotExists(v *ec2.Volume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.EC2Conn
+
+		input := &ec2.DescribeSnapshotsInput{
+			Filters: tfec2.BuildAttributeFilterList(map[string]string{
+				"volume-id": aws.StringValue(v.VolumeId),
+				"status":    ec2.SnapshotStateCompleted,
+			}),
+		}
+
+		output, err := tfec2.FindSnapshot(conn, input)
+
+		if err != nil {
+			return err
+		}
+
+		r := tfec2.ResourceEBSSnapshot()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(output.SnapshotId))
+
+		if err := r.Delete(d, client); err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+var testAccEBSVolumeConfig_basic = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -826,23 +966,9 @@ resource "aws_ebs_volume" "test" {
 }
 `)
 
-func testAccEBSVolumeBasicConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  type              = "gp2"
-  size              = 1
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccEBSAttachedVolumeConfig(rName string) string {
+func testAccEBSVolumeConfig_attached(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -879,9 +1005,9 @@ resource "aws_volume_attachment" "test" {
 `, rName))
 }
 
-func testAccEBSAttachedVolumeUpdateSizeConfig(rName string) string {
+func testAccEBSVolumeConfig_attachedUpdateSize(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -918,7 +1044,7 @@ resource "aws_volume_attachment" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeUpdateSizeConfig(rName string) string {
+func testAccEBSVolumeConfig_updateSize(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -934,7 +1060,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeUpdateTypeConfig(rName string) string {
+func testAccEBSVolumeConfig_updateType(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -950,7 +1076,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeWithIopsIo1Config(rName string) string {
+func testAccEBSVolumeConfig_iopsIo1(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -967,7 +1093,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeWithIopsIo1UpdatedConfig(rName string) string {
+func testAccEBSVolumeConfig_iopsIo1Updated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -984,7 +1110,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeWithIopsIo2Config(rName string) string {
+func testAccEBSVolumeConfig_iopsIo2(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1001,7 +1127,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeWithIopsIo2UpdatedConfig(rName string) string {
+func testAccEBSVolumeConfig_iopsIo2Updated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1018,7 +1144,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeWithKMSKeyConfig(rName string) string {
+func testAccEBSVolumeConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1056,7 +1182,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeConfigTags1(tagKey1, tagValue1 string) string {
+func testAccEBSVolumeConfig_tags1(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1071,7 +1197,7 @@ resource "aws_ebs_volume" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccEBSVolumeConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEBSVolumeConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1087,7 +1213,7 @@ resource "aws_ebs_volume" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccEBSVolumeWithNoIopsConfig(rName string) string {
+func testAccEBSVolumeConfig_noIOPS(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1104,7 +1230,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-var testAccEBSVolumeWithInvalidIopsForTypeConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+var testAccEBSVolumeConfig_invalidIOPSForType = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 10
@@ -1112,7 +1238,7 @@ resource "aws_ebs_volume" "test" {
 }
 `)
 
-var testAccEBSVolumeWithInvalidThroughputForTypeConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+var testAccEBSVolumeConfig_invalidThroughputForType = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 10
@@ -1122,7 +1248,7 @@ resource "aws_ebs_volume" "test" {
 }
 `)
 
-var testAccEBSVolumeWithInvalidMultiAttachEnabledForTypeConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+var testAccEBSVolumeConfig_invalidMultiAttachEnabledForType = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
   size                 = 10
@@ -1131,7 +1257,7 @@ resource "aws_ebs_volume" "test" {
 }
 `)
 
-func testAccEBSVolumeOutpostConfig(rName string) string {
+func testAccEBSVolumeConfig_outpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -1151,7 +1277,7 @@ resource "aws_ebs_volume" "test" {
 `, rName)
 }
 
-func testAccEBSVolumeMultiAttachConfig(rName, volumeType string) string {
+func testAccEBSVolumeConfig_multiAttach(rName, volumeType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
@@ -1167,7 +1293,7 @@ resource "aws_ebs_volume" "test" {
 `, rName, volumeType))
 }
 
-func testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, size, volumeType, iops, throughput string) string {
+func testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, size, volumeType, iops, throughput string) string {
 	if volumeType == "" {
 		volumeType = "null"
 	}
@@ -1195,7 +1321,7 @@ resource "aws_ebs_volume" "test" {
 `, rName, size, volumeType, iops, throughput))
 }
 
-func testAccEBSVolumeSnapshotIDConfig(rName string) string {
+func testAccEBSVolumeConfig_snapshotID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1227,7 +1353,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccEBSVolumeSnapshotIdAndSizeConfig(rName string, size int) string {
+func testAccEBSVolumeConfig_snapshotIdAndSize(rName string, size int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1258,4 +1384,18 @@ resource "aws_ebs_volume" "test" {
   }
 }
 `, rName, size))
+}
+
+func testAccEBSVolumeConfig_finalSnapshot(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 10
+  final_snapshot    = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }

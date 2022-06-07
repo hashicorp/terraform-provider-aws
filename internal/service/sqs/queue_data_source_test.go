@@ -22,7 +22,7 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueDataSourceConfig(rName),
+				Config: testAccQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
@@ -43,7 +43,7 @@ func TestAccSQSQueueDataSource_tags(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueTagsDataSourceConfig(rName),
+				Config: testAccQueueDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
@@ -88,7 +88,7 @@ func testAccQueueCheckDataSource(datasourceName, resourceName string) resource.T
 	}
 }
 
-func testAccQueueDataSourceConfig(rName string) string {
+func testAccQueueDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "wrong" {
   name = "%[1]s_wrong"
@@ -104,7 +104,7 @@ data "aws_sqs_queue" "by_name" {
 `, rName)
 }
 
-func testAccQueueTagsDataSourceConfig(rName string) string {
+func testAccQueueDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = "%[1]s"

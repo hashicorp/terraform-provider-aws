@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"
 	"log"
 	"strconv"
@@ -9,6 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -200,4 +203,92 @@ func CapacitySatisfiedUpdate(d *schema.ResourceData, haveASG, haveELB int) (bool
 		}
 	}
 	return true, ""
+}
+
+// TODO: make this a finder
+// TODO: this should return a NotFoundError if not found
+func getGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
+	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []*string{aws.String(asgName)},
+	}
+
+	log.Printf("[DEBUG] Auto Scaling Group describe configuration: %#v", describeOpts)
+	describeGroups, err := conn.DescribeAutoScalingGroups(&describeOpts)
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("Error retrieving Auto Scaling Groups: %s", err)
+	}
+
+	// Search for the Auto Scaling Group
+	for idx, asc := range describeGroups.AutoScalingGroups {
+		if asc == nil {
+			continue
+		}
+
+		if aws.StringValue(asc.AutoScalingGroupName) == asgName {
+			return describeGroups.AutoScalingGroups[idx], nil
+		}
+	}
+
+	return nil, nil
+}
+
+// getELBInstanceStates returns a mapping of the instance states of all the ELBs attached to the
+// provided ASG.
+//
+// Note that this is the instance state function for ELB Classic.
+//
+// Nested like: lbName -> instanceId -> instanceState
+func getELBInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]map[string]string, error) {
+	lbInstanceStates := make(map[string]map[string]string)
+	conn := meta.(*conns.AWSClient).ELBConn
+
+	for _, lbName := range g.LoadBalancerNames {
+		lbInstanceStates[aws.StringValue(lbName)] = make(map[string]string)
+		opts := &elb.DescribeInstanceHealthInput{LoadBalancerName: lbName}
+		r, err := conn.DescribeInstanceHealth(opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, is := range r.InstanceStates {
+			if is == nil || is.InstanceId == nil || is.State == nil {
+				continue
+			}
+			lbInstanceStates[aws.StringValue(lbName)][aws.StringValue(is.InstanceId)] = aws.StringValue(is.State)
+		}
+	}
+
+	return lbInstanceStates, nil
+}
+
+// getTargetGroupInstanceStates returns a mapping of the instance states of
+// all the ALB target groups attached to the provided ASG.
+//
+// Note that this is the instance state function for Application Load
+// Balancing (aka ELBv2).
+//
+// Nested like: targetGroupARN -> instanceId -> instanceState
+func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]map[string]string, error) {
+	targetInstanceStates := make(map[string]map[string]string)
+	conn := meta.(*conns.AWSClient).ELBV2Conn
+
+	for _, targetGroupARN := range g.TargetGroupARNs {
+		targetInstanceStates[aws.StringValue(targetGroupARN)] = make(map[string]string)
+		opts := &elbv2.DescribeTargetHealthInput{TargetGroupArn: targetGroupARN}
+		r, err := conn.DescribeTargetHealth(opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, desc := range r.TargetHealthDescriptions {
+			if desc == nil || desc.Target == nil || desc.Target.Id == nil || desc.TargetHealth == nil || desc.TargetHealth.State == nil {
+				continue
+			}
+			targetInstanceStates[aws.StringValue(targetGroupARN)][aws.StringValue(desc.Target.Id)] = aws.StringValue(desc.TargetHealth.State)
+		}
+	}
+
+	return targetInstanceStates, nil
 }

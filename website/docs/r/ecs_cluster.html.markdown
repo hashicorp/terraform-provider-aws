@@ -120,7 +120,7 @@ The following arguments are supported:
 ### `setting`
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) The value to assign to the setting. Value values are `enabled` and `disabled`.
+* `value` -  (Required) The value to assign to the setting. Valid values are `enabled` and `disabled`.
 
 ## Attributes Reference
 

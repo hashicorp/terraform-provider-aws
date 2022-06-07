@@ -329,7 +329,7 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSamlProvider(rName, idpEntityID),
+				Config: testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSAMLProvider(rName, idpEntityID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
@@ -1135,7 +1135,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName, idpEntityID))
 }
 
-func testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSamlProvider(rName, idpEntityID string) string {
+func testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSAMLProvider(rName, idpEntityID string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase("test"), fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test1" {
   name                   = %[1]q

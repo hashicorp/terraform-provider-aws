@@ -440,7 +440,7 @@ func (val Value) As(dst interface{}) error {
 		if !ok {
 			return fmt.Errorf("can't unmarshal %s into %T, expected *big.Float", val.Type(), dst)
 		}
-		target.Set(v)
+		target.Copy(v)
 		return nil
 	case **big.Float:
 		if val.IsNull() {

@@ -93,7 +93,7 @@ func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := FindEBSVolumes(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Volumes: %w", err)
+		return fmt.Errorf("reading EBS Volumes: %w", err)
 	}
 
 	if len(output) < 1 {

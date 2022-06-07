@@ -2,40 +2,40 @@ package ec2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
-	var snapshotId string
-	accountId := "111122223333"
+	var providers []*schema.Provider
+	resourceName := "aws_snapshot_create_volume_permission.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
-			// Scaffold everything
 			{
-				Config: testAccSnapshotCreateVolumePermissionConfig(true, accountId),
+				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
-					testAccSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
-				),
-			},
-			// Drop just create volume permission to test destruction
-			{
-				Config: testAccSnapshotCreateVolumePermissionConfig(false, accountId),
-				Check: resource.ComposeTestCheckFunc(
-					testAccSnapshotCreateVolumePermissionDestroyed(&accountId, &snapshotId),
+					testAccSnapshotCreateVolumePermissionExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "snapshot_id"),
 				),
 			},
 		},
@@ -43,8 +43,33 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
-	var snapshotId string
-	accountId := "111122223333"
+	var providers []*schema.Provider
+	resourceName := "aws_snapshot_create_volume_permission.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccSnapshotCreateVolumePermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccSnapshotCreateVolumePermissionExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSnapshotCreateVolumePermission(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -53,34 +78,11 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 		CheckDestroy:      testAccSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCreateVolumePermissionConfig(true, accountId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
-					testAccSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
-				),
-				ExpectNonEmptyPlan: true,
+				Config:      testAccEBSSnapshotCreateVolumePermissionConfig_snapshotOwner(rName),
+				ExpectError: regexp.MustCompile(`owns EBS Snapshot`),
 			},
 		},
 	})
-}
-
-func testCheckResourceGetAttr(name, key string, value *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ms := s.RootModule()
-		rs, ok := ms.Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		is := rs.Primary
-		if is == nil {
-			return fmt.Errorf("No primary instance: %s", name)
-		}
-
-		*value = is.Attributes[key]
-		return nil
-	}
 }
 
 func testAccSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
@@ -91,77 +93,115 @@ func testAccSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		snapshotID, accountID, err := tfec2.SnapshotCreateVolumePermissionParseID(rs.Primary.ID)
+		snapshotID, accountID, err := tfec2.EBSSnapshotCreateVolumePermissionParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if has, err := tfec2.HasCreateVolumePermission(conn, snapshotID, accountID); err != nil {
-			return err
-		} else if has {
-			return fmt.Errorf("create volume permission still exist for '%s' on '%s'", accountID, snapshotID)
+
+		_, err = tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn, snapshotID, accountID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EBS Snapshot CreateVolumePermission %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccSnapshotCreateVolumePermissionExists(accountId, snapshotId *string) resource.TestCheckFunc {
+func testAccSnapshotCreateVolumePermissionExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		if has, err := tfec2.HasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
-			return err
-		} else if !has {
-			return fmt.Errorf("create volume permission does not exist for '%s' on '%s'", aws.StringValue(snapshotId), aws.StringValue(accountId))
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EBS Snapshot CreateVolumePermission ID is set")
+		}
+
+		snapshotID, accountID, err := tfec2.EBSSnapshotCreateVolumePermissionParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		_, err = tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn, snapshotID, accountID)
+
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
 
-func testAccSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		if has, err := tfec2.HasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
-			return err
-		} else if has {
-			return fmt.Errorf("create volume permission still exists for '%s' on '%s'", aws.StringValue(snapshotId), aws.StringValue(accountId))
-		}
-		return nil
-	}
-}
-
-func testAccSnapshotCreateVolumePermissionConfig(includeCreateVolumePermission bool, accountID string) string {
-	base := `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
-    Name = "ebs_snap_perm"
+    Name = %[1]q
   }
 }
 
 resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
 
-	if !includeCreateVolumePermission {
-		return base
-	}
+data "aws_caller_identity" "test" {
+  provider = "awsalternate"
+}
 
-	return base + fmt.Sprintf(`
 resource "aws_snapshot_create_volume_permission" "test" {
   snapshot_id = aws_ebs_snapshot.test.id
-  account_id  = %q
+  account_id  = data.aws_caller_identity.test.account_id
 }
-`, accountID)
+`, rName))
+}
+
+func testAccEBSSnapshotCreateVolumePermissionConfig_snapshotOwner(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_caller_identity" "test" {}
+
+resource "aws_snapshot_create_volume_permission" "test" {
+  snapshot_id = aws_ebs_snapshot.test.id
+  account_id  = data.aws_caller_identity.test.account_id
+}
+`, rName))
 }

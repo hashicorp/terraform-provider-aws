@@ -32,7 +32,7 @@ func TestAccVPCRoute_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
@@ -79,7 +79,7 @@ func TestAccVPCRoute_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRoute(), resourceName),
@@ -104,7 +104,7 @@ func TestAccVPCRoute_Disappears_routeTable(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRouteTable(), rtResourceName),
@@ -129,7 +129,7 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6EgressOnlyInternetGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -159,7 +159,7 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 			},
 			{
 				// Verify that expanded form of the destination CIDR causes no diff.
-				Config:   testAccRouteIPv6EgressOnlyInternetGatewayConfig(rName, "::0/0"),
+				Config:   testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
 				PlanOnly: true,
 			},
 		},
@@ -180,7 +180,7 @@ func TestAccVPCRoute_ipv6ToInternetGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6InternetGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -226,7 +226,7 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6InstanceConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -272,7 +272,7 @@ func TestAccVPCRoute_IPv6ToNetworkInterface_unattached(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6NetworkInterfaceUnattachedConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6NetworkInterfaceUnattached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -318,7 +318,7 @@ func TestAccVPCRoute_ipv6ToVPCPeeringConnection(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6VPCPeeringConnectionConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6PeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -364,7 +364,7 @@ func TestAccVPCRoute_ipv6ToVPNGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6VPNGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6VPNGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -410,7 +410,7 @@ func TestAccVPCRoute_ipv4ToVPNGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4VPNGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4VPNGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -456,7 +456,7 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4InstanceConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -502,7 +502,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_unattached(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4NetworkInterfaceUnattachedConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4NetworkInterfaceUnattached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -549,7 +549,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4NetworkInterfaceAttachedConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4NetworkInterfaceAttached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -597,7 +597,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4NetworkInterfaceTwoAttachmentsConfig(rName, destinationCidr, eni1ResourceName),
+				Config: testAccVPCRouteConfig_ipv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni1ResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -620,7 +620,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4NetworkInterfaceTwoAttachmentsConfig(rName, destinationCidr, eni2ResourceName),
+				Config: testAccVPCRouteConfig_ipv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni2ResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -666,7 +666,7 @@ func TestAccVPCRoute_ipv4ToVPCPeeringConnection(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4VPCPeeringConnectionConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4PeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -712,7 +712,7 @@ func TestAccVPCRoute_ipv4ToNatGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4NatGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4NATGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -758,7 +758,7 @@ func TestAccVPCRoute_ipv6ToNatGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6NatGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6NATGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -804,7 +804,7 @@ func TestAccVPCRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteWithVPCEndpointConfig(rName),
+				Config: testAccVPCRouteConfig_endpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
@@ -839,7 +839,7 @@ func TestAccVPCRoute_ipv4ToTransitGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4TransitGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -889,7 +889,7 @@ func TestAccVPCRoute_ipv6ToTransitGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6TransitGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv6TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -935,7 +935,7 @@ func TestAccVPCRoute_ipv4ToCarrierGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4CarrierGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_ipv4CarrierGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, "id"),
@@ -981,7 +981,7 @@ func TestAccVPCRoute_ipv4ToLocalGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteResourceIPv4LocalGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_resourceIPv4LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1027,7 +1027,7 @@ func TestAccVPCRoute_ipv6ToLocalGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteResourceIPv6LocalGatewayConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_resourceIPv6LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1073,7 +1073,7 @@ func TestAccVPCRoute_conditionalCIDRBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr, false),
+				Config: testAccVPCRouteConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
@@ -1081,7 +1081,7 @@ func TestAccVPCRoute_conditionalCIDRBlock(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr, true),
+				Config: testAccVPCRouteConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
@@ -1123,7 +1123,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "instance_id", instanceResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1146,7 +1146,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "gateway_id", vgwResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1169,7 +1169,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "gateway_id", igwResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1192,7 +1192,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "nat_gateway_id", ngwResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "nat_gateway_id", ngwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1215,7 +1215,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "network_interface_id", eniResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1239,7 +1239,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "transit_gateway_id", tgwResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "transit_gateway_id", tgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1262,7 +1262,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "vpc_endpoint_id", vpcEndpointResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "vpc_endpoint_id", vpcEndpointResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1285,7 +1285,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1340,7 +1340,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "instance_id", instanceResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1363,7 +1363,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "gateway_id", vgwResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1386,7 +1386,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "gateway_id", igwResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1409,7 +1409,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "egress_only_gateway_id", eoigwResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "egress_only_gateway_id", eoigwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1432,7 +1432,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "network_interface_id", eniResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1455,7 +1455,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1505,7 +1505,7 @@ func TestAccVPCRoute_ipv4ToVPCEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteResourceIPv4VPCEndpointConfig(rName, destinationCidr),
+				Config: testAccVPCRouteConfig_resourceIPv4Endpoint(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1553,7 +1553,7 @@ func TestAccVPCRoute_localRoute(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteIPv4NoRouteConfig(rName),
+				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
@@ -1561,7 +1561,7 @@ func TestAccVPCRoute_localRoute(t *testing.T) {
 				),
 			},
 			{
-				Config:       testAccRouteIPv4LocalRouteConfig(rName),
+				Config:       testAccVPCRouteConfig_ipv4Local(rName),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateIdFunc: func(rt *ec2.RouteTable, v *ec2.Vpc) resource.ImportStateIdFunc {
@@ -1591,7 +1591,7 @@ func TestAccVPCRoute_prefixListToInternetGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListInternetGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListInternetGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1637,7 +1637,7 @@ func TestAccVPCRoute_prefixListToVPNGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListVPNGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListVPNGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1683,7 +1683,7 @@ func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListInstanceConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1729,7 +1729,7 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_unattached(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListNetworkInterfaceUnattachedConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListNetworkInterfaceUnattached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1776,7 +1776,7 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListNetworkInterfaceAttachedConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListNetworkInterfaceAttached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1822,7 +1822,7 @@ func TestAccVPCRoute_prefixListToVPCPeeringConnection(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListVPCPeeringConnectionConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListPeeringConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1868,7 +1868,7 @@ func TestAccVPCRoute_prefixListToNatGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListNatGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListNATGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1918,7 +1918,7 @@ func TestAccVPCRoute_prefixListToTransitGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListTransitGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListTransitGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1968,7 +1968,7 @@ func TestAccVPCRoute_prefixListToCarrierGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListCarrierGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListCarrierGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, "id"),
@@ -2018,7 +2018,7 @@ func TestAccVPCRoute_prefixListToLocalGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListLocalGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListLocalGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -2064,7 +2064,7 @@ func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutePrefixListEgressOnlyInternetGatewayConfig(rName),
+				Config: testAccVPCRouteConfig_prefixListEgressOnlyInternetGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -2179,7 +2179,7 @@ func testAccRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 	}
 }
 
-func testAccRouteIPv4InternetGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2213,7 +2213,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv6InternetGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6InternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -2256,7 +2256,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv6NetworkInterfaceUnattachedConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6NetworkInterfaceUnattached(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2304,7 +2304,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteIPv6InstanceConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6Instance(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -2358,7 +2358,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteIPv6VPCPeeringConnectionConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6PeeringConnection(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -2404,7 +2404,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv6EgressOnlyInternetGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -2439,7 +2439,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteWithVPCEndpointConfig(rName string) string {
+func testAccVPCRouteConfig_endpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2484,7 +2484,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccRouteIPv4TransitGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4TransitGateway(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -2538,7 +2538,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteIPv6TransitGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6TransitGateway(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2593,7 +2593,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
+func testAccVPCRouteConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -2636,7 +2636,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr, destinationIpv6Cidr, ipv6Route)
 }
 
-func testAccRouteIPv4InstanceConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4Instance(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -2686,7 +2686,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteIPv4NetworkInterfaceUnattachedConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4NetworkInterfaceUnattached(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2732,7 +2732,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteResourceIPv4LocalGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_resourceIPv4LocalGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
@@ -2781,7 +2781,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteResourceIPv6LocalGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_resourceIPv6LocalGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
@@ -2831,7 +2831,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv4NetworkInterfaceAttachedConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4NetworkInterfaceAttached(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -2896,7 +2896,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteIPv4NetworkInterfaceTwoAttachmentsConfig(rName, destinationCidr, targetResourceName string) string {
+func testAccVPCRouteConfig_ipv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -2974,7 +2974,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr, targetResourceName))
 }
 
-func testAccRouteIPv4VPCPeeringConnectionConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4PeeringConnection(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3018,7 +3018,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv4NatGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4NATGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3082,7 +3082,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv6NatGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6NATGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -3131,7 +3131,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv4VPNGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4VPNGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3165,7 +3165,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteIPv6VPNGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv6VPNGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -3200,7 +3200,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
-func testAccRouteResourceIPv4VPCEndpointConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_resourceIPv4Endpoint(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -3270,9 +3270,9 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccRouteIPv4FlexiTargetConfig(rName, destinationCidr, targetAttribute, targetValue string) string {
+func testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3445,9 +3445,9 @@ resource "aws_route" "test" {
 `, rName, destinationCidr, targetAttribute, targetValue))
 }
 
-func testAccRouteIPv6FlexiTargetConfig(rName, destinationCidr, targetAttribute, targetValue string) string {
+func testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3566,7 +3566,7 @@ resource "aws_route" "test" {
 `, rName, destinationCidr, targetAttribute, targetValue))
 }
 
-func testAccRouteIPv4NoRouteConfig(rName string) string {
+func testAccVPCRouteConfig_ipv4NoRoute(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3586,9 +3586,9 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccRouteIPv4LocalRouteConfig(rName string) string {
+func testAccVPCRouteConfig_ipv4Local(rName string) string {
 	return acctest.ConfigCompose(
-		testAccRouteIPv4NoRouteConfig(rName),
+		testAccVPCRouteConfig_ipv4NoRoute(rName),
 		`
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
@@ -3598,7 +3598,7 @@ resource "aws_route" "test" {
 `)
 }
 
-func testAccRoutePrefixListInternetGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListInternetGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3638,7 +3638,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListVPNGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListVPNGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3678,7 +3678,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListInstanceConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListInstance(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -3734,7 +3734,7 @@ resource "aws_route" "test" {
 `, rName))
 }
 
-func testAccRoutePrefixListNetworkInterfaceUnattachedConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListNetworkInterfaceUnattached(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -3786,7 +3786,7 @@ resource "aws_route" "test" {
 `, rName))
 }
 
-func testAccRoutePrefixListNetworkInterfaceAttachedConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListNetworkInterfaceAttached(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -3857,7 +3857,7 @@ resource "aws_route" "test" {
 `, rName))
 }
 
-func testAccRoutePrefixListVPCPeeringConnectionConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListPeeringConnection(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3907,7 +3907,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListNatGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListNATGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -3977,7 +3977,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListTransitGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListTransitGateway(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -4037,7 +4037,7 @@ resource "aws_route" "test" {
 `, rName))
 }
 
-func testAccRoutePrefixListCarrierGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListCarrierGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -4077,7 +4077,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListLocalGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListLocalGateway(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
@@ -4132,7 +4132,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRoutePrefixListEgressOnlyInternetGatewayConfig(rName string) string {
+func testAccVPCRouteConfig_prefixListEgressOnlyInternetGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -4173,7 +4173,7 @@ resource "aws_route" "test" {
 `, rName)
 }
 
-func testAccRouteIPv4CarrierGatewayConfig(rName, destinationCidr string) string {
+func testAccVPCRouteConfig_ipv4CarrierGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

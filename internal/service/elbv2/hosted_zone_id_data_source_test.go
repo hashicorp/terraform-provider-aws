@@ -9,32 +9,32 @@ import (
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
-func TestAccLBHostedZoneIDDataSource_basic(t *testing.T) {
+func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSLbHostedZoneIdConfig,
+				Config: testAccHostedZoneIDConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", "id", tfelbv2.HostedZoneIdPerRegionALBMap[acctest.Region()]),
 				),
 			},
 			{
-				Config: testAccCheckAWSLbHostedZoneIdExplicitRegionConfig,
+				Config: testAccHostedZoneIDConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.regional", "id", "Z32O12XQLNTSW2"),
 				),
 			},
 			{
-				Config: testAccCheckAWSLbHostedZoneIdExplicitNetworkConfig,
+				Config: testAccHostedZoneIDConfig_explicitNetwork,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network", "id", tfelbv2.HostedZoneIdPerRegionNLBMap[acctest.Region()]),
 				),
 			},
 			{
-				Config: testAccCheckAWSLbHostedZoneIdExplicitNetworkRegionConfig,
+				Config: testAccHostedZoneIDConfig_explicitNetworkRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network-regional", "id", "Z2IFOLAFXWLO4F"),
 				),
@@ -43,25 +43,25 @@ func TestAccLBHostedZoneIDDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSLbHostedZoneIdConfig = `
+const testAccHostedZoneIDConfig_basic = `
 data "aws_lb_hosted_zone_id" "main" {}
 `
 
 //lintignore:AWSAT003
-const testAccCheckAWSLbHostedZoneIdExplicitRegionConfig = `
+const testAccHostedZoneIDConfig_explicitRegion = `
 data "aws_lb_hosted_zone_id" "regional" {
   region = "eu-west-1"
 }
 `
 
-const testAccCheckAWSLbHostedZoneIdExplicitNetworkConfig = `
+const testAccHostedZoneIDConfig_explicitNetwork = `
 data "aws_lb_hosted_zone_id" "network" {
   load_balancer_type = "network"
 }
 `
 
 //lintignore:AWSAT003
-const testAccCheckAWSLbHostedZoneIdExplicitNetworkRegionConfig = `
+const testAccHostedZoneIDConfig_explicitNetworkRegion = `
 data "aws_lb_hosted_zone_id" "network-regional" {
   region             = "eu-west-1"
   load_balancer_type = "network"

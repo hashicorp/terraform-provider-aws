@@ -2,7 +2,21 @@ package organizations_test
 
 import (
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(organizations.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED",
+	)
+}
 
 func TestAccOrganizations_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){

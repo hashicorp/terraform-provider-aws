@@ -29,7 +29,7 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretPolicyBasicConfig(rName),
+				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -43,7 +43,7 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
-				Config: testAccSecretPolicyUpdatedConfig(rName),
+				Config: testAccSecretPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -66,7 +66,7 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretPolicyBlockConfig(rName, true),
+				Config: testAccSecretPolicyConfig_block(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -79,14 +79,14 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
-				Config: testAccSecretPolicyBlockConfig(rName, false),
+				Config: testAccSecretPolicyConfig_block(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
-				Config: testAccSecretPolicyBlockConfig(rName, true),
+				Config: testAccSecretPolicyConfig_block(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -108,7 +108,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretPolicyBasicConfig(rName),
+				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
@@ -213,7 +213,7 @@ func testAccCheckSecretPolicyExists(resourceName string, policy *secretsmanager.
 	}
 }
 
-func testAccSecretPolicyBasicConfig(rName string) string {
+func testAccSecretPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -261,7 +261,7 @@ POLICY
 `, rName)
 }
 
-func testAccSecretPolicyUpdatedConfig(rName string) string {
+func testAccSecretPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -290,7 +290,7 @@ POLICY
 `, rName)
 }
 
-func testAccSecretPolicyBlockConfig(rName string, block bool) string {
+func testAccSecretPolicyConfig_block(rName string, block bool) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

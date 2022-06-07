@@ -250,10 +250,16 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "simple",
+				Default:  SriovNetSupportSimple,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.TpmSupportValues_Values(), false),
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -298,6 +304,10 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 
 	if ramdiskId := d.Get("ramdisk_id").(string); ramdiskId != "" {
 		input.RamdiskId = aws.String(ramdiskId)
+	}
+
+	if v := d.Get("tpm_support").(string); v != "" {
+		input.TpmSupport = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
@@ -419,6 +429,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("root_device_name", image.RootDeviceName)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
+	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
@@ -485,7 +496,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 		ImageId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return nil
 	}
 

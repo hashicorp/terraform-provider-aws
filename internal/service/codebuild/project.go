@@ -801,7 +801,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+		params.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("badge_enabled"); ok {
@@ -1228,7 +1228,7 @@ func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConf
 	return s3LogsConfig
 }
 
-func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
+func expandVPCConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 	vpcConfig := codebuild.VpcConfig{}
 	if len(rawVpcConfig) == 0 || rawVpcConfig[0] == nil {
 		return &vpcConfig
@@ -1382,7 +1382,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting secondary_sources: %w", err)
 	}
 
-	if err := d.Set("secondary_source_version", flattenAwsCodeBuildProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
+	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
 		return fmt.Errorf("error setting secondary_source_version: %w", err)
 	}
 
@@ -1515,7 +1515,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("vpc_config") {
-			params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
+			params.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 		}
 
 		if d.HasChange("logs_config") {
@@ -1850,16 +1850,16 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	return m
 }
 
-func flattenAwsCodeBuildProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
+func flattenProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, sourceVersion := range sourceVersions {
-		l = append(l, flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion))
+		l = append(l, flattenProjectSourceVersionsData(sourceVersion))
 	}
 	return l
 }
 
-func flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
+func flattenProjectSourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
 	values := map[string]interface{}{}
 
 	if sourceVersion.SourceIdentifier != nil {

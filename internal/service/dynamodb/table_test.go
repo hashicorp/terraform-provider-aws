@@ -28,7 +28,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestUpdateDynamoDbDiffGSI(t *testing.T) {
+func TestUpdateDiffGSI(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}

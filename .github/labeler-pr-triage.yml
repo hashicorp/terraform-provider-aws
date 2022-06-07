@@ -416,6 +416,9 @@ service/emr:
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
+service/emrserverless:
+  - 'internal/service/emrserverless/**/*'
+  - 'website/**/emrserverless_*'
 service/events:
   - 'internal/service/events/**/*'
   - 'website/**/cloudwatch_event_*'

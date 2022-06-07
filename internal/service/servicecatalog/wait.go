@@ -2,13 +2,11 @@ package servicecatalog
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -50,7 +48,6 @@ const (
 	ProvisioningArtifactReadTimeout            = 10 * time.Minute
 	ProvisioningArtifactReadyTimeout           = 3 * time.Minute
 	ProvisioningArtifactUpdateTimeout          = 3 * time.Minute
-	RecordReadyTimeout                         = 30 * time.Minute
 	ServiceActionDeleteTimeout                 = 3 * time.Minute
 	ServiceActionReadTimeout                   = 10 * time.Minute
 	ServiceActionReadyTimeout                  = 3 * time.Minute
@@ -517,7 +514,14 @@ func WaitProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLang
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ProvisionedProductDetail.StatusMessage)))
+		if detail := output.ProvisionedProductDetail; detail != nil {
+			status := aws.StringValue(detail.Status)
+			// Note: "TAINTED" is described as a stable state per API docs, though can result from a failed update
+			// such that the stack rolls back to a previous version
+			if status == servicecatalog.ProvisionedProductStatusError || status == servicecatalog.ProvisionedProductStatusTainted {
+				tfresource.SetLastError(err, errors.New(aws.StringValue(detail.StatusMessage)))
+			}
+		}
 		return output, err
 	}
 
@@ -535,36 +539,6 @@ func WaitProvisionedProductTerminated(conn *servicecatalog.ServiceCatalog, accep
 	_, err := stateConf.WaitForState()
 
 	return err
-}
-
-func WaitRecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string, timeout time.Duration) (*servicecatalog.DescribeRecordOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.RecordStatusSucceeded, servicecatalog.StatusAvailable},
-		Refresh:                   StatusRecord(conn, acceptLanguage, id),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: ContinuousTargetOccurrence,
-		NotFoundChecks:            NotFoundChecks,
-		MinTimeout:                MinTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*servicecatalog.DescribeRecordOutput); ok {
-		if errors := output.RecordDetail.RecordErrors; len(errors) > 0 {
-			var errs *multierror.Error
-
-			for _, err := range output.RecordDetail.RecordErrors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.Code), aws.StringValue(err.Description)))
-			}
-
-			tfresource.SetLastError(err, errs.ErrorOrNil())
-		}
-
-		return output, err
-	}
-
-	return nil, err
 }
 
 func WaitPortfolioConstraintsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]*servicecatalog.ConstraintDetail, error) {

@@ -134,7 +134,7 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22866
-func TestAccAPIGatewayStage_cache_size_cache_disabled(t *testing.T) {
+func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_stage.test"
@@ -276,7 +276,7 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_disappears_restApi(t *testing.T) {
+func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"

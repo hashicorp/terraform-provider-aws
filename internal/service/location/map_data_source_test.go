@@ -22,7 +22,7 @@ func TestAccLocationMapDataSource_mapName(t *testing.T) {
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMapDataSource_mapName(rName),
+				Config: testAccMapDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration.#", resourceName, "configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration.0.style", resourceName, "configuration.0.style"),
@@ -38,7 +38,7 @@ func TestAccLocationMapDataSource_mapName(t *testing.T) {
 	})
 }
 
-func testAccConfigMapDataSource_mapName(rName string) string {
+func testAccMapDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_location_map" "test" {
   configuration {

@@ -516,7 +516,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
+func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"

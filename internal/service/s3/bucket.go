@@ -1006,7 +1006,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 

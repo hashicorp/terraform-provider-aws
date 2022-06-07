@@ -43,7 +43,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Created"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -65,7 +65,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Updated"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -98,7 +98,7 @@ func testAccHoursOfOperation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Disappear"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
@@ -187,7 +187,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccHoursOfOperationBasicConfig(rName, rName2, label string) string {
+func testAccHoursOfOperationConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccHoursOfOperationBaseConfig(rName),
 		fmt.Sprintf(`

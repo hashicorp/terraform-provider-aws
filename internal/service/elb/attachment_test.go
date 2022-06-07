@@ -113,7 +113,7 @@ func testAccAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expe
 
 // add one attachment
 func testAccAttachment1Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -148,7 +148,7 @@ resource "aws_elb_attachment" "foo1" {
 
 // add a second attachment
 func testAccAttachment2Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -193,7 +193,7 @@ resource "aws_elb_attachment" "foo2" {
 
 // swap attachments between resources
 func testAccAttachment3Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 

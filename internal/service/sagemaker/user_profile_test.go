@@ -29,7 +29,7 @@ func testAccUserProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileBasicConfig(rName),
+				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_profile_name", rName),
@@ -61,7 +61,7 @@ func testAccUserProfile_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileTags1Config(rName, "key1", "value1"),
+				Config: testAccUserProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -74,7 +74,7 @@ func testAccUserProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserProfileTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUserProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -83,7 +83,7 @@ func testAccUserProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserProfileTags1Config(rName, "key2", "value2"),
+				Config: testAccUserProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -106,7 +106,7 @@ func testAccUserProfile_tensorboardAppSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileTensorBoardAppSettingsConfig(rName),
+				Config: testAccUserProfileConfig_tensorBoardAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
@@ -136,7 +136,7 @@ func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileTensorBoardAppSettingsWithImageConfig(rName),
+				Config: testAccUserProfileConfig_tensorBoardAppSettingsImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
@@ -167,7 +167,7 @@ func testAccUserProfile_kernelGatewayAppSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileKernelGatewayAppSettingsConfig(rName),
+				Config: testAccUserProfileConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
@@ -197,7 +197,7 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileKernelGatewayAppSettingsLifecycleConfig(rName),
+				Config: testAccUserProfileConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
@@ -235,7 +235,7 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileKernelGatewayAppSettingsImageConfig(rName, baseImage),
+				Config: testAccUserProfileConfig_kernelGatewayAppSettingsImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
@@ -267,7 +267,7 @@ func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileJupyterServerAppSettingsConfig(rName),
+				Config: testAccUserProfileConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
@@ -297,7 +297,7 @@ func testAccUserProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileBasicConfig(rName),
+				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, &domain),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
@@ -418,7 +418,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccUserProfileBasicConfig(rName string) string {
+func testAccUserProfileConfig_basic(rName string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -427,7 +427,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccUserProfileTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccUserProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -440,7 +440,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccUserProfileTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccUserProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -454,7 +454,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccUserProfileTensorBoardAppSettingsConfig(rName string) string {
+func testAccUserProfileConfig_tensorBoardAppSettings(rName string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -473,7 +473,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccUserProfileTensorBoardAppSettingsWithImageConfig(rName string) string {
+func testAccUserProfileConfig_tensorBoardAppSettingsImage(rName string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q
@@ -498,7 +498,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccUserProfileJupyterServerAppSettingsConfig(rName string) string {
+func testAccUserProfileConfig_jupyterServerAppSettings(rName string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -517,7 +517,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccUserProfileKernelGatewayAppSettingsConfig(rName string) string {
+func testAccUserProfileConfig_kernelGatewayAppSettings(rName string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -536,7 +536,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccUserProfileKernelGatewayAppSettingsLifecycleConfig(rName string) string {
+func testAccUserProfileConfig_kernelGatewayAppSettingsLifecycle(rName string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
@@ -564,7 +564,7 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName)
 }
 
-func testAccUserProfileKernelGatewayAppSettingsImageConfig(rName, baseImage string) string {
+func testAccUserProfileConfig_kernelGatewayAppSettingsImage(rName, baseImage string) string {
 	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 

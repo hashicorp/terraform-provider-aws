@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
@@ -583,12 +582,7 @@ func testAccUserPoolClientImportStateIDFunc(resourceName string) resource.Import
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		clientId := rs.Primary.ID
 
-		params := &cognitoidentityprovider.DescribeUserPoolClientInput{
-			UserPoolId: aws.String(userPoolId),
-			ClientId:   aws.String(clientId),
-		}
-
-		_, err := conn.DescribeUserPoolClient(params)
+		_, err := tfcognitoidp.FindCognitoUserPoolClient(conn, userPoolId, clientId)
 
 		if err != nil {
 			return "", err
@@ -606,17 +600,12 @@ func testAccCheckUserPoolClientDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := &cognitoidentityprovider.DescribeUserPoolClientInput{
-			ClientId:   aws.String(rs.Primary.ID),
-			UserPoolId: aws.String(rs.Primary.Attributes["user_pool_id"]),
+		_, err := tfcognitoidp.FindCognitoUserPoolClient(conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeUserPoolClient(params)
-
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-				return nil
-			}
 			return err
 		}
 	}
@@ -637,17 +626,12 @@ func testAccCheckUserPoolClientExists(name string, client *cognitoidentityprovid
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
-		params := &cognitoidentityprovider.DescribeUserPoolClientInput{
-			ClientId:   aws.String(rs.Primary.ID),
-			UserPoolId: aws.String(rs.Primary.Attributes["user_pool_id"]),
-		}
-
-		resp, err := conn.DescribeUserPoolClient(params)
+		resp, err := tfcognitoidp.FindCognitoUserPoolClient(conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		*client = *resp.UserPoolClient
+		*client = *resp
 
 		return nil
 	}

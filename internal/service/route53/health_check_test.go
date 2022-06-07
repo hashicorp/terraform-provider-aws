@@ -143,7 +143,7 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 		CheckDestroy:      testAccCheckHealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_childHealthChecks,
+				Config: testAccHealthCheckConfig_childs,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(resourceName, &check),
 				),
@@ -514,7 +514,7 @@ resource "aws_route53_health_check" "test" {
 `, ip)
 }
 
-const testAccHealthCheckConfig_childHealthChecks = `
+const testAccHealthCheckConfig_childs = `
 resource "aws_route53_health_check" "child1" {
   fqdn              = "child1.example.com"
   port              = 80

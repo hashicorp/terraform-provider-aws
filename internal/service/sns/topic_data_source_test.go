@@ -21,7 +21,7 @@ func TestAccSNSTopicDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicDataSourceConfig(rName),
+				Config: testAccTopicDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -31,7 +31,7 @@ func TestAccSNSTopicDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccTopicDataSourceConfig(rName string) string {
+func testAccTopicDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q

@@ -133,7 +133,7 @@ func ResourceTopicSubscription() *schema.Resource {
 func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes, err := subscriptionAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	attributes := outputRaw.(map[string]string)
 
-	err = subscriptionAttributeMap.ApiAttributesToResourceData(attributes, d)
+	err = subscriptionAttributeMap.APIAttributesToResourceData(attributes, d)
 
 	if err != nil {
 		return err
@@ -216,7 +216,7 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes, err := subscriptionAttributeMap.ResourceDataToApiAttributesUpdate(d)
+	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 	if err != nil {
 		return err

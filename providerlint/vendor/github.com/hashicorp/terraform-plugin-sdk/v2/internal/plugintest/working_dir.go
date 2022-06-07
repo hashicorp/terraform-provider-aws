@@ -155,7 +155,9 @@ func (wd *WorkingDir) Init(ctx context.Context) error {
 
 	logging.HelperResourceTrace(ctx, "Calling Terraform CLI init command")
 
-	err := wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo))
+	// -upgrade=true is required for per-TestStep provider version changes
+	// e.g. TestTest_TestStep_ExternalProviders_DifferentVersions
+	err := wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Upgrade(true))
 
 	logging.HelperResourceTrace(ctx, "Called Terraform CLI init command")
 

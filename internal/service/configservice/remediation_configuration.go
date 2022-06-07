@@ -162,7 +162,7 @@ func expandRemediationConfigurationExecutionControlsConfig(v map[string]interfac
 	if w, ok := v["ssm_controls"]; ok {
 		x := w.([]interface{})
 		if len(x) > 0 {
-			ssmControls, err := expandRemediationConfigurationSsmControlsConfig(x[0].(map[string]interface{}))
+			ssmControls, err := expandRemediationConfigurationSSMControlsConfig(x[0].(map[string]interface{}))
 			if err != nil {
 				return nil, err
 			}
@@ -175,7 +175,7 @@ func expandRemediationConfigurationExecutionControlsConfig(v map[string]interfac
 	return nil, fmt.Errorf("expected 'ssm_controls' in execution controls configuration")
 }
 
-func expandRemediationConfigurationSsmControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
+func expandRemediationConfigurationSSMControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
 	ret = &configservice.SsmControls{}
 	p := false
 	if concurrentExecutionRatePercentage, ok := v["concurrent_execution_rate_percentage"]; ok {
@@ -216,11 +216,11 @@ func flattenRemediationConfigurationExecutionControlsConfig(controls *configserv
 		return nil
 	}
 	return []interface{}{map[string]interface{}{
-		"ssm_controls": flattenRemediationConfigurationSsmControlsConfig(controls.SsmControls),
+		"ssm_controls": flattenRemediationConfigurationSSMControlsConfig(controls.SsmControls),
 	}}
 }
 
-func flattenRemediationConfigurationSsmControlsConfig(controls *configservice.SsmControls) []interface{} {
+func flattenRemediationConfigurationSSMControlsConfig(controls *configservice.SsmControls) []interface{} {
 	if controls == nil {
 		return nil
 	}

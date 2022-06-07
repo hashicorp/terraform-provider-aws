@@ -34,7 +34,7 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
 		"basic":         testAccAPIMapping_basic,
 		"disappears":    testAccAPIMapping_disappears,
-		"ApiMappingKey": testAccAPIMapping_ApiMappingKey,
+		"ApiMappingKey": testAccAPIMapping_key,
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -116,7 +116,7 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	})
 }
 
-func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	var domainName string
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"

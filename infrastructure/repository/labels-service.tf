@@ -107,6 +107,7 @@ variable "service_labels" {
     "elbv2",
     "emr",
     "emrcontainers",
+    "emrserverless",
     "events",
     "evidently",
     "finspace",

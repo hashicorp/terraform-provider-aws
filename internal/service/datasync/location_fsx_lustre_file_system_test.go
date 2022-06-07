@@ -167,7 +167,7 @@ func testAccCheckLocationFSxLustreDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfdatasync.FindFsxLustreLocationByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -191,7 +191,7 @@ func testAccCheckLocationFSxLustreExists(resourceName string, locationFsxLustre 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		output, err := tfdatasync.FindFsxLustreLocationByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -2,6 +2,7 @@ package s3
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -74,6 +76,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 					"error_document",
 					"index_document",
 					"routing_rule",
+					"routing_rules",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -90,8 +93,10 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 				},
 			},
 			"routing_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"routing_rules"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"condition": {
@@ -144,6 +149,17 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"routing_rules": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"routing_rule"},
+				ValidateFunc:  validation.StringIsJSON,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 			"website_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -178,6 +194,14 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		websiteConfig.RoutingRules = expandBucketWebsiteConfigurationRoutingRules(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("routing_rules"); ok {
+		var unmarshalledRules []*s3.RoutingRule
+		if err := json.Unmarshal([]byte(v.(string)), &unmarshalledRules); err != nil {
+			return diag.FromErr(fmt.Errorf("error creating S3 Bucket (%s) website configuration: %w", bucket, err))
+		}
+		websiteConfig.RoutingRules = unmarshalledRules
 	}
 
 	input := &s3.PutBucketWebsiteInput{
@@ -254,6 +278,16 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error setting routing_rule: %w", err))
 	}
 
+	if output.RoutingRules != nil {
+		rr, err := normalizeRoutingRules(output.RoutingRules)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error while marshaling routing rules: %w", err))
+		}
+		d.Set("routing_rules", rr)
+	} else {
+		d.Set("routing_rules", nil)
+	}
+
 	// Add website_endpoint and website_domain as attributes
 	websiteEndpoint, err := resourceBucketWebsiteConfigurationWebsiteEndpoint(ctx, meta.(*conns.AWSClient), bucket, expectedBucketOwner)
 	if err != nil {
@@ -290,8 +324,29 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		websiteConfig.RedirectAllRequestsTo = expandBucketWebsiteConfigurationRedirectAllRequestsTo(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		websiteConfig.RoutingRules = expandBucketWebsiteConfigurationRoutingRules(v.([]interface{}))
+	if d.HasChanges("routing_rule", "routing_rules") {
+		if d.HasChange("routing_rule") {
+			websiteConfig.RoutingRules = expandBucketWebsiteConfigurationRoutingRules(d.Get("routing_rule").([]interface{}))
+		} else {
+			var unmarshalledRules []*s3.RoutingRule
+			if err := json.Unmarshal([]byte(d.Get("routing_rules").(string)), &unmarshalledRules); err != nil {
+				return diag.FromErr(fmt.Errorf("error updating S3 Bucket (%s) website configuration: %w", bucket, err))
+			}
+			websiteConfig.RoutingRules = unmarshalledRules
+		}
+	} else {
+		// Still send the current RoutingRules configuration
+		if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			websiteConfig.RoutingRules = expandBucketWebsiteConfigurationRoutingRules(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("routing_rules"); ok {
+			var unmarshalledRules []*s3.RoutingRule
+			if err := json.Unmarshal([]byte(v.(string)), &unmarshalledRules); err != nil {
+				return diag.FromErr(fmt.Errorf("error updating S3 Bucket (%s) website configuration: %w", bucket, err))
+			}
+			websiteConfig.RoutingRules = unmarshalledRules
+		}
 	}
 
 	input := &s3.PutBucketWebsiteInput{

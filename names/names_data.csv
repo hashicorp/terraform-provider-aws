@@ -143,6 +143,7 @@ mediatailor,mediatailor,mediatailor,mediatailor,,mediatailor,,,MediaTailor,Media
 ,,,,,,,,,,,,,,,,Elemental On-Premises,AWS,x,,,,No SDK support
 emr,emr,emr,emr,,emr,,,EMR,EMR,,1,,aws_emr_,,emr_,EMR,Amazon,,,,,
 emr-containers,emrcontainers,emrcontainers,emrcontainers,,emrcontainers,,,EMRContainers,EMRContainers,,1,,aws_emrcontainers_,,emrcontainers_,EMR Containers,Amazon,,,,,
+emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRServerless,EMRServerless,,1,,aws_emrserverless_,,emrserverless_,EMR Serverless,Amazon,,,,,
 ,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,No SDK support
 events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,1,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,
 schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,

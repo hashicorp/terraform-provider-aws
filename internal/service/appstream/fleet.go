@@ -246,7 +246,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		input.VpcConfig = expandVpcConfig(v.([]interface{}))
+		input.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -347,7 +347,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("state", fleet.State)
 	d.Set("stream_view", fleet.StreamView)
 
-	if err = d.Set("vpc_config", flattenVpcConfig(fleet.VpcConfig)); err != nil {
+	if err = d.Set("vpc_config", flattenVPCConfig(fleet.VpcConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "vpc_config", d.Id(), err))
 	}
 
@@ -454,7 +454,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("vpc_config") {
-		input.VpcConfig = expandVpcConfig(d.Get("vpc_config").([]interface{}))
+		input.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 	}
 
 	resp, err := conn.UpdateFleetWithContext(ctx, input)
@@ -579,7 +579,7 @@ func flattenDomainInfo(apiObject *appstream.DomainJoinInfo) []interface{} {
 	return []interface{}{tfList}
 }
 
-func expandVpcConfig(tfList []interface{}) *appstream.VpcConfig {
+func expandVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -597,7 +597,7 @@ func expandVpcConfig(tfList []interface{}) *appstream.VpcConfig {
 	return apiObject
 }
 
-func flattenVpcConfig(apiObject *appstream.VpcConfig) []interface{} {
+func flattenVPCConfig(apiObject *appstream.VpcConfig) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

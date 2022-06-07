@@ -27,7 +27,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
+				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
@@ -36,7 +36,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
+				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
@@ -66,7 +66,7 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 		CheckDestroy:      testAccCheckSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceCredential_BasicAuth(token, "user1"),
+				Config: testAccSourceCredentialConfig_basicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
@@ -76,7 +76,7 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSourceCredential_BasicAuth(token, "user2"),
+				Config: testAccSourceCredentialConfig_basicAuth(token, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
@@ -104,7 +104,7 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
+				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
@@ -163,7 +163,7 @@ func testAccCheckSourceCredentialExists(name string, sourceCredential *codebuild
 	}
 }
 
-func testAccSourceCredential_Basic(authType, serverType, token string) string {
+func testAccSourceCredentialConfig_basic(authType, serverType, token string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_source_credential" "test" {
   auth_type   = "%s"
@@ -173,7 +173,7 @@ resource "aws_codebuild_source_credential" "test" {
 `, authType, serverType, token)
 }
 
-func testAccSourceCredential_BasicAuth(token, userName string) string {
+func testAccSourceCredentialConfig_basicAuth(token, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_source_credential" "test" {
   auth_type   = "BASIC_AUTH"
