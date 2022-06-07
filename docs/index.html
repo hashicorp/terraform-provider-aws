@@ -74,22 +74,22 @@ layout: default
   </tr>
   <tr>
     <td>Add a newly released AWS Region</td>
-    <td></td>
+    <td>New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround unecessary.</td>
     <td><a href="add-a-new-region">Add a new Region</a></td>
   </tr>
   <tr>
     <td>Fix a bug, or make an enhancement to a resource or datasource</td>
-    <td></td>
+    <td>These constitute the majority of pull requests submitted, and we try to merge these smaller features regardless of popularity during our internal gardening days.</td>
     <td><a href="bugs-and-enhancements">Making small changes to existing resources.</a></td>
   </tr>
   <tr>
     <td>Add Resource Name Generation Support</td>
-    <td></td>
-    <td><a href="resource-name-generation.md">Allow a resource, to either fully, or partially generate its own resource names.</a></td>
+    <td>Allow a resource, to either fully, or partially generate its own resource names. TODO:This can be useful.</td>
+    <td><a href="resource-name-generation.md"></a>Resource Name Generation</td>
   </tr>  
   <tr>
     <td>Add Tagging support for a Resource</td>
-    <td></td>
+    <td>Many AWS resources allow [assigning metadata via tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) which can be enormously useful to manage and track cloud resources from a governance and cost perspective. Often though, resources are launched without tagging support, which can follow later. In this case taggins support will need to be explicitly added to those resources. Typically this support follows an established pattern so support is normally straightforward to add.</td>
     <td><a href="resource-tagging.md">Add tag support for a resource.</a></td>
   </tr>    
   <tr>
