@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAnomalySubscription_basic(t *testing.T) {
+func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -31,6 +31,13 @@ func TestAccAnomalySubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "subscriber.#"),
+					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
 				),
 			},
 			{
@@ -62,7 +69,7 @@ func testAccCheckAnomalySubscriptionExists(n string) resource.TestCheckFunc {
 		}
 
 		if resp == nil || len(resp.AnomalySubscriptions) < 1 {
-			return fmt.Errorf("Anomaly Subscription (%s) not found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Anomaly Subscription (%s) not found", rs.Primary.ID)
 		}
 
 		return nil
@@ -94,21 +101,24 @@ func testAccCheckAnomalySubscriptionDestroy(s *terraform.State) error {
 
 func testAccAnomalySubscriptionConfig(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_ce_anomaly_monitor" "test" {
+  name      = %[1]q
+  type      = "DIMENSIONAL"
+  dimension = "SERVICE"
+}
 resource "aws_ce_anomaly_subscription" "test" {
-  name      = "DailyAnomalySubscription"
+  name      = %[1]q
   threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
-    aws_ce_anomaly_subscription.anomaly_subscription.arn,
+    aws_ce_anomaly_monitor.test.arn,
   ]
 
-  subscribers = [
-    {
-      type    = "EMAIL"
-      address = "abc@example.com"
-    }
-  ]
+  subscriber {
+    type    = "EMAIL"
+    address = "abc@example.com"
+  }
 }
 `, rName)
 }

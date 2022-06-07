@@ -33,19 +33,18 @@ func ResourceAnomalySubscription() *schema.Resource {
 				Computed: true,
 			},
 			"frequency": {
-				Type:          schema.TypeString,
-				Required:      true,
-				ValidateFunc:  validation.StringInSlice([]string{"SERVICE"}, false),
-				ConflictsWith: []string{"specification"},
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{costexplorer.AnomalySubscriptionFrequencyDaily, costexplorer.AnomalySubscriptionFrequencyImmediate, costexplorer.AnomalySubscriptionFrequencyWeekly}, false),
 			},
 			"monitor_arn_list": {
 				Type:     schema.TypeList,
 				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subscribers": {
-				Type:     schema.TypeList,
+			"subscriber": {
+				Type:     schema.TypeSet,
 				Required: true,
-				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"address": {
@@ -89,8 +88,8 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		AnomalySubscription: &costexplorer.AnomalySubscription{
 			SubscriptionName: aws.String(d.Get("name").(string)),
 			Frequency:        aws.String(d.Get("frequency").(string)),
-			MonitorArnList:   aws.StringSlice(d.Get("monitor_arn_list").([]string)),
-			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscribers").([]interface{})),
+			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorArnList(d.Get("monitor_arn_list").([]interface{}))),
+			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 			Threshold:        aws.Float64(d.Get("threshold").(float64)),
 		},
 	}
@@ -131,7 +130,8 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("arn", anomalySubscription.SubscriptionArn)
 	d.Set("frequency", anomalySubscription.Frequency)
 	d.Set("monitor_arn_list", anomalySubscription.MonitorArnList)
-	d.Set("subscribers", anomalySubscription.Subscribers)
+	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(anomalySubscription.Subscribers))
+	d.Set("threshold", anomalySubscription.Threshold)
 	d.Set("name", anomalySubscription.SubscriptionName)
 
 	// tags, err := ListTags(conn, aws.StringValue(anomalySubscription.MonitorArn))
@@ -170,8 +170,8 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		requestUpdate = true
 	}
 
-	if d.HasChange("subscribers") {
-		input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscribers").([]interface{}))
+	if d.HasChange("subscriber") {
+		input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").([]interface{}))
 		requestUpdate = true
 	}
 
@@ -207,6 +207,21 @@ func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
+func expandAnomalySubscriptionMonitorArnList(rawMonitorArnList []interface{}) []string {
+	if len(rawMonitorArnList) == 0 {
+		return nil
+	}
+
+	var monitorArns []string
+
+	for _, arn := range rawMonitorArnList {
+
+		monitorArns = append(monitorArns, arn.(string))
+	}
+
+	return monitorArns
+}
+
 func expandAnomalySubscriptionSubscribers(rawSubscribers []interface{}) []*costexplorer.Subscriber {
 	if len(rawSubscribers) == 0 {
 		return nil
@@ -215,15 +230,28 @@ func expandAnomalySubscriptionSubscribers(rawSubscribers []interface{}) []*coste
 	var subscribers []*costexplorer.Subscriber
 
 	for _, sub := range rawSubscribers {
-		subMap := sub.(map[string]interface{})
-
-		var subscriber *costexplorer.Subscriber
-
-		subscriber.Address = aws.String(subMap["address"].(string))
-		subscriber.Type = aws.String(subMap["type"].(string))
-
+		rawSubMap := sub.(map[string]interface{})
+		subscriber := &costexplorer.Subscriber{Address: aws.String(rawSubMap["address"].(string)), Type: aws.String(rawSubMap["type"].(string))}
 		subscribers = append(subscribers, subscriber)
 	}
 
 	return subscribers
+}
+
+func flattenAnomalySubscriptionSubscribers(subscribers []*costexplorer.Subscriber) []interface{} {
+	if subscribers == nil {
+		return []interface{}{}
+	}
+
+	var rawSubscribers []interface{}
+	for _, subscriber := range subscribers {
+		rawSubscriber := map[string]interface{}{
+			"address": aws.StringValue(subscriber.Address),
+			"type":    aws.StringValue(subscriber.Type),
+		}
+
+		rawSubscribers = append(rawSubscribers, rawSubscriber)
+	}
+
+	return rawSubscribers
 }
