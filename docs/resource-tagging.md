@@ -221,7 +221,7 @@ More details about this code generation, including fixes for potential error mes
     resource.ParallelTest(t, resource.TestCase{
       PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
       ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-      Providers:    acctest.Providers,
+		  ProviderFactories: acctest.ProviderFactories,
       CheckDestroy: testAccCheckClusterDestroy,
       Steps: []resource.TestStep{
         {

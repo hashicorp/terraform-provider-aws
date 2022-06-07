@@ -68,5 +68,5 @@ See [Raising a Pull Request](raising-a-pull-request.md).
 
 #### Wait for prioritization.
 
-In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our Prioritization guide TODO for full details of the process.
+In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our [Prioritization Guide](prioritization-guide.md) for full details of the process.
 

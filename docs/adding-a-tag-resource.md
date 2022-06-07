@@ -26,7 +26,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		Providers:    acctest.Providers,
+		ProviderFactories:    acctest.ProviderFactories,
 		CheckDestroy: testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		Providers:    acctest.Providers,
+		ProviderFactories:    acctest.ProviderFactories,
 		CheckDestroy: testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		Providers:    acctest.Providers,
+		ProviderFactories:    acctest.ProviderFactories,
 		CheckDestroy: testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{

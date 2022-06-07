@@ -55,10 +55,25 @@ Terraform Providers, see the [Extending Terraform documentation](https://www.ter
 
 ## Acceptance Tests Often Cost Money to Run
 
-Because acceptance tests create real resources, they often cost money to run.
+Our acceptance test suite creates real resources, and as a result they cost real money to run.
 Because the resources only exist for a short period of time, the total amount
-of money required is usually a relatively small. Nevertheless, we don't want
-financial limitations to be a barrier to contribution, so if you are unable to
+of money required is usually a relatively small amount. That said there are particular services
+which are very expensive to run and its important to be prepared for those costs.
+
+Some services which can be cost prohibitive include (among others):
+
+- WorkSpaces
+- Glue
+- OpenSearch
+- RDS
+- ACM (Amazon Certificate Manager)
+- FSx
+- Kinesis Analytics
+- EC2
+- ElastiCache
+- Storage Gateway
+
+We don't want financial limitations to be a barrier to contribution, so if you are unable to
 pay to run acceptance tests for your contribution, mention this in your
 pull request. We will happily accept "best effort" implementations of
 acceptance tests and run them for you on our side. This might mean that your PR
@@ -543,7 +558,7 @@ func TestAccExampleThing_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -741,7 +756,7 @@ func TestAccExampleThing_disappears(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -784,7 +799,7 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckExampleChildThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -814,7 +829,7 @@ func TestAccExampleThing_Description(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -858,7 +873,7 @@ When testing requires AWS infrastructure in a second AWS account, the below chan
 
 - In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
+- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
 - Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -922,7 +937,7 @@ When testing requires AWS infrastructure in a second or third AWS region, the be
 
 - In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
+- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -1156,7 +1171,7 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -1432,18 +1447,18 @@ resource "aws_backup_selection" "test" {
 #### Hardcoded AMI IDs
 
 - [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. The package `internal/acctest` includes test configuration helper functions to simplify these lookups:
-    - `acctest.ConfigLatestAmazonLinuxHvmEbsAmi()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
+    - `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
     - `testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig()` (EC2): AMI lookup using Amazon Linux, HVM virtualization, and Instance Store storage. Should only be used in testing that requires Instance Store storage rather than EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-instance-store.id`.
     - `testAccLatestAmazonLinuxPVEBSAMIConfig()` (EC2): AMI lookup using Amazon Linux, Paravirtual virtualization, and EBS storage. Should only be used in testing that requires Paravirtual over Hardware Virtual Machine (HVM) virtualization. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-ebs.id`.
     - `configLatestAmazonLinuxPvInstanceStoreAmi` (EC2): AMI lookup using Amazon Linux, Paravirtual virtualization, and Instance Store storage. Should only be used in testing that requires Paravirtual virtualization over HVM and Instance Store storage over EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-instance-store.id`.
     - `testAccLatestWindowsServer2016CoreAMIConfig()` (EC2): AMI lookup using Windows Server 2016 Core, HVM virtualization, and EBS storage. Should only be used in testing that requires Windows. To reference the AMI ID in the test configuration: `data.aws_ami.win2016core-ami.id`.
 
-Here's an example of using `acctest.ConfigLatestAmazonLinuxHvmEbsAmi()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
+Here's an example of using `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
 
 ```go
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q

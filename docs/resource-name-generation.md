@@ -58,7 +58,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -86,7 +86,7 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { acctest.PreCheck(t) },
     ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    Providers:    acctest.Providers,
+    ProviderFactories:    acctest.ProviderFactories,
     CheckDestroy: testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
