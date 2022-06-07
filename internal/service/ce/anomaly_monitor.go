@@ -154,6 +154,10 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 
 	tags, err := ListTags(conn, aws.StringValue(anomalyMonitor.MonitorArn))
 
+	if err != nil {
+		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+	}
+
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
