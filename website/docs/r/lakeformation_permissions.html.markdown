@@ -114,7 +114,7 @@ resource "aws_lakeformation_permissions" "example" {
 
 ```terraform
 resource "aws_lakeformation_permissions" "example" {
-  principal   = aws_iam_role.workflow_role.arn
+  role        = aws_iam_role.workflow_role.arn
   permissions = ["CREATE_TABLE", "ALTER", "DROP"]
 
   database {
