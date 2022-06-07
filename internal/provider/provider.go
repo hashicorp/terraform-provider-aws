@@ -1043,6 +1043,7 @@ func Provider() *schema.Provider {
 
 			"aws_ce_anomaly_subscription": ce.ResourceAnomalySubscription(),
 			"aws_ce_cost_category":        ce.ResourceCostCategory(),
+			"aws_ce_anomaly_monitor":      ce.ResourceAnomalyMonitor(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
