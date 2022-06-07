@@ -57,6 +57,9 @@ func testAccAnomalyMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "dimension", "SERVICE"),
+					resource.TestCheckResourceAttr(resourceName, "type", "DIMENSIONAL"),
 				),
 			},
 			{
@@ -151,6 +154,8 @@ func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
+					resource.TestCheckResourceAttrSet(resourceName, "specification"),
 				),
 			},
 			{
