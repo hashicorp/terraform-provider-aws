@@ -41,7 +41,6 @@ func ResourceAnomalyMonitor() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
 					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
@@ -179,7 +178,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("name") {
-		input.MonitorName = aws.String(d.Get("Name").(string))
+		input.MonitorName = aws.String(d.Get("name").(string))
 		requestUpdate = true
 	}
 
