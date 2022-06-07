@@ -529,7 +529,7 @@ To read:
 func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
-    if v, ok := tfMap["nested_attribute_name"].(int); ok && v != 0.0 {
+    if v, ok := tfMap["nested_attribute_name"].(float64); ok && v != 0.0 {
         apiObject.NestedAttributeName = aws.Float64(float64(v))
     }
 
