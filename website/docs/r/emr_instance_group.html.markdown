@@ -83,5 +83,5 @@ In addition to all arguments above, the following attributes are exported:
 EMR task instance group can be imported using their EMR Cluster id and Instance Group id separated by a forward-slash `/`, e.g.,
 
 ```
-$ terraform import aws_emr_instance_group.task_greoup j-123456ABCDEF/ig-15EK4O09RZLNR
+$ terraform import aws_emr_instance_group.task_group j-123456ABCDEF/ig-15EK4O09RZLNR
 ```
