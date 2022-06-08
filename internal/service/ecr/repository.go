@@ -375,7 +375,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 
-		return resource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Repository to be deleted", d.Id()))
+		return resource.RetryableError(fmt.Errorf("ECR Repository (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeRepositories(input)
