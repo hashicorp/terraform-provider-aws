@@ -674,6 +674,37 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_ecs_noPropagateTags(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetECSWithNoPropagateTagsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.propagate_tags", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_batch(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
@@ -1659,6 +1690,25 @@ resource "aws_cloudwatch_event_target" "test" {
     tags = {
       test = "test1"
     }
+
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
+  }
+}
+`
+}
+
+func testAccTargetECSWithNoPropagateTagsConfig(rName string) string {
+	return testAccTargetECSBaseConfig(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  ecs_target {
+    task_definition_arn     = aws_ecs_task_definition.task.arn
+    launch_type             = "FARGATE"
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]

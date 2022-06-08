@@ -232,8 +232,7 @@ func ResourceTarget() *schema.Resource {
 						"propagate_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      eventbridge.PropagateTagsTaskDefinition,
-							ValidateFunc: validation.StringInSlice(eventbridge.PropagateTags_Values(), false),
+							ValidateFunc: validation.StringInSlice(append(eventbridge.PropagateTags_Values(), ""), false),
 						},
 						"tags": tftags.TagsSchema(),
 						"task_count": {
@@ -718,7 +717,7 @@ func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters 
 			ecsParameters.PlacementConstraints = expandTargetPlacementConstraints(v.List())
 		}
 
-		if v, ok := param["propagate_tags"].(string); ok {
+		if v, ok := param["propagate_tags"].(string); ok && v != "" {
 			ecsParameters.PropagateTags = aws.String(v)
 		}
 
