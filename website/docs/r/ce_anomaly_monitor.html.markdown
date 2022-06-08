@@ -64,8 +64,8 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the cost category.
-* `id` - Unique ID of the cost category. Same as `arn`.
+* `arn` - ARN of the anomaly monitor.
+* `id` - Unique ID of the anomaly monitor. Same as `arn`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
@@ -73,5 +73,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_ce_anomaly_monitor` can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_ce_anomaly_monitor.example costAnomalyARN
+$ terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```
