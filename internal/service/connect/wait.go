@@ -21,7 +21,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, timeout tim
 		Pending: []string{connect.InstanceStatusCreationInProgress},
 		Target:  []string{connect.InstanceStatusActive},
 		Refresh: statusInstance(ctx, conn, instanceId),
-		Timeout: instanceCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -41,7 +41,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, timeout tim
 		Pending: []string{connect.InstanceStatusActive},
 		Target:  []string{connect.ErrCodeResourceNotFoundException},
 		Refresh: statusInstance(ctx, conn, instanceId),
-		Timeout: instanceDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
