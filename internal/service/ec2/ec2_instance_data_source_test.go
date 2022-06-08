@@ -653,6 +653,33 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceDataSource_disableApiStopTermination(t *testing.T) {
+	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_disableApiStopTermination(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_stop", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_termination", "true"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfig_disableApiStopTermination(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_stop", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_termination", "false"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
@@ -1325,4 +1352,27 @@ data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
 `, rName))
+}
+
+func testAccInstanceDataSourceConfig_disableApiStopTermination(rName string, disableApiStopTermination bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  disable_api_stop        = %[2]t
+  disable_api_termination = %[2]t
+  instance_type           = "t2.micro"
+  subnet_id               = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName, disableApiStopTermination))
 }
