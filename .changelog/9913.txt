@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/resource_aws_ecr_repository: Add `force_new` parameter.
+```
