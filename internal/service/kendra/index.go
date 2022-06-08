@@ -708,7 +708,7 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []type
 		userTokenConfigurationConfig := types.UserTokenConfiguration{}
 
 		if v, ok := tfMap["json_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
-			userTokenConfigurationConfig.JsonTokenTypeConfiguration = expandJsonTokenTypeConfiguration(v)
+			userTokenConfigurationConfig.JsonTokenTypeConfiguration = expandJSONTokenTypeConfiguration(v)
 		}
 
 		if v, ok := tfMap["jwt_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -721,7 +721,7 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []type
 	return userTokenConfigurationsConfigs
 }
 
-func expandJsonTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *types.JsonTokenTypeConfiguration {
+func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *types.JsonTokenTypeConfiguration {
 	if len(jsonTokenTypeConfiguration) == 0 || jsonTokenTypeConfiguration[0] == nil {
 		return nil
 	}
@@ -924,7 +924,7 @@ func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenCon
 		values := map[string]interface{}{}
 
 		if v := userTokenConfiguration.JsonTokenTypeConfiguration; v != nil {
-			values["json_token_type_configuration"] = flattenJsonTokenTypeConfiguration(v)
+			values["json_token_type_configuration"] = flattenJSONTokenTypeConfiguration(v)
 		}
 
 		if v := userTokenConfiguration.JwtTokenTypeConfiguration; v != nil {
@@ -937,7 +937,7 @@ func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenCon
 	return userTokenConfigurationsList
 }
 
-func flattenJsonTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []interface{} {
+func flattenJSONTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []interface{} {
 	if jsonTokenTypeConfiguration == nil {
 		return []interface{}{}
 	}

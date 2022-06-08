@@ -61,7 +61,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -124,7 +124,7 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -169,7 +169,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -220,7 +220,7 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -246,7 +246,7 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	})
 }
 
-func TestAccKendraIndex_updateUserTokenJson(t *testing.T) {
+func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -273,11 +273,11 @@ func TestAccKendraIndex_updateUserTokenJson(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccIndexConfig_userTokenJson(rName, rName2, rName3, originalGroupAttributeField, originalUserNameAttributeField),
+				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, originalGroupAttributeField, originalUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
@@ -292,7 +292,7 @@ func TestAccKendraIndex_updateUserTokenJson(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_userTokenJson(rName, rName2, rName3, updatedGroupAttributeField, originalUserNameAttributeField),
+				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, originalUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
@@ -302,7 +302,7 @@ func TestAccKendraIndex_updateUserTokenJson(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIndexConfig_userTokenJson(rName, rName2, rName3, updatedGroupAttributeField, updatedUserNameAttributeField),
+				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, updatedUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
@@ -339,7 +339,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -378,7 +378,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccKendraIndex_updateRoleArn(t *testing.T) {
+func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -402,7 +402,7 @@ func TestAccKendraIndex_updateRoleArn(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -452,7 +452,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexBaseConfig(rName, rName2),
+				Config: testAccIndexConfig_base(rName, rName2),
 				Check:  propagationSleep(),
 			},
 			{
@@ -515,7 +515,7 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 	}
 }
 
-func testAccIndexBaseConfig(rName, rName2 string) string {
+func testAccIndexConfig_base(rName, rName2 string) string {
 	// Kendra IAM policies: https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -642,7 +642,7 @@ resource "aws_iam_role" "access_sm" {
 
 func testAccIndexConfig_basic(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName, rName2),
+		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -658,7 +658,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName, rName2),
+		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -674,7 +674,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_serverSideEncryption(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName, rName2),
+		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name     = %[1]q
@@ -687,9 +687,9 @@ resource "aws_kendra_index" "test" {
 `, rName3))
 }
 
-func testAccIndexConfig_userTokenJson(rName, rName2, rName3, groupAttributeField, userNameAttributeField string) string {
+func testAccIndexConfig_userTokenJSON(rName, rName2, rName3, groupAttributeField, userNameAttributeField string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName, rName2),
+		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name     = %[1]q
@@ -707,7 +707,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_tags(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName, rName2),
+		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -724,7 +724,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_tagsUpdated(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexBaseConfig(rName, rName2),
+		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
