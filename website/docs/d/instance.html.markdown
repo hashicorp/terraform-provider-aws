@@ -62,6 +62,8 @@ interpolation.
 * `arn` - The ARN of the instance.
 * `associate_public_ip_address` - Whether or not the Instance is associated with a public IP address or not (Boolean).
 * `availability_zone` - The availability zone of the Instance.
+* `disable_api_stop` - Whether or not EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection) is enabled (Boolean).
+* `disable_api_termination` - Whether or not [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination) is enabled (Boolean).
 * `ebs_block_device` - The EBS block device mappings of the Instance.
     * `delete_on_termination` - If the EBS volume will be deleted on termination.
     * `device_name` - The physical name of the device.
