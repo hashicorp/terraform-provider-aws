@@ -640,11 +640,9 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	var resourceNotFoundException *types.ResourceNotFoundException
-
 	stateConf := &resource.StateChangeConf{
 		Pending: IndexStatusValues(types.IndexStatusDeleting),
-		Target:  []string{resourceNotFoundException.ErrorMessage()},
+		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
