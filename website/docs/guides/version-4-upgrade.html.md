@@ -491,6 +491,8 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 ### Migrating to `aws_s3_bucket_lifecycle_configuration`
 
+~> **Note:** In version `3.x` of the provider, the `lifecycle_rule.id` argument was an optional parameter, while in version `4.x`, the `aws_s3_bucket_lifecycle_configuration.rule.id` argument required.
+
 #### For Lifecycle Rules with no `prefix` previously configured
 
 ~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
