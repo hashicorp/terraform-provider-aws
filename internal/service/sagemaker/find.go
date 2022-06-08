@@ -488,3 +488,28 @@ func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 
 	return output, nil
 }
+
+func FindNotebookInstanceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+	input := &sagemaker.DescribeNotebookInstanceInput{
+		NotebookInstanceName: aws.String(name),
+	}
+
+	output, err := conn.DescribeNotebookInstance(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
