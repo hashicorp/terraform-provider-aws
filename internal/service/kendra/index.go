@@ -599,7 +599,7 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 	}
 }
 
-func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) { //nolint:unparam
+func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
 		Pending: IndexStatusValues(types.IndexStatusCreating),
@@ -619,7 +619,7 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 	return nil, err
 }
 
-func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) { //nolint:unparam
+func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
 		Pending: IndexStatusValues(types.IndexStatusUpdating),
@@ -639,7 +639,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 	return nil, err
 }
 
-func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) { //nolint:unparam
+func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 	var resourceNotFoundException *types.ResourceNotFoundException
 
 	stateConf := &resource.StateChangeConf{
