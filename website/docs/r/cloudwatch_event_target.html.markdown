@@ -15,6 +15,7 @@ Provides an EventBridge Target resource.
 ## Example Usage
 
 ### Kinesis Usage
+
 ```terraform
 resource "aws_cloudwatch_event_target" "yada" {
   target_id = "Yada"
@@ -435,6 +436,7 @@ resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_cloudwatch_log_group.example.arn
 }
 ```
+
 ## Argument Reference
 
 -> **Note:** In order to be able to have your AWS Lambda function or
