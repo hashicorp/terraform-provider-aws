@@ -90,7 +90,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		AnomalySubscription: &costexplorer.AnomalySubscription{
 			SubscriptionName: aws.String(d.Get("name").(string)),
 			Frequency:        aws.String(d.Get("frequency").(string)),
-			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorArnList(d.Get("monitor_arn_list").([]interface{}))),
+			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 			Threshold:        aws.Float64(d.Get("threshold").(float64)),
 		},
@@ -218,7 +218,7 @@ func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func expandAnomalySubscriptionMonitorArnList(rawMonitorArnList []interface{}) []string {
+func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []string {
 	if len(rawMonitorArnList) == 0 {
 		return nil
 	}
