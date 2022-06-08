@@ -143,8 +143,8 @@ The following arguments are required:
 * `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `DAILY` | `IMMEDIATE` | `WEEKLY`.
 * `monitor_arn_list` - (Required) A list of cost anomaly monitors.
 * `subscriber` - (Required) A subscriber configuration. Multiple subscribers can be defined.
-  * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
-  * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EAMIL`, this will be the destination email address.
+    * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
+    * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EAMIL`, this will be the destination email address.
 * `threshold` - (Required) The dollar value that triggers a notification if the threshold is exceeded.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
