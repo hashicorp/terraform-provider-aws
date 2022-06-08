@@ -32,11 +32,11 @@ func ResourceAnomalyMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dimension": {
+			"monitor_dimension": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ValidateFunc:  validation.StringInSlice([]string{"SERVICE"}, false),
-				ConflictsWith: []string{"specification"},
+				ConflictsWith: []string{"monitor_specification"},
+				ValidateFunc:  validation.StringInSlice(costexplorer.MonitorDimension_Values(), false),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -45,18 +45,19 @@ func ResourceAnomalyMonitor() *schema.Resource {
 					validation.StringLenBetween(1, 1024),
 					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
 			},
-			"specification": {
+			"monitor_specification": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				ConflictsWith:    []string{"dimension"},
+				ConflictsWith:    []string{"monitor_dimension"},
 			},
-			"type": {
+			"monitor_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"DIMENSIONAL", "CUSTOM"}, false),
+				ValidateFunc: validation.StringInSlice(costexplorer.MonitorType_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -74,18 +75,18 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &costexplorer.CreateAnomalyMonitorInput{
 		AnomalyMonitor: &costexplorer.AnomalyMonitor{
 			MonitorName: aws.String(d.Get("name").(string)),
-			MonitorType: aws.String(d.Get("type").(string)),
+			MonitorType: aws.String(d.Get("monitor_type").(string)),
 		},
 	}
-	switch d.Get("type").(string) {
+	switch d.Get("monitor_type").(string) {
 	case costexplorer.MonitorTypeDimensional:
-		if v, ok := d.GetOk("dimension"); ok {
+		if v, ok := d.GetOk("monitor_dimension"); ok {
 			input.AnomalyMonitor.MonitorDimension = aws.String(v.(string))
 		} else {
 			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeDimensional)
 		}
 	case costexplorer.MonitorTypeCustom:
-		if v, ok := d.GetOk("specification"); ok {
+		if v, ok := d.GetOk("monitor_specification"); ok {
 			expression := costexplorer.Expression{}
 
 			if err := json.Unmarshal([]byte(v.(string)), &expression); err != nil {
@@ -143,13 +144,13 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("Specification (%s) is invalid JSON: %s", specificationToSet, err)
 		}
 
-		d.Set("specification", specificationToSet)
+		d.Set("monitor_specification", specificationToSet)
 	}
 
 	d.Set("arn", anomalyMonitor.MonitorArn)
-	d.Set("dimension", anomalyMonitor.MonitorDimension)
+	d.Set("monitor_dimension", anomalyMonitor.MonitorDimension)
 	d.Set("name", anomalyMonitor.MonitorName)
-	d.Set("type", anomalyMonitor.MonitorType)
+	d.Set("monitor_type", anomalyMonitor.MonitorType)
 
 	tags, err := ListTags(conn, aws.StringValue(anomalyMonitor.MonitorArn))
 

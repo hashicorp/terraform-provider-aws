@@ -17,8 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TestAccCEAnomalyMonitor_dimensionalserial limits the number of parallel tests run with a type of DIMENSIONAL to 1.
-// This is required as AWS only allows 1 Anomaly Monitor with a type of DIMENSIONAL per AWS account.
+// TestAccCEAnomalyMonitor_Dimensional_serial ensures all tests for monitor_type DIMENSIONAL run in series
+// before any tests are run in parallel. This is required as AWS only allows 1 Anomaly Monitor
+// with a type of DIMENSIONAL per AWS account.
 func TestAccCEAnomalyMonitor_Dimensional_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"AnomalyMonitor": {
@@ -58,8 +59,8 @@ func testAccAnomalyMonitor_basic(t *testing.T) {
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalymonitor/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dimension", "SERVICE"),
-					resource.TestCheckResourceAttr(resourceName, "type", "DIMENSIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "monitor_dimension", "SERVICE"),
+					resource.TestCheckResourceAttr(resourceName, "monitor_type", "DIMENSIONAL"),
 				),
 			},
 			{
@@ -105,40 +106,6 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalyMonitor_Dimension(t *testing.T) {
-	rDimension := "BADDIMENSION"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAnomalyMonitorConfig_Dimension(rDimension),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected dimension to be one of \[SERVICE\], got %s`, rDimension)),
-			},
-		},
-	})
-}
-
-func TestAccCEAnomalyMonitor_Type(t *testing.T) {
-	rType := "BADTYPE"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAnomalyMonitorConfig_Type(rType),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected type to be one of \[DIMENSIONAL CUSTOM\], got %s`, rType)),
-			},
-		},
-	})
-}
-
 func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -154,8 +121,8 @@ func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
-					resource.TestCheckResourceAttrSet(resourceName, "specification"),
+					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
 				),
 			},
 			{
@@ -286,9 +253,9 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 func testAccAnomalyMonitorConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = %[1]q
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = %[1]q
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
 }
 `, rName)
 }
@@ -296,9 +263,9 @@ resource "aws_ce_anomaly_monitor" "test" {
 func testAccAnomalyMonitorConfig_Dimension(rDimension string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = "CEAnomalyTestMonitor"
-  type      = "DIMENSIONAL"
-  dimension = %[1]q
+  name              = "CEAnomalyTestMonitor"
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = %[1]q
 }
 `, rDimension)
 }
@@ -306,9 +273,9 @@ resource "aws_ce_anomaly_monitor" "test" {
 func testAccAnomalyMonitorConfig_Type(rType string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = "CEAnomalyTestMonitor"
-  type      = %[1]q
-  dimension = "SERVICE"
+  name              = "CEAnomalyTestMonitor"
+  monitor_type      = %[1]q
+  monitor_dimension = "SERVICE"
 }
 `, rType)
 }
@@ -316,10 +283,10 @@ resource "aws_ce_anomaly_monitor" "test" {
 func testAccAnomalyMonitorConfig_Custom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
-  type = "CUSTOM"
+  name         = %[1]q
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -342,9 +309,9 @@ JSON
 func testAccAnomalyMonitorConfig_Tags1(rName string, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`	
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = %[1]q
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = %[1]q
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
   tags = {
     %[2]q = %[3]q
   }
@@ -355,9 +322,9 @@ resource "aws_ce_anomaly_monitor" "test" {
 func testAccAnomalyMonitorConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`	
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = %[1]q
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = %[1]q
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
