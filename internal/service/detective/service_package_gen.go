@@ -45,6 +45,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_detective_organization_admin_account",
 		},
+		{
+			Factory:  ResourceOrganizationConfiguration,
+			TypeName: "aws_detective_organization_configuration",
+		},
 	}
 }
 

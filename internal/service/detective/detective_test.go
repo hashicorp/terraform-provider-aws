@@ -29,6 +29,9 @@ func TestAccDetective_serial(t *testing.T) {
 			"disappears":  testAccOrganizationAdminAccount_disappears,
 			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
+		"OrganizationConfiguration": {
+			"basic": testAccOrganizationConfiguration_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
