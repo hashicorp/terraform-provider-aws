@@ -2,22 +2,24 @@
 package kendra
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists kendra service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *kendra.Kendra, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn *kendra.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &kendra.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResource(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -29,11 +31,11 @@ func ListTags(conn *kendra.Kendra, identifier string) (tftags.KeyValueTags, erro
 // []*SERVICE.Tag handling
 
 // Tags returns kendra service tags.
-func Tags(tags tftags.KeyValueTags) []*kendra.Tag {
-	result := make([]*kendra.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []types.Tag {
+	result := make([]types.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &kendra.Tag{
+		tag := types.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -45,11 +47,11 @@ func Tags(tags tftags.KeyValueTags) []*kendra.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from kendra service tags.
-func KeyValueTags(tags []*kendra.Tag) tftags.KeyValueTags {
+func KeyValueTags(tags []types.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(m)
@@ -58,17 +60,17 @@ func KeyValueTags(tags []*kendra.Tag) tftags.KeyValueTags {
 // UpdateTags updates kendra service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *kendra.Kendra, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kendra.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     removedTags.IgnoreAWS().Keys(),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
@@ -81,7 +83,7 @@ func UpdateTags(conn *kendra.Kendra, identifier string, oldTagsMap interface{}, 
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)

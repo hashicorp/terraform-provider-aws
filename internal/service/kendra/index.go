@@ -2,21 +2,23 @@ package kendra
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/kendra"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -30,9 +32,9 @@ func ResourceIndex() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(kendraIndexCreatedTimeout),
-			Update: schema.DefaultTimeout(kendraIndexUpdatedTimeout),
-			Delete: schema.DefaultTimeout(kendraIndexDeletedTimeout),
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -138,10 +140,10 @@ func ResourceIndex() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(kendra.IndexEdition_Values(), false),
+				ValidateFunc: validation.StringInSlice(indexEditionValues(types.IndexEdition("").Values()...), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "ENTERPRISE_EDITION" by default.
-					if old == kendra.IndexEditionEnterpriseEdition && new == "" {
+					if old == string(types.IndexEditionEnterpriseEdition) && new == "" {
 						return true
 					}
 
@@ -231,10 +233,10 @@ func ResourceIndex() *schema.Resource {
 			"user_context_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(kendra.UserContextPolicy_Values(), false),
+				ValidateFunc: validation.StringInSlice(userContextPolicyValues(types.UserContextPolicy("").Values()...), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "ATTRIBUTE_FILTER" by default.
-					if old == kendra.UserContextPolicyAttributeFilter && new == "" {
+					if old == string(types.UserContextPolicyAttributeFilter) && new == "" {
 						return true
 					}
 
@@ -250,7 +252,7 @@ func ResourceIndex() *schema.Resource {
 						"user_group_resolution_mode": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(kendra.UserGroupResolutionMode_Values(), false),
+							ValidateFunc: validation.StringInSlice(userGroupResolutionModeValues(types.UserGroupResolutionMode("").Values()...), false),
 						},
 					},
 				},
@@ -304,7 +306,7 @@ func ResourceIndex() *schema.Resource {
 									"key_location": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice(kendra.KeyLocation_Values(), false),
+										ValidateFunc: validation.StringInSlice(keyLocationValues(types.KeyLocation("").Values()...), false),
 									},
 									"secrets_manager_arn": {
 										Type:         schema.TypeString,
@@ -357,7 +359,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("edition"); ok {
-		input.Edition = aws.String(v.(string))
+		input.Edition = types.IndexEdition(v.(string))
 	}
 
 	if v, ok := d.GetOk("server_side_encryption_configuration"); ok {
@@ -365,7 +367,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("user_context_policy"); ok {
-		input.UserContextPolicy = aws.String(v.(string))
+		input.UserContextPolicy = types.UserContextPolicy(v.(string))
 	}
 
 	if v, ok := d.GetOk("user_group_resolution_configuration"); ok {
@@ -380,22 +382,22 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Kendra Index %s", input)
-	output, err := conn.CreateIndexWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Kendra Index %#v", input)
+	output, err := conn.CreateIndex(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Kendra Index (%s): %w", name, err))
+		return diag.Errorf("error creating Kendra Index (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Kendra Index (%s): empty output", name))
+		return diag.Errorf("error creating Kendra Index (%s): empty output", name)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
-	if _, err := waitIndexCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Index (%s) creation: %w", d.Id(), err))
+	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceIndexRead(ctx, d, meta)
@@ -406,24 +408,20 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	id := d.Id()
+	resp, err := findIndexByID(ctx, conn, d.Id())
 
-	resp, err := conn.DescribeIndexWithContext(ctx, &kendra.DescribeIndexInput{
-		Id: aws.String(id),
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kendra.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Kendra Index (%s): %w", d.Id(), err))
+		return diag.Errorf("error getting Kendra Index (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error getting Kendra Index (%s): empty response", d.Id()))
+		return diag.Errorf("error getting Kendra Index (%s): empty response", d.Id())
 	}
 
 	arn := arn.ARN{
@@ -435,14 +433,14 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}.String()
 
 	d.Set("arn", arn)
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("description", resp.Description)
 	d.Set("edition", resp.Edition)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("name", resp.Name)
 	d.Set("role_arn", resp.RoleArn)
 	d.Set("status", resp.Status)
-	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
+	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("user_context_policy", resp.UserContextPolicy)
 
 	if err := d.Set("capacity_units", flattenCapacityUnits(resp.CapacityUnits)); err != nil {
@@ -469,19 +467,19 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for resource (%s): %s", d.Get("arn").(string), err))
+		return diag.Errorf("error listing tags for resource (%s): %s", d.Get("arn").(string), err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil
@@ -507,7 +505,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.RoleArn = aws.String(d.Get("role_arn").(string))
 		}
 		if d.HasChange("user_context_policy") {
-			input.UserContextPolicy = aws.String(d.Get("user_context_policy").(string))
+			input.UserContextPolicy = types.UserContextPolicy(d.Get("user_context_policy").(string))
 		}
 		if d.HasChange("user_group_resolution_configuration") {
 			input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]interface{}))
@@ -516,22 +514,22 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
 		}
 
-		_, err := conn.UpdateIndexWithContext(ctx, input)
+		_, err := conn.UpdateIndex(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Index (%s): %w", d.Id(), err))
+			return diag.Errorf("[ERROR] Error updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
-		if _, err := waitIndexUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for Index (%s) update: %w", d.Id(), err))
+		if _, err := waitIndexUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("error waiting for Index (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -543,22 +541,126 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	_, err := conn.DeleteIndexWithContext(ctx, &kendra.DeleteIndexInput{
+	_, err := conn.DeleteIndex(ctx, &kendra.DeleteIndexInput{
 		Id: aws.String(id),
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Index (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting Index (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitIndexDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), id); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Index (%s) delete: %w", d.Id(), err))
+	if _, err := waitIndexDeleted(ctx, conn, id, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("error waiting for Index (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *kendra.ServerSideEncryptionConfiguration {
+func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra.DescribeIndexOutput, error) {
+	input := &kendra.DescribeIndexInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.DescribeIndex(ctx, input)
+
+	if err != nil {
+		var resourceNotFoundException *types.ResourceNotFoundException
+
+		if errors.As(err, &resourceNotFoundException) {
+			return nil, &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findIndexByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) { //nolint:unparam
+
+	stateConf := &resource.StateChangeConf{
+		Pending: IndexStatusValues(types.IndexStatusCreating),
+		Target:  IndexStatusValues(types.IndexStatusActive, types.IndexStatusFailed),
+		Timeout: timeout,
+		Refresh: statusIndex(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) { //nolint:unparam
+
+	stateConf := &resource.StateChangeConf{
+		Pending: IndexStatusValues(types.IndexStatusUpdating),
+		Target:  IndexStatusValues(types.IndexStatusActive, types.IndexStatusFailed),
+		Timeout: timeout,
+		Refresh: statusIndex(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) { //nolint:unparam
+	var resourceNotFoundException *types.ResourceNotFoundException
+
+	stateConf := &resource.StateChangeConf{
+		Pending: IndexStatusValues(types.IndexStatusDeleting),
+		Target:  []string{resourceNotFoundException.ErrorMessage()},
+		Timeout: timeout,
+		Refresh: statusIndex(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *types.ServerSideEncryptionConfiguration {
 	if len(serverSideEncryptionConfiguration) == 0 || serverSideEncryptionConfiguration[0] == nil {
 		return nil
 	}
@@ -568,7 +670,7 @@ func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration [
 		return nil
 	}
 
-	result := &kendra.ServerSideEncryptionConfiguration{}
+	result := &types.ServerSideEncryptionConfiguration{}
 
 	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		result.KmsKeyId = aws.String(v)
@@ -577,7 +679,7 @@ func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration [
 	return result
 }
 
-func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []interface{}) *kendra.UserGroupResolutionConfiguration {
+func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []interface{}) *types.UserGroupResolutionConfiguration {
 	if len(userGroupResolutionConfiguration) == 0 || userGroupResolutionConfiguration[0] == nil {
 		return nil
 	}
@@ -587,23 +689,23 @@ func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []i
 		return nil
 	}
 
-	result := &kendra.UserGroupResolutionConfiguration{
-		UserGroupResolutionMode: aws.String(tfMap["user_group_resolution_mode"].(string)),
+	result := &types.UserGroupResolutionConfiguration{
+		UserGroupResolutionMode: types.UserGroupResolutionMode(tfMap["user_group_resolution_mode"].(string)),
 	}
 
 	return result
 }
 
-func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []*kendra.UserTokenConfiguration {
+func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []types.UserTokenConfiguration {
 	if len(userTokenConfigurations) == 0 {
 		return nil
 	}
 
-	userTokenConfigurationsConfigs := []*kendra.UserTokenConfiguration{}
+	userTokenConfigurationsConfigs := []types.UserTokenConfiguration{}
 
 	for _, userTokenConfiguration := range userTokenConfigurations {
 		tfMap := userTokenConfiguration.(map[string]interface{})
-		userTokenConfigurationConfig := &kendra.UserTokenConfiguration{}
+		userTokenConfigurationConfig := types.UserTokenConfiguration{}
 
 		if v, ok := tfMap["json_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
 			userTokenConfigurationConfig.JsonTokenTypeConfiguration = expandJsonTokenTypeConfiguration(v)
@@ -619,7 +721,7 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []*ken
 	return userTokenConfigurationsConfigs
 }
 
-func expandJsonTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *kendra.JsonTokenTypeConfiguration {
+func expandJsonTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *types.JsonTokenTypeConfiguration {
 	if len(jsonTokenTypeConfiguration) == 0 || jsonTokenTypeConfiguration[0] == nil {
 		return nil
 	}
@@ -629,7 +731,7 @@ func expandJsonTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) 
 		return nil
 	}
 
-	result := &kendra.JsonTokenTypeConfiguration{
+	result := &types.JsonTokenTypeConfiguration{
 		GroupAttributeField:    aws.String(tfMap["group_attribute_field"].(string)),
 		UserNameAttributeField: aws.String(tfMap["user_name_attribute_field"].(string)),
 	}
@@ -637,7 +739,7 @@ func expandJsonTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) 
 	return result
 }
 
-func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *kendra.JwtTokenTypeConfiguration {
+func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *types.JwtTokenTypeConfiguration {
 	if len(jwtTokenTypeConfiguration) == 0 || jwtTokenTypeConfiguration[0] == nil {
 		return nil
 	}
@@ -647,8 +749,8 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *k
 		return nil
 	}
 
-	result := &kendra.JwtTokenTypeConfiguration{
-		KeyLocation: aws.String(tfMap["key_location"].(string)),
+	result := &types.JwtTokenTypeConfiguration{
+		KeyLocation: types.KeyLocation(tfMap["key_location"].(string)),
 	}
 
 	if v, ok := tfMap["claim_regex"].(string); ok && v != "" {
@@ -678,28 +780,28 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *k
 	return result
 }
 
-func flattenCapacityUnits(capacityUnits *kendra.CapacityUnitsConfiguration) []interface{} {
+func flattenCapacityUnits(capacityUnits *types.CapacityUnitsConfiguration) []interface{} {
 	if capacityUnits == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"query_capacity_units":   aws.Int64Value(capacityUnits.QueryCapacityUnits),
-		"storage_capacity_units": aws.Int64Value(capacityUnits.StorageCapacityUnits),
+		"query_capacity_units":   aws.ToInt32(capacityUnits.QueryCapacityUnits),
+		"storage_capacity_units": aws.ToInt32(capacityUnits.StorageCapacityUnits),
 	}
 
 	return []interface{}{values}
 }
 
-func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []*kendra.DocumentMetadataConfiguration) []interface{} {
+func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []types.DocumentMetadataConfiguration) []interface{} {
 	documentMetadataConfigurationsList := []interface{}{}
 
 	for _, documentMetadataConfiguration := range documentMetadataConfigurations {
 		values := map[string]interface{}{
-			"name":      aws.StringValue(documentMetadataConfiguration.Name),
+			"name":      documentMetadataConfiguration.Name,
 			"relevance": flattenRelevance(documentMetadataConfiguration.Relevance),
 			"search":    flattenSearch(documentMetadataConfiguration.Search),
-			"type":      aws.StringValue(documentMetadataConfiguration.Type),
+			"type":      documentMetadataConfiguration.Type,
 		}
 
 		documentMetadataConfigurationsList = append(documentMetadataConfigurationsList, values)
@@ -708,63 +810,50 @@ func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []*ken
 	return documentMetadataConfigurationsList
 }
 
-func flattenRelevance(relevance *kendra.Relevance) []interface{} {
+func flattenRelevance(relevance *types.Relevance) []interface{} {
 	if relevance == nil {
 		return []interface{}{}
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]interface{}{
+		"rank_order": relevance.RankOrder,
+	}
 
 	if v := relevance.Duration; v != nil {
-		values["duration"] = aws.StringValue(v)
+		values["duration"] = aws.ToString(v)
 	}
 
 	if v := relevance.Freshness; v != nil {
-		values["freshness"] = aws.BoolValue(v)
+		values["freshness"] = aws.ToBool(v)
 	}
 
 	if v := relevance.Importance; v != nil {
-		values["importance"] = aws.Int64Value(v)
-	}
-
-	if v := relevance.RankOrder; v != nil {
-		values["rank_order"] = aws.StringValue(v)
+		values["importance"] = aws.ToInt32(v)
 	}
 
 	if v := relevance.ValueImportanceMap; v != nil {
-		values["values_importance_map"] = aws.Int64ValueMap(v)
+		values["values_importance_map"] = v
 	}
 
 	return []interface{}{values}
 }
 
-func flattenSearch(search *kendra.Search) []interface{} {
+func flattenSearch(search *types.Search) []interface{} {
 	if search == nil {
 		return []interface{}{}
 	}
 
-	values := map[string]interface{}{}
-
-	if v := search.Displayable; v != nil {
-		values["displayable"] = aws.BoolValue(v)
-	}
-
-	if v := search.Facetable; v != nil {
-		values["facetable"] = aws.BoolValue(v)
-	}
-
-	if v := search.Searchable; v != nil {
-		values["searchable"] = aws.BoolValue(v)
-	}
-
-	if v := search.Sortable; v != nil {
-		values["sortable"] = aws.BoolValue(v)
+	values := map[string]interface{}{
+		"displayable": search.Displayable,
+		"facetable":   search.Facetable,
+		"searchable":  search.Searchable,
+		"sortable":    search.Sortable,
 	}
 
 	return []interface{}{values}
 }
 
-func flattenIndexStatistics(indexStatistics *kendra.IndexStatistics) []interface{} {
+func flattenIndexStatistics(indexStatistics *types.IndexStatistics) []interface{} {
 	if indexStatistics == nil {
 		return []interface{}{}
 	}
@@ -777,32 +866,32 @@ func flattenIndexStatistics(indexStatistics *kendra.IndexStatistics) []interface
 	return []interface{}{values}
 }
 
-func flattenFaqStatistics(faqStatistics *kendra.FaqStatistics) []interface{} {
+func flattenFaqStatistics(faqStatistics *types.FaqStatistics) []interface{} {
 	if faqStatistics == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"indexed_question_answers_count": aws.Int64Value(faqStatistics.IndexedQuestionAnswersCount),
+		"indexed_question_answers_count": aws.ToInt32(&faqStatistics.IndexedQuestionAnswersCount),
 	}
 
 	return []interface{}{values}
 }
 
-func flattenTextDocumentStatistics(textDocumentStatistics *kendra.TextDocumentStatistics) []interface{} {
+func flattenTextDocumentStatistics(textDocumentStatistics *types.TextDocumentStatistics) []interface{} {
 	if textDocumentStatistics == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"indexed_text_bytes":           aws.Int64Value(textDocumentStatistics.IndexedTextBytes),
-		"indexed_text_documents_count": aws.Int64Value(textDocumentStatistics.IndexedTextDocumentsCount),
+		"indexed_text_bytes":           aws.ToInt64(&textDocumentStatistics.IndexedTextBytes),
+		"indexed_text_documents_count": aws.ToInt32(&textDocumentStatistics.IndexedTextDocumentsCount),
 	}
 
 	return []interface{}{values}
 }
 
-func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration *kendra.ServerSideEncryptionConfiguration) []interface{} {
+func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration *types.ServerSideEncryptionConfiguration) []interface{} {
 	if serverSideEncryptionConfiguration == nil {
 		return []interface{}{}
 	}
@@ -810,25 +899,25 @@ func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration 
 	values := map[string]interface{}{}
 
 	if v := serverSideEncryptionConfiguration.KmsKeyId; v != nil {
-		values["kms_key_id"] = aws.StringValue(v)
+		values["kms_key_id"] = aws.ToString(v)
 	}
 
 	return []interface{}{values}
 }
 
-func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *kendra.UserGroupResolutionConfiguration) []interface{} {
+func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *types.UserGroupResolutionConfiguration) []interface{} {
 	if userGroupResolutionConfiguration == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"user_group_resolution_configuration": aws.StringValue(userGroupResolutionConfiguration.UserGroupResolutionMode),
+		"user_group_resolution_configuration": userGroupResolutionConfiguration.UserGroupResolutionMode,
 	}
 
 	return []interface{}{values}
 }
 
-func flattenUserTokenConfigurations(userTokenConfigurations []*kendra.UserTokenConfiguration) []interface{} {
+func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenConfiguration) []interface{} {
 	userTokenConfigurationsList := []interface{}{}
 
 	for _, userTokenConfiguration := range userTokenConfigurations {
@@ -848,51 +937,102 @@ func flattenUserTokenConfigurations(userTokenConfigurations []*kendra.UserTokenC
 	return userTokenConfigurationsList
 }
 
-func flattenJsonTokenTypeConfiguration(jsonTokenTypeConfiguration *kendra.JsonTokenTypeConfiguration) []interface{} {
+func flattenJsonTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []interface{} {
 	if jsonTokenTypeConfiguration == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"group_attribute_field":     aws.StringValue(jsonTokenTypeConfiguration.GroupAttributeField),
-		"user_name_attribute_field": aws.StringValue(jsonTokenTypeConfiguration.UserNameAttributeField),
+		"group_attribute_field":     jsonTokenTypeConfiguration.GroupAttributeField,
+		"user_name_attribute_field": jsonTokenTypeConfiguration.UserNameAttributeField,
 	}
 
 	return []interface{}{values}
 }
 
-func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *kendra.JwtTokenTypeConfiguration) []interface{} {
+func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenTypeConfiguration) []interface{} {
 	if jwtTokenTypeConfiguration == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"key_location": aws.StringValue(jwtTokenTypeConfiguration.KeyLocation),
+		"key_location": jwtTokenTypeConfiguration.KeyLocation,
 	}
 
 	if v := jwtTokenTypeConfiguration.ClaimRegex; v != nil {
-		values["claim_regex"] = aws.StringValue(v)
+		values["claim_regex"] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.GroupAttributeField; v != nil {
-		values["group_attribute_field"] = aws.StringValue(v)
+		values["group_attribute_field"] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.Issuer; v != nil {
-		values["issuer"] = aws.StringValue(v)
+		values["issuer"] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.SecretManagerArn; v != nil {
-		values["secrets_manager_arn"] = aws.StringValue(v)
+		values["secrets_manager_arn"] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.URL; v != nil {
-		values["url"] = aws.StringValue(v)
+		values["url"] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.UserNameAttributeField; v != nil {
-		values["user_name_attribute_field"] = aws.StringValue(v)
+		values["user_name_attribute_field"] = aws.ToString(v)
 	}
 
 	return []interface{}{values}
+}
+
+// Helpers added. Could be generated or somehow use go 1.18 generics?
+func indexEditionValues(input ...types.IndexEdition) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
+func userContextPolicyValues(input ...types.UserContextPolicy) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
+func userGroupResolutionModeValues(input ...types.UserGroupResolutionMode) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
+func keyLocationValues(input ...types.KeyLocation) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
+func IndexStatusValues(input ...types.IndexStatus) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
 }

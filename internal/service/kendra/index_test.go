@@ -1,20 +1,41 @@
 package kendra_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkendra "github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func testAccPreCheck(t *testing.T) {
+	acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
+
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+
+	input := &kendra.ListIndicesInput{}
+
+	_, err := conn.ListIndices(context.TODO(), input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
 
 func TestAccKendraIndex_basic(t *testing.T) {
 	var index kendra.DescribeIndexOutput
@@ -34,11 +55,8 @@ func TestAccKendraIndex_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +75,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "13"),
-					resource.TestCheckResourceAttr(resourceName, "edition", kendra.IndexEditionEnterpriseEdition),
+					resource.TestCheckResourceAttr(resourceName, "edition", string(types.IndexEditionEnterpriseEdition)),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.faq_statistics.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.faq_statistics.0.indexed_question_answers_count"),
@@ -66,7 +84,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "status", kendra.IndexStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.IndexStatusActive)),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "user_context_policy", "ATTRIBUTE_FILTER"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "0"),
@@ -100,11 +118,8 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -148,11 +163,8 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -202,11 +214,8 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -258,11 +267,8 @@ func TestAccKendraIndex_updateUserTokenJson(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -327,11 +333,8 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -393,11 +396,8 @@ func TestAccKendraIndex_updateRoleArn(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -446,11 +446,8 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kendra.EndpointsID, t)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, kendra.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
@@ -482,10 +479,10 @@ func testAccCheckIndexDestroy(s *terraform.State) error {
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.DescribeIndex(input)
+		resp, err := conn.DescribeIndex(context.TODO(), input)
 
 		if err == nil {
-			if aws.StringValue(resp.Id) == rs.Primary.ID {
+			if aws.ToString(resp.Id) == rs.Primary.ID {
 				return fmt.Errorf("Index '%s' was not deleted properly", rs.Primary.ID)
 			}
 		}
@@ -506,7 +503,7 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 		input := &kendra.DescribeIndexInput{
 			Id: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.DescribeIndex(input)
+		resp, err := conn.DescribeIndex(context.TODO(), input)
 
 		if err != nil {
 			return err

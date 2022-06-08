@@ -23,6 +23,7 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	KendraEndpointID         = "kendra"
 	Route53DomainsEndpointID = "route53domains"
 )
 
