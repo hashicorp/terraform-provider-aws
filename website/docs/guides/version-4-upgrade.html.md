@@ -491,7 +491,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 ### Migrating to `aws_s3_bucket_lifecycle_configuration`
 
-~> **Note:** In version `3.x` of the provider, the `lifecycle_rule.id` argument was an optional parameter, while in version `4.x`, the `aws_s3_bucket_lifecycle_configuration.rule.id` argument required.
+~> **Note:** In version `3.x` of the provider, the `lifecycle_rule.id` argument was optional, while in version `4.x`, the `aws_s3_bucket_lifecycle_configuration.rule.id` argument required. Use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html) to get the source bucket's lifecycle configuration to determine the ID.
 
 #### For Lifecycle Rules with no `prefix` previously configured
 
