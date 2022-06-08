@@ -37,6 +37,7 @@ resource "aws_launch_template" "foo" {
     cpu_credits = "standard"
   }
 
+  disable_api_stop        = true
   disable_api_termination = true
 
   ebs_optimized = true
@@ -118,6 +119,7 @@ The following arguments are supported:
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
 * `description` - (Optional) Description of the launch template.
+* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
