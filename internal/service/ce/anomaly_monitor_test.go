@@ -260,26 +260,6 @@ resource "aws_ce_anomaly_monitor" "test" {
 `, rName)
 }
 
-func testAccAnomalyMonitorConfig_Dimension(rDimension string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name              = "CEAnomalyTestMonitor"
-  monitor_type      = "DIMENSIONAL"
-  monitor_dimension = %[1]q
-}
-`, rDimension)
-}
-
-func testAccAnomalyMonitorConfig_Type(rType string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name              = "CEAnomalyTestMonitor"
-  monitor_type      = %[1]q
-  monitor_dimension = "SERVICE"
-}
-`, rType)
-}
-
 func testAccAnomalyMonitorConfig_Custom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
