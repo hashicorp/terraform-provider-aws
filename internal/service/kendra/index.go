@@ -589,7 +589,7 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 
 	stateConf := &resource.StateChangeConf{
 		Pending: IndexStatusValues(types.IndexStatusCreating),
-		Target:  IndexStatusValues(types.IndexStatusActive, types.IndexStatusFailed),
+		Target:  IndexStatusValues(types.IndexStatusActive),
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
@@ -597,8 +597,9 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
-
+		if output.Status == types.IndexStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		}
 		return output, err
 	}
 
@@ -609,7 +610,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 
 	stateConf := &resource.StateChangeConf{
 		Pending: IndexStatusValues(types.IndexStatusUpdating),
-		Target:  IndexStatusValues(types.IndexStatusActive, types.IndexStatusFailed),
+		Target:  IndexStatusValues(types.IndexStatusActive),
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
@@ -617,8 +618,9 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
-
+		if output.Status == types.IndexStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		}
 		return output, err
 	}
 
