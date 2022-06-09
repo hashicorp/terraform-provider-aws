@@ -83,6 +83,12 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.GetEmailIdentity(readOpts)
 	if err != nil {
+		if _, ok := err.(*sesv2.NotFoundException); ok {
+			log.Printf("[WARN] %s", err)
+			d.SetId("")
+			return nil
+		}
+
 		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
 		return err
 	}
