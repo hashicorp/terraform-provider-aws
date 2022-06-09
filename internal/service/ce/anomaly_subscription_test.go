@@ -323,7 +323,7 @@ func testAccCheckAnomalySubscriptionDestroy(s *terraform.State) error {
 func testAccAnomalySubscriptionConfig(rName string, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -364,7 +364,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 func testAccAnomalySubscriptionConfig_MonitorARNList(rName string, rName2 string, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test1" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -386,7 +386,7 @@ JSON
 }
 
 resource "aws_ce_anomaly_monitor" "test2" {
-  name = %[2]q
+  name         = %[2]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -427,7 +427,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 func testAccAnomalySubscriptionConfig_Frequency(rName string, rFrequency string, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -468,7 +468,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 func testAccAnomalySubscriptionConfig_Subscriber2(rName string, address1 string, address2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -584,7 +584,7 @@ resource "aws_sns_topic_policy" "test" {
 }
 
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -629,7 +629,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 func testAccAnomalySubscriptionConfig_Threshold(rName string, rThreshold int, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -670,7 +670,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 func testAccAnomalySubscriptionConfig_Tags1(rName string, tagKey1, tagValue1 string, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
@@ -715,7 +715,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 func testAccAnomalySubscriptionConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
-  name = %[1]q
+  name         = %[1]q
   monitor_type = "CUSTOM"
 
   monitor_specification = <<JSON
