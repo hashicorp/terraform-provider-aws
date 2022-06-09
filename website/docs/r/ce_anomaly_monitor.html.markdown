@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ce_anomaly_monitor
 
-Provides a CE Cost Category.
+Provides a CE Anomaly Monitor.
 
 ## Example Usage
 
@@ -55,17 +55,17 @@ JSON
 The following arguments are required:
 
 * `name` - (Required) The name of the monitor.
-* `type` - (Required) The possible type values. Valid Values: `DIMENSIONAL` | `CUSTOM`.
-* `dimension` - (Required, if `type` is `DIMENSIONAL`) The dimensions to evaluate. Valid Values: `SERVICE`.
-* `specification` - (Required, if `type` is `CUSTOM`) Is valid JSON representation for the [Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html) object.
+* `type` - (Required) The possible type values. Valid values: `DIMENSIONAL` | `CUSTOM`.
+* `dimension` - (Required, if `type` is `DIMENSIONAL`) The dimensions to evaluate. Valid values: `SERVICE`.
+* `specification` - (Required, if `type` is `CUSTOM`) A valid JSON representation for the [Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html) object.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the cost category.
-* `id` - Unique ID of the cost category. Same as `arn`.
+* `arn` - ARN of the anomaly monitor.
+* `id` - Unique ID of the anomaly monitor. Same as `arn`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
@@ -73,5 +73,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_ce_anomaly_monitor` can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_ce_anomaly_monitor.example costAnomalyARN
+$ terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```

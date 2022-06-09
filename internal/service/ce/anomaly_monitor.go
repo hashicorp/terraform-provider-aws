@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,32 +33,32 @@ func ResourceAnomalyMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dimension": {
+			"monitor_dimension": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ValidateFunc:  validation.StringInSlice([]string{"SERVICE"}, false),
-				ConflictsWith: []string{"specification"},
+				ConflictsWith: []string{"monitor_specification"},
+				ValidateFunc:  validation.StringInSlice(costexplorer.MonitorDimension_Values(), false),
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
 					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
 			},
-			"specification": {
+			"monitor_specification": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				ConflictsWith:    []string{"dimension"},
+				ConflictsWith:    []string{"monitor_dimension"},
 			},
-			"type": {
+			"monitor_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"DIMENSIONAL", "CUSTOM"}, false),
+				ValidateFunc: validation.StringInSlice(costexplorer.MonitorType_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -75,18 +76,18 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &costexplorer.CreateAnomalyMonitorInput{
 		AnomalyMonitor: &costexplorer.AnomalyMonitor{
 			MonitorName: aws.String(d.Get("name").(string)),
-			MonitorType: aws.String(d.Get("type").(string)),
+			MonitorType: aws.String(d.Get("monitor_type").(string)),
 		},
 	}
-	switch d.Get("type").(string) {
+	switch d.Get("monitor_type").(string) {
 	case costexplorer.MonitorTypeDimensional:
-		if v, ok := d.GetOk("dimension"); ok {
+		if v, ok := d.GetOk("monitor_dimension"); ok {
 			input.AnomalyMonitor.MonitorDimension = aws.String(v.(string))
 		} else {
 			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeDimensional)
 		}
 	case costexplorer.MonitorTypeCustom:
-		if v, ok := d.GetOk("specification"); ok {
+		if v, ok := d.GetOk("monitor_specification"); ok {
 			expression := costexplorer.Expression{}
 
 			if err := json.Unmarshal([]byte(v.(string)), &expression); err != nil {
@@ -110,6 +111,10 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("Error creating Anomaly Monitor: %s", err)
 	}
 
+	if resp == nil || resp.MonitorArn == nil {
+		return diag.Errorf("creating Cost Explorer Anomaly Monitor resource (%s): empty output", d.Get("name").(string))
+	}
+
 	d.SetId(aws.StringValue(resp.MonitorArn))
 
 	return resourceAnomalyMonitorRead(ctx, d, meta)
@@ -118,10 +123,11 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetAnomalyMonitorsWithContext(ctx, &costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{d.Id()})})
+	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && len(resp.AnomalyMonitors) < 1 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id())
 		d.SetId("")
 		return nil
@@ -131,10 +137,8 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
 	}
 
-	anomalyMonitor := resp.AnomalyMonitors[0]
-
-	if anomalyMonitor.MonitorSpecification != nil {
-		specificationToJson, err := json.Marshal(anomalyMonitor.MonitorSpecification)
+	if monitor.MonitorSpecification != nil {
+		specificationToJson, err := json.Marshal(monitor.MonitorSpecification)
 		if err != nil {
 			return diag.Errorf("Error parsing specification response: %s", err)
 		}
@@ -144,27 +148,28 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("Specification (%s) is invalid JSON: %s", specificationToSet, err)
 		}
 
-		d.Set("specification", specificationToSet)
+		d.Set("monitor_specification", specificationToSet)
 	}
 
-	d.Set("arn", anomalyMonitor.MonitorArn)
-	d.Set("dimension", anomalyMonitor.MonitorDimension)
-	d.Set("name", anomalyMonitor.MonitorName)
-	d.Set("type", anomalyMonitor.MonitorType)
+	d.Set("arn", monitor.MonitorArn)
+	d.Set("monitor_dimension", monitor.MonitorDimension)
+	d.Set("name", monitor.MonitorName)
+	d.Set("monitor_type", monitor.MonitorType)
 
-	tags, err := ListTags(conn, aws.StringValue(anomalyMonitor.MonitorArn))
+	tags, err := ListTags(conn, aws.StringValue(monitor.MonitorArn))
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	return nil
@@ -179,7 +184,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("name") {
-		input.MonitorName = aws.String(d.Get("Name").(string))
+		input.MonitorName = aws.String(d.Get("name").(string))
 		requestUpdate = true
 	}
 
@@ -187,7 +192,15 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 		}
 	}
 
@@ -195,7 +208,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := conn.UpdateAnomalyMonitorWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
 		}
 	}
 
@@ -207,7 +220,7 @@ func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, m
 
 	_, err := conn.DeleteAnomalyMonitorWithContext(ctx, &costexplorer.DeleteAnomalyMonitorInput{MonitorArn: aws.String(d.Id())})
 
-	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
 		return nil
 	}
 
