@@ -67,7 +67,7 @@ func TestAccDataSyncLocationEFS_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_point_arn", "aws_efs_access_point.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "in_transit_cncryption", "TLS1_2"),
+					resource.TestCheckResourceAttr(resourceName, "in_transit_encryption", "TLS1_2"),
 				),
 			},
 			{
@@ -348,7 +348,7 @@ resource "aws_efs_access_point" "test" {
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn   = aws_efs_mount_target.test.file_system_arn
   access_point_arn      = aws_efs_access_point.test.arn
-  in_transit_cncryption = "TLS1_2"
+  in_transit_encryption = "TLS1_2"
 
   ec2_config {
     security_group_arns = [aws_security_group.test.arn]
