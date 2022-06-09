@@ -1,0 +1,117 @@
+# Terraform AWS Provider - Contributor Guide
+
+<p>The AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. There are many way to contribute, and we have extensive documentation on them. Below are the main ways most users engage with the provider repository and the high level steps required to ensure the contribution goes smoothly.</p>
+
+## What would you like do do?
+
+### Add a new AWS Service to the Provider
+
+Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by introducing the resources and datasources required to manage configuration of the service.
+
+- [Add Service Client](add-a-new-service#add-a-service-client)
+- [Perform Service Design](add-a-new-service#perform-service-design)
+- [Add a new resource](add-a-new-service#add-a-new-resource)
+
+### Add a new resource to the Provider
+
+Allow the management of a logical resource within AWS by adding a new resource to the Terraform AWS Provider.
+
+- [Name the resource](add-a-new-service#add-a-new-resource#name-the-resource)
+
+    <td>
+      <ul>
+        <li><a href="add-a-new-resource#name-the-resource">Name the resource</a></li>
+        <li><a href="add-a-new-resource#fork-the-provider">Fork the Provider</a></li>
+        <li><a href="add-a-new-resource#fill-out-the-resource-schema">Fill out the Resource Schema</a></li>
+        <li><a href="add-a-new-resource#implement-crud-handlers">Implement CRUD Handlers</a></li>
+        <li><a href="add-a-new-resource#write-passing-acceptance-tests">Write passing Acceptance Tests</a></li>
+        <li><a href="add-a-new-resource#create-documentation-for-the-resource">Create Documentation for the Resource</a></li>
+        <li><a href="add-a-new-resource#ensure-format-and-link-checks-are-passing">Ensure format and lint checks are passing</a></li>
+        <li><a href="raising-a-pull-request.md">Raise a Pull Request</a></li>
+        <li><a href="add-a-new-resource#implement-crud-handlers">Wait for Prioritization</a></li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>Add a new datasource to the Provider</td>
+    <td>Allow reading of an existing AWS resource and allow its use within Terraform configurations.</td>
+    <td>
+      <ul>
+        <li><a href="add-a-new-datasource#name-the-datasource">Name the datasource</a></li>
+        <li><a href="add-a-new-datasource#fork-the-provider">Fork the Provider</a></li>
+        <li><a href="add-a-new-datasource#fill-out-the-datasource-schema">Fill out the Datasource Schema</a></li>
+        <li><a href="add-a-new-datasource#implement-crud-handlers">Implement Read Handler</a></li>
+        <li><a href="add-a-new-datasource#write-passing-acceptance-tests">Write passing Acceptance Tests</a></li>
+        <li><a href="add-a-new-datasource#create-documentation-for-the-resource">Create Documentation for the Datasource</a></li>
+        <li><a href="add-a-new-datasource#ensure-format-and-link-checks-are-passing">Ensure format and lint checks are passing</a></li>
+        <li><a href="raising-a-pull-request.md">Raise a Pull Request</a></li>
+        <li><a href="add-a-new-datasource#implement-crud-handlers">Wait for Prioritization</a></li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>Add a newly released AWS Region</td>
+    <td>New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround unecessary.</td>
+    <td>
+      <ul>
+        <a href="add-a-new-region">Add a new Region</a>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>Fix a bug, or make an enhancement to a resource or datasource</td>
+    <td>These constitute the majority of pull requests submitted, and we try to merge these smaller features regardless of popularity during our internal gardening days.</td>
+    <td>
+      <ul>
+        <li><a href="bugs-and-enhancements">Making small changes to existing resources.</a></li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>Add Resource Name Generation Support</td>
+    <td>Allow a resource, to either fully, or partially generate its own resource names. TODO:This can be useful.</td>
+    <td>
+      <ul>
+        <li><a href="resource-name-generation.md">Resource Name Generation</a></li>
+      </ul>
+    </td>
+  </tr>  
+  <tr>
+    <td>Add Tagging support for a Resource</td>
+    <td>Many AWS resources allow <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">assigning metadata via tags</a> which can be enormously useful to manage and track cloud resources from a governance and cost perspective. Often though, resources are launched without tagging support, which can follow later. In this case taggins support will need to be explicitly added to those resources. Typically this support follows an established pattern so support is normally straightforward to add.</td>
+    <td>
+      <ul>
+        <li><a href="resource-tagging.md">Add tag support for a resource.</a></li>
+      </ul>
+    </td>
+  </tr>    
+  <tr>
+    <td>Add Import support for a Resource</td>
+    <td>Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this may not have been done.</td>
+    <td>
+      <ul>
+        <li><a href="resource-import.md">Add import support</a></li>
+      </ul>
+    </td>
+  </tr>  
+  <tr>
+    <td>Registry Documentation Changes</td>
+    <td>The provider documentation is displayed on the <a href="https://registry.terraform.io/providers/hashicorp/aws/latest">Terraform Registry</a> and is sourced and refreshed from the provider repository during the release process.</td>
+    <td>
+      <ul>
+        <li><a href="documentation-changes">How to modify provider documentation</a></li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>Report a bug, or make a feature request</td>
+    <td>In both cases follow the template laid out in the submission forms. Details are important, it can take a considerable amount of time for the maintainers to reprooduce issues. So bug reports without full reproductions are likely to be uninvestigated, or in some case closed.</td>
+    <td>
+      <ul>
+        <li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md">Report a Bug</a></li>
+        <li><a href="https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md">Submit a Feature Request</a></li>
+      </ul>
+    </td>
+  </tr>  
+</tbody>
+</table>

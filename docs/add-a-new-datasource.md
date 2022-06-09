@@ -1,5 +1,3 @@
-## Adding a New Datasource
-
 New datasources are required when AWS adds a new service, or adds new features within an existing service which would require a new datasource to allow practioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a datasource, but some are more useful than others.
 
 Each datasource should be submitted for review in isolation, pull requests containing multiple datasources and/or resources are harder to review and the maintainers will normally ask for them to be broken apart.

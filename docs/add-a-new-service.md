@@ -1,5 +1,3 @@
-## Adding a New AWS Service to the Provider
-
 AWS frequently launches new services, and Terraform support is frequently desired by the community shortly after launch. Depending on the API surface area of the new service, this could be a major undertaking. The following steps should be followed to prepare for adding the resources that allow for Terraform management of that service.
 
 ### Add a Service Client

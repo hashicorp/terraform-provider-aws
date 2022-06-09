@@ -1,5 +1,3 @@
-## Add a New Region
-
 New regions can typically be used immediately with the provider, with two important caveats:
 
 - Regions often need to be explicitly enabled via the AWS console. See [ap-east-1](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to enable a new region for use.

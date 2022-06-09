@@ -1,5 +1,3 @@
-## Adding a New Resource
-
 New resources are required when AWS adds a new service, or adds new features within an existing service which would require a new resource to manage in Terraform. Typically anything with a new set of CRUD API endpoints is a great candidate for a new resource.
 
 Each resource should be submitted for review in isolation, pull requests containing multiple resources are harder to review and the maintainers will normally ask for them to be broken apart.

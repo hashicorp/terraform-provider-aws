@@ -1,0 +1,51 @@
+site_name: Terraform AWS Provider - Contributor Guide
+site_description: 'Docsite generated from terraform-provider-aws'
+copyright: Hashicorp
+repo_name: hashicorp/terraform-provider-aws
+repo_url: https://github.com/hashicorp/terraform-provider-aws
+edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/master/docs"
+
+nav:
+  - Getting Started: index.md
+  - Prioritization: prioritization.md
+  - Development Environment Setup: development-environment.md
+  - Guides:
+    - Adding a New Resource: add-a-new-resource.md
+    - Adding a New Service: add-a-new-service.md
+    - Adding a New Datasource: add-a-new-datasource.md
+    - Adding Import Support: add-import-support.md
+    - Adding a Tag Resource: adding-a-tag-resource.md
+    - Bugs and Enhancements: bugs-and-enhancements.md
+  - Acceptance Testing:
+    - Running and Writing Acceptance Tests: running-and-writing-acceptance-tests.md
+    - Environment Variables: acc-test-environment-variables.md
+  - Reference:
+    - Changelog Process: changelog-process.md
+    - Data Handling and Conversion: data-handling-and-conversion.md
+    - Dependency Updates: dependency-updates.md
+    - Error Handling: error-handling.md
+  - Core Services: core-services.md
+  - Design and Standards:
+    - Provider Design: provider-design.md
+    - Naming: naming.md
+  - FAQ: faq.md
+
+theme:
+  name: material
+  logo: images/hashicorp.png
+  favicon: images/hashicorp-black.png
+  palette:
+    scheme: hashicorp
+    primary: black
+    accent: blue
+  icon:
+    repo: fontawesome/brands/github
+  font: false
+  features:
+    - navigation.instant
+    - content.tabs.link
+
+plugins:
+  - search:
+      lang:
+        - en
