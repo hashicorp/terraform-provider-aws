@@ -2,8 +2,7 @@ New resources are required when AWS adds a new service, or adds new features wit
 
 Each resource should be submitted for review in isolation, pull requests containing multiple resources are harder to review and the maintainers will normally ask for them to be broken apart.
 
-Please use the `skaff` tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards. For more general guidance on items commonly looked for during the code review process please review [Common Review
-Items](pullrequest-submission-and-lifecycle.md#common-review-items).
+Please use the `skaff` tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
 ### Prequisites
 
@@ -62,9 +61,9 @@ make docs-lint # run documentation linters
 
 #### Raise a Pull Request
 
-See [Raising a Pull Request](raising-a-pull-request.md).
+See [Raising a Pull Request](raising-a-pull-request).
 
 #### Wait for prioritization.
 
-In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our [Prioritization Guide](prioritization-guide.md) for full details of the process.
+In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our [Prioritization Guide](prioritization) for full details of the process.
 

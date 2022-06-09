@@ -70,7 +70,7 @@ Many AWS resources allow [assigning metadata via tags](https://docs.aws.amazon.c
 
 Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this may not have been done.
 
-- [Add import support](resource-import.md)
+- [Add import support](add-import-support.md)
 
 ### End User Documentation Changes
 
