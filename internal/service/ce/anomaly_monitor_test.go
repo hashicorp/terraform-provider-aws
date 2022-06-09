@@ -1,12 +1,12 @@
 package ce_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,6 +45,7 @@ func TestAccCEAnomalyMonitor_Dimensional_serial(t *testing.T) {
 }
 
 func testAccAnomalyMonitor_basic(t *testing.T) {
+	var monitor costexplorer.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -56,7 +58,7 @@ func testAccAnomalyMonitor_basic(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalymonitor/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_dimension", "SERVICE"),
@@ -73,6 +75,7 @@ func testAccAnomalyMonitor_basic(t *testing.T) {
 }
 
 func testAccAnomalyMonitor_Name(t *testing.T) {
+	var monitor costexplorer.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,7 +89,7 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -98,7 +101,7 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -107,6 +110,7 @@ func testAccAnomalyMonitor_Name(t *testing.T) {
 }
 
 func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
+	var monitor costexplorer.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,7 +123,7 @@ func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig_Custom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
@@ -135,10 +139,11 @@ func TestAccCEAnomalyMonitor_Custom(t *testing.T) {
 }
 
 func testAccAnomalyMonitor_Tags(t *testing.T) {
+	var monitor costexplorer.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
@@ -147,7 +152,7 @@ func testAccAnomalyMonitor_Tags(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig_Tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -160,7 +165,7 @@ func testAccAnomalyMonitor_Tags(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -169,7 +174,7 @@ func testAccAnomalyMonitor_Tags(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig_Tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -179,6 +184,7 @@ func testAccAnomalyMonitor_Tags(t *testing.T) {
 }
 
 func testAccAnomalyMonitor_disappears(t *testing.T) {
+	var monitor costexplorer.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -191,7 +197,7 @@ func testAccAnomalyMonitor_disappears(t *testing.T) {
 			{
 				Config: testAccAnomalyMonitorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyMonitorExists(resourceName),
+					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceAnomalyMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -200,7 +206,7 @@ func testAccAnomalyMonitor_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalyMonitorExists(n string) resource.TestCheckFunc {
+func testAccCheckAnomalyMonitorExists(n string, anomalyMonitor *costexplorer.AnomalyMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 
@@ -213,15 +219,17 @@ func testAccCheckAnomalyMonitorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Cost Explorer Anomaly Monitor is set")
 		}
 
-		resp, err := conn.GetAnomalyMonitors(&costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{rs.Primary.ID})})
+		resp, err := tfce.FindAnomalyMonitorByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error describing Cost Explorer Anomaly Monitor: %s", err.Error())
+			return err
 		}
 
-		if resp == nil || len(resp.AnomalyMonitors) < 1 {
-			return fmt.Errorf("Anomaly Monitor (%s) not found", rs.Primary.Attributes["name"])
+		if resp == nil {
+			return fmt.Errorf("Cost Explorer %q does not exist", rs.Primary.ID)
 		}
+
+		*anomalyMonitor = *resp
 
 		return nil
 	}
@@ -235,15 +243,18 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.GetAnomalyMonitors(&costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{rs.Primary.ID})})
+		_, err := tfce.FindAnomalyMonitorByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalyMonitor, rs.Primary.ID, err)
+			return err
 		}
 
-		if resp != nil && len(resp.AnomalyMonitors) > 0 {
-			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
-		}
+		return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
+
 	}
 
 	return nil

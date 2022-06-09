@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -119,9 +120,9 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CEConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
-	resp, err := conn.GetAnomalyMonitorsWithContext(ctx, &costexplorer.GetAnomalyMonitorsInput{MonitorArnList: aws.StringSlice([]string{d.Id()})})
+	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && len(resp.AnomalyMonitors) < 1 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id())
 		d.SetId("")
 		return nil
@@ -131,10 +132,8 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
 	}
 
-	anomalyMonitor := resp.AnomalyMonitors[0]
-
-	if anomalyMonitor.MonitorSpecification != nil {
-		specificationToJson, err := json.Marshal(anomalyMonitor.MonitorSpecification)
+	if monitor.MonitorSpecification != nil {
+		specificationToJson, err := json.Marshal(monitor.MonitorSpecification)
 		if err != nil {
 			return diag.Errorf("Error parsing specification response: %s", err)
 		}
@@ -147,12 +146,12 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("monitor_specification", specificationToSet)
 	}
 
-	d.Set("arn", anomalyMonitor.MonitorArn)
-	d.Set("monitor_dimension", anomalyMonitor.MonitorDimension)
-	d.Set("name", anomalyMonitor.MonitorName)
-	d.Set("monitor_type", anomalyMonitor.MonitorType)
+	d.Set("arn", monitor.MonitorArn)
+	d.Set("monitor_dimension", monitor.MonitorDimension)
+	d.Set("name", monitor.MonitorName)
+	d.Set("monitor_type", monitor.MonitorType)
 
-	tags, err := ListTags(conn, aws.StringValue(anomalyMonitor.MonitorArn))
+	tags, err := ListTags(conn, aws.StringValue(monitor.MonitorArn))
 
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
@@ -215,7 +214,7 @@ func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, m
 
 	_, err := conn.DeleteAnomalyMonitorWithContext(ctx, &costexplorer.DeleteAnomalyMonitorInput{MonitorArn: aws.String(d.Id())})
 
-	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
 		return nil
 	}
 
