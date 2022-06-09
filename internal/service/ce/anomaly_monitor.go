@@ -155,16 +155,16 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := ListTags(conn, aws.StringValue(anomalyMonitor.MonitorArn))
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	return nil
@@ -187,7 +187,15 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 		}
 	}
 
@@ -195,7 +203,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := conn.UpdateAnomalyMonitorWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
 		}
 	}
 
