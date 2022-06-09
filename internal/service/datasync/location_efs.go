@@ -74,7 +74,7 @@ func ResourceLocationEFS() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"in_transit_cncryption": {
+			"in_transit_encryption": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -128,7 +128,7 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 		input.FileSystemAccessRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("in_transit_cncryption"); ok {
+	if v, ok := d.GetOk("in_transit_encryption"); ok {
 		input.InTransitEncryption = aws.String(v.(string))
 	}
 
@@ -181,7 +181,7 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("uri", output.LocationUri)
 	d.Set("access_point_arn", output.AccessPointArn)
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
-	d.Set("in_transit_cncryption", output.InTransitEncryption)
+	d.Set("in_transit_encryption", output.InTransitEncryption)
 
 	tags, err := ListTags(conn, d.Id())
 
