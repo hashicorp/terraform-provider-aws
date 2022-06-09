@@ -14,6 +14,8 @@ nav:
     - Adding a New Service: add-a-new-service.md
     - Adding a New Datasource: add-a-new-datasource.md
     - Adding Import Support: add-import-support.md
+    - Adding Resource Filtering Support: resource-filtering.md
+    - Adding Resource Name Generation: resource-name-generation.md
     - Adding a Tag Resource: adding-a-tag-resource.md
     - Bugs and Enhancements: bugs-and-enhancements.md
   - Acceptance Testing:
@@ -24,6 +26,8 @@ nav:
     - Data Handling and Conversion: data-handling-and-conversion.md
     - Dependency Updates: dependency-updates.md
     - Error Handling: error-handling.md
+    - Retries and Waiters: retries-and-waiters.md
+    - Service Packages Refactor: service-packages-pullrequest-guide.md
   - Core Services: core-services.md
   - Design and Standards:
     - Provider Design: provider-design.md
