@@ -2,8 +2,8 @@ site_name: Terraform AWS Provider - Contributor Guide
 site_description: 'Docsite generated from terraform-provider-aws'
 copyright: Hashicorp
 repo_name: hashicorp/terraform-provider-aws
-repo_url: https://github.com/hashicorp/terraform-provider-aws
-edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/master/docs"
+repo_url: https://github.com/breathingdust/terraform-provider-aws
+edit_uri: "https://github.com/breathingdust/terraform-provider-aws/tree/master/docs"
 
 nav:
   - Getting Started: index.md
