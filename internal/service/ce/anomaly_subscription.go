@@ -103,7 +103,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalySubscription, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionCreating, ResAnomalySubscription, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(resp.SubscriptionArn))
@@ -140,16 +140,16 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	tags, err := ListTags(conn, aws.StringValue(anomalySubscription.SubscriptionArn))
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 	}
 
 	return nil
@@ -187,7 +187,15 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 		}
 	}
 
@@ -195,7 +203,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionReading, ResAnomalySubscription, d.Id(), err)
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalySubscription, d.Id(), err)
 		}
 	}
 
