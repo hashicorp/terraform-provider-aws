@@ -3,7 +3,7 @@ New regions can typically be used immediately with the provider, with two import
 - Regions often need to be explicitly enabled via the AWS console. See [ap-east-1](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to enable a new region for use.
 - Until the provider is aware of the new region, automatic region validation will fail. In order to use the region before validation support is added to the provider you will need to disable region validation by doing the following:
 
-```
+```terraform
 provider "aws" {
   # ... potentially other configuration ...
 
@@ -20,23 +20,23 @@ Support for region validation requires that the provider has an updated AWS Go S
 
 [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
 
-- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)]
-- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)]
+- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
 
 #### Update Terraform AWS Provider
 
 [provider](https://github.com/hashicorp/terraform-provider-aws)
 
-- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)] 
-- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)]
+- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
 - Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base) 
 
 #### Update Terraform Core (S3 Backend)
 
 [core](https://github.com/hashicorp/terraform)
 
-- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)] 
-- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)] 
+- Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2) 
 - Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base) 
 
 ```shell
@@ -50,7 +50,7 @@ See the [Changelog Process](changelog-process.md) document for example changlog 
 
 Some datasources include static values specific to regions that are not availalble via a standard AWS API call. These will need to be manually updated. AWS employees can code search previous region values to find new region values in internal packages like RIPStaticConfig if they are not documented yet.
 
-- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go) and [`internal/service/elbv2/hosted_zone_id_data_source.go`](../../internal/service/elbv2/hosted_zone_id_data_source.go)
+- Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go) and [`internal/service/elbv2/hosted_zone_id_data_source.go`](../../internal/service/elbv2/hosted_zone_id_data_source.go)
 - Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)
 - Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to [`internal/service/cloudtrail/service_account_data_source.go`](../../internal/service/cloudtrail/service_account_data_source.go)
 - Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to [`internal/service/elb/service_account_data_source.go`](../../internal/service/elb/service_account_data_source.go)
