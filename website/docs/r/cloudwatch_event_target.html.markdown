@@ -14,6 +14,8 @@ Provides an EventBridge Target resource.
 
 ## Example Usage
 
+### Kinesis Usage
+
 ```terraform
 resource "aws_cloudwatch_event_target" "yada" {
   target_id = "Yada"
@@ -56,7 +58,7 @@ resource "aws_kinesis_stream" "test_stream" {
 }
 ```
 
-## Example SSM Document Usage
+### SSM Document Usage
 
 ```terraform
 data "aws_iam_policy_document" "ssm_lifecycle_trust" {
@@ -149,7 +151,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 }
 ```
 
-## Example RunCommand Usage
+### RunCommand Usage
 
 ```terraform
 resource "aws_cloudwatch_event_rule" "stop_instances" {
@@ -172,7 +174,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 }
 ```
 
-## Example ECS Run Task with Role and Task Override Usage
+### ECS Run Task with Role and Task Override Usage
 
 ```terraform
 resource "aws_iam_role" "ecs_events" {
@@ -242,7 +244,7 @@ DOC
 }
 ```
 
-## Example API Gateway target
+### API Gateway target
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
@@ -275,7 +277,7 @@ resource "aws_api_gateway_stage" "example" {
 }
 ```
 
-## Example Cross-Account Event Bus target
+### Cross-Account Event Bus target
 
 ```terraform
 resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
@@ -328,7 +330,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 }
 ```
 
-## Example Input Transformer Usage - JSON Object
+### Input Transformer Usage - JSON Object
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
@@ -354,7 +356,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 ```
 
-## Example Input Transformer Usage - Simple String
+### Input Transformer Usage - Simple String
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
@@ -372,6 +374,66 @@ resource "aws_cloudwatch_event_target" "example" {
 
 resource "aws_cloudwatch_event_rule" "example" {
   # ...
+}
+```
+
+### Cloudwatch Log Group Usage
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/events/guardduty/logs"
+  retention_in_days = 1
+}
+
+data "aws_iam_policy_document" "example_log_policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.example.arn}:*"
+    ]
+
+    principals {
+      identifiers = ["events.amazonaws.com", "delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+
+    condition {
+      test     = "ArnEquals"
+      values   = [aws_cloudwatch_event_rule.example.arn]
+      variable = "aws:SourceArn"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_document = data.aws_iam_policy_document.example_log_policy.json
+  policy_name     = "guardduty-log-publishing-policy"
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  name        = "guard-duty_event_rule"
+  description = "GuardDuty Findings"
+
+  event_pattern = jsonencode(
+    {
+      "source" : [
+        "aws.guardduty"
+      ]
+    }
+  )
+
+  tags = {
+    Environment = "example"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  rule = aws_cloudwatch_event_rule.example.name
+  arn  = aws_cloudwatch_log_group.example.arn
 }
 ```
 
