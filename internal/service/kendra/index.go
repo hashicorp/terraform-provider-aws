@@ -140,15 +140,8 @@ func ResourceIndex() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
+				Default:      string(types.IndexEditionEnterpriseEdition),
 				ValidateFunc: validation.StringInSlice(indexEditionValues(types.IndexEdition("").Values()...), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// API returns "ENTERPRISE_EDITION" by default.
-					if old == string(types.IndexEditionEnterpriseEdition) && new == "" {
-						return true
-					}
-
-					return old == new
-				},
 			},
 			"error_message": {
 				Type:     schema.TypeString,
@@ -233,15 +226,8 @@ func ResourceIndex() *schema.Resource {
 			"user_context_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      string(types.UserContextPolicyAttributeFilter),
 				ValidateFunc: validation.StringInSlice(userContextPolicyValues(types.UserContextPolicy("").Values()...), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// API returns "ATTRIBUTE_FILTER" by default.
-					if old == string(types.UserContextPolicyAttributeFilter) && new == "" {
-						return true
-					}
-
-					return old == new
-				},
 			},
 			"user_group_resolution_configuration": {
 				Type:     schema.TypeList,
