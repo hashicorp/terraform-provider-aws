@@ -123,6 +123,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
@@ -156,6 +157,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("monitor_type", monitor.MonitorType)
 
 	tags, err := ListTags(conn, aws.StringValue(monitor.MonitorArn))
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
