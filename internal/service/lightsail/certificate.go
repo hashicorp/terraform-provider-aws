@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -142,7 +141,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		return names.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("Error waiting for Create Certificate request operation"))
 	}
 
-	return resourceCertificateRead(d, meta)
+	return resourceCertificateRead(ctx, d, meta)
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -209,7 +208,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceCertificateRead(d, meta)
+	return resourceCertificateRead(ctx, d, meta)
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -252,27 +251,27 @@ func domainValidationOptionsHash(v interface{}) int {
 	return 0
 }
 
-func flattenSubjectAlternativeNames(cert *types.Certificate) []string {
+func flattenSubjectAlternativeNames(cert *lightsail.Certificate) []string {
 	sans := cert.SubjectAlternativeNames
 	vs := make([]string, 0)
 	for _, v := range sans {
-		if v != aws.ToString(cert.DomainName) {
-			vs = append(vs, v)
+		if v != cert.DomainName {
+			vs = append(vs, aws.StringValue(v))
 		}
 	}
 	return vs
 }
 
-func flattenDomainValidationRecords(domainValidationRecords []types.DomainValidationRecord) []map[string]interface{} {
+func flattenDomainValidationRecords(domainValidationRecords []*lightsail.DomainValidationRecord) []map[string]interface{} {
 	var domainValidationResult []map[string]interface{}
 
 	for _, o := range domainValidationRecords {
 		if o.ResourceRecord != nil {
 			validationOption := map[string]interface{}{
-				"domain_name":           aws.ToString(o.DomainName),
-				"resource_record_name":  aws.ToString(o.ResourceRecord.Name),
-				"resource_record_type":  aws.ToString(o.ResourceRecord.Type),
-				"resource_record_value": aws.ToString(o.ResourceRecord.Value),
+				"domain_name":           aws.StringValue(o.DomainName),
+				"resource_record_name":  aws.StringValue(o.ResourceRecord.Name),
+				"resource_record_type":  aws.StringValue(o.ResourceRecord.Type),
+				"resource_record_value": aws.StringValue(o.ResourceRecord.Value),
 			}
 			domainValidationResult = append(domainValidationResult, validationOption)
 		}
