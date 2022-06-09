@@ -3563,6 +3563,11 @@ resource "aws_emr_cluster" "test" {
       type                 = "gp2"
       volumes_per_instance = %[2]d
     }
+    ebs_config {
+      size                 = 10
+      type                 = "sc1"
+      volumes_per_instance = %[2]d
+    }
   }
   core_instance_group {
     instance_count = 1
@@ -3570,6 +3575,11 @@ resource "aws_emr_cluster" "test" {
     ebs_config {
       size                 = 32
       type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
+    ebs_config {
+      size                 = 10
+      type                 = "sc1"
       volumes_per_instance = %[2]d
     }
   }
