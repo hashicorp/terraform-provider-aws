@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -106,6 +107,10 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		return names.DiagError(names.CE, names.ErrActionCreating, ResAnomalySubscription, d.Id(), err)
 	}
 
+	if resp == nil || resp.SubscriptionArn == nil {
+		return diag.Errorf("creating Cost Explorer Anomaly Subscription resource (%s): empty output", d.Get("name").(string))
+	}
+
 	d.SetId(aws.StringValue(resp.SubscriptionArn))
 
 	return resourceAnomalySubscriptionRead(ctx, d, meta)
@@ -114,10 +119,11 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetAnomalySubscriptionsWithContext(ctx, &costexplorer.GetAnomalySubscriptionsInput{SubscriptionArnList: aws.StringSlice([]string{d.Id()})})
+	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && len(resp.AnomalySubscriptions) < 1 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalySubscription, d.Id())
 		d.SetId("")
 		return nil
@@ -127,17 +133,16 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalySubscription, d.Id(), err)
 	}
 
-	anomalySubscription := resp.AnomalySubscriptions[0]
+	d.Set("account_id", subscription.AccountId)
+	d.Set("arn", subscription.SubscriptionArn)
+	d.Set("frequency", subscription.Frequency)
+	d.Set("monitor_arn_list", subscription.MonitorArnList)
+	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(subscription.Subscribers))
+	d.Set("threshold", subscription.Threshold)
+	d.Set("name", subscription.SubscriptionName)
 
-	d.Set("account_id", anomalySubscription.AccountId)
-	d.Set("arn", anomalySubscription.SubscriptionArn)
-	d.Set("frequency", anomalySubscription.Frequency)
-	d.Set("monitor_arn_list", anomalySubscription.MonitorArnList)
-	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(anomalySubscription.Subscribers))
-	d.Set("threshold", anomalySubscription.Threshold)
-	d.Set("name", anomalySubscription.SubscriptionName)
-
-	tags, err := ListTags(conn, aws.StringValue(anomalySubscription.SubscriptionArn))
+	tags, err := ListTags(conn, aws.StringValue(subscription.SubscriptionArn))
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)

@@ -1,12 +1,12 @@
 package ce_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,10 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCEAnomalySubscription_basic(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -32,7 +34,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig(rName, address),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalysubscription/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
@@ -52,6 +54,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 }
 
 func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -66,7 +69,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Frequency(rName, "DAILY", address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 				),
 			},
@@ -78,7 +81,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Frequency(rName, "WEEKLY", address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "WEEKLY"),
 				),
 			},
@@ -87,6 +90,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 }
 
 func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -103,7 +107,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig(rName, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test", "arn"),
 				),
 			},
@@ -115,7 +119,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_MonitorARNList(rName2, rName3, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test1", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.1", "aws_ce_anomaly_monitor.test2", "arn"),
 				),
@@ -125,6 +129,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 }
 
 func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -140,7 +145,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig(rName, address1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address1),
 				),
@@ -153,7 +158,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig(rName, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address2),
 				),
@@ -161,7 +166,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Subscriber2(rName, address1, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address1),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.1.type", "EMAIL"),
@@ -171,7 +176,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_SubscriberSNS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "SNS"),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber.0.address", "aws_sns_topic.test", "arn"),
 				),
@@ -181,6 +186,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 }
 
 func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -195,7 +201,7 @@ func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Threshold(rName, 100, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
 				),
 			},
@@ -207,7 +213,7 @@ func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Threshold(rName, 200, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "200"),
 				),
 			},
@@ -215,6 +221,7 @@ func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
 	})
 }
 func TestAccCEAnomalySubscription_Tags(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -229,7 +236,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Tags1(rName, "key1", "value1", address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -242,7 +249,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Tags2(rName, "key1", "value1updated", "key2", "value2", address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -251,7 +258,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_Tags1(rName, "key2", "value2", address),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(resourceName),
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -260,7 +267,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalySubscriptionExists(n string) resource.TestCheckFunc {
+func testAccCheckAnomalySubscriptionExists(n string, anomalySubscription *costexplorer.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 
@@ -273,15 +280,17 @@ func testAccCheckAnomalySubscriptionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Cost Explorer Anomaly Subscription is set")
 		}
 
-		resp, err := conn.GetAnomalySubscriptions(&costexplorer.GetAnomalySubscriptionsInput{SubscriptionArnList: aws.StringSlice([]string{rs.Primary.ID})})
+		resp, err := tfce.FindAnomalySubscriptionByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error describing Cost Explorer Anomaly Subscription: %s", err.Error())
+			return err
 		}
 
-		if resp == nil || len(resp.AnomalySubscriptions) < 1 {
-			return fmt.Errorf("Anomaly Subscription (%s) not found", rs.Primary.ID)
+		if resp == nil {
+			return fmt.Errorf("Cost Explorer %q does not exist", rs.Primary.ID)
 		}
+
+		*anomalySubscription = *resp
 
 		return nil
 	}
@@ -295,28 +304,29 @@ func testAccCheckAnomalySubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.GetAnomalySubscriptions(&costexplorer.GetAnomalySubscriptionsInput{SubscriptionArnList: aws.StringSlice([]string{rs.Primary.ID})})
+		_, err := tfce.FindAnomalySubscriptionByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalySubscription, rs.Primary.ID, err)
+			return err
 		}
 
-		if resp != nil && len(resp.AnomalySubscriptions) > 0 {
-			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalySubscription, rs.Primary.ID, errors.New("still exists"))
-		}
+		return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalySubscription, rs.Primary.ID, errors.New("still exists"))
+
 	}
-
 	return nil
-
 }
 
 func testAccAnomalySubscriptionConfig(rName string, address string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -355,9 +365,9 @@ func testAccAnomalySubscriptionConfig_MonitorARNList(rName string, rName2 string
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test1" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -377,9 +387,9 @@ JSON
 
 resource "aws_ce_anomaly_monitor" "test2" {
   name = %[2]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
   {
 	  "And": null,
 	  "CostCategories": null,
@@ -418,9 +428,9 @@ func testAccAnomalySubscriptionConfig_Frequency(rName string, rFrequency string,
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -459,9 +469,9 @@ func testAccAnomalySubscriptionConfig_Subscriber2(rName string, address1 string,
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -575,9 +585,9 @@ resource "aws_sns_topic_policy" "test" {
 
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
   {
 	  "And": null,
 	  "CostCategories": null,
@@ -620,9 +630,9 @@ func testAccAnomalySubscriptionConfig_Threshold(rName string, rThreshold int, ad
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -661,9 +671,9 @@ func testAccAnomalySubscriptionConfig_Tags1(rName string, tagKey1, tagValue1 str
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
@@ -706,9 +716,9 @@ func testAccAnomalySubscriptionConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, 
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name = %[1]q
-  type = "CUSTOM"
+  monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,
