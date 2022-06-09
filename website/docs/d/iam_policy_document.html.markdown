@@ -75,6 +75,61 @@ resource "aws_iam_policy" "example" {
 }
 ```
 
+### Example Multiple Condition Keys
+
+You can specify a [condition with multiple keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_multi-value-conditions.html) by supplying multiple `condition` blocks with the same `test` value, but differing `variable` values.
+
+```terraform
+data "aws_iam_policy_document" "example_multiple_condition_keys" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:service"
+      values   = ["pi"]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:aws:pi:service"
+      values   = ["rds"]
+    }
+
+  }
+}
+```
+
+`data.aws_iam_policy_document.example_multiple_condition_keys.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "kms:EncryptionContext:aws:pi:service": "rds",
+          "kms:EncryptionContext:service": "pi"
+        }
+      }
+    }
+  ]
+}
+```
+
 ### Example Assume-Role Policy with Multiple Principals
 
 You can specify multiple principal blocks with different types. You can also use this data source to generate an assume-role policy.
