@@ -10,17 +10,6 @@ import (
 )
 
 const (
-	// OperationStatusNotStarted is a OperationStatus enum value
-	OperationStatusNotStarted = "NotStarted"
-	// OperationStatusStarted is a OperationStatus enum value
-	OperationStatusStarted = "Started"
-	// OperationStatusFailed is a OperationStatus enum value
-	OperationStatusFailed = "Failed"
-	// OperationStatusCompleted is a OperationStatus enum value
-	OperationStatusCompleted = "Completed"
-	// OperationStatusSucceeded is a OperationStatus enum value
-	OperationStatusSucceeded = "Succeeded"
-
 	// OperationTimeout is the Timout Value for Operations
 	OperationTimeout = 20 * time.Minute
 	// OperationDelay is the Delay Value for Operations
@@ -44,8 +33,8 @@ const (
 // waitLightsailOperation waits for an Operation to return Succeeded or Compleated
 func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{OperationStatusStarted},
-		Target:     []string{OperationStatusCompleted, OperationStatusSucceeded},
+		Pending:    []string{lightsail.OperationStatusStarted},
+		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
 		Refresh:    statusLightsailOperation(conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
@@ -62,7 +51,7 @@ func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) error {
 }
 
 // waitDatabaseModified waits for a Modified Database return available
-func waitDatabaseModified(conn *lightsail.Lightsail, db *string) error {
+func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
@@ -74,11 +63,11 @@ func waitDatabaseModified(conn *lightsail.Lightsail, db *string) error {
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if _, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
-		return err
+	if output, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
 
 // waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available

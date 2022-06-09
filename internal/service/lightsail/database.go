@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -171,6 +171,7 @@ func ResourceDatabase() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -262,7 +263,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	err = waitDatabaseModified(conn, aws.String(d.Id()))
+	_, err = waitDatabaseModified(conn, aws.String(d.Id()))
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
@@ -277,41 +278,19 @@ func ResourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	// This is to support importing a resource that is not in a ready state.
-	err := waitDatabaseModified(conn, aws.String(d.Id()))
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-		}
-		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
-	}
+	database, err := waitDatabaseModified(conn, aws.String(d.Id()))
 
-	resp, err := conn.GetRelationalDatabase(&lightsail.GetRelationalDatabaseInput{
-		RelationalDatabaseName: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return err
-		}
-		return err
-	}
-
-	if resp == nil {
-		log.Printf("[WARN] Lightsail Relational Database (%s) not found, nil response from server, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	rd := resp.RelationalDatabase
+	if err != nil {
+		return fmt.Errorf("error reading LightSail Relational Database (%s): %w", d.Id(), err)
+	}
+
+	rd := database.RelationalDatabase
 
 	d.Set("arn", rd.Arn)
 	d.Set("availability_zone", rd.Location.AvailabilityZone)
@@ -354,7 +333,7 @@ func ResourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	err := waitDatabaseModified(conn, aws.String(d.Id()))
+	_, err := waitDatabaseModified(conn, aws.String(d.Id()))
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
@@ -450,6 +429,13 @@ func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Lightsail Database (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	if requestUpdate {
 		resp, err := conn.UpdateRelationalDatabase(&req)
 		if err != nil {
@@ -475,7 +461,7 @@ func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-		err = waitDatabaseModified(conn, aws.String(d.Id()))
+		_, err = waitDatabaseModified(conn, aws.String(d.Id()))
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 		}
