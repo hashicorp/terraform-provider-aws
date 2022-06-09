@@ -44,9 +44,12 @@ theme:
   features:
     - navigation.instant
     - content.tabs.link
-    - content.code.annotate 
 
 plugins:
   - search:
       lang:
         - en
+        
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
