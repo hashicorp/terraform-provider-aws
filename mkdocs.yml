@@ -13,6 +13,7 @@ nav:
     - Adding a New Resource: add-a-new-resource.md
     - Adding a New Service: add-a-new-service.md
     - Adding a New Datasource: add-a-new-datasource.md
+    - Adding a New Region: add-a-new-region.md
     - Adding Import Support: add-import-support.md
     - Adding Resource Filtering Support: resource-filtering.md
     - Adding Resource Name Generation: resource-name-generation.md
