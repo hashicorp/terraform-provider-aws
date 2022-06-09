@@ -111,6 +111,10 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("Error creating Anomaly Monitor: %s", err)
 	}
 
+	if resp == nil || resp.MonitorArn == nil {
+		return diag.Errorf("creating Cost Explorer Anomaly Monitor resource (%s): empty output", d.Get("name").(string))
+	}
+
 	d.SetId(aws.StringValue(resp.MonitorArn))
 
 	return resourceAnomalyMonitorRead(ctx, d, meta)
