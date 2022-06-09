@@ -56,8 +56,6 @@ resource "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-### Arguments supported at create time
-
 The following arguments are supported:
 
 * `description` - (Optional) The description of the Index.
