@@ -1,7 +1,9 @@
-## 4.18.0 (Unreleased)
+## 4.19.0 (Unreleased)
+## 4.18.0 (June 10, 2022)
 
 FEATURES:
 
+* **New Resource:** `aws_ce_anomaly_monitor` ([#251777](https://github.com/hashicorp/terraform-provider-aws/issues/251777))
 * **New Resource:** `aws_emrserverless_application` ([#25144](https://github.com/hashicorp/terraform-provider-aws/issues/25144))
 
 ENHANCEMENTS:
@@ -13,10 +15,12 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot_copy: Add support for `timeouts` configuration block. ([#20912](https://github.com/hashicorp/terraform-provider-aws/issues/20912))
 * resource/aws_ebs_volume: Add `final_snapshot` argument ([#21916](https://github.com/hashicorp/terraform-provider-aws/issues/21916))
 * resource/aws_s3_bucket: Add error handling for `ErrCodeNotImplemented` and `ErrCodeXNotImplemented` errors when ready bucket information. ([#24764](https://github.com/hashicorp/terraform-provider-aws/issues/24764))
+* resource/aws_vpc_ipam_pool_cidr_allocation: improve internal search mechanism ([#25257](https://github.com/hashicorp/terraform-provider-aws/issues/25257))
 
 BUG FIXES:
 
 * resource/aws_snapshot_create_volume_permission: Error if `account_id` is the snapshot's owner ([#12103](https://github.com/hashicorp/terraform-provider-aws/issues/12103))
+* resource/aws_ssm_parameter: Allow `Intelligent-Tiering` to upgrade to `Advanced` tier as needed. ([#25174](https://github.com/hashicorp/terraform-provider-aws/issues/25174))
 
 ## 4.17.1 (June  3, 2022)
 
