@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDatabase_basic(t *testing.T) {
@@ -29,14 +32,14 @@ func TestAccDatabase_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigBasic(rName),
+				Config: testAccDatabaseConfig_Basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "blueprint_id", "mysql_8_0"),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
@@ -86,34 +89,34 @@ func TestAccDatabase_RelationalDatabaseName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigBasic(rNameTooShort),
+				Config:      testAccDatabaseConfig_Basic(rNameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfigBasic(rNameTooLong),
+				Config:      testAccDatabaseConfig_Basic(rNameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfigBasic(rNameContainsUnderscore),
+				Config:      testAccDatabaseConfig_Basic(rNameContainsUnderscore),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config:      testAccDatabaseConfigBasic(rNameStartingDash),
+				Config:      testAccDatabaseConfig_Basic(rNameStartingDash),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config:      testAccDatabaseConfigBasic(rNameEndingDash),
+				Config:      testAccDatabaseConfig_Basic(rNameEndingDash),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config: testAccDatabaseConfigBasic(rName),
+				Config: testAccDatabaseConfig_Basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 				),
 			},
@@ -149,30 +152,30 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameTooShort),
+				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameTooLong),
+				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameContainsSpaces),
+				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameContainsSpaces),
 				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterDatabaseName(rName, dbNameContainsStartingDigit),
+				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameContainsStartingDigit),
 				ExpectError: regexp.MustCompile(`Must begin with a letter`),
 			},
 			{
-				Config: testAccDatabaseConfigMasterDatabaseName(rName, dbName),
+				Config: testAccDatabaseConfig_MasterDatabaseName(rName, dbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbName),
 				),
 			},
@@ -188,9 +191,9 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigMasterDatabaseName(rName, dbNameContainsUnderscore),
+				Config: testAccDatabaseConfig_MasterDatabaseName(rName, dbNameContainsUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbNameContainsUnderscore),
 				),
 			},
@@ -216,34 +219,34 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigMasterUsername(rName, usernameTooShort),
+				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterUsername(rName, usernameTooLong),
+				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterUsername(rName, usernameStartingDigit),
+				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameStartingDigit),
 				ExpectError: regexp.MustCompile(`Must begin with a letter`),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterUsername(rName, usernameContainsDash),
+				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameContainsDash),
 				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterUsername(rName, usernameContainsSpecial),
+				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameContainsSpecial),
 				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
-				Config: testAccDatabaseConfigMasterUsername(rName, username),
+				Config: testAccDatabaseConfig_MasterUsername(rName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_username", username),
 				),
 			},
@@ -259,9 +262,9 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigMasterUsername(rName, usernameContainsUndercore),
+				Config: testAccDatabaseConfig_MasterUsername(rName, usernameContainsUndercore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_username", usernameContainsUndercore),
 				),
 			},
@@ -285,32 +288,32 @@ func TestAccDatabase_MasterPassword(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigMasterPassword(rName, passwordTooShort),
+				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterPassword(rName, passwordTooLong),
+				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsSlash),
+				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsSlash),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsQuotes),
+				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsQuotes),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsAtSymbol),
+				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsAtSymbol),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
-				Config:      testAccDatabaseConfigMasterPassword(rName, passwordContainsSpaces),
+				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsSpaces),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 		},
@@ -330,22 +333,22 @@ func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigPreferredBackupWindow(rName, backupWindowInvalidHour),
+				Config:      testAccDatabaseConfig_PreferredBackupWindow(rName, backupWindowInvalidHour),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
 			},
 			{
-				Config:      testAccDatabaseConfigPreferredBackupWindow(rName, backupWindowInvalidMinute),
+				Config:      testAccDatabaseConfig_PreferredBackupWindow(rName, backupWindowInvalidMinute),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
 			},
 			{
-				Config: testAccDatabaseConfigPreferredBackupWindow(rName, "09:30-10:00"),
+				Config: testAccDatabaseConfig_PreferredBackupWindow(rName, "09:30-10:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "09:30-10:00"),
 				),
 			},
@@ -361,9 +364,9 @@ func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigPreferredBackupWindow(rName, "09:45-10:15"),
+				Config: testAccDatabaseConfig_PreferredBackupWindow(rName, "09:45-10:15"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "09:45-10:15"),
 				),
 			},
@@ -385,26 +388,26 @@ func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigPreferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
+				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
-				Config:      testAccDatabaseConfigPreferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
+				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
-				Config:      testAccDatabaseConfigPreferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
+				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
-				Config: testAccDatabaseConfigPreferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
+				Config: testAccDatabaseConfig_PreferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:30-tue:05:00"),
 				),
 			},
@@ -420,9 +423,9 @@ func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigPreferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
+				Config: testAccDatabaseConfig_PreferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:06:00-wed:07:30"),
 				),
 			},
@@ -441,14 +444,14 @@ func TestAccDatabase_PubliclyAccessible(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigPubliclyAccessible(rName, "true"),
+				Config: testAccDatabaseConfig_PubliclyAccessible(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
@@ -464,9 +467,9 @@ func TestAccDatabase_PubliclyAccessible(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigPubliclyAccessible(rName, "false"),
+				Config: testAccDatabaseConfig_PubliclyAccessible(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 				),
 			},
@@ -485,14 +488,14 @@ func TestAccDatabase_BackupRetentionEnabled(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigBackupRetentionEnabled(rName, "true"),
+				Config: testAccDatabaseConfig_BackupRetentionEnabled(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
 				),
 			},
@@ -508,9 +511,9 @@ func TestAccDatabase_BackupRetentionEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigBackupRetentionEnabled(rName, "false"),
+				Config: testAccDatabaseConfig_BackupRetentionEnabled(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
 				),
 			},
@@ -534,30 +537,30 @@ func TestAccDatabase_FinalSnapshotName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseSnapshotDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDatabaseSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameTooShort),
+				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameTooLong),
+				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameContainsSpaces),
+				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameContainsSpaces),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config:      testAccDatabaseConfigFinalSnapshotName(rName, sNameContainsUnderscore),
+				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameContainsUnderscore),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config: testAccDatabaseConfigFinalSnapshotName(rName, sName),
+				Config: testAccDatabaseConfig_FinalSnapshotName(rName, sName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 				),
 			},
 			{
@@ -586,14 +589,14 @@ func TestAccDatabase_Tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigTags1(rName, "key1", "value1"),
+				Config: testAccDatabaseConfig_Tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db1),
+					testAccCheckDatabaseExists(resourceName, &db1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -610,18 +613,18 @@ func TestAccDatabase_Tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db2),
+					testAccCheckDatabaseExists(resourceName, &db2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDatabaseConfigTags1(rName, "key2", "value2"),
+				Config: testAccDatabaseConfig_Tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db3),
+					testAccCheckDatabaseExists(resourceName, &db3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -660,14 +663,14 @@ func TestAccDatabase_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		Providers:    acctest.Providers,
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		CheckDestroy: testAccCheckAWSDatabaseDestroy,
+		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		CheckDestroy:      testAccChecDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfigBasic(rName),
+				Config: testAccDatabaseConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(resourceName, &db),
 					testDestroy),
 				ExpectNonEmptyPlan: true,
 			},
@@ -675,7 +678,7 @@ func TestAccDatabase_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDatabaseExists(n string, res *lightsail.RelationalDatabase) resource.TestCheckFunc {
+func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -706,7 +709,7 @@ func testAccCheckAWSDatabaseExists(n string, res *lightsail.RelationalDatabase) 
 	}
 }
 
-func testAccCheckAWSDatabaseDestroy(s *terraform.State) error {
+func testAccChecDatabaseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -720,23 +723,21 @@ func testAccCheckAWSDatabaseDestroy(s *terraform.State) error {
 
 		_, err := conn.GetRelationalDatabase(&params)
 
-		if err == nil {
-			return fmt.Errorf("Lightsail Database %q still exists", rs.Primary.ID)
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return nil
-			}
+		if err != nil {
+			return err
 		}
-		return err
+
+		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
 	}
 
 	return nil
 }
 
-func testAccCheckAWSDatabaseSnapshotDestroy(s *terraform.State) error {
+func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -792,7 +793,7 @@ data "aws_availability_zones" "available" {
 `
 }
 
-func testAccDatabaseConfigBasic(rName string) string {
+func testAccDatabaseConfig_Basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -809,7 +810,7 @@ resource "aws_lightsail_database" "test" {
 `, rName))
 }
 
-func testAccDatabaseConfigMasterDatabaseName(rName string, masterDatabaseName string) string {
+func testAccDatabaseConfig_MasterDatabaseName(rName string, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -826,7 +827,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, masterDatabaseName))
 }
 
-func testAccDatabaseConfigMasterUsername(rName string, masterUsername string) string {
+func testAccDatabaseConfig_MasterUsername(rName string, masterUsername string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -843,7 +844,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, masterUsername))
 }
 
-func testAccDatabaseConfigMasterPassword(rName string, masterPassword string) string {
+func testAccDatabaseConfig_MasterPassword(rName string, masterPassword string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -860,7 +861,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, masterPassword))
 }
 
-func testAccDatabaseConfigPreferredBackupWindow(rName string, preferredBackupWindow string) string {
+func testAccDatabaseConfig_PreferredBackupWindow(rName string, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -879,7 +880,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredBackupWindow))
 }
 
-func testAccDatabaseConfigPreferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
+func testAccDatabaseConfig_PreferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -898,7 +899,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredMaintenanceWindow))
 }
 
-func testAccDatabaseConfigPubliclyAccessible(rName string, publiclyAccessible string) string {
+func testAccDatabaseConfig_PubliclyAccessible(rName string, publiclyAccessible string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -917,7 +918,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, publiclyAccessible))
 }
 
-func testAccDatabaseConfigBackupRetentionEnabled(rName string, backupRetentionEnabled string) string {
+func testAccDatabaseConfig_BackupRetentionEnabled(rName string, backupRetentionEnabled string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -936,7 +937,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, backupRetentionEnabled))
 }
 
-func testAccDatabaseConfigFinalSnapshotName(rName string, sName string) string {
+func testAccDatabaseConfig_FinalSnapshotName(rName string, sName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -953,7 +954,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, sName))
 }
 
-func testAccDatabaseConfigTags1(rName string, tagKey1, tagValue1 string) string {
+func testAccDatabaseConfig_Tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -973,7 +974,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccDatabaseConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDatabaseConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
