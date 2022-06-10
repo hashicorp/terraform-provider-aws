@@ -33,7 +33,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
@@ -171,10 +171,11 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 				),
 			},
 			{
+				// Intelligent-Tiering will not downgrade an existing parameter to Standard
 				Config: testAccParameterConfig_tier(rName, ssm.ParameterTierIntelligentTiering),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(resourceName, &parameter2),
-					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
 				),
 			},
 			{
@@ -182,6 +183,68 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
+	var parameter ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	value := sdkacctest.RandString(5000) // Maximum size for Standard tier is 4 KB
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_tierWithValue(rName, ssm.ParameterTierIntelligentTiering, value),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &parameter),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_Tier_intelligentTieringOnUpdate(t *testing.T) {
+	var parameter ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	standardSizedValue := sdkacctest.RandString(10)
+	advancedSizedValue := sdkacctest.RandString(5000)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_tierWithValue(rName, ssm.ParameterTierIntelligentTiering, standardSizedValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &parameter),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+				),
+			},
+			{
+				Config: testAccParameterConfig_tierWithValue(rName, ssm.ParameterTierIntelligentTiering, advancedSizedValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &parameter),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
+				),
 			},
 		},
 	})
@@ -768,6 +831,17 @@ resource "aws_ssm_parameter" "test" {
   value = "test2"
 }
 `, rName, tier)
+}
+
+func testAccParameterConfig_tierWithValue(rName, tier, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  tier  = %[2]q
+  type  = "String"
+  value = %[3]q
+}
+`, rName, tier, value)
 }
 
 func testAccParameterConfig_dataTypeEC2Image(rName string) string {
