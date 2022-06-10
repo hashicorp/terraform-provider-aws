@@ -86,6 +86,44 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
+
+	acmInitialValidationResourceName := "aws_acm_certificate_validation.initial_test"
+	acmUpdatedValidationResourceName := "aws_acm_certificate_validation.updated_test"
+
+	acmInitialCertResourceName := "aws_acm_certificate.initial"
+	acmUpdatedCertResourceName := "aws_acm_certificate.updated"
+
+	cognitoPoolResourceName := "aws_cognito_user_pool_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDomainConfig_customCertUpdate(rootDomain, domain, poolName, acmInitialValidationResourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(cognitoPoolResourceName),
+					testAccCheckUserPoolDomainCertMatches(cognitoPoolResourceName, acmInitialCertResourceName),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, "certificate_arn", acmInitialCertResourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccUserPoolDomainConfig_customCertUpdate(rootDomain, domain, poolName, acmUpdatedValidationResourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainCertMatches(cognitoPoolResourceName, acmUpdatedCertResourceName),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, "certificate_arn", acmUpdatedCertResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
@@ -127,6 +165,49 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 		})
 
 		return err
+	}
+}
+
+func testAccCheckUserPoolDomainCertMatches(cognitoResourceName string, certResourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		cognitoResource, ok := s.RootModule().Resources[cognitoResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", cognitoResourceName)
+		}
+
+		if cognitoResource.Primary.ID == "" {
+			return errors.New("No Cognito User Pool Domain ID is set")
+		}
+
+		certResource, ok := s.RootModule().Resources[certResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", cognitoResourceName)
+		}
+
+		if certResource.Primary.ID == "" {
+			return errors.New("No ACM Certificate ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+
+		domain, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
+			Domain: aws.String(cognitoResource.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+		desc := domain.DomainDescription
+
+		if desc.CustomDomainConfig == nil {
+			return fmt.Errorf("No Custom Domain set on User pool: %s", *desc.UserPoolId)
+		}
+
+		if *desc.CustomDomainConfig.CertificateArn != certResource.Primary.ID {
+			return fmt.Errorf("Certificate ARN on Custom Domain does not match, expected: %s, got: %s", certResource.Primary.ID, *desc.CustomDomainConfig.CertificateArn)
+		}
+
+		return nil
 	}
 }
 
@@ -225,4 +306,63 @@ resource "aws_cognito_user_pool_domain" "test" {
   user_pool_id    = aws_cognito_user_pool.test.id
 }
 `, rootDomain, domain, poolName))
+}
+
+func testAccUserPoolDomainConfig_customCertUpdate(rootDomain string, domain string, poolName string, appliedCertValidation string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolCustomDomainRegionProviderConfig(),
+		fmt.Sprintf(`
+data "aws_route53_zone" "test" {
+  name         = %[1]q
+  private_zone = false
+}
+
+resource "aws_acm_certificate" "initial" {
+  domain_name       = %[2]q
+  validation_method = "DNS"
+}
+
+resource "aws_acm_certificate" "updated" {
+  domain_name       = %[2]q
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "initial_test" {
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.initial.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.initial.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.initial.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_route53_record" "updated_test" {
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.updated.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.updated.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.updated.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "initial_test" {
+  certificate_arn         = aws_acm_certificate.initial.arn
+  validation_record_fqdns = [aws_route53_record.initial_test.fqdn]
+}
+
+resource "aws_acm_certificate_validation" "updated_test" {
+  certificate_arn         = aws_acm_certificate.updated.arn
+  validation_record_fqdns = [aws_route53_record.updated_test.fqdn]
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[3]q
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  certificate_arn = %[4]s.certificate_arn
+  domain          = aws_acm_certificate.initial.domain_name
+  user_pool_id    = aws_cognito_user_pool.test.id
+}
+`, rootDomain, domain, poolName, appliedCertValidation))
 }

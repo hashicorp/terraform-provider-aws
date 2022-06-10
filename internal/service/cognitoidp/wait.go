@@ -48,6 +48,31 @@ func waitUserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProv
 
 	outputRaw, err := stateConf.WaitForState()
 
+	if err != nil {
+		return nil, err
+	}
+
+	if output, ok := outputRaw.(*cognitoidentityprovider.DescribeUserPoolDomainOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitUserPoolDomainUpdated(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			cognitoidentityprovider.DomainStatusTypeUpdating,
+		},
+		Target: []string{
+			cognitoidentityprovider.DomainStatusTypeActive,
+		},
+		Refresh: statusUserPoolDomain(conn, domain),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
 	if output, ok := outputRaw.(*cognitoidentityprovider.DescribeUserPoolDomainOutput); ok {
 		return output, err
 	}
