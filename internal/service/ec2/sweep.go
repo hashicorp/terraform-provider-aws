@@ -180,6 +180,11 @@ func init() {
 		F:    sweepSpotFleetRequests,
 	})
 
+	resource.AddTestSweepers("aws_spot_instance_request", &resource.Sweeper{
+		Name: "aws_spot_instance_request",
+		F:    sweepSpotInstanceRequests,
+	})
+
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
 		F:    sweepSubnets,
@@ -1530,6 +1535,57 @@ func sweepSpotFleetRequests(region string) error {
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepSpotInstanceRequests(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeSpotInstanceRequestsPages(&ec2.DescribeSpotInstanceRequestsInput{}, func(page *ec2.DescribeSpotInstanceRequestsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		if len(page.SpotInstanceRequests) == 0 {
+			log.Print("[DEBUG] No Spot Instance Requests to sweep")
+			return false
+		}
+
+		for _, config := range page.SpotInstanceRequests {
+			id := aws.StringValue(config.SpotInstanceRequestId)
+
+			r := ResourceSpotInstanceRequest()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("instance_interruption_behavior", ec2.InstanceInterruptionBehaviorTerminate)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Instance Requests for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Instance Requests for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Spot Instance Requests sweep for %s: %s", region, errs)
 		return nil
 	}
 
