@@ -20,7 +20,7 @@ func TestAccOutpostsOutpostInstanceTypesDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostInstanceTypesDataSourceConfig(),
+				Config: testAccOutpostInstanceTypesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOutpostInstanceTypesAttributes(dataSourceName),
 				),
@@ -44,7 +44,7 @@ func testAccCheckOutpostInstanceTypesAttributes(dataSourceName string) resource.
 	}
 }
 
-func testAccOutpostInstanceTypesDataSourceConfig() string {
+func testAccOutpostInstanceTypesDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 

@@ -22,7 +22,7 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_Basic(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "certificate_authority.#", "1"),
@@ -57,8 +57,8 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig_Basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Logging(rName, []string{"api", "audit"}), `
+func testAccClusterDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }

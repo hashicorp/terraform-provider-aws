@@ -151,7 +151,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta int
 	log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
 	_, err = conn.ModifyNetworkInterfaceAttribute(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {
 		return nil
 	}
 

@@ -25,7 +25,7 @@ func TestAccImageBuilderImageRecipesDataSource_owner(t *testing.T) {
 		CheckDestroy:      testAccCheckImageRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipesOwnerDataSourceConfig(rName),
+				Config: testAccImageRecipesDataSourceConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "arns.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "names.#", "0"),
@@ -51,7 +51,7 @@ func TestAccImageBuilderImageRecipesDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckImageRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipesFilterDataSourceConfig(rName),
+				Config: testAccImageRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
@@ -89,7 +89,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccImageRecipesOwnerDataSourceConfig(rName string) string {
+func testAccImageRecipesDataSourceConfig_owner(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageRecipeDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
@@ -121,7 +121,7 @@ data "aws_imagebuilder_image_recipes" "self" {
 `, rName))
 }
 
-func testAccImageRecipesFilterDataSourceConfig(rName string) string {
+func testAccImageRecipesDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageRecipeDataSourceBaseConfig(rName),
 		fmt.Sprintf(`

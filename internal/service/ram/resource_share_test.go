@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 )
 
 func TestAccRAMResourceShare_basic(t *testing.T) {
@@ -32,6 +33,38 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRAMResourceShare_permission(t *testing.T) {
+	var resourceShare ram.ResourceShare
+	resourceName := "aws_ram_resource_share.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceShareNamePermissionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceShareExists(resourceName, &resourceShare),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -158,7 +191,30 @@ func TestAccRAMResourceShare_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceShareExists(resourceName string, resourceShare *ram.ResourceShare) resource.TestCheckFunc {
+func TestAccRAMResourceShare_disappears(t *testing.T) {
+	var resourceShare ram.ResourceShare
+	resourceName := "aws_ram_resource_share.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceShareNameConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceShareExists(resourceName, &resourceShare),
+					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShare(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckResourceShareExists(resourceName string, v *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
@@ -171,25 +227,17 @@ func testAccCheckResourceShareExists(resourceName string, resourceShare *ram.Res
 			return fmt.Errorf("No ID is set")
 		}
 
-		request := &ram.GetResourceSharesInput{
-			ResourceShareArns: []*string{aws.String(rs.Primary.ID)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
+		output, err := tfram.FindResourceShareOwnerSelfByARN(conn, rs.Primary.ID)
 
-		output, err := conn.GetResourceShares(request)
 		if err != nil {
 			return err
 		}
 
-		if len(output.ResourceShares) == 0 {
-			return fmt.Errorf("No RAM resource share found")
-		}
-
-		resourceShare = output.ResourceShares[0]
-
-		if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusActive {
+		if aws.StringValue(output.Status) != ram.ResourceShareStatusActive {
 			return fmt.Errorf("RAM resource share (%s) delet(ing|ed)", rs.Primary.ID)
 		}
+
+		*v = *output
 
 		return nil
 	}
@@ -203,21 +251,14 @@ func testAccCheckResourceShareDestroy(s *terraform.State) error {
 			continue
 		}
 
-		request := &ram.GetResourceSharesInput{
-			ResourceShareArns: []*string{aws.String(rs.Primary.ID)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
+		resourceShare, err := tfram.FindResourceShareOwnerSelfByARN(conn, rs.Primary.ID)
 
-		output, err := conn.GetResourceShares(request)
 		if err != nil {
 			return err
 		}
 
-		if len(output.ResourceShares) > 0 {
-			resourceShare := output.ResourceShares[0]
-			if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusDeleted {
-				return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
-			}
+		if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusDeleted {
+			return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
 		}
 	}
 
@@ -264,4 +305,15 @@ resource "aws_ram_resource_share" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccResourceShareNamePermissionConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_ram_resource_share" "test" {
+  name            = %[1]q
+  permission_arns = ["arn:${data.aws_partition.current.partition}:ram::aws:permission/AWSRAMBlankEndEntityCertificateAPICSRPassthroughIssuanceCertificateAuthority"]
+}
+`, rName)
 }

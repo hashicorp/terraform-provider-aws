@@ -188,6 +188,25 @@ func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destination
 	}
 }
 
+func StatusFleetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
+		output, err := FindFleet(conn, &ec2.DescribeFleetsInput{
+			FleetIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.FleetState), nil
+	}
+}
+
 func StatusImageState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImageByID(conn, id)
@@ -521,7 +540,7 @@ func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resourc
 	}
 }
 
-func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetAssignIPv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -537,7 +556,7 @@ func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.
 	}
 }
 
-func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableDNS64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -553,7 +572,7 @@ func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -569,7 +588,7 @@ func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id strin
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -758,6 +777,38 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 		}
 
 		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
+	}
+}
+
+func StatusVolumeState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeAttachmentState(conn *ec2.EC2, volumeID, instanceID, deviceName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeAttachment(conn, volumeID, instanceID, deviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
@@ -1072,34 +1123,19 @@ func StatusVPCEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID, routeT
 	}
 }
 
-const (
-	snapshotImportNotFound = "NotFound"
-)
-
-func StatusEBSSnapshotImport(conn *ec2.EC2, importTaskId string) resource.StateRefreshFunc {
+func StatusEBSSnapshotImport(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		params := &ec2.DescribeImportSnapshotTasksInput{
-			ImportTaskIds: []*string{aws.String(importTaskId)},
+		output, err := FindImportSnapshotTaskByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		resp, err := conn.DescribeImportSnapshotTasks(params)
 		if err != nil {
 			return nil, "", err
 		}
 
-		if resp == nil || len(resp.ImportSnapshotTasks) < 1 {
-			return nil, snapshotImportNotFound, nil
-		}
-
-		if task := resp.ImportSnapshotTasks[0]; task != nil {
-			detail := task.SnapshotTaskDetail
-			if detail.Status != nil && aws.StringValue(detail.Status) == EBSSnapshotImportStateDeleting {
-				err = fmt.Errorf("Snapshot import task is deleting")
-			}
-			return detail, aws.StringValue(detail.Status), err
-		} else {
-			return nil, snapshotImportNotFound, nil
-		}
+		return output.SnapshotTaskDetail, aws.StringValue(output.SnapshotTaskDetail.Status), nil
 	}
 }
 
@@ -1119,9 +1155,9 @@ func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEn
 	}
 }
 
-func StatusSnapshotTierStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSnapshotStorageTier(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotTierStatusById(conn, id)
+		output, err := FindSnapshotTierStatusBySnapshotID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

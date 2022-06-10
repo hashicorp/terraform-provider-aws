@@ -3536,7 +3536,7 @@ func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(commonName 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
 
-	return testAccCloudfrontRegionProviderConfig() + fmt.Sprintf(`
+	return testAccRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"

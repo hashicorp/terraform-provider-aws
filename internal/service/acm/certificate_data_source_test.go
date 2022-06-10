@@ -47,6 +47,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
@@ -55,6 +57,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
@@ -62,6 +66,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
@@ -69,6 +75,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
@@ -76,6 +84,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
@@ -83,6 +93,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 		},

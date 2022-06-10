@@ -21,7 +21,7 @@ func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParametersByPathDataSourceConfig(rName1, rName2, false),
+				Config: testAccParametersByPathDataSourceConfig_basic(rName1, rName2, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
@@ -35,7 +35,7 @@ func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckParametersByPathDataSourceConfig(rName1, rName2 string, withDecryption bool) string {
+func testAccParametersByPathDataSourceConfig_basic(rName1, rName2 string, withDecryption bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test1" {
   name  = "/%[1]s/param-a"
@@ -78,7 +78,7 @@ func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParametersByPathDataSourceConfigWithRecursion(pathPrefix),
+				Config: testAccParametersByPathDataSourceConfig_recursion(pathPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
@@ -91,7 +91,7 @@ func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
 	})
 }
 
-func testAccCheckParametersByPathDataSourceConfigWithRecursion(pathPrefix string) string {
+func testAccParametersByPathDataSourceConfig_recursion(pathPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "top_level" {
   name  = "/%[1]s/top_param"

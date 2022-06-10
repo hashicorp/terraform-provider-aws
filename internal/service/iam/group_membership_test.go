@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -97,11 +97,12 @@ func testAccCheckGroupMembershipDestroy(s *terraform.State) error {
 		_, err := conn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(group),
 		})
+
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			continue
+		}
+
 		if err != nil {
-			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "NoSuchEntity" {
-				continue
-			}
 			return err
 		}
 

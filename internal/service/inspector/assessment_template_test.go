@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,7 +27,7 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateAssessmentBasic(rName),
+				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
@@ -59,7 +59,7 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateAssessmentBasic(rName),
+				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &v),
 					testAccCheckTemplateDisappears(&v),
@@ -82,7 +82,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateAssessmentTags1(rName, "key1", "value1"),
+				Config: testAccAssessmentTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -95,7 +95,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTemplateAssessmentTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAssessmentTemplateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -104,7 +104,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTemplateAssessmentTags1(rName, "key2", "value2"),
+				Config: testAccAssessmentTemplateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -112,7 +112,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTemplateAssessmentBasic(rName),
+				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -136,12 +136,12 @@ func testAccCheckTemplateDestroy(s *terraform.State) error {
 			},
 		})
 
+		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
+			continue
+		}
+
 		if err != nil {
-			if inspectorerr, ok := err.(awserr.Error); ok && inspectorerr.Code() == "InvalidInputException" {
-				return nil
-			} else {
-				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
-			}
+			return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
 		}
 
 		if len(resp.AssessmentTemplates) > 0 {
@@ -214,7 +214,7 @@ resource "aws_inspector_assessment_target" "test" {
 `, rName)
 }
 
-func testAccTemplateAssessmentBasic(rName string) string {
+func testAccAssessmentTemplateConfig_basic(rName string) string {
 	return testAccTemplateAssessmentBase(rName) + fmt.Sprintf(`
 resource "aws_inspector_assessment_template" "test" {
   name       = %[1]q
@@ -226,7 +226,7 @@ resource "aws_inspector_assessment_template" "test" {
 `, rName)
 }
 
-func testAccTemplateAssessmentTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAssessmentTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccTemplateAssessmentBase(rName) + fmt.Sprintf(`
 resource "aws_inspector_assessment_template" "test" {
   name       = %[1]q
@@ -242,7 +242,7 @@ resource "aws_inspector_assessment_template" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccTemplateAssessmentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAssessmentTemplateConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccTemplateAssessmentBase(rName) + fmt.Sprintf(`
 resource "aws_inspector_assessment_template" "test" {
   name       = %[1]q

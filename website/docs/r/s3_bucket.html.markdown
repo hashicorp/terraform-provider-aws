@@ -44,7 +44,7 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `policy` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
-~> **NOTE on S3 Bucket Replication Configuration:** S3 Bucket Replication can be configured in either the standalone resource [`aws_s3_bucket_replicaton_configuration`](s3_bucket_replication_configuration.html)
+~> **NOTE on S3 Bucket Replication Configuration:** S3 Bucket Replication can be configured in either the standalone resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html)
 or with the deprecated parameter `replication_configuration` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 

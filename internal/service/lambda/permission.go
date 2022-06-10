@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 
 func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
@@ -347,7 +347,7 @@ func FindPolicyStatementByID(policy *Policy, id string) (*PolicyStatement, error
 }
 
 func GetQualifierFromAliasOrVersionARN(arn string) (string, error) {
-	matches := regexp.MustCompile(LambdaFunctionRegexp).FindStringSubmatch(arn)
+	matches := regexp.MustCompile(functionRegexp).FindStringSubmatch(arn)
 	if len(matches) < 8 || matches[7] == "" {
 		return "", fmt.Errorf("Invalid ARN or otherwise unable to get qualifier from ARN (%q)",
 			arn)
@@ -357,7 +357,7 @@ func GetQualifierFromAliasOrVersionARN(arn string) (string, error) {
 }
 
 func GetFunctionNameFromARN(arn string) (string, error) {
-	matches := regexp.MustCompile(LambdaFunctionRegexp).FindStringSubmatch(arn)
+	matches := regexp.MustCompile(functionRegexp).FindStringSubmatch(arn)
 	if len(matches) < 6 || matches[5] == "" {
 		return "", fmt.Errorf("Invalid ARN or otherwise unable to get qualifier from ARN (%q)",
 			arn)

@@ -55,7 +55,7 @@ func testAccRegexMatchSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexMatchSetConfig(matchSetName, patternSetName),
+				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckRegexPatternSetExists("aws_waf_regex_pattern_set.test", &patternSet),
@@ -96,7 +96,7 @@ func testAccRegexMatchSet_changePatterns(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexMatchSetConfig(matchSetName, patternSetName),
+				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexMatchSetExists(resourceName, &before),
 					testAccCheckRegexPatternSetExists("aws_waf_regex_pattern_set.test", &patternSet),
@@ -177,7 +177,7 @@ func testAccRegexMatchSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexMatchSetConfig(matchSetName, patternSetName),
+				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckRegexMatchSetDisappears(&matchSet),
@@ -298,7 +298,7 @@ func testAccCheckRegexMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRegexMatchSetConfig(matchSetName, patternSetName string) string {
+func testAccRegexMatchSetConfig_basic(matchSetName, patternSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
   name = "%s"

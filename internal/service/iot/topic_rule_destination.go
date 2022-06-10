@@ -90,7 +90,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationConfiguration.VpcConfiguration = expandVpcDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule Destination: %s", input)
@@ -154,7 +154,7 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("arn", output.Arn)
 	d.Set("enabled", aws.StringValue(output.Status) == iot.TopicRuleDestinationStatusEnabled)
 	if output.VpcProperties != nil {
-		if err := d.Set("vpc_configuration", []interface{}{flattenVpcDestinationProperties(output.VpcProperties)}); err != nil {
+		if err := d.Set("vpc_configuration", []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
 			return diag.Errorf("setting vpc_configuration: %s", err)
 		}
 	} else {
@@ -212,7 +212,7 @@ func resourceTopicRuleDestinationDelete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandVpcDestinationConfiguration(tfMap map[string]interface{}) *iot.VpcDestinationConfiguration {
+func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *iot.VpcDestinationConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -238,7 +238,7 @@ func expandVpcDestinationConfiguration(tfMap map[string]interface{}) *iot.VpcDes
 	return apiObject
 }
 
-func flattenVpcDestinationProperties(apiObject *iot.VpcDestinationProperties) map[string]interface{} {
+func flattenVPCDestinationProperties(apiObject *iot.VpcDestinationProperties) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

@@ -30,7 +30,7 @@ func TestAccWAFRegionalRule_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(wafRuleName),
+				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`rule/.+`)),
@@ -60,7 +60,7 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleTags1Config(wafRuleName, "key1", "value1"),
+				Config: testAccRuleConfig_tags1(wafRuleName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -73,7 +73,7 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleTags2Config(wafRuleName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleConfig_tags2(wafRuleName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -82,7 +82,7 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleTags1Config(wafRuleName, "key2", "value2"),
+				Config: testAccRuleConfig_tags1(wafRuleName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -106,7 +106,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(wafRuleName),
+				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
@@ -115,7 +115,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleChangeNameConfig(wafRuleNewName),
+				Config: testAccRuleConfig_changeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
@@ -144,7 +144,7 @@ func TestAccWAFRegionalRule_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(wafRuleName),
+				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					testAccCheckRuleDisappears(&v),
@@ -167,7 +167,7 @@ func TestAccWAFRegionalRule_noPredicates(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRule_noPredicates(wafRuleName),
+				Config: testAccRuleConfig_noPredicates(wafRuleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
@@ -199,7 +199,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig(ruleName),
+				Config: testAccRuleConfig_basic(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists("aws_wafregional_ipset.ipset", &ipset),
 					testAccCheckRuleExists(resourceName, &before),
@@ -213,7 +213,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRule_changePredicates(ruleName),
+				Config: testAccRuleConfig_changePredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckXSSMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &xssMatchSet),
 					testAccCheckRuleExists(resourceName, &after),
@@ -359,7 +359,7 @@ func testAccCheckRuleExists(n string, v *waf.Rule) resource.TestCheckFunc {
 	}
 }
 
-func testAccRuleConfig(name string) string {
+func testAccRuleConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -383,7 +383,7 @@ resource "aws_wafregional_rule" "wafrule" {
 `, name)
 }
 
-func testAccRuleTags1Config(name, tagKey1, tagValue1 string) string {
+func testAccRuleConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -411,7 +411,7 @@ resource "aws_wafregional_rule" "wafrule" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccRuleTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRuleConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -440,7 +440,7 @@ resource "aws_wafregional_rule" "wafrule" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccRuleChangeNameConfig(name string) string {
+func testAccRuleConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -464,7 +464,7 @@ resource "aws_wafregional_rule" "wafrule" {
 `, name)
 }
 
-func testAccRule_noPredicates(name string) string {
+func testAccRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
   name        = %[1]q
@@ -473,7 +473,7 @@ resource "aws_wafregional_rule" "wafrule" {
 `, name)
 }
 
-func testAccRule_changePredicates(name string) string {
+func testAccRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q

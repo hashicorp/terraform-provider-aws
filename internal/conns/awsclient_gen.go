@@ -114,6 +114,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
@@ -420,6 +421,7 @@ type AWSClient struct {
 	ELBV2Conn                        *elbv2.ELBV2
 	EMRConn                          *emr.EMR
 	EMRContainersConn                *emrcontainers.EMRContainers
+	EMRServerlessConn                *emrserverless.EMRServerless
 	ElastiCacheConn                  *elasticache.ElastiCache
 	ElasticBeanstalkConn             *elasticbeanstalk.ElasticBeanstalk
 	ElasticInferenceConn             *elasticinference.ElasticInference

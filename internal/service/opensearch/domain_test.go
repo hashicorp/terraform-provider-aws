@@ -91,7 +91,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1"),
@@ -121,7 +121,7 @@ func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_domainEndpointOptions(rName, true, "Policy-Min-TLS-1-0-2019-07"),
+				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-0-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists("aws_opensearch_domain.test", &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
@@ -134,7 +134,7 @@ func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_domainEndpointOptions(rName, true, "Policy-Min-TLS-1-2-2019-07"),
+				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-2-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists("aws_opensearch_domain.test", &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-2019-07", &domain),
@@ -274,7 +274,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_clusterWithColdStorageOptions(rName, true, false),
+				Config: testAccDomainConfig_clusterColdStorageOptions(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
@@ -288,7 +288,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_clusterWithColdStorageOptions(rName, true, true),
+				Config: testAccDomainConfig_clusterColdStorageOptions(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
@@ -476,7 +476,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1")),
@@ -632,7 +632,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -644,7 +644,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_internetToVpcEndpoint(rName),
+				Config: testAccDomainConfig_internetToVPCEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -1143,7 +1143,7 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_encryptAtRestWithKey(rName, "Elasticsearch_6.0", true),
+				Config: testAccDomainConfig_encryptAtRestKey(rName, "Elasticsearch_6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1540,7 +1540,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
 				),
@@ -1869,7 +1869,7 @@ func testAccCheckELBDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDomainConfig(rName string) string {
+func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1932,7 +1932,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_domainEndpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
+func testAccDomainConfig_endpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2000,7 +2000,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName, availabilityZoneCount)
 }
 
-func testAccDomainConfig_clusterWithColdStorageOptions(rName string, warmEnabled bool, csEnabled bool) string {
+func testAccDomainConfig_clusterColdStorageOptions(rName string, warmEnabled bool, csEnabled bool) string {
 	warmConfig := ""
 	if warmEnabled {
 		warmConfig = `
@@ -2429,7 +2429,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName, version, enabled)
 }
 
-func testAccDomainConfig_encryptAtRestWithKey(rName, version string, enabled bool) string {
+func testAccDomainConfig_encryptAtRestKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -2754,7 +2754,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_internetToVpcEndpoint(rName string) string {
+func testAccDomainConfig_internetToVPCEndpoint(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

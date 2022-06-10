@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -43,7 +43,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Created", "+12345678912"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Created", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -66,7 +66,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 			},
 			{
 				// update description
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated", "+12345678912"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Updated", "+12345678912"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -89,7 +89,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 			},
 			{
 				// update phone number
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated", "+12345678913"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Updated", "+12345678913"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -122,7 +122,7 @@ func testAccQuickConnect_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Disappear", "+12345678912"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Disappear", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
@@ -186,15 +186,17 @@ func testAccCheckQuickConnectDestroy(s *terraform.State) error {
 			InstanceId:     aws.String(instanceID),
 		}
 
-		_, experr := conn.DescribeQuickConnect(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		_, err = conn.DescribeQuickConnect(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
@@ -209,7 +211,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccQuickConnectPhoneNumberConfig(rName, rName2, label string, phoneNumber string) string {
+func testAccQuickConnectConfig_phoneNumber(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
 		testAccQuickConnectBaseConfig(rName),
 		fmt.Sprintf(`

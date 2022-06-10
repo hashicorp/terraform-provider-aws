@@ -95,7 +95,7 @@ func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 func testAccUsersDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
-  count = %[1]q
+  count = %[1]s
   name  = "%[2]s-${count.index}-user"
 
   tags = {
@@ -112,7 +112,7 @@ data "aws_iam_users" "test" {
 func testAccUsersDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
-  count = %[1]q
+  count = %[1]s
   name  = "%[2]s-${count.index}-user"
   path  = "/%[3]s/"
 }

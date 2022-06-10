@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -327,7 +327,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_globalIdentifierPrimarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
+				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExistsProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
 					testAccCheckClusterExistsProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
@@ -681,7 +681,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 	})
 }
 
-func testAccClusterConfig_globalIdentifierPrimarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -841,11 +841,8 @@ func testAccCheckClusterDestroyProvider(s *terraform.State, provider *schema.Pro
 			}
 		}
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "DBClusterNotFoundFault" {
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+			continue
 		}
 
 		return err
@@ -936,11 +933,8 @@ func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
 				}
 			}
 
-			// Return nil if the cluster is already destroyed
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "DBClusterNotFoundFault" {
-					return nil
-				}
+			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+				continue
 			}
 
 			return err

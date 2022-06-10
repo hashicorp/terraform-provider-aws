@@ -409,12 +409,16 @@ service/elbv2:
   - 'website/**/lb\.*'
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
+  - 'website/**/lb_hosted*'
 service/emr:
   - 'internal/service/emr/**/*'
   - 'website/**/emr_*'
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
+service/emrserverless:
+  - 'internal/service/emrserverless/**/*'
+  - 'website/**/emrserverless_*'
 service/events:
   - 'internal/service/events/**/*'
   - 'website/**/cloudwatch_event_*'

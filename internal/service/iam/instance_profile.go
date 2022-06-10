@@ -249,8 +249,8 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	result, err := conn.GetInstanceProfile(request)
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

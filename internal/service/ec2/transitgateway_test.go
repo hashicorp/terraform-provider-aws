@@ -30,8 +30,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"ConnectPeer": {
 			"basic":                 testAccTransitGatewayConnectPeer_basic,
 			"disappears":            testAccTransitGatewayConnectPeer_disappears,
-			"BgpAsn":                testAccTransitGatewayConnectPeer_BgpAsn,
-			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_InsideCidrBlocks,
+			"BgpAsn":                testAccTransitGatewayConnectPeer_bgpASN,
+			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
 			"Tags":                  testAccTransitGatewayConnectPeer_tags,
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
@@ -40,7 +40,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"disappears":                  testAccTransitGateway_disappears,
 			"AmazonSideASN":               testAccTransitGateway_AmazonSideASN,
 			"AutoAcceptSharedAttachments": testAccTransitGateway_AutoAcceptSharedAttachments,
-			"CidrBlocks":                  testAccTransitGateway_CidrBlocks,
+			"CidrBlocks":                  testAccTransitGateway_cidrBlocks,
 			"DefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled,
 			"DefaultRouteTableAssociation":                       testAccTransitGateway_DefaultRouteTableAssociation,
 			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
@@ -152,7 +152,7 @@ func testAccTransitGateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConfig(),
+				Config: testAccTransitGatewayConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", "64512"),
@@ -190,7 +190,7 @@ func testAccTransitGateway_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConfig(),
+				Config: testAccTransitGatewayConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), resourceName),
@@ -212,7 +212,7 @@ func testAccTransitGateway_AmazonSideASN(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayAmazonSideASNConfig(64513),
+				Config: testAccTransitGatewayConfig_amazonSideASN(64513),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", "64513"),
@@ -224,7 +224,7 @@ func testAccTransitGateway_AmazonSideASN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayAmazonSideASNConfig(64514),
+				Config: testAccTransitGatewayConfig_amazonSideASN(64514),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayRecreated(&transitGateway1, &transitGateway2),
@@ -246,7 +246,7 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayAutoAcceptSharedAttachmentsConfig(ec2.AutoAcceptSharedAttachmentsValueEnable),
+				Config: testAccTransitGatewayConfig_autoAcceptSharedAttachments(ec2.AutoAcceptSharedAttachmentsValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_attachments", ec2.AutoAcceptSharedAttachmentsValueEnable),
@@ -258,7 +258,7 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayAutoAcceptSharedAttachmentsConfig(ec2.AutoAcceptSharedAttachmentsValueDisable),
+				Config: testAccTransitGatewayConfig_autoAcceptSharedAttachments(ec2.AutoAcceptSharedAttachmentsValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
@@ -269,7 +269,7 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	})
 }
 
-func testAccTransitGateway_CidrBlocks(t *testing.T) {
+func testAccTransitGateway_cidrBlocks(t *testing.T) {
 	var v1, v2, v3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -281,7 +281,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayCidrBlocks2Config(rName),
+				Config: testAccTransitGatewayConfig_cidrBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
@@ -295,7 +295,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayCidrBlocks1Config(rName),
+				Config: testAccTransitGatewayConfig_cidrBlocks1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v2),
 					testAccCheckTransitGatewayNotRecreated(&v1, &v2),
@@ -304,7 +304,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayCidrBlocks2Config(rName),
+				Config: testAccTransitGatewayConfig_cidrBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v3),
 					testAccCheckTransitGatewayNotRecreated(&v2, &v3),
@@ -328,7 +328,7 @@ func testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t 
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig(),
+				Config: testAccTransitGatewayConfig_defaultRouteTableAssociationAndPropagationDisabled(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", ec2.DefaultRouteTableAssociationValueDisable),
@@ -355,7 +355,7 @@ func testAccTransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDefaultRouteTableAssociationConfig(ec2.DefaultRouteTableAssociationValueDisable),
+				Config: testAccTransitGatewayConfig_defaultRouteTableAssociation(ec2.DefaultRouteTableAssociationValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", ec2.DefaultRouteTableAssociationValueDisable),
@@ -367,7 +367,7 @@ func testAccTransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayDefaultRouteTableAssociationConfig(ec2.DefaultRouteTableAssociationValueEnable),
+				Config: testAccTransitGatewayConfig_defaultRouteTableAssociation(ec2.DefaultRouteTableAssociationValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayRecreated(&transitGateway1, &transitGateway2),
@@ -375,7 +375,7 @@ func testAccTransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayDefaultRouteTableAssociationConfig(ec2.DefaultRouteTableAssociationValueDisable),
+				Config: testAccTransitGatewayConfig_defaultRouteTableAssociation(ec2.DefaultRouteTableAssociationValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway3),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
@@ -397,7 +397,7 @@ func testAccTransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDefaultRouteTablePropagationConfig(ec2.DefaultRouteTablePropagationValueDisable),
+				Config: testAccTransitGatewayConfig_defaultRouteTablePropagation(ec2.DefaultRouteTablePropagationValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueDisable),
@@ -409,7 +409,7 @@ func testAccTransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayDefaultRouteTablePropagationConfig(ec2.DefaultRouteTablePropagationValueEnable),
+				Config: testAccTransitGatewayConfig_defaultRouteTablePropagation(ec2.DefaultRouteTablePropagationValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayRecreated(&transitGateway1, &transitGateway2),
@@ -417,7 +417,7 @@ func testAccTransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayDefaultRouteTablePropagationConfig(ec2.DefaultRouteTablePropagationValueDisable),
+				Config: testAccTransitGatewayConfig_defaultRouteTablePropagation(ec2.DefaultRouteTablePropagationValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway3),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
@@ -439,7 +439,7 @@ func testAccTransitGateway_DNSSupport(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDNSSupportConfig(ec2.DnsSupportValueDisable),
+				Config: testAccTransitGatewayConfig_dnsSupport(ec2.DnsSupportValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueDisable),
@@ -451,7 +451,7 @@ func testAccTransitGateway_DNSSupport(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayDNSSupportConfig(ec2.DnsSupportValueEnable),
+				Config: testAccTransitGatewayConfig_dnsSupport(ec2.DnsSupportValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
@@ -473,7 +473,7 @@ func testAccTransitGateway_VPNECMPSupport(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPNECMPSupportConfig(ec2.VpnEcmpSupportValueDisable),
+				Config: testAccTransitGatewayConfig_vpnECMPSupport(ec2.VpnEcmpSupportValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "vpn_ecmp_support", ec2.VpnEcmpSupportValueDisable),
@@ -485,7 +485,7 @@ func testAccTransitGateway_VPNECMPSupport(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayVPNECMPSupportConfig(ec2.VpnEcmpSupportValueEnable),
+				Config: testAccTransitGatewayConfig_vpnECMPSupport(ec2.VpnEcmpSupportValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
@@ -507,7 +507,7 @@ func testAccTransitGateway_Description(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDescriptionConfig("description1"),
+				Config: testAccTransitGatewayConfig_description("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -519,7 +519,7 @@ func testAccTransitGateway_Description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayDescriptionConfig("description2"),
+				Config: testAccTransitGatewayConfig_description("description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
@@ -541,7 +541,7 @@ func testAccTransitGateway_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayTags1Config("key1", "value1"),
+				Config: testAccTransitGatewayConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -554,7 +554,7 @@ func testAccTransitGateway_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
@@ -564,7 +564,7 @@ func testAccTransitGateway_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayTags1Config("key2", "value2"),
+				Config: testAccTransitGatewayConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway3),
 					testAccCheckTransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
@@ -777,13 +777,13 @@ func testAccPreCheckTransitGateway(t *testing.T) {
 	}
 }
 
-func testAccTransitGatewayConfig() string {
+func testAccTransitGatewayConfig_basic() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 `
 }
 
-func testAccTransitGatewayAmazonSideASNConfig(amazonSideASN int) string {
+func testAccTransitGatewayConfig_amazonSideASN(amazonSideASN int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   amazon_side_asn = %d
@@ -791,7 +791,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, amazonSideASN)
 }
 
-func testAccTransitGatewayAutoAcceptSharedAttachmentsConfig(autoAcceptSharedAttachments string) string {
+func testAccTransitGatewayConfig_autoAcceptSharedAttachments(autoAcceptSharedAttachments string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   auto_accept_shared_attachments = %q
@@ -799,7 +799,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, autoAcceptSharedAttachments)
 }
 
-func testAccTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig() string {
+func testAccTransitGatewayConfig_defaultRouteTableAssociationAndPropagationDisabled() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_association = "disable"
@@ -808,7 +808,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `
 }
 
-func testAccTransitGatewayDefaultRouteTableAssociationConfig(defaultRouteTableAssociation string) string {
+func testAccTransitGatewayConfig_defaultRouteTableAssociation(defaultRouteTableAssociation string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_association = %q
@@ -816,7 +816,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, defaultRouteTableAssociation)
 }
 
-func testAccTransitGatewayDefaultRouteTablePropagationConfig(defaultRouteTablePropagation string) string {
+func testAccTransitGatewayConfig_defaultRouteTablePropagation(defaultRouteTablePropagation string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_propagation = %q
@@ -824,7 +824,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, defaultRouteTablePropagation)
 }
 
-func testAccTransitGatewayDNSSupportConfig(dnsSupport string) string {
+func testAccTransitGatewayConfig_dnsSupport(dnsSupport string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   dns_support = %q
@@ -832,7 +832,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, dnsSupport)
 }
 
-func testAccTransitGatewayVPNECMPSupportConfig(vpnEcmpSupport string) string {
+func testAccTransitGatewayConfig_vpnECMPSupport(vpnEcmpSupport string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   vpn_ecmp_support = %q
@@ -840,7 +840,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, vpnEcmpSupport)
 }
 
-func testAccTransitGatewayDescriptionConfig(description string) string {
+func testAccTransitGatewayConfig_description(description string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %q
@@ -848,7 +848,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, description)
 }
 
-func testAccTransitGatewayTags1Config(tagKey1, tagValue1 string) string {
+func testAccTransitGatewayConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -858,7 +858,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccTransitGatewayTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTransitGatewayConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -869,7 +869,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccTransitGatewayCidrBlocks1Config(rName string) string {
+func testAccTransitGatewayConfig_cidrBlocks1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   transit_gateway_cidr_blocks = ["10.120.0.0/24"]
@@ -881,7 +881,7 @@ resource "aws_ec2_transit_gateway" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayCidrBlocks2Config(rName string) string {
+func testAccTransitGatewayConfig_cidrBlocks2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   transit_gateway_cidr_blocks = ["10.120.0.0/24", "2001:1234:1234::/64"]

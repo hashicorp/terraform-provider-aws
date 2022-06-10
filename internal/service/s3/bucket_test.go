@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -277,7 +276,7 @@ func TestAccS3Bucket_Basic_keyEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withDefaultEncryptionAndBucketKeyEnabled_KmsMasterKey(bucketName),
+				Config: testAccBucketConfig_DefaultEncryption_bucketKeyEnabledKMSMasterKey(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
@@ -1003,7 +1002,7 @@ func TestAccS3Bucket_Manage_versioningDisabled(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Manage_MfaDeleteDisabled(t *testing.T) {
+func TestAccS3Bucket_Manage_MFADeleteDisabled(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket.test"
 
@@ -1014,7 +1013,7 @@ func TestAccS3Bucket_Manage_MfaDeleteDisabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withVersioningMfaDelete(bucketName, false),
+				Config: testAccBucketConfig_versioningMFADelete(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
@@ -1032,7 +1031,7 @@ func TestAccS3Bucket_Manage_MfaDeleteDisabled(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Manage_versioningAndMfaDeleteDisabled(t *testing.T) {
+func TestAccS3Bucket_Manage_versioningAndMFADeleteDisabled(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket.test"
 
@@ -1043,7 +1042,7 @@ func TestAccS3Bucket_Manage_versioningAndMfaDeleteDisabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withVersioningDisabledAndMfaDelete(bucketName, false),
+				Config: testAccBucketConfig_versioningDisabledAndMFADelete(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
@@ -2063,7 +2062,7 @@ func TestAccS3Bucket_Security_enableDefaultEncryptionWhenTypical(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withDefaultEncryption_KmsMasterKey(bucketName),
+				Config: testAccBucketConfig_DefaultEncryption_kmsMasterKey(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
@@ -2832,11 +2831,11 @@ func testAccCheckBucketPolicy(n string, policy string) resource.TestCheckFunc {
 			Bucket: aws.String(rs.Primary.ID),
 		})
 
+		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchBucketPolicy) {
+			return nil
+		}
+
 		if policy == "" {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucketPolicy" {
-				// expected
-				return nil
-			}
 			if err == nil {
 				return fmt.Errorf("Expected no policy, got: %#v", *out.Policy)
 			} else {
@@ -3019,7 +3018,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, sseAlgorithm)
 }
 
-func testAccBucketConfig_withDefaultEncryption_KmsMasterKey(bucketName string) string {
+func testAccBucketConfig_DefaultEncryption_kmsMasterKey(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
@@ -3041,7 +3040,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_withDefaultEncryptionAndBucketKeyEnabled_KmsMasterKey(bucketName string) string {
+func testAccBucketConfig_DefaultEncryption_bucketKeyEnabledKMSMasterKey(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
@@ -4236,7 +4235,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, enabled)
 }
 
-func testAccBucketConfig_withVersioningMfaDelete(bucketName string, mfaDelete bool) string {
+func testAccBucketConfig_versioningMFADelete(bucketName string, mfaDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4248,7 +4247,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, mfaDelete)
 }
 
-func testAccBucketConfig_withVersioningDisabledAndMfaDelete(bucketName string, mfaDelete bool) string {
+func testAccBucketConfig_versioningDisabledAndMFADelete(bucketName string, mfaDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

@@ -41,7 +41,7 @@ func testAccConfigRule_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigRule_ownerAws(t *testing.T) {
+func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:aws-in-func-name
 	var cr configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -429,7 +429,7 @@ resource "aws_config_config_rule" "test" {
 `, rName)
 }
 
-func testAccConfigRuleConfig_ownerAws(rName string) string {
+func testAccConfigRuleConfig_ownerAws(rName string) string { // nosemgrep:aws-in-func-name
 	return testAccConfigRuleConfig_base(rName) + fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
   name        = %q

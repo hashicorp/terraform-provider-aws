@@ -103,7 +103,7 @@ func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) 
 		VpnConnectionId:      aws.String(vpnConnectionID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return nil
 	}
 

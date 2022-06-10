@@ -25,12 +25,12 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyBasicConfig(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
@@ -67,12 +67,12 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyEventConfig(rName),
+				Config: testAccLifecyclePolicyConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
@@ -115,12 +115,12 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyCronConfig(rName),
+				Config: testAccLifecyclePolicyConfig_cron(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression", "cron(0 18 ? * WED *)"),
 				),
@@ -142,12 +142,12 @@ func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyRetainIntervalConfig(rName),
+				Config: testAccLifecyclePolicyConfig_retainInterval(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval_unit", "DAYS"),
 				),
@@ -169,12 +169,12 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyDeprecateConfig(rName),
+				Config: testAccLifecyclePolicyConfig_deprecate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.0.count", "10"),
 				),
@@ -196,12 +196,12 @@ func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyFastRestoreConfig(rName),
+				Config: testAccLifecyclePolicyConfig_fastRestore(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.fast_restore_rule.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.fast_restore_rule.0.availability_zones.#", "data.aws_availability_zones.available", "names.#"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.fast_restore_rule.0.count", "10"),
@@ -224,12 +224,12 @@ func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyShareRuleConfig(rName),
+				Config: testAccLifecyclePolicyConfig_shareRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.share_rule.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.share_rule.0.target_accounts.0", "data.aws_caller_identity.current", "account_id"),
 				),
@@ -251,12 +251,12 @@ func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyParametersInstanceConfig(rName),
+				Config: testAccLifecyclePolicyConfig_parametersInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "false"),
@@ -279,12 +279,12 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyParametersVolumeConfig(rName),
+				Config: testAccLifecyclePolicyConfig_parametersVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "true"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "false"),
@@ -307,12 +307,12 @@ func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyVariableTagsConfig(rName),
+				Config: testAccLifecyclePolicyConfig_variableTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.variable_tags.instance_id", "$(instance-id)"),
 				),
 			},
@@ -333,12 +333,12 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyFullConfig(rName),
+				Config: testAccLifecyclePolicyConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
@@ -359,9 +359,9 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: dlmLifecyclePolicyFullUpdateConfig(rName),
+				Config: testAccLifecyclePolicyConfig_fullUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full-updated"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
@@ -394,12 +394,12 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyConfigCrossRegionCopyRule(rName),
+				Config: testAccLifecyclePolicyConfig_crossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "15"),
@@ -413,9 +413,9 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: dlmLifecyclePolicyConfigUpdateCrossRegionCopyRule(rName),
+				Config: testAccLifecyclePolicyConfig_updateCrossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.cmk_arn", "aws_kms_key.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.copy_tags", "true"),
@@ -431,9 +431,9 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: dlmLifecyclePolicyConfigNoCrossRegionCopyRule(rName),
+				Config: testAccLifecyclePolicyConfig_noCrossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "0"),
 				),
 			},
@@ -449,12 +449,12 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyConfigTags1(rName, "key1", "value1"),
+				Config: testAccLifecyclePolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -465,18 +465,18 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: dlmLifecyclePolicyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLifecyclePolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: dlmLifecyclePolicyConfigTags1(rName, "key2", "value2"),
+				Config: testAccLifecyclePolicyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -493,12 +493,12 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		CheckDestroy:      lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyBasicConfig(rName),
+				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
+					checkLifecyclePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
 				),
@@ -508,7 +508,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 	})
 }
 
-func dlmLifecyclePolicyDestroy(s *terraform.State) error {
+func lifecyclePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -538,7 +538,7 @@ func dlmLifecyclePolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
+func checkLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -577,7 +577,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func dlmLifecyclePolicyBaseConfig(rName string) string {
+func lifecyclePolicyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -603,8 +603,8 @@ EOF
 `, rName)
 }
 
-func dlmLifecyclePolicyBasicConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_basic(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -632,8 +632,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyEventConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
+func testAccLifecyclePolicyConfig_event(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy" "test" {
@@ -678,8 +678,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, acctest.AlternateRegion()))
 }
 
-func dlmLifecyclePolicyCronConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_cron(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -707,8 +707,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyRetainIntervalConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_retainInterval(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -737,8 +737,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyDeprecateConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_deprecate(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -771,8 +771,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyFastRestoreConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_fastRestore(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -806,8 +806,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyShareRuleConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_shareRule(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dlm_lifecycle_policy" "test" {
@@ -842,8 +842,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyParametersInstanceConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_parametersInstance(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -876,8 +876,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyParametersVolumeConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_parametersVolume(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -910,8 +910,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyVariableTagsConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_variableTags(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -944,8 +944,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyFullConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_full(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full"
   execution_role_arn = aws_iam_role.test.arn
@@ -982,8 +982,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyFullUpdateConfig(rName string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
+func testAccLifecyclePolicyConfig_fullUpdate(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full-updated"
   execution_role_arn = "${aws_iam_role.test.arn}-doesnt-exist"
@@ -1020,9 +1020,9 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `)
 }
 
-func dlmLifecyclePolicyConfigCrossRegionCopyRule(rName string) string {
+func testAccLifecyclePolicyConfig_crossRegionCopyRule(rName string) string {
 	return acctest.ConfigCompose(
-		dlmLifecyclePolicyBaseConfig(rName),
+		lifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
@@ -1060,10 +1060,10 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName, acctest.AlternateRegion()))
 }
 
-func dlmLifecyclePolicyConfigUpdateCrossRegionCopyRule(rName string) string {
+func testAccLifecyclePolicyConfig_updateCrossRegionCopyRule(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		dlmLifecyclePolicyBaseConfig(rName),
+		lifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   provider    = "awsalternate"
@@ -1126,10 +1126,10 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName, acctest.AlternateRegion()))
 }
 
-func dlmLifecyclePolicyConfigNoCrossRegionCopyRule(rName string) string {
+func testAccLifecyclePolicyConfig_noCrossRegionCopyRule(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		dlmLifecyclePolicyBaseConfig(rName),
+		lifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
@@ -1158,8 +1158,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName))
 }
 
-func dlmLifecyclePolicyConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
+func testAccLifecyclePolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -1191,8 +1191,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func dlmLifecyclePolicyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
+func testAccLifecyclePolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
   execution_role_arn = aws_iam_role.test.arn

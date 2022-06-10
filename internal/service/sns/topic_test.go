@@ -41,7 +41,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameGeneratedConfig,
+				Config: testAccTopicConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
@@ -93,7 +93,7 @@ func TestAccSNSTopic_name(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameConfig(rName),
+				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -121,7 +121,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNamePrefixConfig(rName),
+				Config: testAccTopicConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
@@ -151,7 +151,7 @@ func TestAccSNSTopic_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicWithPolicy(rName),
+				Config: testAccTopicConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					testAccCheckNSTopicHasPolicy(resourceName, expectedPolicy),
@@ -178,7 +178,7 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicConfig_withIAMRole(rName),
+				Config: testAccTopicConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 				),
@@ -201,7 +201,7 @@ func TestAccSNSTopic_withFakeIAMRole(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTopicConfig_withFakeIAMRole(rName),
+				Config:      testAccTopicConfig_fakeIAMRole(rName),
 				ExpectError: regexp.MustCompile(`PrincipalNotFound`),
 			},
 		},
@@ -221,7 +221,7 @@ func TestAccSNSTopic_withDeliveryPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicConfig_withDeliveryPolicy(rName),
+				Config: testAccTopicConfig_deliveryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					testAccCheckNSTopicHasDeliveryPolicy(resourceName, expectedPolicy),
@@ -290,7 +290,7 @@ func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameGeneratedFIFOTopicConfig,
+				Config: testAccTopicConfig_nameGeneratedFIFO,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					create.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FIFOTopicNameSuffix),
@@ -319,7 +319,7 @@ func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameFIFOTopicConfig(rName),
+				Config: testAccTopicConfig_nameFIFO(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -347,7 +347,7 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNamePrefixFIFOTopicConfig(rName),
+				Config: testAccTopicConfig_namePrefixFIFO(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					create.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FIFOTopicNameSuffix),
@@ -376,7 +376,7 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicWithFIFOContentBasedDeduplicationConfig(rName, true),
+				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
@@ -390,7 +390,7 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccTopicWithFIFOContentBasedDeduplicationConfig(rName, false),
+				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
@@ -409,7 +409,7 @@ func TestAccSNSTopic_fifoExpectContentBasedDeduplicationError(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTopicExpectContentBasedDeduplicationError(rName),
+				Config:      testAccTopicConfig_expectContentBasedDeduplicationError(rName),
 				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO topics`),
 			},
 		},
@@ -428,7 +428,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicConfig_withEncryption(rName),
+				Config: testAccTopicConfig_encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sns"),
@@ -440,7 +440,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicNameConfig(rName),
+				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
@@ -462,7 +462,7 @@ func TestAccSNSTopic_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicTags1Config(rName, "key1", "value1"),
+				Config: testAccTopicConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -475,7 +475,7 @@ func TestAccSNSTopic_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTopicConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -484,7 +484,7 @@ func TestAccSNSTopic_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTopicTags1Config(rName, "key2", "value2"),
+				Config: testAccTopicConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -506,7 +506,7 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameGeneratedConfig,
+				Config: testAccTopicConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), resourceName),
@@ -656,17 +656,17 @@ func testAccCheckTopicExists(n string, v *map[string]string) resource.TestCheckF
 	}
 }
 
-const testAccTopicNameGeneratedConfig = `
+const testAccTopicConfig_nameGenerated = `
 resource "aws_sns_topic" "test" {}
 `
 
-const testAccTopicNameGeneratedFIFOTopicConfig = `
+const testAccTopicConfig_nameGeneratedFIFO = `
 resource "aws_sns_topic" "test" {
   fifo_topic = true
 }
 `
 
-func testAccTopicNameConfig(rName string) string {
+func testAccTopicConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -674,7 +674,7 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTopicNameFIFOTopicConfig(rName string) string {
+func testAccTopicConfig_nameFIFO(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name       = %[1]q
@@ -683,7 +683,7 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTopicNamePrefixConfig(prefix string) string {
+func testAccTopicConfig_namePrefix(prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name_prefix = %[1]q
@@ -691,7 +691,7 @@ resource "aws_sns_topic" "test" {
 `, prefix)
 }
 
-func testAccTopicNamePrefixFIFOTopicConfig(prefix string) string {
+func testAccTopicConfig_namePrefixFIFO(prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name_prefix = %[1]q
@@ -700,7 +700,7 @@ resource "aws_sns_topic" "test" {
 `, prefix)
 }
 
-func testAccTopicWithPolicy(r string) string {
+func testAccTopicConfig_policy(r string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -731,7 +731,7 @@ EOF
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/3660
-func testAccTopicConfig_withIAMRole(r string) string {
+func testAccTopicConfig_iamRole(r string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -783,7 +783,7 @@ EOF
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/14024
-func testAccTopicConfig_withDeliveryPolicy(r string) string {
+func testAccTopicConfig_deliveryPolicy(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "tf_acc_test_delivery_policy_%s"
@@ -809,7 +809,7 @@ EOF
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/3660
-func testAccTopicConfig_withFakeIAMRole(r string) string {
+func testAccTopicConfig_fakeIAMRole(r string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -911,7 +911,7 @@ EOF
 `, r)
 }
 
-func testAccTopicConfig_withEncryption(rName string) string {
+func testAccTopicConfig_encryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name              = %[1]q
@@ -920,7 +920,7 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTopicWithFIFOContentBasedDeduplicationConfig(r string, cbd bool) string {
+func testAccTopicConfig_fifoContentBasedDeduplication(r string, cbd bool) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name                        = "terraform-test-topic-%s.fifo"
@@ -930,7 +930,7 @@ resource "aws_sns_topic" "test" {
 `, r, cbd)
 }
 
-func testAccTopicExpectContentBasedDeduplicationError(r string) string {
+func testAccTopicConfig_expectContentBasedDeduplicationError(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name                        = "terraform-test-topic-%s"
@@ -939,7 +939,7 @@ resource "aws_sns_topic" "test" {
 `, r)
 }
 
-func testAccTopicTags1Config(r, tag1Key, tag1Value string) string {
+func testAccTopicConfig_tags1(r, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "terraform-test-topic-%s"
@@ -951,7 +951,7 @@ resource "aws_sns_topic" "test" {
 `, r, tag1Key, tag1Value)
 }
 
-func testAccTopicTags2Config(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccTopicConfig_tags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "terraform-test-topic-%s"

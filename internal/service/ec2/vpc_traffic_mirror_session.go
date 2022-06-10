@@ -101,7 +101,7 @@ func resourceTrafficMirrorSessionCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorSession)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorSession)
 	}
 
 	out, err := conn.CreateTrafficMirrorSession(input)

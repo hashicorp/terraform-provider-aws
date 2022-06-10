@@ -29,7 +29,7 @@ func TestAccImageBuilderImage_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRequiredConfig(rName),
+				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexp.MustCompile(fmt.Sprintf("image/%s/1.0.0/[1-9][0-9]*", rName))),
@@ -70,7 +70,7 @@ func TestAccImageBuilderImage_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRequiredConfig(rName),
+				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceImage(), resourceName),
@@ -93,7 +93,7 @@ func TestAccImageBuilderImage_distributionARN(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageDistributionConfigurationARNConfig(rName),
+				Config: testAccImageConfig_distributionConfigurationARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution_configuration_arn", distributionConfigurationResourceName, "arn"),
@@ -119,7 +119,7 @@ func TestAccImageBuilderImage_enhancedImageMetadataEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageEnhancedImageMetadataEnabledConfig(rName, false),
+				Config: testAccImageConfig_enhancedMetadataEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "false"),
@@ -145,7 +145,7 @@ func TestAccImageBuilderImage_ImageTests_imageTestsEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageImageTestsConfigurationImageTestsEnabledConfig(rName, false),
+				Config: testAccImageConfig_testsConfigurationTestsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
@@ -172,7 +172,7 @@ func TestAccImageBuilderImage_ImageTests_timeoutMinutes(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageImageTestsConfigurationTimeoutMinutesConfig(rName, 721),
+				Config: testAccImageConfig_testsConfigurationTimeoutMinutes(rName, 721),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
@@ -199,7 +199,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageTags1Config(rName, "key1", "value1"),
+				Config: testAccImageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -212,7 +212,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImageTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccImageConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -221,7 +221,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccImageTags1Config(rName, "key2", "value2"),
+				Config: testAccImageConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -244,7 +244,7 @@ func TestAccImageBuilderImage_containerRecipeARN(t *testing.T) {
 		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageContainerRecipeARNConfig(rName),
+				Config: testAccImageConfig_containerRecipeARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "container_recipe_arn", containerRecipeResourceName, "arn"),
@@ -414,7 +414,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 `, rName)
 }
 
-func testAccImageDistributionConfigurationARNConfig(rName string) string {
+func testAccImageConfig_distributionConfigurationARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -438,7 +438,7 @@ resource "aws_imagebuilder_image" "test" {
 `, rName))
 }
 
-func testAccImageEnhancedImageMetadataEnabledConfig(rName string, enhancedImageMetadataEnabled bool) string {
+func testAccImageConfig_enhancedMetadataEnabled(rName string, enhancedImageMetadataEnabled bool) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -450,7 +450,7 @@ resource "aws_imagebuilder_image" "test" {
 `, rName, enhancedImageMetadataEnabled))
 }
 
-func testAccImageImageTestsConfigurationImageTestsEnabledConfig(rName string, imageTestsEnabled bool) string {
+func testAccImageConfig_testsConfigurationTestsEnabled(rName string, imageTestsEnabled bool) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -465,7 +465,7 @@ resource "aws_imagebuilder_image" "test" {
 `, rName, imageTestsEnabled))
 }
 
-func testAccImageImageTestsConfigurationTimeoutMinutesConfig(rName string, timeoutMinutes int) string {
+func testAccImageConfig_testsConfigurationTimeoutMinutes(rName string, timeoutMinutes int) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -480,7 +480,7 @@ resource "aws_imagebuilder_image" "test" {
 `, rName, timeoutMinutes))
 }
 
-func testAccImageRequiredConfig(rName string) string {
+func testAccImageConfig_required(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		`
@@ -491,7 +491,7 @@ resource "aws_imagebuilder_image" "test" {
 `)
 }
 
-func testAccImageTags1Config(rName string, tagKey1 string, tagValue1 string) string {
+func testAccImageConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -506,7 +506,7 @@ resource "aws_imagebuilder_image" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccImageTags2Config(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccImageConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccImageBaseConfig(rName),
 		fmt.Sprintf(`
@@ -522,7 +522,7 @@ resource "aws_imagebuilder_image" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccImageContainerRecipeARNConfig(rName string) string {
+func testAccImageConfig_containerRecipeARN(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

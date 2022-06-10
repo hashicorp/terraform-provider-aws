@@ -199,7 +199,7 @@ func resourceNetworkProfileRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("uplink_loss_percent", project.UplinkLossPercent)
 	d.Set("type", project.Type)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "networkprofile", meta)
+	projectArn, err := decodeProjectARN(arn, "networkprofile", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}

@@ -24,7 +24,7 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionDataSourceConfig(rName, jdbcConnectionUrl),
+				Config: testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccConnectionCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
@@ -53,7 +53,7 @@ func testAccConnectionCheckDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccConnectionDataSourceConfig(rName, jdbcConnectionUrl string) string {
+func testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
   name = %[1]q

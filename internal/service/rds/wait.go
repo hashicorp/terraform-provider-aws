@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
-	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
+	dbClusterRoleAssociationCreatedTimeout = 10 * time.Minute
+	dbClusterRoleAssociationDeletedTimeout = 10 * time.Minute
 
 	dbClusterActivityStreamStartedTimeout = 30 * time.Minute
 	dbClusterActivityStreamStoppedTimeout = 30 * time.Minute

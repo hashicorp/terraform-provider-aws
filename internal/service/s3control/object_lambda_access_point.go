@@ -340,13 +340,13 @@ func expandObjectLambdaContentTransformation(tfMap map[string]interface{}) *s3co
 	apiObject := &s3control.ObjectLambdaContentTransformation{}
 
 	if v, ok := tfMap["aws_lambda"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AwsLambda = expandAwsLambdaTransformation(v[0].(map[string]interface{}))
+		apiObject.AwsLambda = expandLambdaTransformation(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandAwsLambdaTransformation(tfMap map[string]interface{}) *s3control.AwsLambdaTransformation {
+func expandLambdaTransformation(tfMap map[string]interface{}) *s3control.AwsLambdaTransformation {
 	if tfMap == nil {
 		return nil
 	}
@@ -434,13 +434,13 @@ func flattenObjectLambdaContentTransformation(apiObject *s3control.ObjectLambdaC
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AwsLambda; v != nil {
-		tfMap["aws_lambda"] = []interface{}{flattenAwsLambdaTransformation(v)}
+		tfMap["aws_lambda"] = []interface{}{flattenLambdaTransformation(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAwsLambdaTransformation(apiObject *s3control.AwsLambdaTransformation) map[string]interface{} {
+func flattenLambdaTransformation(apiObject *s3control.AwsLambdaTransformation) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

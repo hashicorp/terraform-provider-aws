@@ -22,10 +22,10 @@ func TestAccIPAMScope_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamScopeDestroy,
+		CheckDestroy:      testAccCheckIPAMScopeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamScope("test"),
+				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "pool_count", "0"),
@@ -41,7 +41,7 @@ func TestAccIPAMScope_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamScope("test2"),
+				Config: testAccIPAMScopeConfig_basic("test2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -58,10 +58,10 @@ func TestAccIPAMScope_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamScopeDestroy,
+		CheckDestroy:      testAccCheckIPAMScopeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamScopeTagsConfig("key1", "value1"),
+				Config: testAccIPAMScopeConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -73,7 +73,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamScopeTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccIPAMScopeConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -81,7 +81,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCIpamScopeTagsConfig("key2", "value2"),
+				Config: testAccIPAMScopeConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -91,7 +91,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIpamScopeDestroy(s *terraform.State) error {
+func testAccCheckIPAMScopeDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -101,7 +101,7 @@ func testAccCheckVPCIpamScopeDestroy(s *terraform.State) error {
 
 		id := aws.String(rs.Primary.ID)
 
-		if _, err := tfec2.WaitIpamScopeDeleted(conn, *id, tfec2.IpamScopeDeleteTimeout); err != nil {
+		if _, err := tfec2.WaitIPAMScopeDeleted(conn, *id, tfec2.IPAMScopeDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -112,7 +112,7 @@ func testAccCheckVPCIpamScopeDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccVPCIpamScopeBase = `
+const testAccIPAMScopeConfig_Base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -123,8 +123,8 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-func testAccVPCIpamScope(desc string) string {
-	return testAccVPCIpamScopeBase + fmt.Sprintf(`
+func testAccIPAMScopeConfig_basic(desc string) string {
+	return testAccIPAMScopeConfig_Base + fmt.Sprintf(`
 resource "aws_vpc_ipam_scope" "test" {
   ipam_id     = aws_vpc_ipam.test.id
   description = %[1]q
@@ -132,8 +132,8 @@ resource "aws_vpc_ipam_scope" "test" {
 `, desc)
 }
 
-func testAccVPCIpamScopeTagsConfig(tagKey1, tagValue1 string) string {
-	return testAccVPCIpamScopeBase + fmt.Sprintf(`
+func testAccIPAMScopeConfig_tags(tagKey1, tagValue1 string) string {
+	return testAccIPAMScopeConfig_Base + fmt.Sprintf(`
 resource "aws_vpc_ipam_scope" "test" {
   ipam_id = aws_vpc_ipam.test.id
   tags = {
@@ -143,8 +143,8 @@ resource "aws_vpc_ipam_scope" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccVPCIpamScopeTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccVPCIpamScopeBase + fmt.Sprintf(`
+func testAccIPAMScopeConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccIPAMScopeConfig_Base + fmt.Sprintf(`
 
 
 resource "aws_vpc_ipam_scope" "test" {

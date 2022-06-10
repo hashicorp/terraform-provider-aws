@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,7 +28,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestUpdateDynamoDbDiffGSI(t *testing.T) {
+func TestUpdateDiffGSI(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
@@ -1680,9 +1680,8 @@ func testAccCheckTableDestroy(s *terraform.State) error {
 			return fmt.Errorf("DynamoDB table %s still exists. Failing!", rs.Primary.ID)
 		}
 
-		// Verify the error is what we want
-		if dbErr, ok := err.(awserr.Error); ok && dbErr.Code() == "ResourceNotFoundException" {
-			return nil
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+			continue
 		}
 
 		return err
