@@ -1572,7 +1572,7 @@ func sweepSpotInstanceRequests(region string) error {
 			r := ResourceSpotInstanceRequest()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("instance_interruption_behavior", ec2.InstanceInterruptionBehaviorTerminate)
+			d.Set("spot_instance_id", config.InstanceId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
