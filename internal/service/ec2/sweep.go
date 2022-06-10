@@ -98,6 +98,7 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 	})
 
@@ -115,6 +116,7 @@ func init() {
 			"aws_elastic_beanstalk_environment",
 			"aws_instance",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 		F: sweepKeyPairs,
 	})
@@ -159,6 +161,7 @@ func init() {
 			"aws_instance",
 			"aws_launch_template",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 	})
 
@@ -227,6 +230,7 @@ func init() {
 			"aws_route53_resolver_endpoint",
 			"aws_sagemaker_notebook_instance",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 			"aws_vpc_endpoint",
 		},
 	})
