@@ -46,7 +46,7 @@ func ResourceAPIDestination() *schema.Resource {
 			"invocation_rate_limit_per_second": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 300),
+				ValidateFunc: validation.IntAtLeast(1),
 				Default:      300,
 			},
 			"http_method": {
