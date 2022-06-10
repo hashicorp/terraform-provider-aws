@@ -45,15 +45,20 @@ func ResourceIndex() *schema.Resource {
 			"capacity_units": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"query_capacity_units": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Type:         schema.TypeInt,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"storage_capacity_units": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Type:         schema.TypeInt,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 					},
 				},
@@ -381,12 +386,23 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.Id))
 
+	// arn needed to update tags
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "kendra",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("index/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
+
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceIndexRead(ctx, d, meta)
+	return resourceIndexUpdate(ctx, d, meta)
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -476,11 +492,14 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("capacity_units", "description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
 
+		if d.HasChange("capacity_units") {
+			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
+		}
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
 		}
@@ -644,6 +663,24 @@ func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeo
 	}
 
 	return nil, err
+}
+
+func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfiguration {
+	if len(capacityUnits) == 0 || capacityUnits[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := capacityUnits[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.CapacityUnitsConfiguration{
+		QueryCapacityUnits:   aws.Int32(int32(tfMap["query_capacity_units"].(int))),
+		StorageCapacityUnits: aws.Int32(int32(tfMap["storage_capacity_units"].(int))),
+	}
+
+	return result
 }
 
 func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *types.ServerSideEncryptionConfiguration {

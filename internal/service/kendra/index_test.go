@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"testing"
 	"time"
 
@@ -139,6 +140,63 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalQueryCapacityUnits := 2
+	updatedQueryCapacityUnits := 3
+	originalStorageCapacityUnits := 1
+	updatedStorageCapacityUnits := 2
+	resourceName := "aws_kendra_index.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
+			time.Sleep(30 * time.Second)
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexConfig_base(rName, rName2),
+				Check:  propagationSleep(),
+			},
+			{
+				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, originalQueryCapacityUnits, originalStorageCapacityUnits),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", strconv.Itoa(originalQueryCapacityUnits)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", strconv.Itoa(originalStorageCapacityUnits)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, updatedQueryCapacityUnits, updatedStorageCapacityUnits),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", strconv.Itoa(updatedQueryCapacityUnits)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", strconv.Itoa(updatedStorageCapacityUnits)),
+				),
 			},
 		},
 	})
@@ -654,6 +712,26 @@ resource "aws_kendra_index" "test" {
   }
 }
 `, rName3, description))
+}
+
+func testAccIndexConfig_capacityUnits(rName, rName2, rName3 string, queryCapacityUnits, storageCapacityUnits int) string {
+	return acctest.ConfigCompose(
+		testAccIndexConfig_base(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_kendra_index" "test" {
+  name        = %[1]q
+  role_arn    = aws_iam_role.access_cw.arn
+
+  capacity_units {
+    query_capacity_units   = %[2]d
+    storage_capacity_units = %[3]d
+  }
+
+  tags = {
+    "Key1" = "Value1"
+  }
+}
+`, rName3, queryCapacityUnits, storageCapacityUnits))
 }
 
 func testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description string) string {

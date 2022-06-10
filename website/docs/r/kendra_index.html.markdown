@@ -25,6 +25,21 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
+### With capacity units
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name        = "example"
+  edition     = "DEVELOPER_EDITION"
+  role_arn    = aws_iam_role.this.arn
+
+  capacity_units {
+    query_capacity_units   = 2
+    storage_capacity_units = 2
+  }
+}
+```
+
 ### With server side encryption configuration
 
 ```terraform
@@ -58,6 +73,7 @@ resource "aws_kendra_index" "example" {
 
 The following arguments are supported:
 
+* `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index.
 * `description` - (Optional) The description of the Index.
 * `edition` - (Optional) The Amazon Kendra edition to use for the index. Choose `DEVELOPER_EDITION` for indexes intended for development, testing, or proof of concept. Use `ENTERPRISE_EDITION` for your production databases. Once you set the edition for an index, it can't be changed. Defaults to `ENTERPRISE_EDITION`
 * `name` - (Required) Specifies the name of the Index.
@@ -68,6 +84,11 @@ The following arguments are supported:
 * `user_token_configurations` - (Optional) A block that specifies the user token configuration. Documented below.
 * `tags` - (Optional) Tags to apply to the Index. If configured with a provider
 [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+A `capacity_units` block supports the following arguments:
+
+* `query_capacity_units` - (Required) The amount of extra query capacity for an index and GetQuerySuggestions capacity. For more information, refer to [QueryCapacityUnits](https://docs.aws.amazon.com/kendra/latest/dg/API_CapacityUnitsConfiguration.html#Kendra-Type-CapacityUnitsConfiguration-QueryCapacityUnits).
+* `storage_capacity_units` - (Required) The amount of extra storage capacity for an index. A single capacity unit provides 30 GB of storage space or 100,000 documents, whichever is reached first. Minimum value of 0.
 
 A `server_side_encryption_configuration` block supports the following arguments:
 
@@ -110,7 +131,6 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
-* `capacity_units` - A block that sets the number of additional document storage and query capacity units that should be used by the index.
 * `created_at` - The Unix datetime that the index was created.
 * `document_metadata_configuration_updates` - One or more blocks that specify the configuration settings for any metadata applied to the documents in the index. Documented below.
 * `error_message` - When the Status field value is `FAILED`, this contains a message that explains why.
@@ -119,11 +139,6 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - The current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updated_at` - The Unix datetime that the index was last updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-
-A `capacity_units` block supports the following attributes:
-
-* `query_capacity_units` - The amount of extra query capacity for an index and GetQuerySuggestions capacity. For more information, refer to [QueryCapacityUnits](https://docs.aws.amazon.com/kendra/latest/dg/API_CapacityUnitsConfiguration.html#Kendra-Type-CapacityUnitsConfiguration-QueryCapacityUnits).
-* `storage_capacity_units` - The amount of extra storage capacity for an index. A single capacity unit provides 30 GB of storage space or 100,000 documents, whichever is reached first. Minimum value of 0.
 
 A `document_metadata_configuration_updates` block supports the following attributes:
 
