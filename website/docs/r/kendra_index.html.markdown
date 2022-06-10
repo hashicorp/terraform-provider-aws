@@ -29,9 +29,9 @@ resource "aws_kendra_index" "example" {
 
 ```terraform
 resource "aws_kendra_index" "example" {
-  name        = "example"
-  edition     = "DEVELOPER_EDITION"
-  role_arn    = aws_iam_role.this.arn
+  name     = "example"
+  edition  = "DEVELOPER_EDITION"
+  role_arn = aws_iam_role.this.arn
 
   capacity_units {
     query_capacity_units   = 2

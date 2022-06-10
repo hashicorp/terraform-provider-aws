@@ -802,8 +802,8 @@ func testAccIndexConfig_capacityUnits(rName, rName2, rName3 string, queryCapacit
 		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
-  name        = %[1]q
-  role_arn    = aws_iam_role.access_cw.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.access_cw.arn
 
   capacity_units {
     query_capacity_units   = %[2]d
@@ -822,8 +822,8 @@ func testAccIndexConfig_documentMetadataConfigurationUpdatesEditAuthors(rName, r
 		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
-  name        = %[1]q
-  role_arn    = aws_iam_role.access_cw.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.access_cw.arn
 
   document_metadata_configuration_updates {
     name = "_authors"
@@ -843,8 +843,8 @@ func testAccIndexConfig_documentMetadataConfigurationUpdatesNewMetadata(rName, r
 		testAccIndexConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
-  name        = %[1]q
-  role_arn    = aws_iam_role.access_cw.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.access_cw.arn
 
   document_metadata_configuration_updates {
     name = "example"
