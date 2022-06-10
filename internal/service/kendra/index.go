@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -76,36 +77,57 @@ func ResourceIndex() *schema.Resource {
 			"document_metadata_configuration_updates": {
 				Type:     schema.TypeSet,
 				Computed: true,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 500,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:         schema.TypeString,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 30),
 						},
 						"relevance": {
 							Type:     schema.TypeList,
 							Computed: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"duration": {
 										Type:     schema.TypeString,
 										Computed: true,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10),
+											validation.StringMatch(
+												regexp.MustCompile(`[0-9]+[s]`),
+												"numeric string followed by the character \"s\"",
+											),
+										),
 									},
 									"freshness": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"importance": {
-										Type:     schema.TypeInt,
-										Computed: true,
+										Type:         schema.TypeInt,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 10),
 									},
 									"rank_order": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:         schema.TypeString,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(orderValues(types.Order("").Values()...), false),
 									},
 									"values_importance_map": {
 										Type:     schema.TypeMap,
 										Computed: true,
+										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeInt},
 									},
 								},
@@ -114,30 +136,38 @@ func ResourceIndex() *schema.Resource {
 						"search": {
 							Type:     schema.TypeList,
 							Computed: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"displayable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"facetable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"searchable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"sortable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 								},
 							},
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:         schema.TypeString,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(documentAttributeValues(types.DocumentAttributeValueType("").Values()...), false),
 						},
 					},
 				},
@@ -493,7 +523,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units", "description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
@@ -503,6 +533,9 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
+		}
+		if d.HasChange("document_metadata_configuration_updates") {
+			input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
 		}
 		if d.HasChange("name") {
 			input.Name = aws.String(d.Get("name").(string))
@@ -679,6 +712,95 @@ func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfig
 	result := &types.CapacityUnitsConfiguration{
 		QueryCapacityUnits:   aws.Int32(int32(tfMap["query_capacity_units"].(int))),
 		StorageCapacityUnits: aws.Int32(int32(tfMap["storage_capacity_units"].(int))),
+	}
+
+	return result
+}
+
+func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []interface{}) []types.DocumentMetadataConfiguration {
+	if len(documentMetadataConfigurationUpdates) == 0 {
+		return nil
+	}
+
+	documentMetadataConfigurationUpdateConfigs := []types.DocumentMetadataConfiguration{}
+
+	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
+		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
+		documentMetadataConfigurationUpdateConfig := types.DocumentMetadataConfiguration{
+			Name: aws.String(tfMap["name"].(string)),
+			Type: types.DocumentAttributeValueType(tfMap["type"].(string)),
+		}
+
+		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}))
+		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
+
+		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
+	}
+
+	return documentMetadataConfigurationUpdateConfigs
+}
+
+func expandRelevance(relevance []interface{}) *types.Relevance {
+	if len(relevance) == 0 || relevance[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := relevance[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.Relevance{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		result.Duration = aws.String(v)
+	}
+
+	if v, ok := tfMap["freshness"].(bool); ok {
+		result.Freshness = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["importance"].(int); ok {
+		result.Importance = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["rank_order"].(string); ok && v != "" {
+		result.RankOrder = types.Order(v)
+	}
+
+	if v, ok := tfMap["values_importance_map"].(map[string]interface{}); ok && len(v) > 0 {
+		result.ValueImportanceMap = flex.ExpandInt32Map(v)
+	}
+
+	return result
+}
+
+func expandSearch(search []interface{}) *types.Search {
+	if len(search) == 0 || search[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := search[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.Search{}
+
+	if v, ok := tfMap["displayable"].(bool); ok {
+		result.Displayable = v
+	}
+
+	if v, ok := tfMap["facetable"].(bool); ok {
+		result.Facetable = v
+	}
+
+	if v, ok := tfMap["searchable"].(bool); ok {
+		result.Searchable = v
+	}
+
+	if v, ok := tfMap["sortable"].(bool); ok {
+		result.Sortable = v
 	}
 
 	return result
@@ -1011,7 +1133,27 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 }
 
 // Helpers added. Could be generated or somehow use go 1.18 generics?
+func documentAttributeValues(input ...types.DocumentAttributeValueType) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
 func indexEditionValues(input ...types.IndexEdition) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
+func orderValues(input ...types.Order) []string {
 	var output []string
 
 	for _, v := range input {
