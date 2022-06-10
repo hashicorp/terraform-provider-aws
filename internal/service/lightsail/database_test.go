@@ -9,15 +9,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +33,7 @@ func TestAccDatabase_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_Basic(rName),
@@ -91,7 +90,7 @@ func TestAccDatabase_RelationalDatabaseName(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_Basic(rNameTooShort),
@@ -154,7 +153,7 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameTooShort),
@@ -221,7 +220,7 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameTooShort),
@@ -290,7 +289,7 @@ func TestAccDatabase_MasterPassword(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordTooShort),
@@ -335,7 +334,7 @@ func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_PreferredBackupWindow(rName, backupWindowInvalidHour),
@@ -390,7 +389,7 @@ func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
@@ -446,7 +445,7 @@ func TestAccDatabase_PubliclyAccessible(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_PubliclyAccessible(rName, "true"),
@@ -490,7 +489,7 @@ func TestAccDatabase_BackupRetentionEnabled(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_BackupRetentionEnabled(rName, "true"),
@@ -591,7 +590,7 @@ func TestAccDatabase_Tags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_Tags1(rName, "key1", "value1"),
@@ -665,7 +664,7 @@ func TestAccDatabase_disappears(t *testing.T) {
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		CheckDestroy:      testAccChecDatabaseDestroy,
+		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_Basic(rName),
@@ -709,7 +708,7 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 	}
 }
 
-func testAccChecDatabaseDestroy(s *terraform.State) error {
+func testAccCheckDatabaseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -721,14 +720,16 @@ func testAccChecDatabaseDestroy(s *terraform.State) error {
 			RelationalDatabaseName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetRelationalDatabase(&params)
+		respDatabase, err := conn.GetRelationalDatabase(&params)
 
-		if tfresource.NotFound(err) {
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
 			continue
 		}
 
-		if err != nil {
-			return err
+		if err == nil {
+			if respDatabase.RelationalDatabase != nil {
+				return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+			}
 		}
 
 		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
@@ -762,19 +763,19 @@ func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
 			RelationalDatabaseName: aws.String(rs.Primary.ID),
 		}
 
-		_, err = conn.GetRelationalDatabase(&params)
+		respDatabase, err := conn.GetRelationalDatabase(&params)
+
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			continue
+		}
 
 		if err == nil {
-			return fmt.Errorf("Lightsail Database %q still exists", rs.Primary.ID)
-		}
-
-		// Verify the error
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return nil
+			if respDatabase.RelationalDatabase != nil {
+				return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
 			}
 		}
-		return err
+
+		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
 	}
 
 	return nil
