@@ -1,6 +1,6 @@
 ## Making small changes to existing resources
 
-Most contributions to the provider will take the form of small additions or bugfixes on existing resources/datasources. In this case the existing resource will give you the best guidance on how the change should be structured, but we require the following to allow the change to be merged:
+Most contributions to the provider will take the form of small additions or bug-fixes on existing resources/datasources. In this case the existing resource will give you the best guidance on how the change should be structured, but we require the following to allow the change to be merged:
 
 - __Acceptance test coverage of new behavior__: Existing resources each
    have a set of [acceptance tests](running-and-writing-acceptance-tests.md) covering their functionality.

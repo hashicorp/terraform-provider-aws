@@ -1,6 +1,6 @@
 ## Make Changes to Documentation
 
-All practioner focused documentation is found in the `/website` folder of the repository.
+All practitioner focused documentation is found in the `/website` folder of the repository.
 ```
 ├── website/
     ├── r/                     # Documentation for resources

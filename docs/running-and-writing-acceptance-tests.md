@@ -212,7 +212,7 @@ Or:
 
 ## Writing an Acceptance Test
 
-Terraform has a framework for writing acceptance tests which minimises the
+Terraform has a framework for writing acceptance tests which minimizes the
 amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html) with Terraform AWS Provider specific conventions and helpers.
 
 ### Anatomy of an Acceptance Test
@@ -1231,7 +1231,7 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Sweeper Checklists
 
-- __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be sweeped, at `internal/sweep/sweep_test.go`.
+- __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be swept, at `internal/sweep/sweep_test.go`.
 - __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
 
 ### Writing Test Sweepers
@@ -1413,7 +1413,7 @@ For resources that support import, the additional item below is required that wi
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
 - [ ] __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Builtin Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/teststep.html#builtin-check-functions).
-- [ ] __Uses TestCheckResoureAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
+- [ ] __Uses TestCheckResourceAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
 - [ ] __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
 - [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAcc{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
 

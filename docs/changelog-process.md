@@ -1,8 +1,8 @@
 ## Changelog Process
 
-HashiCorp’s open-source projects have always maintained user-friendly, readable CHANGELOGs that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
+HashiCorp’s open-source projects have always maintained user-friendly, readable CHANGELOG.md that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
 
-We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate and update the changelog from files created in the `.changelog/` directory. It is important that when you raise your Pull Request, there is a changelog entry which describes the changes your contribution makes. Not all changes require an entry in the CHANGELOG, guidance follows on what changes do.
+We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate and update the changelog from files created in the `.changelog/` directory. It is important that when you raise your Pull Request, there is a changelog entry which describes the changes your contribution makes. Not all changes require an entry in the changelog, guidance follows on what changes do.
 
 ### Changelog Format
 
@@ -74,7 +74,7 @@ resource/aws_glue_classifier: Fix quote_symbol being optional
 
 ##### Resource and provider enhancements
 
-A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
+A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enhancements.
 
 ``````markdown
 ```release-note:enhancement

@@ -17,7 +17,7 @@ conflicts; they are attempting to apply changes to files that have since been
 relocated. Furthermore, any new files or functions introduced must be brought
 into line with the codebase's new conventions. The following steps are intended
 to resolve such a conflict -- though it should be noted that this guide is an
-active work in progress as additional pull requests are ameneded.
+active work in progress as additional pull requests are amended.
 
 These fixes, however, *in no way affect the prioritization* of a particular
 pull request. Once a pull request has been selected for review, the necessary

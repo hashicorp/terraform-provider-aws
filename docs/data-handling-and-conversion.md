@@ -124,7 +124,7 @@ _There are efforts to replace the Terraform Plugin type system with one similar 
 
 ### Zero Value Mapping
 
-As mentioned in the [Type Mapping section](#type-mapping), there is a discrepency with how the Terraform Plugin SDK represents values and the reality that a Terraform State may not configure an Attribute. These values will default to the matching underlying Go type "zero value" if not set:
+As mentioned in the [Type Mapping section](#type-mapping), there is a discrepancy with how the Terraform Plugin SDK represents values and the reality that a Terraform State may not configure an Attribute. These values will default to the matching underlying Go type "zero value" if not set:
 
 | Terraform Plugin SDK | Go Type | Zero Value |
 |----------------------|---------|------------|

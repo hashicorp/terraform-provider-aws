@@ -1,6 +1,6 @@
 New regions can typically be used immediately with the provider, with two important caveats:
 
-- Regions often need to be explicitly enabled via the AWS console. See [ap-east-1](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to enable a new region for use.
+- Regions often need to be explicitly enabled via the AWS console. See [ap-east-1 launch blog](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to enable a new region for use.
 - Until the provider is aware of the new region, automatic region validation will fail. In order to use the region before validation support is added to the provider you will need to disable region validation by doing the following:
 
 ```terraform
@@ -44,11 +44,11 @@ go get github.com/aws/aws-sdk-go@v#.#.#
 go mod tidy
 ```
 
-See the [Changelog Process](changelog-process.md) document for example changlog format.
+See the [Changelog Process](changelog-process.md) document for example changelog format.
 
 ### Update Region Specific values in static Datasources
 
-Some datasources include static values specific to regions that are not availalble via a standard AWS API call. These will need to be manually updated. AWS employees can code search previous region values to find new region values in internal packages like RIPStaticConfig if they are not documented yet.
+Some datasources include static values specific to regions that are not available via a standard AWS API call. These will need to be manually updated. AWS employees can code search previous region values to find new region values in internal packages like RIPStaticConfig if they are not documented yet.
 
 - Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go) and [`internal/service/elbv2/hosted_zone_id_data_source.go`](../../internal/service/elbv2/hosted_zone_id_data_source.go)
 - Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)

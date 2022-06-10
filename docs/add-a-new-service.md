@@ -3,7 +3,7 @@ AWS frequently launches new services, and Terraform support is frequently desire
 ### Add a Service Client
 
 
-Before new resources are submitted, please raise a separate pull request containing just the new AWS Go SDK service client. Doing so will pull the AWS Go SDK service code into the project at the current version. Since the AWS Go SDK is updated frequently, these pull reqests can easily have merge conflicts or be out of date. The maintainers prioritize reviewing and merging these quickly to prevent those situations.
+Before new resources are submitted, please raise a separate pull request containing just the new AWS Go SDK service client. Doing so will pull the AWS Go SDK service code into the project at the current version. Since the AWS Go SDK is updated frequently, these pull requests can easily have merge conflicts or be out of date. The maintainers prioritize reviewing and merging these quickly to prevent those situations.
 
 To add an AWS Go SDK service client:
 
@@ -20,7 +20,7 @@ To add an AWS Go SDK service client:
 
 ### Perform Service Design
 
-Before adding a new service to the provider its a good idea to familarize yourself with the primary workflows practioners are likely to want to accomplish with the provider to ensure the provider design can solve for for this. Its not always necessary to cover 100% of the AWS service offering to unblock most workflows.
+Before adding a new service to the provider its a good idea to familiarize yourself with the primary workflows practitioners are likely to want to accomplish with the provider to ensure the provider design can solve for for this. Its not always necessary to cover 100% of the AWS service offering to unblock most workflows.
 
 You should have an idea of what resources and datasources should be added, their dependencies and relative importance in relation to the workflow. This should give you an idea of the order in which resources to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
 

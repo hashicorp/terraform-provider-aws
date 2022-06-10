@@ -4,7 +4,7 @@ Each resource should be submitted for review in isolation, pull requests contain
 
 Please use the `skaff` tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
-### Prequisites
+### Prerequisites
 
 If this is the first resource for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
 
@@ -33,7 +33,7 @@ Typically you will add arguments to represent the values that are under control 
 Attribute names are to specified in `camel_case` as opposed to the AWS API which is `CamelCase`
 
 #### Implement CRUD handlers
-These will map planned Terraform state to the AWS API call, or an AWS API response to an applied Terrafrom state. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
+These will map planned Terraform state to the AWS API call, or an AWS API response to an applied Terraform state. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
 
 #### Write passing Acceptance Tests
 In order to adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](#writing-acceptance-tests) below for a detailed guide on how to approach these.
@@ -41,7 +41,7 @@ In order to adequately test the resource we will need to write a complete set of
 You will need at minimum:
 
 - Basic Test - Tests full lifecycle (CRUD + Import) of a minimal configuration (all required fields, no optional).
-- Dissapears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
+- Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
 - Per Attribute Tests - For each attribute a test should exists which tests that particular attribute in isolation alongside any required fields.
 
 #### Create documentation for the resource. 

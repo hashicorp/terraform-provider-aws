@@ -1,10 +1,10 @@
-New datasources are required when AWS adds a new service, or adds new features within an existing service which would require a new datasource to allow practioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a datasource, but some are more useful than others.
+New datasources are required when AWS adds a new service, or adds new features within an existing service which would require a new datasource to allow practitioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a datasource, but some are more useful than others.
 
 Each datasource should be submitted for review in isolation, pull requests containing multiple datasources and/or resources are harder to review and the maintainers will normally ask for them to be broken apart.
 
 Please use the `skaff` tool to generate new datasource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
-### Prequisites
+### Prerequisites
 
 If this is the first addition of a resource or datasource for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
 
@@ -40,7 +40,7 @@ In order to adequately test the resource we will need to write a complete set of
 You will need at minimum:
 
 - Basic Test - Tests full lifecycle (CRUD + Import) of a minimal configuration (all required fields, no optional).
-- Dissapears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
+- Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
 - Per Attribute Tests - For each attribute a test should exists which tests that particular attribute in isolation alongside any required fields.
 
 #### Create documentation for the resource. 

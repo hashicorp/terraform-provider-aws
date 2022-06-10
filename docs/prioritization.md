@@ -12,7 +12,7 @@ Due to the variety of input sources, the scale of the provider, and resource con
 
 ## Prioritization
 
-We prioritze work based on a number of factors, including community feedback, issue/PR reactions, as well as the source of the request. While community feedback is heavily weighted, there are times where other factors take precedence. By their nature, some factors are less visible to the community, and so are outlined here as a way to be as transparent as possible. Each of the sources of input are detailed below.
+We prioritize work based on a number of factors, including community feedback, issue/PR reactions, as well as the source of the request. While community feedback is heavily weighted, there are times where other factors take precedence. By their nature, some factors are less visible to the community, and so are outlined here as a way to be as transparent as possible. Each of the sources of input are detailed below.
 
 ### Community
 
