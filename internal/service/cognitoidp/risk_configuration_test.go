@@ -222,7 +222,7 @@ resource "aws_cognito_risk_configuration" "test" {
 
   risk_exception_configuration {
     blocked_ip_range_list = ["10.10.10.10/32", "10.10.10.11/32"]
-	skipped_ip_range_list = ["10.10.10.12/32"]
+    skipped_ip_range_list = ["10.10.10.12/32"]
   }
 }
 `, rName)
@@ -240,7 +240,7 @@ resource "aws_cognito_risk_configuration" "test" {
   compromised_credentials_risk_configuration {
     event_filter = ["SIGN_IN"]
     actions {
-       event_action = "BLOCK"
+      event_action = "BLOCK"
     }
   }
 }
