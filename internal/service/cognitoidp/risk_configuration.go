@@ -291,6 +291,10 @@ func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) erro
 		input.CompromisedCredentialsRiskConfiguration = expandCompromisedCredentialsRiskConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("account_takeover_risk_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.AccountTakeoverRiskConfiguration = expandAccountTakeoverRiskConfiguration(v.([]interface{}))
+	}
+
 	_, err := conn.SetRiskConfiguration(input)
 
 	if err != nil {
@@ -460,6 +464,22 @@ func flattenCompromisedCredentialsActions(apiObject *cognitoidentityprovider.Com
 	return []interface{}{tfMap}
 }
 
+func expandAccountTakeoverRiskConfiguration(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverRiskConfigurationType {
+	config := riskConfig[0].(map[string]interface{})
+
+	accountTakeoverRiskConfiguration := &cognitoidentityprovider.AccountTakeoverRiskConfigurationType{}
+
+	if v, ok := config["notify_configuration"].([]interface{}); ok && len(v) > 0 {
+		accountTakeoverRiskConfiguration.NotifyConfiguration = expandNotifyConfiguration(v)
+	}
+
+	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
+		accountTakeoverRiskConfiguration.Actions = expandAccountTakeoverActions(v)
+	}
+
+	return accountTakeoverRiskConfiguration
+}
+
 func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.AccountTakeoverRiskConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -476,6 +496,26 @@ func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.
 	}
 
 	return []interface{}{tfMap}
+}
+
+func expandAccountTakeoverActions(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverActionsType {
+	config := riskConfig[0].(map[string]interface{})
+
+	actions := &cognitoidentityprovider.AccountTakeoverActionsType{}
+
+	if v, ok := config["high_action"].([]interface{}); ok && len(v) > 0 {
+		actions.HighAction = expandAccountTakeoverAction(v)
+	}
+
+	if v, ok := config["low_action"].([]interface{}); ok && len(v) > 0 {
+		actions.LowAction = expandAccountTakeoverAction(v)
+	}
+
+	if v, ok := config["medium_action"].([]interface{}); ok && len(v) > 0 {
+		actions.MediumAction = expandAccountTakeoverAction(v)
+	}
+
+	return actions
 }
 
 func flattenAccountTakeoverActions(apiObject *cognitoidentityprovider.AccountTakeoverActionsType) []interface{} {
@@ -500,6 +540,22 @@ func flattenAccountTakeoverActions(apiObject *cognitoidentityprovider.AccountTak
 	return []interface{}{tfMap}
 }
 
+func expandAccountTakeoverAction(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverActionType {
+	config := riskConfig[0].(map[string]interface{})
+
+	action := &cognitoidentityprovider.AccountTakeoverActionType{}
+
+	if v, ok := config["event_action"].(string); ok && v != "" {
+		action.EventAction = aws.String(v)
+	}
+
+	if v, ok := config["notify"].(bool); ok {
+		action.Notify = aws.Bool(v)
+	}
+
+	return action
+}
+
 func flattenAccountTakeoverAction(apiObject *cognitoidentityprovider.AccountTakeoverActionType) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -516,6 +572,38 @@ func flattenAccountTakeoverAction(apiObject *cognitoidentityprovider.AccountTake
 	}
 
 	return []interface{}{tfMap}
+}
+
+func expandNotifyConfiguration(riskConfig []interface{}) *cognitoidentityprovider.NotifyConfigurationType {
+	config := riskConfig[0].(map[string]interface{})
+
+	notifConfig := &cognitoidentityprovider.NotifyConfigurationType{}
+
+	if v, ok := config["from"].(string); ok && v != "" {
+		notifConfig.From = aws.String(v)
+	}
+
+	if v, ok := config["reply_to"].(string); ok && v != "" {
+		notifConfig.ReplyTo = aws.String(v)
+	}
+
+	if v, ok := config["source_arn"].(string); ok && v != "" {
+		notifConfig.SourceArn = aws.String(v)
+	}
+
+	if v, ok := config["block_email"].([]interface{}); ok && len(v) > 0 {
+		notifConfig.BlockEmail = expandNotifyEmail(v)
+	}
+
+	if v, ok := config["mfa_email"].([]interface{}); ok && len(v) > 0 {
+		notifConfig.MfaEmail = expandNotifyEmail(v)
+	}
+
+	if v, ok := config["no_action_email"].([]interface{}); ok && len(v) > 0 {
+		notifConfig.NoActionEmail = expandNotifyEmail(v)
+	}
+
+	return notifConfig
 }
 
 func flattenNotifyConfiguration(apiObject *cognitoidentityprovider.NotifyConfigurationType) []interface{} {
@@ -550,6 +638,26 @@ func flattenNotifyConfiguration(apiObject *cognitoidentityprovider.NotifyConfigu
 	}
 
 	return []interface{}{tfMap}
+}
+
+func expandNotifyEmail(riskConfig []interface{}) *cognitoidentityprovider.NotifyEmailType {
+	config := riskConfig[0].(map[string]interface{})
+
+	notifyEmail := &cognitoidentityprovider.NotifyEmailType{}
+
+	if v, ok := config["html_body"].(string); ok && v != "" {
+		notifyEmail.HtmlBody = aws.String(v)
+	}
+
+	if v, ok := config["subject"].(string); ok && v != "" {
+		notifyEmail.Subject = aws.String(v)
+	}
+
+	if v, ok := config["text_body"].(string); ok && v != "" {
+		notifyEmail.TextBody = aws.String(v)
+	}
+
+	return notifyEmail
 }
 
 func flattenNotifyEmail(apiObject *cognitoidentityprovider.NotifyEmailType) []interface{} {
