@@ -30,12 +30,12 @@ const (
 	DatabaseMinTimeout = 3 * time.Second
 )
 
-// waitLightsailOperation waits for an Operation to return Succeeded or Compleated
-func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) error {
+// waitOperation waits for an Operation to return Succeeded or Compleated
+func waitOperation(conn *lightsail.Lightsail, oid *string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{lightsail.OperationStatusStarted},
 		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusLightsailOperation(conn, oid),
+		Refresh:    statusOperation(conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
@@ -55,7 +55,7 @@ func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.Get
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
-		Refresh:    statusLightsailDatabase(conn, db),
+		Refresh:    statusDatabase(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -76,7 +76,7 @@ func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!aws.BoolValue(status))},
 		Target:     []string{strconv.FormatBool(aws.BoolValue(status))},
-		Refresh:    statusLightsailDatabaseBackupRetention(conn, db),
+		Refresh:    statusDatabaseBackupRetention(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,

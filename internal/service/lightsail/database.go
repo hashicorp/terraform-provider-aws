@@ -224,7 +224,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	op := resp.Operations[0]
 	d.SetId(d.Get("relational_database_name").(string))
 
-	err = waitLightsailOperation(conn, op.Id)
+	err = waitOperation(conn, op.Id)
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 	}
@@ -250,7 +250,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 
 		op := resp.Operations[0]
 
-		err = waitLightsailOperation(conn, op.Id)
+		err = waitOperation(conn, op.Id)
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
@@ -361,7 +361,7 @@ func ResourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 
 	op := resp.Operations[0]
 
-	err = waitLightsailOperation(conn, op.Id)
+	err = waitOperation(conn, op.Id)
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to Delete: %s", d.Id(), err)
 	}
@@ -448,7 +448,7 @@ func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		op := resp.Operations[0]
 
-		err = waitLightsailOperation(conn, op.Id)
+		err = waitOperation(conn, op.Id)
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}

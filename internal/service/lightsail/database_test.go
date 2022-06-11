@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDatabase_basic(t *testing.T) {
+func TestAccLightsailDatabase_basic(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
@@ -72,7 +72,7 @@ func TestAccDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_RelationalDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
@@ -134,7 +134,7 @@ func TestAccDatabase_RelationalDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_MasterDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -200,7 +200,7 @@ func TestAccDatabase_MasterDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_MasterUsername(t *testing.T) {
+func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -271,7 +271,7 @@ func TestAccDatabase_MasterUsername(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_MasterPassword(t *testing.T) {
+func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	password := "testpassword"
 	passwordTooShort := "short"
@@ -319,7 +319,7 @@ func TestAccDatabase_MasterPassword(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
+func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -373,7 +373,7 @@ func TestAccDatabase_PreferredBackupWindow(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
+func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -432,7 +432,7 @@ func TestAccDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_PubliclyAccessible(t *testing.T) {
+func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -476,7 +476,7 @@ func TestAccDatabase_PubliclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_BackupRetentionEnabled(t *testing.T) {
+func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -520,7 +520,7 @@ func TestAccDatabase_BackupRetentionEnabled(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_FinalSnapshotName(t *testing.T) {
+func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -577,7 +577,7 @@ func TestAccDatabase_FinalSnapshotName(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_Tags(t *testing.T) {
+func TestAccLightsailDatabase_Tags(t *testing.T) {
 	var db1, db2, db3 lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
@@ -632,7 +632,7 @@ func TestAccDatabase_Tags(t *testing.T) {
 	})
 }
 
-func TestAccDatabase_disappears(t *testing.T) {
+func TestAccLightsailDatabase_disappears(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	resourceName := "aws_lightsail_database.test"
