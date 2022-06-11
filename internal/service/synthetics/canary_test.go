@@ -3,12 +3,8 @@ package synthetics_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -60,7 +56,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_zipUpdated(rName),
@@ -117,7 +113,7 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_artifactEncryptionKMS(rName),
@@ -155,7 +151,7 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.2"),
@@ -191,7 +187,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_start(rName, false),
@@ -240,7 +236,7 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_startZipUpdated(rName, true),
@@ -295,7 +291,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary"},
+				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary", "delete_lambda"},
 			},
 		},
 	})
@@ -325,7 +321,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_run2(rName),
@@ -369,7 +365,7 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_runTracing(rName, false),
@@ -411,7 +407,7 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "run_config.0.environment_variables"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "run_config.0.environment_variables"},
 			},
 			{
 				Config: testAccCanaryConfig_runEnvVariables2(rName),
@@ -460,7 +456,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_vpc2(rName),
@@ -478,7 +474,6 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					testAccCheckCanaryDeleteImplicitResources(resourceName),
 				),
 			},
 		},
@@ -508,7 +503,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
 				Config: testAccCanaryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -599,57 +594,6 @@ func testAccCheckCanaryExists(n string, canary *synthetics.Canary) resource.Test
 		}
 
 		*canary = *output
-
-		return nil
-	}
-}
-
-func testAccCheckCanaryDeleteImplicitResources(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("synthetics Canary not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("synthetics Canary name not set")
-		}
-
-		lambdaConn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
-
-		layerArn := rs.Primary.Attributes["source_location_arn"]
-		layerArnObj, err := arn.Parse(layerArn)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda Layer %s incorrect arn format: %w", layerArn, err)
-		}
-
-		layerName := strings.Split(layerArnObj.Resource, ":")
-
-		deleteLayerVersionInput := &lambda.DeleteLayerVersionInput{
-			LayerName:     aws.String(layerName[1]),
-			VersionNumber: aws.Int64(1),
-		}
-
-		_, err = lambdaConn.DeleteLayerVersion(deleteLayerVersionInput)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda Layer %s could not be deleted: %w", layerArn, err)
-		}
-
-		lambdaArn := rs.Primary.Attributes["engine_arn"]
-		lambdaArnObj, err := arn.Parse(layerArn)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda %s incorrect arn format: %w", lambdaArn, err)
-		}
-		lambdaArnParts := strings.Split(lambdaArnObj.Resource, ":")
-
-		deleteLambdaInput := &lambda.DeleteFunctionInput{
-			FunctionName: aws.String(lambdaArnParts[1]),
-		}
-
-		_, err = lambdaConn.DeleteFunction(deleteLambdaInput)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda %s could not be deleted: %w", lambdaArn, err)
-		}
 
 		return nil
 	}
@@ -798,6 +742,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -821,6 +766,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -845,6 +791,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -869,6 +816,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -894,6 +842,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -923,6 +872,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -940,6 +890,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.3"
+  delete_lambda        = true
 
   artifact_config {
     s3_encryption {
@@ -970,6 +921,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.3"
+  delete_lambda        = true
 
   artifact_config {
     s3_encryption {
@@ -996,6 +948,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = %[2]q
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1015,6 +968,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1035,6 +989,7 @@ resource "aws_synthetics_canary" "test" {
   zip_file             = "test-fixtures/lambdatest.zip"
   start_canary         = %[2]t
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1055,6 +1010,7 @@ resource "aws_synthetics_canary" "test" {
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1076,6 +1032,7 @@ resource "aws_synthetics_canary" "test" {
   s3_key               = aws_s3_object.test.key
   s3_version           = aws_s3_object.test.version_id
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1162,6 +1119,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1189,6 +1147,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1216,6 +1175,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1240,6 +1200,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1261,6 +1222,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
