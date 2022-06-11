@@ -187,13 +187,8 @@ func FindIPAMPoolCIDRAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocati
 	}
 
 	input := &ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(pool_id),
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("ipam-pool-allocation-id"),
-				Values: aws.StringSlice([]string{allocation_id}),
-			},
-		},
+		IpamPoolId:           aws.String(pool_id),
+		IpamPoolAllocationId: aws.String(allocation_id),
 	}
 
 	output, err := conn.GetIpamPoolAllocations(input)

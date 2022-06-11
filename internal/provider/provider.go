@@ -1041,7 +1041,8 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_cost_category": ce.ResourceCostCategory(),
+			"aws_ce_anomaly_monitor": ce.ResourceAnomalyMonitor(),
+			"aws_ce_cost_category":   ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1628,6 +1629,7 @@ func Provider() *schema.Provider {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_database":              lightsail.ResourceDatabase(),
 			"aws_lightsail_domain":                lightsail.ResourceDomain(),
 			"aws_lightsail_instance":              lightsail.ResourceInstance(),
 			"aws_lightsail_instance_public_ports": lightsail.ResourceInstancePublicPorts(),
