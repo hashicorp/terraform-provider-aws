@@ -239,9 +239,9 @@ resource "aws_cognito_risk_configuration" "test" {
 
   compromised_credentials_risk_configuration {
     event_filter = ["SIGN_IN"]
-	actions {
-      event_action = "BLOCK"
-	}
+    actions {
+       event_action = "BLOCK"
+    }
   }
 }
 `, rName)
