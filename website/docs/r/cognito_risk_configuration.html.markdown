@@ -81,7 +81,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The AWS account ID for the user pool owner.
+* `id` - The user pool ID. or The user pool ID and Client Id separated by a `:` if the configuration is client specific.
 
 ## Import
 
@@ -89,4 +89,8 @@ Cognito Risk Configurations can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cognito_risk_configuration.main example
+```
+
+```
+$ terraform import aws_cognito_risk_configuration.main example:example
 ```
