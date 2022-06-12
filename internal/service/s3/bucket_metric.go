@@ -54,9 +54,10 @@ func ResourceBucketMetric() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 		},
 	}
