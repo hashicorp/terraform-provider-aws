@@ -27,6 +27,9 @@ func TestAccGrafana_serial(t *testing.T) {
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
 			"tags":                     testAccWorkspace_tags,
 		},
+		"ApiKey": {
+			"basic": testAccWorkspaceApiKey_basic,
+		},
 		"DataSource": {
 			"basic": testAccWorkspaceDataSource_basic,
 		},
