@@ -97,8 +97,10 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 	cidr := aws.StringValue(output.IpamPoolCidr.Cidr)
 	id := encodeIPAMPoolCIDRId(cidr, pool_id)
 
-	if _, err = WaitIPAMPoolCIDRAvailable(conn, id, ipamPoolCIDRCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", id, err)
+	v, err := WaitIPAMPoolCIDRAvailable(conn, id, ipamPoolCIDRCreateTimeout)
+	outval := aws.StringValue(v.FailureReason.Message)
+	if err != nil {
+		return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", outval, err)
 	}
 
 	d.SetId(id)
