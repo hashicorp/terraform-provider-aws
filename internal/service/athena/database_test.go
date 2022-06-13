@@ -89,7 +89,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseAclConfig(rName, dbName, false),
+				Config: testAccDatabaseACLConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -491,7 +491,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName, forceDestroy)
 }
 
-func testAccDatabaseAclConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseACLConfig(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q

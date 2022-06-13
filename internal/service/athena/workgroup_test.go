@@ -66,7 +66,7 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationAclConfig(rName),
+				Config: testAccWorkGroupConfigConfigurationResultConfigurationACLConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
@@ -819,7 +819,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, bucketName)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationAclConfig(rName string) string {
+func testAccWorkGroupConfigConfigurationResultConfigurationACLConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q

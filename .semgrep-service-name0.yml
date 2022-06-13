@@ -92,7 +92,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/athena
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -110,7 +109,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/athena
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -128,7 +126,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/athena
         - internal/service/firehose
         - internal/service/kafka
     patterns:
