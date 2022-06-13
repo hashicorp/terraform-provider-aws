@@ -458,6 +458,61 @@ func testAccDomain_disappears(t *testing.T) {
 	})
 }
 
+func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_sharingSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
 func testAccCheckDomainDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
