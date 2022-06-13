@@ -394,16 +394,6 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// CreateIndex API does not support capacity_units but UpdateIndex does
 	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		// arn needed to update tags
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "kendra",
-			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  fmt.Sprintf("index/%s", d.Id()),
-		}.String()
-
-		d.Set("arn", arn)
 		return resourceIndexUpdate(ctx, d, meta)
 	}
 
@@ -532,7 +522,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
+	if !d.IsNewResource() && d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
