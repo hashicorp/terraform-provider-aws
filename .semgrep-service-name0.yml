@@ -277,7 +277,6 @@ rules:
         - internal/service/elbv2
         - internal/service/emrcontainers
         - internal/service/events
-        - internal/service/firehose
         - internal/service/glacier
         - internal/service/globalaccelerator
         - internal/service/grafana
