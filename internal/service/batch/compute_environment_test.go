@@ -212,7 +212,7 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_ec2DesiredVcpusEC2KeyPairImageIdAndResourcesTags(rName, publicKey),
+				Config: testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
@@ -1612,7 +1612,7 @@ resource "aws_batch_compute_environment" "test" {
 `, rName))
 }
 
-func testAccComputeEnvironmentConfig_ec2DesiredVcpusEC2KeyPairImageIdAndResourcesTags(rName, publicKey string) string {
+func testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey string) string {
 	return acctest.ConfigCompose(
 		testAccComputeEnvironmentBaseConfig(rName),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
