@@ -9,6 +9,8 @@ nav:
   - Getting Started: index.md
   - Prioritization: prioritization.md
   - Development Environment Setup: development-environment.md
+  - Raising a Pull Request: raising-a-pull-request.md
+  - Issue Reporting and Lifecycle: issue-reporting-and-lifecycle.md
   - Guides:
     - Adding a New Resource: add-a-new-resource.md
     - Adding a New Service: add-a-new-service.md
@@ -28,7 +30,7 @@ nav:
     - Dependency Updates: dependency-updates.md
     - Error Handling: error-handling.md
     - Retries and Waiters: retries-and-waiters.md
-    - Service Packages Refactor: service-packages-pullrequest-guide.md
+    - Service Packages Refactor: service-package-pullrequest-guide.md
   - Core Services: core-services.md
   - Design and Standards:
     - Provider Design: provider-design.md
