@@ -29,17 +29,8 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: |
-        results=$( semgrep -c .semgrep-service-name0.yml 2>&1 )
-        while [[ "${results}" == *Invalid_argument* ]]; do
-          echo "${results}"
-          results=$( semgrep -c .semgrep-service-name0.yml 2>&1 )
-        done
-        if [[ ! "${results}" == *" 0 findings"* ]]; then
-          echo "${results}"
-          return 5
-        fi
-        echo "${results}"
+    - shell: bash
+    - run: .github/scripts/semgrep.sh 0
   naming_semgrep1:
     name: Semgrep Naming Scan C-G
     runs-on: ubuntu-latest
@@ -48,17 +39,8 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: |
-        results=$( semgrep -c .semgrep-service-name1.yml 2>&1 )
-        while [[ "${results}" == *Invalid_argument* ]]; do
-          echo "${results}"
-          results=$( semgrep -c .semgrep-service-name1.yml 2>&1 )
-        done
-        if [[ ! "${results}" == *" 0 findings"* ]]; then
-          echo "${results}"
-          return 5
-        fi
-        echo "${results}"
+    - shell: bash
+    - run: .github/scripts/semgrep.sh 1
   naming_semgrep2:
     name: Semgrep Naming Scan G-Q
     runs-on: ubuntu-latest
@@ -67,17 +49,8 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: |
-        results=$( semgrep -c .semgrep-service-name2.yml 2>&1 )
-        while [[ "${results}" == *Invalid_argument* ]]; do
-          echo "${results}"
-          results=$( semgrep -c .semgrep-service-name2.yml 2>&1 )
-        done
-        if [[ ! "${results}" == *" 0 findings"* ]]; then
-          echo "${results}"
-          return 5
-        fi
-        echo "${results}"
+    - shell: bash
+    - run: .github/scripts/semgrep.sh 2
   naming_semgrep3:
     name: Semgrep Naming Scan Q-Z
     runs-on: ubuntu-latest
@@ -86,14 +59,5 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: |
-        results=$( semgrep -c .semgrep-service-name3.yml 2>&1 )
-        while [[ "${results}" == *Invalid_argument* ]]; do
-          echo "${results}"
-          results=$( semgrep -c .semgrep-service-name3.yml 2>&1 )
-        done
-        if [[ ! "${results}" == *" 0 findings"* ]]; then
-          echo "${results}"
-          return 5
-        fi
-        echo "${results}"
+    - shell: bash
+    - run: .github/scripts/semgrep.sh 3
