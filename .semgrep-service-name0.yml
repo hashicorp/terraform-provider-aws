@@ -92,7 +92,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
         - internal/service/emr
@@ -113,7 +112,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
         - internal/service/emr
@@ -134,7 +132,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
         - internal/service/emr
@@ -252,7 +249,6 @@ rules:
       exclude:
         - internal/service/accessanalyzer
         - internal/service/account
-        - internal/service/acm
         - internal/service/acmpca
         - internal/service/amp
         - internal/service/amplify
@@ -442,6 +438,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)AccessAnalyzer"
     severity: WARNING
+  - id: acm-in-func-name
+    languages:
+      - go
+    message: Do not use "ACM" in func name inside acm package
+    paths:
+      include:
+        - internal/service/acm
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ACM"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: acm-in-test-name
+    languages:
+      - go
+    message: Include "ACM" in test name
+    paths:
+      include:
+        - internal/service/acm/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccACM"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: acm-in-const-name
+    languages:
+      - go
+    message: Do not use "ACM" in const name inside acm package
+    paths:
+      include:
+        - internal/service/acm
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ACM"
+    severity: WARNING
+  - id: acm-in-var-name
+    languages:
+      - go
+    message: Do not use "ACM" in var name inside acm package
+    paths:
+      include:
+      - internal/service/acm
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ACM"
+    severity: WARNING    
   - id: amg-in-func-name
     languages:
       - go
