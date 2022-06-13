@@ -1,6 +1,6 @@
 # Terraform AWS Provider - Contributor Guide
 
-<p>The AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. There are many way to contribute, and we have extensive documentation on them. Below are the main ways most users engage with the provider repository and the high level steps required to ensure the contribution goes smoothly.</p>
+The AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. There are many way to contribute, and we have extensive documentation on them. Below are the main ways most users engage with the provider repository and the high level steps required to ensure the contribution goes smoothly.
 
 ## What would you like do do?
 
@@ -43,7 +43,7 @@ Allow reading an existing AWS resource by id or filter, and allow its use within
 
 ### Add a newly released AWS Region
 
-New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround unecessary.
+New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround necessary.
 
 - [Add a new Region](add-a-new-region)
 
