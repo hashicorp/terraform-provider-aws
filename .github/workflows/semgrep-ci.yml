@@ -35,7 +35,7 @@ jobs:
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name0.yml 2>&1 )
         done
-        if [[ ! "${results}" == *" 0 findings"* ]]; do
+        if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
           return 1
         fi
@@ -53,7 +53,7 @@ jobs:
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name1.yml 2>&1 )
         done
-        if [[ ! "${results}" == *" 0 findings"* ]]; do
+        if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
           return 1
         fi
@@ -71,7 +71,7 @@ jobs:
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name2.yml 2>&1 )
         done
-        if [[ ! "${results}" == *" 0 findings"* ]]; do
+        if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
           return 1
         fi
@@ -89,7 +89,7 @@ jobs:
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name3.yml 2>&1 )
         done
-        if [[ ! "${results}" == *" 0 findings"* ]]; do
+        if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
           return 1
         fi
