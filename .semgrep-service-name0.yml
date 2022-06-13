@@ -95,7 +95,6 @@ rules:
         - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
-        - internal/service/emr
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -116,7 +115,6 @@ rules:
         - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
-        - internal/service/emr
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -137,7 +135,6 @@ rules:
         - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
-        - internal/service/emr
         - internal/service/firehose
         - internal/service/kafka
     patterns:
