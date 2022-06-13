@@ -296,7 +296,6 @@ rules:
         - internal/service/elasticsearch
         - internal/service/elb
         - internal/service/elbv2
-        - internal/service/emr
         - internal/service/emrcontainers
         - internal/service/events
         - internal/service/firehose
