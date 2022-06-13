@@ -1,4 +1,9 @@
 ## 4.19.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ec2_managed_prefix_list_entry: Fix error when attempting to create or delete multiple list entries ([#25046](https://github.com/hashicorp/terraform-provider-aws/issues/25046))
+
 ## 4.18.0 (June 10, 2022)
 
 FEATURES:
