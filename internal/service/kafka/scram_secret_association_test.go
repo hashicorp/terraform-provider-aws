@@ -28,7 +28,7 @@ func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociation_basic(rName, 1),
+				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", clusterResourceName, "arn"),
@@ -59,13 +59,13 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 		CheckDestroy:      testAccCheckScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociation_basic(rName, 1),
+				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(resourceName),
 				),
 			},
 			{
-				Config: testAccScramSecretAssociation_basic(rName, 3),
+				Config: testAccScramSecretAssociationConfig_basic(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "3"),
@@ -75,7 +75,7 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccScramSecretAssociation_basic(rName, 2),
+				Config: testAccScramSecretAssociationConfig_basic(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "2"),
@@ -103,7 +103,7 @@ func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociation_basic(rName, 1),
+				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceScramSecretAssociation(), resourceName),
@@ -126,7 +126,7 @@ func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
 		CheckDestroy:      testAccCheckScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScramSecretAssociation_basic(rName, 1),
+				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceCluster(), clusterResourceName),
@@ -240,7 +240,7 @@ POLICY
 `, rName, count)
 }
 
-func testAccScramSecretAssociation_basic(rName string, count int) string {
+func testAccScramSecretAssociationConfig_basic(rName string, count int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
 		testAccScramSecretAssociationBaseConfig(rName, count), `

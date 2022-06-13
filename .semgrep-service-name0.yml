@@ -299,7 +299,6 @@ rules:
         - internal/service/iam
         - internal/service/identitystore
         - internal/service/iot
-        - internal/service/kafka
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
         - internal/service/lambda
