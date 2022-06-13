@@ -487,9 +487,12 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("capacity_units", "description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
+		}
+		if d.HasChange("capacity_units") {
+			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
 		}
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
