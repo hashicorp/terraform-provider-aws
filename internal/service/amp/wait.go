@@ -16,7 +16,7 @@ const (
 	workspaceTimeout = 5 * time.Minute
 )
 
-func waitAWSAlertManagerDefinitionCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
+func waitAlertManagerDefinitionCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeCreating},
 		Target:  []string{prometheusservice.AlertManagerDefinitionStatusCodeActive},

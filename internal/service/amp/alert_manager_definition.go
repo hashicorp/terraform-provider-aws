@@ -56,7 +56,7 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(workspaceID)
 
-	if _, err := waitAWSAlertManagerDefinitionCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitAlertManagerDefinitionCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Prometheus Alert Manager Definition (%s) create: %w", d.Id(), err))
 	}
 
