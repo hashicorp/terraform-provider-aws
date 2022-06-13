@@ -31,12 +31,13 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         results=$( semgrep -c .semgrep-service-name0.yml 2>&1 )
-        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]] && [[ "${results}" == *" 0 findings"* ]]; do
+        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]]; do
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name0.yml 2>&1 )
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
-          >&2 echo "${results}"
+          echo "${results}"
+          return 2
         fi
         echo "${results}"
   naming_semgrep1:
@@ -49,12 +50,13 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         results=$( semgrep -c .semgrep-service-name1.yml 2>&1 )
-        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]] && [[ "${results}" == *" 0 findings"* ]]; do
+        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]]; do
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name1.yml 2>&1 )
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
-          >&2 echo "${results}"
+          echo "${results}"
+          return 2
         fi
         echo "${results}"
   naming_semgrep2:
@@ -67,12 +69,13 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         results=$( semgrep -c .semgrep-service-name2.yml 2>&1 )
-        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]] && [[ "${results}" == *" 0 findings"* ]]; do
+        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]]; do
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name2.yml 2>&1 )
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
-          >&2 echo "${results}"
+          echo "${results}"
+          return 2
         fi
         echo "${results}"
   naming_semgrep3:
@@ -85,11 +88,12 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         results=$( semgrep -c .semgrep-service-name3.yml 2>&1 )
-        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]] && [[ "${results}" == *" 0 findings"* ]]; do
+        while [[ "${results}" == *"Invalid_argument \"index out of bounds\""* ]]; do
           echo "Found Invalid_argument \"index out of bounds\"; trying semgrep again"
           results=$( semgrep -c .semgrep-service-name3.yml 2>&1 )
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
-          >&2 echo "${results}"
+          echo "${results}"
+          return 2
         fi
         echo "${results}"
