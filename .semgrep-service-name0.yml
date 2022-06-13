@@ -256,7 +256,6 @@ rules:
         - internal/service/appflow
         - internal/service/appmesh
         - internal/service/appstream
-        - internal/service/appsync
         - internal/service/athena
         - internal/service/autoscaling
         - internal/service/backup
