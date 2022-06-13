@@ -1378,7 +1378,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchBasic(rName),
+				Config: testAccDeliveryStreamConfig_elasticsearchBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -1390,7 +1390,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchUpdate(rName),
+				Config: testAccDeliveryStreamConfig_elasticsearchUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
@@ -1432,7 +1432,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchEndpoint(rName),
+				Config: testAccDeliveryStreamConfig_elasticsearchEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -1444,7 +1444,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchEndpointUpdate(rName),
+				Config: testAccDeliveryStreamConfig_elasticsearchEndpointUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
@@ -1488,7 +1488,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchVPCBasic(rName),
+				Config: testAccDeliveryStreamConfig_elasticsearchVPCBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -1504,7 +1504,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchVPCUpdate(rName),
+				Config: testAccDeliveryStreamConfig_elasticsearchVPCUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
@@ -1530,7 +1530,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchErrorOutputPrefix(rName, "prefix1"),
+				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
@@ -1543,7 +1543,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchErrorOutputPrefix(rName, "prefix2"),
+				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
@@ -1556,7 +1556,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeliveryStreamConfig_elasticSearchErrorOutputPrefix(rName, ""),
+				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
@@ -3477,7 +3477,7 @@ EOF
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchBasic(rName string) string {
+func testAccDeliveryStreamConfig_elasticsearchBasic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseElasticsearchConfig(rName),
 		fmt.Sprintf(`
@@ -3502,7 +3502,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchErrorOutputPrefix(rName, errorOutputPrefix string) string {
+func testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, errorOutputPrefix string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseElasticsearchConfig(rName),
 		fmt.Sprintf(`
@@ -3528,7 +3528,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName, errorOutputPrefix))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchVPCBasic(rName string) string {
+func testAccDeliveryStreamConfig_elasticsearchVPCBasic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseElasticsearchVPCConfig(rName),
 		fmt.Sprintf(`
@@ -3559,7 +3559,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchUpdate(rName string) string {
+func testAccDeliveryStreamConfig_elasticsearchUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
 		testAccDeliveryStreamBaseElasticsearchConfig(rName),
@@ -3599,7 +3599,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchVPCUpdate(rName string) string {
+func testAccDeliveryStreamConfig_elasticsearchVPCUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
 		testAccDeliveryStreamBaseElasticsearchVPCConfig(rName),
@@ -3642,7 +3642,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }`, rName))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchEndpoint(rName string) string {
+func testAccDeliveryStreamConfig_elasticsearchEndpoint(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseElasticsearchConfig(rName),
 		fmt.Sprintf(`
@@ -3666,7 +3666,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }`, rName))
 }
 
-func testAccDeliveryStreamConfig_elasticSearchEndpointUpdate(rName string) string {
+func testAccDeliveryStreamConfig_elasticsearchEndpointUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
 		testAccDeliveryStreamBaseElasticsearchConfig(rName),
