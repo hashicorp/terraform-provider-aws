@@ -94,7 +94,6 @@ rules:
       exclude:
         - internal/service/athena
         - internal/service/firehose
-        - internal/service/kafka
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -112,7 +111,6 @@ rules:
       exclude:
         - internal/service/athena
         - internal/service/firehose
-        - internal/service/kafka
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -130,7 +128,6 @@ rules:
       exclude:
         - internal/service/athena
         - internal/service/firehose
-        - internal/service/kafka
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -298,7 +295,6 @@ rules:
         - internal/service/iam
         - internal/service/identitystore
         - internal/service/iot
-        - internal/service/kafka
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
         - internal/service/lambda
