@@ -8,6 +8,7 @@ while [[ "${results}" == *Invalid_argument* ]] && [[ "${results}" == *" 0 findin
   results=$( semgrep -c .semgrep-service-name"${idx}".yml 2>&1 )
 done
 if [[ ! "${results}" == *" 0 findings"* ]]; then
-  >&2 echo "${results}"
+  echo "${results}" >&2
+  exit 1
 fi
 echo "${results}"
