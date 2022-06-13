@@ -28,7 +28,7 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that validation succeeds
 			{
-				Config: testAccAcmCertificateValidationConfig(rootDomain, domain),
+				Config: testAccCertificateValidationConfig_basic(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -49,7 +49,7 @@ func TestAccACMCertificateValidation_timeout(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAcmCertificateValidationTimeoutConfig(domain),
+				Config:      testAccCertificateValidationConfig_timeout(domain),
 				ExpectError: regexp.MustCompile(`timeout while waiting for state to become 'ISSUED' \(last state: 'PENDING_VALIDATION'`),
 			},
 		},
@@ -70,12 +70,12 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that validation fails if given validation_fqdns don't match
 			{
-				Config:      testAccAcmCertificateValidationValidationRecordFQDNsWrongFQDNConfig(domain),
+				Config:      testAccCertificateValidationConfig_recordFQDNsWrongFQDN(domain),
 				ExpectError: regexp.MustCompile("missing .+ DNS validation record: .+"),
 			},
 			// Test that validation succeeds with validation
 			{
-				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, domain),
+				Config: testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -96,7 +96,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSEmail(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAcmCertificateValidationValidationRecordFQDNsEmailValidationConfig(domain),
+				Config:      testAccCertificateValidationConfig_recordFQDNsEmail(domain),
 				ExpectError: regexp.MustCompile("validation_record_fqdns is not valid for EMAIL validation"),
 			},
 		},
@@ -115,7 +115,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRoot(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, rootDomain),
+				Config: testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootDomain, rootDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -138,7 +138,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRootAndWildcard(t *tes
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, rootDomain, strconv.Quote(wildcardDomain)),
+				Config: testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootDomain, rootDomain, strconv.Quote(wildcardDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -162,7 +162,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSSan(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, domain, strconv.Quote(sanDomain)),
+				Config: testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootDomain, domain, strconv.Quote(sanDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -185,7 +185,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcard(t *testing.T)
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, wildcardDomain),
+				Config: testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootDomain, wildcardDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -209,7 +209,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, wildcardDomain, strconv.Quote(rootDomain)),
+				Config: testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootDomain, wildcardDomain, strconv.Quote(rootDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
@@ -243,7 +243,7 @@ func testAccCheckCertificateValidationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAcmCertificateValidationConfig(rootZoneDomain, domainName string) string {
+func testAccCertificateValidationConfig_basic(rootZoneDomain, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
@@ -292,7 +292,7 @@ resource "aws_acm_certificate_validation" "test" {
 `, domainName, rootZoneDomain)
 }
 
-func testAccAcmCertificateValidationTimeoutConfig(domainName string) string {
+func testAccCertificateValidationConfig_timeout(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
@@ -309,7 +309,7 @@ resource "aws_acm_certificate_validation" "test" {
 `, domainName)
 }
 
-func testAccAcmCertificateValidationValidationRecordFQDNsEmailValidationConfig(domainName string) string {
+func testAccCertificateValidationConfig_recordFQDNsEmail(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
@@ -323,7 +323,7 @@ resource "aws_acm_certificate_validation" "test" {
 `, domainName)
 }
 
-func testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootZoneDomain, domainName string) string {
+func testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootZoneDomain, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
@@ -376,7 +376,7 @@ resource "aws_acm_certificate_validation" "test" {
 `, domainName, rootZoneDomain)
 }
 
-func testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootZoneDomain, domainName, subjectAlternativeNames string) string {
+func testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootZoneDomain, domainName, subjectAlternativeNames string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = %[1]q
@@ -439,7 +439,7 @@ resource "aws_acm_certificate_validation" "test" {
 `, domainName, subjectAlternativeNames, rootZoneDomain)
 }
 
-func testAccAcmCertificateValidationValidationRecordFQDNsWrongFQDNConfig(domainName string) string {
+func testAccCertificateValidationConfig_recordFQDNsWrongFQDN(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q

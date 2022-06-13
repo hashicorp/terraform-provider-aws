@@ -29,7 +29,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodEmail),
+				Config: testAccCertificateConfig_basic(domain, acm.ValidationMethodEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -66,7 +66,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_basic(domain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -105,7 +105,7 @@ func TestAccACMCertificate_root(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig(rootDomain, acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_basic(rootDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -145,7 +145,7 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateValidationOptionsConfig(rootDomain, domain),
+				Config: testAccCertificateConfig_validationOptions(rootDomain, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -184,7 +184,7 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificatePrivateCertConfig(commonName.String(), certificateDomainName),
+				Config: testAccCertificateConfig_privateCert(commonName.String(), certificateDomainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -221,7 +221,7 @@ func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
+				Config:      testAccCertificateConfig_basic(domain, acm.ValidationMethodDns),
 				ExpectError: regexp.MustCompile(`invalid value for domain_name \(cannot end with a period\)`),
 			},
 		},
@@ -241,7 +241,7 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(rootDomain, strconv.Quote(wildcardDomain), acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_subjectAlternativeNames(rootDomain, strconv.Quote(wildcardDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -283,7 +283,7 @@ func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(""), acm.ValidationMethodDns),
+				Config:      testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(""), acm.ValidationMethodDns),
 				ExpectError: regexp.MustCompile(`expected length`),
 			},
 		},
@@ -304,7 +304,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -350,7 +350,7 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_subjectAlternativeNames(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -400,7 +400,7 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
@@ -445,7 +445,7 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
@@ -489,7 +489,7 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig(wildcardDomain, acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_basic(wildcardDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -528,7 +528,7 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateSubjectAlternativeNamesConfig(wildcardDomain, strconv.Quote(rootDomain), acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_subjectAlternativeNames(wildcardDomain, strconv.Quote(rootDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -571,7 +571,7 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateDisableCTLoggingConfig(rootDomain, acm.ValidationMethodDns),
+				Config: testAccCertificateConfig_disableCTLogging(rootDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
@@ -620,7 +620,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificatePrivateKeyConfig(certificate, key, caCertificate),
+				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -628,7 +628,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAcmCertificatePrivateKeyConfig(newCertificate, key, newCaCertificate),
+				Config: testAccCertificateConfig_privateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -636,7 +636,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig(withoutChainDomain),
+				Config: testAccCertificateConfig_privateKeyNoChain(withoutChainDomain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -666,7 +666,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig("1.2.3.4"),
+				Config: testAccCertificateConfig_privateKeyNoChain("1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
@@ -701,7 +701,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfigTags1(certificate1, key1, "key1", "value1"),
+				Config: testAccCertificateConfig_tags1(certificate1, key1, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -715,7 +715,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
 			},
 			{
-				Config: testAccAcmCertificateConfigTags2(certificate1, key1, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCertificateConfig_tags2(certificate1, key1, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -723,14 +723,14 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAcmCertificateConfigTags1(certificate1, key1, "key2", "value2"),
+				Config: testAccCertificateConfig_tags1(certificate1, key1, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAcmCertificateConfigTags1(certificate2, key2, "key1", "value1"),
+				Config: testAccCertificateConfig_tags1(certificate2, key2, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -789,7 +789,7 @@ func testAccCheckCertificateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAcmCertificateConfig(domainName, validationMethod string) string {
+func testAccCertificateConfig_basic(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
@@ -798,7 +798,7 @@ resource "aws_acm_certificate" "test" {
 `, domainName, validationMethod)
 }
 
-func testAccAcmCertificateValidationOptionsConfig(rootDomainName, domainName string) string {
+func testAccCertificateConfig_validationOptions(rootDomainName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[2]q
@@ -812,7 +812,7 @@ resource "aws_acm_certificate" "test" {
 `, rootDomainName, domainName)
 }
 
-func testAccAcmCertificatePrivateCertConfig(commonName, certificateDomainName string) string {
+func testAccCertificateConfig_privateCert(commonName, certificateDomainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -835,7 +835,7 @@ resource "aws_acm_certificate" "test" {
 `, commonName, certificateDomainName)
 }
 
-func testAccAcmCertificateSubjectAlternativeNamesConfig(domainName, subjectAlternativeNames, validationMethod string) string {
+func testAccCertificateConfig_subjectAlternativeNames(domainName, subjectAlternativeNames, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = %[1]q
@@ -845,7 +845,7 @@ resource "aws_acm_certificate" "test" {
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
-func testAccAcmCertificatePrivateKeyWithoutChainConfig(commonName string) string {
+func testAccCertificateConfig_privateKeyNoChain(commonName string) string {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
 
@@ -857,7 +857,7 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccAcmCertificateConfigTags1(certificate, key, tagKey1, tagValue1 string) string {
+func testAccCertificateConfig_tags1(certificate, key, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
@@ -870,7 +870,7 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
 }
 
-func testAccAcmCertificateConfigTags2(certificate, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCertificateConfig_tags2(certificate, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
@@ -884,7 +884,7 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAcmCertificatePrivateKeyConfig(certificate, privateKey, chain string) string {
+func testAccCertificateConfig_privateKey(certificate, privateKey, chain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body  = "%[1]s"
@@ -894,7 +894,7 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(chain))
 }
 
-func testAccAcmCertificateDisableCTLoggingConfig(domainName, validationMethod string) string {
+func testAccCertificateConfig_disableCTLogging(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
