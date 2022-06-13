@@ -92,7 +92,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/acm
         - internal/service/appsync
         - internal/service/athena
         - internal/service/emr

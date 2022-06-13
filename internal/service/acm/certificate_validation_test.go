@@ -24,13 +24,13 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			// Test that validation succeeds
 			{
 				Config: testAccAcmCertificateValidationConfig(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
@@ -46,7 +46,7 @@ func TestAccACMCertificateValidation_timeout(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateValidationTimeoutConfig(domain),
@@ -66,7 +66,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			// Test that validation fails if given validation_fqdns don't match
 			{
@@ -77,7 +77,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
@@ -93,7 +93,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSEmail(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateValidationValidationRecordFQDNsEmailValidationConfig(domain),
@@ -112,12 +112,12 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRoot(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, rootDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
@@ -135,12 +135,12 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRootAndWildcard(t *tes
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, rootDomain, strconv.Quote(wildcardDomain)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
@@ -159,12 +159,12 @@ func TestAccACMCertificateValidation_validationRecordFQDNSSan(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, domain, strconv.Quote(sanDomain)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
@@ -182,12 +182,12 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcard(t *testing.T)
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsOneRoute53RecordConfig(rootDomain, wildcardDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 				// ExpectNonEmptyPlan: true, // https://github.com/hashicorp/terraform-provider-aws/issues/16913
@@ -206,12 +206,12 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAcmCertificateDestroy,
+		CheckDestroy:      testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateValidationValidationRecordFQDNsTwoRoute53RecordsConfig(rootDomain, wildcardDomain, strconv.Quote(rootDomain)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcmCertificateValidationExists(resourceName),
+					testAccCheckCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 				// ExpectNonEmptyPlan: true, // https://github.com/hashicorp/terraform-provider-aws/issues/16913
@@ -220,7 +220,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 	})
 }
 
-func testAccCheckAcmCertificateValidationExists(n string) resource.TestCheckFunc {
+func testAccCheckCertificateValidationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
