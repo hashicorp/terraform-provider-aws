@@ -37,7 +37,7 @@ jobs:
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
-          return 2
+          return 5
         fi
         echo "${results}"
   naming_semgrep1:
@@ -56,7 +56,7 @@ jobs:
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
-          return 2
+          return 5
         fi
         echo "${results}"
   naming_semgrep2:
@@ -75,7 +75,7 @@ jobs:
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
-          return 2
+          return 5
         fi
         echo "${results}"
   naming_semgrep3:
@@ -94,6 +94,6 @@ jobs:
         done
         if [[ ! "${results}" == *" 0 findings"* ]]; then
           echo "${results}"
-          return 2
+          return 5
         fi
         echo "${results}"
