@@ -287,11 +287,11 @@ func testAccCheckItemDestroy(s *terraform.State) error {
 		}
 
 		result, err := conn.GetItem(&dynamodb.GetItemInput{
-			TableName:                aws.String(attrs["table_name"]),
-			ConsistentRead:           aws.Bool(true),
-			Key:                      tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"]),
-			ProjectionExpression:     tfdynamodb.BuildProjectionExpression(attributes),
-			ExpressionAttributeNames: tfdynamodb.BuildExpressionAttributeNames(attributes),
+			TableName:      aws.String(attrs["table_name"]),
+			ConsistentRead: aws.Bool(true),
+			Key:            tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"]),
+			//ProjectionExpression:     tfdynamodb.BuildProjectionExpression(attributes),
+			//ExpressionAttributeNames: tfdynamodb.BuildExpressionAttributeNames(attributes),
 		})
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {

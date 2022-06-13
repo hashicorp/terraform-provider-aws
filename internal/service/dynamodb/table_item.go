@@ -229,7 +229,12 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 		Key:       queryKey,
 		TableName: aws.String(d.Get("table_name").(string)),
 	})
-	return fmt.Errorf("error deleting DynamoDB Table Item (%s): %w", d.Id(), err)
+
+	if err != nil {
+		return fmt.Errorf("error deleting DynamoDB Table Item (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 // Helpers
