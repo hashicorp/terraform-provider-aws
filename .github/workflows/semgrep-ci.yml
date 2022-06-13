@@ -10,6 +10,7 @@ on:
       - internal/**
       - .semgrep.yml
       - .semgrep-service-name*yml
+      - .github/workflows/semgrep-ci.yml
 
 jobs:
   semgrep:
