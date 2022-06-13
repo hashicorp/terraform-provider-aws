@@ -95,7 +95,6 @@ rules:
         - internal/service/appsync
         - internal/service/athena
         - internal/service/firehose
-        - internal/service/kafka
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -114,7 +113,6 @@ rules:
         - internal/service/appsync
         - internal/service/athena
         - internal/service/firehose
-        - internal/service/kafka
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -133,7 +131,6 @@ rules:
         - internal/service/appsync
         - internal/service/athena
         - internal/service/firehose
-        - internal/service/kafka
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

@@ -374,7 +374,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, true),
+				Config: testAccClusterClientAuthenticationSASLScramConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
@@ -398,7 +398,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, false),
+				Config: testAccClusterClientAuthenticationSASLScramConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -1534,7 +1534,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, t))
 }
 
-func testAccConfigurationAllowEveryoneNoAclFoundFalse(rName string) string {
+func testAccConfigurationAllowEveryoneNoACLFoundFalse(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.7.1"]
@@ -1549,7 +1549,7 @@ resource "aws_msk_configuration" "test" {
 func testAccClusterConfig_brokerNodeGroupInfoNoPublicAccessSASLIAM(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBasePublicAccessConfig(rName),
-		testAccConfigurationAllowEveryoneNoAclFoundFalse(rName),
+		testAccConfigurationAllowEveryoneNoACLFoundFalse(rName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1580,7 +1580,7 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_brokerNodeGroupInfoPublicAccessSASLIAM(rName string, pa string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBasePublicAccessConfig(rName),
-		testAccConfigurationAllowEveryoneNoAclFoundFalse(rName),
+		testAccConfigurationAllowEveryoneNoACLFoundFalse(rName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1696,7 +1696,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, commonName))
 }
 
-func testAccClusterClientAuthenticationSaslScramConfig(rName string, scramEnabled bool) string {
+func testAccClusterClientAuthenticationSASLScramConfig(rName string, scramEnabled bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
