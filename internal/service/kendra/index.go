@@ -417,23 +417,27 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.Id))
 
-	// arn needed to update tags
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("index/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
-
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceIndexUpdate(ctx, d, meta)
+	// CreateIndex API does not support capacity_units but UpdateIndex does
+	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		// arn needed to update tags
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   "kendra",
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Resource:  fmt.Sprintf("index/%s", d.Id()),
+		}.String()
+
+		d.Set("arn", arn)
+		return resourceIndexUpdate(ctx, d, meta)
+	}
+
+	return resourceIndexRead(ctx, d, meta)
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -523,13 +527,9 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
-		}
-
-		if d.HasChange("capacity_units") {
-			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
 		}
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
