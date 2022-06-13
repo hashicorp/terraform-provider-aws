@@ -27,12 +27,12 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigName(rName),
+				Config: testAccJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -64,12 +64,12 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigName(rName),
+				Config: testAccJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,12 +87,12 @@ func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigCapabilitiesEC2(rName),
+				Config: testAccJobDefinitionConfigCapabilitiesEC2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -125,12 +125,12 @@ func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDe
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName),
+				Config: testAccJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -163,12 +163,12 @@ func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigCapabilitiesFargate(rName),
+				Config: testAccJobDefinitionConfigCapabilitiesFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -240,13 +240,13 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName),
+				Config: testAccJobDefinitionConfigContainerPropertiesAdvanced(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
-					testAccCheckBatchJobDefinitionAttributes(&jd, &compare),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionAttributes(&jd, &compare),
 				),
 			},
 			{
@@ -267,19 +267,19 @@ func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName),
+				Config: testAccJobDefinitionConfigContainerPropertiesAdvanced(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &before),
-					testAccCheckBatchJobDefinitionAttributes(&before, nil),
+					testAccCheckJobDefinitionExists(resourceName, &before),
+					testAccCheckJobDefinitionAttributes(&before, nil),
 				),
 			},
 			{
-				Config: testAccBatchJobDefinitionConfigContainerPropertiesAdvancedUpdate(rName),
+				Config: testAccJobDefinitionConfigContainerPropertiesAdvancedUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &after),
+					testAccCheckJobDefinitionExists(resourceName, &after),
 					testAccCheckJobDefinitionRecreated(t, &before, &after),
 				),
 			},
@@ -301,12 +301,12 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionConfigTags1(rName, "key1", "value1"),
+				Config: testAccJobDefinitionConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -317,18 +317,18 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBatchJobDefinitionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccJobDefinitionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccBatchJobDefinitionConfigTags1(rName, "key2", "value2"),
+				Config: testAccJobDefinitionConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -346,12 +346,12 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobDefinitionDestroy,
+		CheckDestroy:      testAccCheckJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobDefinitionPropagateTags(rName),
+				Config: testAccJobDefinitionPropagateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckJobDefinitionExists(resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -369,7 +369,7 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionExists(n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -394,7 +394,7 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 	}
 }
 
-func testAccCheckBatchJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_batch_job_definition" {
@@ -431,7 +431,7 @@ func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDe
 	}
 }
 
-func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
+func testAccCheckJobDefinitionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -454,7 +454,7 @@ func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName string) string {
+func testAccJobDefinitionConfigContainerPropertiesAdvanced(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
@@ -515,7 +515,7 @@ CONTAINER_PROPERTIES
 `, rName)
 }
 
-func testAccBatchJobDefinitionConfigContainerPropertiesAdvancedUpdate(rName string) string {
+func testAccJobDefinitionConfigContainerPropertiesAdvancedUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name                 = %[1]q
@@ -558,7 +558,7 @@ CONTAINER_PROPERTIES
 `, rName)
 }
 
-func testAccBatchJobDefinitionConfigName(rName string) string {
+func testAccJobDefinitionConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   container_properties = jsonencode({
@@ -573,7 +573,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccBatchJobDefinitionConfigCapabilitiesEC2(rName string) string {
+func testAccJobDefinitionConfigCapabilitiesEC2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
@@ -593,7 +593,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccBatchJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName string) string {
+func testAccJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -640,7 +640,7 @@ CONTAINER_PROPERTIES
 `, rName)
 }
 
-func testAccBatchJobDefinitionConfigCapabilitiesFargate(rName string) string {
+func testAccJobDefinitionConfigCapabilitiesFargate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -694,7 +694,7 @@ CONTAINER_PROPERTIES
 `, rName)
 }
 
-func testAccBatchJobDefinitionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccJobDefinitionConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   container_properties = jsonencode({
@@ -713,7 +713,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccBatchJobDefinitionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccJobDefinitionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   container_properties = jsonencode({
@@ -733,7 +733,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccBatchJobDefinitionPropagateTags(rName string) string {
+func testAccJobDefinitionPropagateTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   container_properties = jsonencode({

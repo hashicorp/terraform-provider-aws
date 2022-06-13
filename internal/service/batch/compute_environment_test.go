@@ -26,7 +26,7 @@ func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentBasicConfig(rName),
@@ -58,7 +58,7 @@ func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentBasicConfig(rName),
@@ -81,7 +81,7 @@ func TestAccBatchComputeEnvironment_nameGenerated(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentNameGeneratedConfig(rName),
@@ -109,7 +109,7 @@ func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentNamePrefixConfig(rName),
@@ -141,7 +141,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentEC2Config(rName),
@@ -209,7 +209,7 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentEC2WithDesiredVcpusEC2KeyPairImageIdAndComputeResourcesTagsConfig(rName, publicKey),
@@ -270,7 +270,7 @@ func TestAccBatchComputeEnvironment_createSpot(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentSpotConfig(rName),
@@ -330,7 +330,7 @@ func TestAccBatchComputeEnvironment_CreateSpotAllocationStrategy_bidPercentage(t
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentSpotWithAllocationStrategyAndBidPercentageConfig(rName),
@@ -388,7 +388,7 @@ func TestAccBatchComputeEnvironment_createFargate(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentFargateConfig(rName),
@@ -445,7 +445,7 @@ func TestAccBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentFargateSpotConfig(rName),
@@ -500,7 +500,7 @@ func TestAccBatchComputeEnvironment_updateState(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentStateConfig(rName, "ENABLED"),
@@ -558,7 +558,7 @@ func TestAccBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentFargateConfig(rName),
@@ -652,7 +652,7 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentFargateDefaultServiceRoleConfig(rName),
@@ -710,7 +710,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentComputeResourcesMaxVcpusMinVcpusConfig(rName, 4, 0),
@@ -839,7 +839,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentComputeResourcesMaxVcpusMinVcpusConfig(rName, 4, 0),
@@ -969,7 +969,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentEC2Configuration(rName),
@@ -1032,7 +1032,7 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentLaunchTemplateConfig(rName),
@@ -1096,7 +1096,7 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentUpdateLaunchTemplateInExistingComputeEnvironment(rName, "$Default"),
@@ -1198,7 +1198,7 @@ func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *te
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentFargateConfig(rName),
@@ -1287,7 +1287,7 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentTags1Config(rName, "key1", "value1"),
@@ -1330,7 +1330,7 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentUnmanagedWithComputeResourcesConfig(rName),
@@ -1349,7 +1349,7 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentEC2WithoutComputeResourcesConfig(rName),
@@ -1366,7 +1366,7 @@ func TestAccBatchComputeEnvironment_createSpotWithoutIAMFleetRole(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchComputeEnvironmentDestroy,
+		CheckDestroy:      testAccCheckComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentSpotWithoutIAMFleetRoleConfig(rName),
@@ -1376,7 +1376,7 @@ func TestAccBatchComputeEnvironment_createSpotWithoutIAMFleetRole(t *testing.T) 
 	})
 }
 
-func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
+func testAccCheckComputeEnvironmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	for _, rs := range s.RootModule().Resources {
