@@ -94,7 +94,6 @@ rules:
       exclude:
         - internal/service/appsync
         - internal/service/athena
-        - internal/service/emr
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -114,7 +113,6 @@ rules:
       exclude:
         - internal/service/appsync
         - internal/service/athena
-        - internal/service/emr
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -134,7 +132,6 @@ rules:
       exclude:
         - internal/service/appsync
         - internal/service/athena
-        - internal/service/emr
         - internal/service/firehose
         - internal/service/kafka
     patterns:
@@ -295,7 +292,6 @@ rules:
         - internal/service/elasticsearch
         - internal/service/elb
         - internal/service/elbv2
-        - internal/service/emr
         - internal/service/emrcontainers
         - internal/service/events
         - internal/service/firehose

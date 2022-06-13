@@ -160,7 +160,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 		}
-		groupConfig.Configurations, err = expandConfigurationJson(info)
+		groupConfig.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
@@ -224,7 +224,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case len(ig.Configurations) > 0:
-		configOut, err := flattenConfigurationJson(ig.Configurations)
+		configOut, err := flattenConfigurationJSON(ig.Configurations)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR instance group configurations: %s", err)
 		}
@@ -302,7 +302,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 				if err != nil {
 					return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 				}
-				instanceGroupModifyConfig.Configurations, err = expandConfigurationJson(info)
+				instanceGroupModifyConfig.Configurations, err = expandConfigurationJSON(info)
 				if err != nil {
 					return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 				}
