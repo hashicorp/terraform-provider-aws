@@ -27,7 +27,7 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSchedulingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchedulingPolicyConfigBasic(rName),
+				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(resourceName, &schedulingPolicy1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -46,7 +46,7 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 			},
 			{
 				// add one more share_distribution block
-				Config: testAccSchedulingPolicyConfigBasic2(rName),
+				Config: testAccSchedulingPolicyConfig_basic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(resourceName, &schedulingPolicy1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -74,7 +74,7 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSchedulingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchedulingPolicyConfigBasic(rName),
+				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(resourceName, &schedulingPolicy1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceSchedulingPolicy(), resourceName),
@@ -149,7 +149,7 @@ func GetSchedulingPolicyNoContext(conn *batch.Batch, arn string) (*batch.Schedul
 	return nil, nil
 }
 
-func testAccSchedulingPolicyConfigBasic(rName string) string {
+func testAccSchedulingPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {
@@ -172,7 +172,7 @@ resource "aws_batch_scheduling_policy" "test" {
 `, rName))
 }
 
-func testAccSchedulingPolicyConfigBasic2(rName string) string {
+func testAccSchedulingPolicyConfig_basic2(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {

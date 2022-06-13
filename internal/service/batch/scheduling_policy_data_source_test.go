@@ -21,7 +21,7 @@ func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchedulingPolicyDataSourceConfig_Basic(rName),
+				Config: testAccSchedulingPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.#", resourceName, "fair_share_policy.#"),
@@ -63,7 +63,7 @@ resource "aws_batch_scheduling_policy" "test" {
 `, rName)
 }
 
-func testAccSchedulingPolicyDataSourceConfig_Basic(rName string) string {
+func testAccSchedulingPolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(testAccSchedulingPolicyDataSourceConfig(rName) + `
 data "aws_batch_scheduling_policy" "test" {
   arn = aws_batch_scheduling_policy.test.arn

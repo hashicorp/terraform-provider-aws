@@ -246,7 +246,6 @@ rules:
         - internal/service/appstream
         - internal/service/autoscaling
         - internal/service/backup
-        - internal/service/batch
         - internal/service/budgets
         - internal/service/ce
         - internal/service/chime
