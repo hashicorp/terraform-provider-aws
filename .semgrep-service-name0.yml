@@ -92,7 +92,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/appsync
         - internal/service/athena
         - internal/service/emr
         - internal/service/firehose
@@ -112,7 +111,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/appsync
         - internal/service/athena
         - internal/service/emr
         - internal/service/firehose
@@ -132,7 +130,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/appsync
         - internal/service/athena
         - internal/service/emr
         - internal/service/firehose
@@ -849,7 +846,7 @@ rules:
     message: Do not use "AppRunner" in var name inside apprunner package
     paths:
       include:
-      - internal/service/apprunner
+        - internal/service/apprunner
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -907,7 +904,7 @@ rules:
     message: Do not use "AppStream" in var name inside appstream package
     paths:
       include:
-      - internal/service/appstream
+        - internal/service/appstream
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -965,7 +962,7 @@ rules:
     message: Do not use "AppSync" in var name inside appsync package
     paths:
       include:
-      - internal/service/appsync
+        - internal/service/appsync
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

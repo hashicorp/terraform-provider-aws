@@ -1001,7 +1001,7 @@ func Provider() *schema.Provider {
 			"aws_appsync_api_key":                     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":                  appsync.ResourceDataSource(),
 			"aws_appsync_domain_name":                 appsync.ResourceDomainName(),
-			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameApiAssociation(),
+			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameAPIAssociation(),
 			"aws_appsync_function":                    appsync.ResourceFunction(),
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
