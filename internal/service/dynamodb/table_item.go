@@ -120,19 +120,29 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		oldAttributes, err := ExpandTableItemAttributes(oldItem.(string))
+		if err != nil {
+			return err
+		}
+
+		for k := range oldAttributes {
+			if k == hashKey || k == rangeKey {
+				continue
+			}
+			if _, ok := attributes[k]; !ok {
+				updates[k] = &dynamodb.AttributeValueUpdate{
+					Action: aws.String(dynamodb.AttributeActionDelete),
+				}
+			}
+		}
+
 		_, err = conn.UpdateItem(&dynamodb.UpdateItemInput{
 			AttributeUpdates: updates,
 			TableName:        aws.String(tableName),
 			Key:              newQueryKey,
 		})
 		if err != nil {
-			return err
-		}
-
-		oItem := oldItem.(string)
-		oldAttributes, err := ExpandTableItemAttributes(oItem)
-		if err != nil {
-			return err
+			return fmt.Errorf("error updating DynamoDB Table Item (%s): %w", d.Id(), err)
 		}
 
 		// New record is created via UpdateItem in case we're changing hash key
@@ -170,11 +180,9 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	result, err := conn.GetItem(&dynamodb.GetItemInput{
-		TableName:                aws.String(tableName),
-		ConsistentRead:           aws.Bool(true),
-		Key:                      BuildTableItemqueryKey(attributes, hashKey, rangeKey),
-		ProjectionExpression:     BuildProjectionExpression(attributes),
-		ExpressionAttributeNames: BuildExpressionAttributeNames(attributes),
+		TableName:      aws.String(tableName),
+		ConsistentRead: aws.Bool(true),
+		Key:            BuildTableItemqueryKey(attributes, hashKey, rangeKey),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
@@ -221,7 +229,7 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 		Key:       queryKey,
 		TableName: aws.String(d.Get("table_name").(string)),
 	})
-	return err
+	return fmt.Errorf("error deleting DynamoDB Table Item (%s): %w", d.Id(), err)
 }
 
 // Helpers
