@@ -92,7 +92,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/athena
         - internal/service/firehose
     patterns:
       - pattern: func $NAME( ... ) { ... }
@@ -109,7 +108,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/athena
         - internal/service/firehose
     patterns:
       - pattern: const $NAME = ...
@@ -126,7 +124,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/athena
         - internal/service/firehose
     patterns:
       - pattern: var $NAME = ...
@@ -250,7 +247,6 @@ rules:
         - internal/service/appflow
         - internal/service/appmesh
         - internal/service/appstream
-        - internal/service/athena
         - internal/service/autoscaling
         - internal/service/backup
         - internal/service/batch
