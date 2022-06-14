@@ -32,10 +32,10 @@ func TestAccTableItem_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckItemDestroy,
+		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccItemBasicConfig(tableName, hashKey, itemContent),
+				Config: testAccTableItemBasicConfig(tableName, hashKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -67,7 +67,7 @@ func TestAccTableItem_rangeKey(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckItemDestroy,
+		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemContent),
@@ -111,7 +111,7 @@ func TestAccTableItem_withMultipleItems(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckItemDestroy,
+		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithMultipleItemsConfig(tableName, hashKey, rangeKey, firstItem, secondItem),
@@ -154,7 +154,7 @@ func TestAccTableItem_wonkyItems(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckItemDestroy,
+		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithWonkyItemsConfig(rName, hashKey, rangeKey, item),
@@ -196,10 +196,10 @@ func TestAccTableItem_update(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckItemDestroy,
+		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccItemBasicConfig(tableName, hashKey, itemBefore),
+				Config: testAccTableItemBasicConfig(tableName, hashKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -209,7 +209,7 @@ func TestAccTableItem_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccItemBasicConfig(tableName, hashKey, itemAfter),
+				Config: testAccTableItemBasicConfig(tableName, hashKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -244,7 +244,7 @@ func TestAccTableItem_updateWithRangeKey(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckItemDestroy,
+		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemBefore),
@@ -272,7 +272,39 @@ func TestAccTableItem_updateWithRangeKey(t *testing.T) {
 	})
 }
 
-func testAccCheckItemDestroy(s *terraform.State) error {
+func TestAccTableItem_disappears(t *testing.T) {
+	var conf dynamodb.GetItemOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dynamodb_table_item.test"
+
+	hashKey := "hashKey"
+	itemContent := `{
+	"hashKey": {"S": "something"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"},
+	"four": {"N": "44444"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTableItemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemBasicConfig(rName, hashKey, itemContent),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableItemExists(resourceName, &conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckTableItemDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -356,7 +388,7 @@ func testAccCheckTableItemCount(tableName string, count int64) resource.TestChec
 	}
 }
 
-func testAccItemBasicConfig(tableName, hashKey, item string) string {
+func testAccTableItemBasicConfig(tableName, hashKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
