@@ -17,10 +17,10 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_docdb_global_cluster", &resource.Sweeper{
-		Name: "aws_docdb_global_cluster",
-		F:    sweepGlobalClusters,
+		Name:         "aws_docdb_global_cluster",
+		F:            sweepGlobalClusters,
 		Dependencies: []string{
-			"aws_docdb_cluster",
+			// "aws_docdb_cluster",
 		},
 	})
 }
