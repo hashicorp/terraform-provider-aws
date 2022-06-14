@@ -57,8 +57,8 @@ resource "aws_lb_target_group" "lambda-example" {
 ### ALB Target Group
 
 ```terraform
-resource "aws_lb_target_group" "lambda-example" {
-  name        = "tf-example-lb-tg"
+resource "aws_lb_target_group" "alb-example" {
+  name        = "tf-example-lb-alb-tg"
   target_type = "alb"
   port        = 80
   protocol    = "TCP"
