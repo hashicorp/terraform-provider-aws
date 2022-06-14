@@ -4,7 +4,7 @@ The AWS Provider is the work of thousands of contributors, and is maintained by 
 
 ## What would you like do do?
 
-### Add a new AWS Service to the Provider
+### Add a New AWS Service to the Provider
 
 Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by introducing the resources and datasources required to manage configuration of the service.
 
@@ -12,7 +12,7 @@ Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by 
 - [Perform Service Design](add-a-new-service#perform-service-design)
 - [Add a new resource](add-a-new-service#add-a-new-resource)
 
-### Add a new resource to the Provider
+### Add a New Resource to the Provider
 
 Allow the management of a logical resource within AWS by adding a new resource to the Terraform AWS Provider.
 
@@ -26,7 +26,7 @@ Allow the management of a logical resource within AWS by adding a new resource t
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
-### Add a new datasource to the Provider
+### Add a New Datasource to the Provider
 
 Allow reading an existing AWS resource by id or filter, and allow its use within Terraform configurations.
 
@@ -41,7 +41,7 @@ Allow reading an existing AWS resource by id or filter, and allow its use within
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
-### Add a newly released AWS Region
+### Add a Newly Released AWS Region
 
 New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround necessary.
 
