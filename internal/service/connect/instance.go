@@ -28,8 +28,8 @@ func ResourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectInstanceCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectInstanceDeletedTimeout),
+			Create: schema.DefaultTimeout(instanceCreatedTimeout),
+			Delete: schema.DefaultTimeout(instanceDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {

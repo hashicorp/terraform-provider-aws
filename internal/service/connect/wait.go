@@ -10,13 +10,13 @@ import (
 
 const (
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
-	connectInstanceCreatedTimeout = 5 * time.Minute
-	connectInstanceDeletedTimeout = 5 * time.Minute
+	instanceCreatedTimeout = 5 * time.Minute
+	instanceDeletedTimeout = 5 * time.Minute
 
-	connectContactFlowCreateTimeout = 5 * time.Minute
-	connectContactFlowUpdateTimeout = 5 * time.Minute
+	contactFlowCreateTimeout = 5 * time.Minute
+	contactFlowUpdateTimeout = 5 * time.Minute
 
-	connectBotAssociationCreateTimeout = 5 * time.Minute
+	botAssociationCreateTimeout = 5 * time.Minute
 )
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
@@ -24,7 +24,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId 
 		Pending: []string{connect.InstanceStatusCreationInProgress},
 		Target:  []string{connect.InstanceStatusActive},
 		Refresh: statusInstance(ctx, conn, instanceId),
-		Timeout: connectInstanceCreatedTimeout,
+		Timeout: instanceCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -44,7 +44,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId 
 		Pending: []string{connect.InstanceStatusActive},
 		Target:  []string{InstanceStatusStatusNotFound},
 		Refresh: statusInstance(ctx, conn, instanceId),
-		Timeout: connectInstanceDeletedTimeout,
+		Timeout: instanceDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

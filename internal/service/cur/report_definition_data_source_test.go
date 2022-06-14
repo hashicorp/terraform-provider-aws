@@ -19,7 +19,7 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReportDefinitionDestroy,
@@ -50,7 +50,7 @@ func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReportDefinitionDestroy,
@@ -91,7 +91,7 @@ func testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName s
 
 func testAccReportDefinitionDataSourceConfig_basic(reportName string, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccCurRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
@@ -163,7 +163,7 @@ data "aws_cur_report_definition" "test" {
 
 func testAccReportDefinitionDataSourceConfig_additional(reportName string, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccCurRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 

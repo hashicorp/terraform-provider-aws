@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccTableItem_basic(t *testing.T) {
+func TestAccDynamoDBTableItem_basic(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -48,7 +48,7 @@ func TestAccTableItem_basic(t *testing.T) {
 	})
 }
 
-func TestAccTableItem_rangeKey(t *testing.T) {
+func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,7 +84,7 @@ func TestAccTableItem_rangeKey(t *testing.T) {
 	})
 }
 
-func TestAccTableItem_withMultipleItems(t *testing.T) {
+func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
@@ -135,7 +135,7 @@ func TestAccTableItem_withMultipleItems(t *testing.T) {
 	})
 }
 
-func TestAccTableItem_wonkyItems(t *testing.T) {
+func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 	var conf1 dynamodb.GetItemOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -172,7 +172,7 @@ func TestAccTableItem_wonkyItems(t *testing.T) {
 	})
 }
 
-func TestAccTableItem_update(t *testing.T) {
+func TestAccDynamoDBTableItem_update(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -222,7 +222,7 @@ func TestAccTableItem_update(t *testing.T) {
 	})
 }
 
-func TestAccTableItem_updateWithRangeKey(t *testing.T) {
+func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -272,7 +272,7 @@ func TestAccTableItem_updateWithRangeKey(t *testing.T) {
 	})
 }
 
-func TestAccTableItem_disappears(t *testing.T) {
+func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_table_item.test"

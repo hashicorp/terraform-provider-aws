@@ -113,7 +113,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		input.RoutingProfileId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		routingProfileSummary, err := dataSourceGetConnectRoutingProfileSummaryByName(ctx, conn, instanceID, name)
+		routingProfileSummary, err := dataSourceGetRoutingProfileSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): %w", name, err))
@@ -167,7 +167,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func dataSourceGetConnectRoutingProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.RoutingProfileSummary, error) {
+func dataSourceGetRoutingProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.RoutingProfileSummary, error) {
 	var result *connect.RoutingProfileSummary
 
 	input := &connect.ListRoutingProfilesInput{
