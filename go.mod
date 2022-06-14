@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.29
 	github.com/aws/aws-sdk-go-v2 v1.16.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.6
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.6
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8

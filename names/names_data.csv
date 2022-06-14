@@ -192,7 +192,7 @@ iottwinmaker,iottwinmaker,iottwinmaker,iottwinmaker,,iottwinmaker,,,IoTTwinMaker
 iotwireless,iotwireless,iotwireless,iotwireless,,iotwireless,,,IoTWireless,IoTWireless,,1,,aws_iotwireless_,,iotwireless_,IoT Wireless,AWS,,,,,
 ,,,,,,,,,,,,,,,,IQ,AWS,x,,,,No SDK support
 ivs,ivs,ivs,ivs,,ivs,,,IVS,IVS,,1,,aws_ivs_,,ivs_,IVS (Interactive Video),Amazon,,,,,
-kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,,1,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,
+kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,x,2,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,
 keyspaces,keyspaces,keyspaces,,,keyspaces,,,Keyspaces,Keyspaces,,1,,aws_keyspaces_,,keyspaces_,Keyspaces (for Apache Cassandra),Amazon,,,,,
 kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,,1,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,
 kinesisanalytics,kinesisanalytics,kinesisanalytics,kinesisanalytics,,kinesisanalytics,,,KinesisAnalytics,KinesisAnalytics,,1,aws_kinesis_analytics_,aws_kinesisanalytics_,,kinesis_analytics_,Kinesis Analytics,Amazon,,,,,
