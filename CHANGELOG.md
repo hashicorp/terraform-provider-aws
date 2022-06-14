@@ -1,5 +1,9 @@
 ## 4.19.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_kendra_index` ([#24920](https://github.com/hashicorp/terraform-provider-aws/issues/24920))
+
 BUG FIXES:
 
 * resource/aws_ec2_managed_prefix_list_entry: Fix error when attempting to create or delete multiple list entries ([#25046](https://github.com/hashicorp/terraform-provider-aws/issues/25046))
