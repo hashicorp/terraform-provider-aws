@@ -3,10 +3,12 @@ subcategory: "Kendra"
 layout: "aws"
 page_title: "AWS: aws_kendra_index"
 description: |-
-  Provides details about a specific Amazon Kendra Index.
+  Provides an Amazon Kendra Index resource.
 ---
 
 # Resource: aws_kendra_index
+
+Provides an Amazon Kendra Index resource.
 
 ## Example Usage
 
