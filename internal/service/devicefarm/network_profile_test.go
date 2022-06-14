@@ -192,7 +192,7 @@ func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) re
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindNetworkProfileByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindNetworkProfileByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -215,7 +215,7 @@ func testAccCheckNetworkProfileDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindNetworkProfileByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindNetworkProfileByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

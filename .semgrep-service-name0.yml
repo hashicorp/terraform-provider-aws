@@ -133,8 +133,6 @@ rules:
     paths:
       include:
         - internal
-      exclude:
-        - internal/service/devicefarm
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -149,8 +147,6 @@ rules:
     paths:
       include:
         - internal
-      exclude:
-        - internal/service/devicefarm
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -165,8 +161,6 @@ rules:
     paths:
       include:
         - internal
-      exclude:
-        - internal/service/devicefarm
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

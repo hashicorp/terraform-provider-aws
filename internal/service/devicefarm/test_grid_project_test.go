@@ -189,7 +189,7 @@ func testAccCheckProjectTestGridProjectExists(n string, v *devicefarm.TestGridPr
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindTestGridProjectByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindTestGridProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func testAccCheckProjectTestGridProjectDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindTestGridProjectByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindTestGridProjectByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

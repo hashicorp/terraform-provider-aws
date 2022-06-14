@@ -185,7 +185,7 @@ func testAccCheckDevicePoolExists(n string, v *devicefarm.DevicePool) resource.T
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindDevicepoolByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindDevicePoolByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -208,7 +208,7 @@ func testAccCheckDevicePoolDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindDevicepoolByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindDevicePoolByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
