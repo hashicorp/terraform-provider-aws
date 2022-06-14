@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEnvironmentMembership_basic(t *testing.T) {
+func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 	var conf cloud9.EnvironmentMember
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -27,7 +27,7 @@ func TestAccEnvironmentMembership_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentMembershipConfig(rName, "read-only"),
+				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "permissions", "read-only"),
@@ -41,7 +41,7 @@ func TestAccEnvironmentMembership_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentMembershipConfig(rName, "read-write"),
+				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-write"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "permissions", "read-write"),
@@ -53,7 +53,7 @@ func TestAccEnvironmentMembership_basic(t *testing.T) {
 	})
 }
 
-func TestAccEnvironmentMembership_disappears(t *testing.T) {
+func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
 	var conf cloud9.EnvironmentMember
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -66,7 +66,7 @@ func TestAccEnvironmentMembership_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentMembershipConfig(rName, "read-only"),
+				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
@@ -78,7 +78,7 @@ func TestAccEnvironmentMembership_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEnvironmentMembership_disappears_env(t *testing.T) {
+func TestAccCloud9EnvironmentMembership_disappears_env(t *testing.T) {
 	var conf cloud9.EnvironmentMember
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -91,7 +91,7 @@ func TestAccEnvironmentMembership_disappears_env(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentMembershipConfig(rName, "read-only"),
+				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
@@ -213,7 +213,7 @@ resource "aws_cloud9_environment_ec2" "test" {
 `, rName)
 }
 
-func testAccEnvironmentMembershipConfig(rName, permissions string) string {
+func testAccEnvironmentMembershipConfig_basic(rName, permissions string) string {
 	return testAccEnvironmentMemberBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

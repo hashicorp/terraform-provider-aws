@@ -362,7 +362,6 @@ rules:
         - internal/service/budgets
         - internal/service/ce
         - internal/service/chime
-        - internal/service/cloud9
         - internal/service/cloudcontrol
         - internal/service/cloudfront
         - internal/service/cloudhsmv2
