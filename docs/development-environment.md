@@ -13,7 +13,7 @@ If you wish to work on the provider, you'll first need [Go](http://www.golang.or
 
 Clone repository to: `$HOME/development/hashicorp/`
 
-```sh
+```console
 $ mkdir -p $HOME/development/hashicorp/; cd $HOME/development/hashicorp/
 $ git clone git@github.com:hashicorp/terraform-provider-aws
 ...
@@ -21,13 +21,13 @@ $ git clone git@github.com:hashicorp/terraform-provider-aws
 
 Enter the provider directory and run `make tools`. This will install the needed tools for the provider.
 
-```sh
+```console
 $ make tools
 ```
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
-```sh
+```console
 $ make build
 ...
 $ $GOPATH/bin/terraform-provider-aws
@@ -40,7 +40,7 @@ In order to test the provider, you can run `make test`.
 
 *Note:* Make sure no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` variables are set, and there's no `[default]` section in the AWS credentials file `~/.aws/credentials`.
 
-```sh
+```console
 $ make test
 ```
 
@@ -48,7 +48,7 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 
 *Note:* Acceptance tests create real resources, and often cost money to run. Please read [Running and Writing Acceptance Tests](./running-and-writing-acceptance-tests.md) in the contribution guidelines for more information on usage.
 
-```sh
+```console
 $ make testacc
 ```
 
