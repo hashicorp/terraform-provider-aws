@@ -26,7 +26,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionSettings1Config(),
+				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "12"),
@@ -53,7 +53,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegionSettings2Config(),
+				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "12"),
@@ -75,7 +75,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRegionSettings3Config(),
+				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "12"),
@@ -116,7 +116,7 @@ func testAccCheckRegionSettingsExists(v *backup.DescribeRegionSettingsOutput) re
 	}
 }
 
-func testAccRegionSettings1Config() string {
+func testAccRegionSettingsConfig_1() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
@@ -137,7 +137,7 @@ resource "aws_backup_region_settings" "test" {
 `
 }
 
-func testAccRegionSettings2Config() string {
+func testAccRegionSettingsConfig_2() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
@@ -163,7 +163,7 @@ resource "aws_backup_region_settings" "test" {
 `
 }
 
-func testAccRegionSettings3Config() string {
+func testAccRegionSettingsConfig_3() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {

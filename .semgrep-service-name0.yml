@@ -1258,8 +1258,6 @@ rules:
     paths:
       include:
         - internal/service/backup
-      exclude:
-        - internal/service/backup
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1290,8 +1288,6 @@ rules:
     paths:
       include:
         - internal/service/backup
-      exclude:
-        - internal/service/backup
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1305,8 +1301,6 @@ rules:
     message: Do not use "Backup" in var name inside backup package
     paths:
       include:
-        - internal/service/backup
-      exclude:
         - internal/service/backup
     patterns:
       - pattern: var $NAME = ...
