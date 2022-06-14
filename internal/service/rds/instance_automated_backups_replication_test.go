@@ -35,7 +35,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceAutomatedBackupsReplicationConfig(rName),
+				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
@@ -70,7 +70,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T)
 		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceAutomatedBackupReplicationsRetentionPeriodConfig(rName),
+				Config: testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
@@ -105,7 +105,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceAutomatedBackupsReplicationKMSEncryptedConfig(rName),
+				Config: testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
@@ -120,7 +120,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 	})
 }
 
-func testAccInstanceAutomatedBackupsReplicationConfig(rName string) string {
+func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
@@ -143,7 +143,7 @@ resource "aws_db_instance_automated_backups_replication" "test" {
 `, rName))
 }
 
-func testAccInstanceAutomatedBackupReplicationsRetentionPeriodConfig(rName string) string {
+func testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
@@ -167,7 +167,7 @@ resource "aws_db_instance_automated_backups_replication" "test" {
 `, rName))
 }
 
-func testAccInstanceAutomatedBackupsReplicationKMSEncryptedConfig(rName string) string {
+func testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q

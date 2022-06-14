@@ -33,7 +33,7 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRoleAssociationConfig(rName),
+				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
 					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, "id"),
@@ -68,7 +68,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRoleAssociationConfig(rName),
+				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(dbInstanceResourceName, &dbInstance1),
 					testAccCheckInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
@@ -162,7 +162,7 @@ func testAccCheckInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, d
 	}
 }
 
-func testAccInstanceRoleAssociationConfig(rName string) string {
+func testAccInstanceRoleAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance_role_association" "test" {
   db_instance_identifier = aws_db_instance.test.id

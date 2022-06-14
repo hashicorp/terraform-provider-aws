@@ -29,7 +29,7 @@ func TestAccRDSClusterRoleAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterRoleAssociationConfig(rName),
+				Config: testAccClusterConfig_roleAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					resource.TestCheckResourceAttrPair(resourceName, "db_cluster_identifier", dbClusterResourceName, "id"),
@@ -58,7 +58,7 @@ func TestAccRDSClusterRoleAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterRoleAssociationConfig(rName),
+				Config: testAccClusterConfig_roleAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterRoleAssociation(), resourceName),
@@ -82,7 +82,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterRoleAssociationConfig(rName),
+				Config: testAccClusterConfig_roleAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceCluster(), clusterResourceName),
@@ -106,7 +106,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterRoleAssociationConfig(rName),
+				Config: testAccClusterConfig_roleAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					acctest.CheckResourceDisappears(acctest.Provider, iam.ResourceRole(), roleResourceName),
@@ -175,7 +175,7 @@ func testAccCheckClusterRoleAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccClusterRoleAssociationConfig(rName string) string {
+func testAccClusterConfig_roleAssociation(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

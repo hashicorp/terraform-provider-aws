@@ -27,7 +27,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSnapshotConfig(rName),
+				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
@@ -67,7 +67,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSnapshotTags1Config(rName, "key1", "value1"),
+				Config: testAccClusterSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -87,7 +87,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterSnapshotTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -96,7 +96,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterSnapshotTags1Config(rName, "key2", "value2"),
+				Config: testAccClusterSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -167,7 +167,7 @@ func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *r
 	}
 }
 
-func testAccClusterSnapshotConfig(rName string) string {
+func testAccClusterSnapshotConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -218,7 +218,7 @@ resource "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccClusterSnapshotTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccClusterSnapshotConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -272,7 +272,7 @@ resource "aws_db_cluster_snapshot" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccClusterSnapshotTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterSnapshotConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

@@ -30,7 +30,7 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 		CheckDestroy:      testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProxyTargetInstanceConfig(rName),
+				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_db_instance.test", "address"),
@@ -66,7 +66,7 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 		CheckDestroy:      testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProxyTargetClusterConfig(rName),
+				Config: testAccProxyTargetConfig_cluster(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", ""),
@@ -102,7 +102,7 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProxyTargetInstanceConfig(rName),
+				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(resourceName, &dbProxyTarget),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
@@ -296,7 +296,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccProxyTargetInstanceConfig(rName string) string {
+func testAccProxyTargetConfig_instance(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetBaseConfig(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
@@ -334,7 +334,7 @@ resource "aws_db_proxy_target" "test" {
 `, rName))
 }
 
-func testAccProxyTargetClusterConfig(rName string) string {
+func testAccProxyTargetConfig_cluster(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetBaseConfig(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine = "aurora-mysql"

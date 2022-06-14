@@ -31,7 +31,7 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDBSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotConfig(rName),
+				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -63,7 +63,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDBSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotTags1Config(rName, "key1", "value1"),
+				Config: testAccSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -76,7 +76,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSnapshotTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -85,7 +85,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSnapshotTags1Config(rName, "key2", "value2"),
+				Config: testAccSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -112,7 +112,7 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDBSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotConfig(rName),
+				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(resourceName, &v),
 					testAccCheckDBSnapshotDisappears(&v),
@@ -225,7 +225,7 @@ resource "aws_db_instance" "test" {
 }`, rName)
 }
 
-func testAccSnapshotConfig(rName string) string {
+func testAccSnapshotConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotBaseConfig(rName),
 		fmt.Sprintf(`
@@ -236,7 +236,7 @@ resource "aws_db_snapshot" "test" {
 `, rName))
 }
 
-func testAccSnapshotTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccSnapshotConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotBaseConfig(rName),
 		fmt.Sprintf(`
@@ -251,7 +251,7 @@ resource "aws_db_snapshot" "test" {
 `, rName, tag1Key, tag1Value))
 }
 
-func testAccSnapshotTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccSnapshotConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotBaseConfig(rName),
 		fmt.Sprintf(`
