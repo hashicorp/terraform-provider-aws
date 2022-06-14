@@ -7,14 +7,13 @@ rules:
     paths:
       include:
         - internal/service/connect
-      exclude:
-        - internal/service/connect
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: connect-in-test-name
@@ -39,14 +38,13 @@ rules:
     paths:
       include:
         - internal/service/connect
-      exclude:
-        - internal/service/connect
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
     severity: WARNING
   - id: connect-in-var-name
     languages:
@@ -55,14 +53,13 @@ rules:
     paths:
       include:
         - internal/service/connect
-      exclude:
-        - internal/service/connect
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
     severity: WARNING
   - id: costandusagereportservice-in-func-name
     languages:
@@ -156,8 +153,6 @@ rules:
     message: Do not use "CUR" in func name inside cur package
     paths:
       include:
-        - internal/service/cur
-      exclude:
         - internal/service/cur
     patterns:
       - pattern: func $NAME( ... ) { ... }
@@ -1042,8 +1037,6 @@ rules:
     message: Do not use "DynamoDB" in func name inside dynamodb package
     paths:
       include:
-        - internal/service/dynamodb
-      exclude:
         - internal/service/dynamodb
     patterns:
       - pattern: func $NAME( ... ) { ... }
