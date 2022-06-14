@@ -24,12 +24,12 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDbClusterSnapshotDestroy,
+		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
@@ -64,12 +64,12 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDbClusterSnapshotDestroy,
+		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -89,7 +89,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -98,7 +98,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -107,7 +107,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
+func testAccCheckClusterSnapshotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -135,7 +135,7 @@ func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDbClusterSnapshotExists(resourceName string, dbClusterSnapshot *rds.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *rds.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

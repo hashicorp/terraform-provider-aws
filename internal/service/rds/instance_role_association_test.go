@@ -96,7 +96,7 @@ func testAccCheckInstanceRoleAssociationExists(resourceName string, dbInstanceRo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		role, err := tfrds.DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		role, err := tfrds.DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("RDS DB Instance IAM Role Association not found")
 		}
@@ -128,7 +128,7 @@ func testAccCheckInstanceRoleAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
 
-		dbInstanceRole, err := tfrds.DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		dbInstanceRole, err := tfrds.DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -158,7 +158,7 @@ func testAccCheckInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, d
 			return err
 		}
 
-		return tfrds.WaitForDbInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
+		return tfrds.WaitForDBInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
 	}
 }
 

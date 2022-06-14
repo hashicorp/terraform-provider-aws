@@ -106,7 +106,7 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading resource ID: %w", err)
 	}
 
-	dbInstanceRole, err := DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+	dbInstanceRole, err := DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
@@ -155,7 +155,7 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error disassociating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
 	}
 
-	if err := WaitForDbInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
+	if err := WaitForDBInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %w", dbInstanceIdentifier, roleArn, err)
 	}
 
@@ -172,7 +172,7 @@ func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func DescribeDbInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
+func DescribeDBInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
 	dbInstance, err := FindDBInstanceByID(conn, dbInstanceIdentifier)
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleA
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{dbInstanceRoleStatusPending},
 		Target:  []string{dbInstanceRoleStatusActive},
-		Refresh: statusDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
+		Refresh: statusDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
 		Timeout: dbInstanceRoleAssociationCreatedTimeout,
 	}
 
@@ -201,14 +201,14 @@ func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleA
 	return err
 }
 
-func WaitForDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func WaitForDBInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dbInstanceRoleStatusActive,
 			dbInstanceRoleStatusPending,
 		},
 		Target:  []string{},
-		Refresh: statusDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
+		Refresh: statusDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
 		Timeout: dbInstanceRoleAssociationDeletedTimeout,
 	}
 
@@ -218,9 +218,9 @@ func WaitForDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, ro
 	return err
 }
 
-func statusDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
+func statusDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		dbInstanceRole, err := DescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		dbInstanceRole, err := DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
