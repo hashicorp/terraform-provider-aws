@@ -27,7 +27,7 @@ func TestAccRDSEventSubscription_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionBasicConfig(rName),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
@@ -62,7 +62,7 @@ func TestAccRDSEventSubscription_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionBasicConfig(rName),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceEventSubscription(), resourceName),
@@ -85,7 +85,7 @@ func TestAccRDSEventSubscription_Name_generated(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionNameGeneratedConfig(rName),
+				Config: testAccEventSubscriptionConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -113,7 +113,7 @@ func TestAccRDSEventSubscription_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionNamePrefixConfig(rName, "tf-acc-test-prefix-"),
+				Config: testAccEventSubscriptionConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
@@ -141,7 +141,7 @@ func TestAccRDSEventSubscription_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionTags1Config(rName, "key1", "value1"),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -154,7 +154,7 @@ func TestAccRDSEventSubscription_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEventSubscriptionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -163,7 +163,7 @@ func TestAccRDSEventSubscription_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSubscriptionTags1Config(rName, "key2", "value2"),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -187,7 +187,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionCategoriesConfig(rName),
+				Config: testAccEventSubscriptionConfig_categories(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
@@ -213,7 +213,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionCategoriesUpdatedConfig(rName),
+				Config: testAccEventSubscriptionConfig_categoriesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
@@ -230,7 +230,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSubscriptionCategoriesAndSourceTypeUpdatedConfig(rName),
+				Config: testAccEventSubscriptionConfig_categoriesAndSourceTypeUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
@@ -266,7 +266,7 @@ func TestAccRDSEventSubscription_sourceIDs(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionSourceIDsConfig(rName),
+				Config: testAccEventSubscriptionConfig_sourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "2"),
@@ -280,7 +280,7 @@ func TestAccRDSEventSubscription_sourceIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionSourceIDsUpdatedConfig(rName),
+				Config: testAccEventSubscriptionConfig_sourceIDsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
@@ -340,7 +340,7 @@ func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccEventSubscriptionBasicConfig(rName string) string {
+func testAccEventSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -353,7 +353,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionNameGeneratedConfig(rName string) string {
+func testAccEventSubscriptionConfig_nameGenerated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -365,7 +365,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionNamePrefixConfig(rName, namePrefix string) string {
+func testAccEventSubscriptionConfig_namePrefix(rName, namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -378,7 +378,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName, namePrefix)
 }
 
-func testAccEventSubscriptionTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccEventSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -395,7 +395,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccEventSubscriptionTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEventSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -413,7 +413,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccEventSubscriptionCategoriesConfig(rName string) string {
+func testAccEventSubscriptionConfig_categories(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -436,7 +436,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionCategoriesUpdatedConfig(rName string) string {
+func testAccEventSubscriptionConfig_categoriesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -455,7 +455,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccEventSubscriptionCategoriesAndSourceTypeUpdatedConfig(rName string) string {
+func testAccEventSubscriptionConfig_categoriesAndSourceTypeUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -498,7 +498,7 @@ resource "aws_db_parameter_group" "test3" {
 `, rName)
 }
 
-func testAccEventSubscriptionSourceIDsConfig(rName string) string {
+func testAccEventSubscriptionConfig_sourceIDs(rName string) string {
 	return acctest.ConfigCompose(testAccEventSubscriptionSourceIDsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_db_event_subscription" "test" {
   name        = %[1]q
@@ -517,7 +517,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName))
 }
 
-func testAccEventSubscriptionSourceIDsUpdatedConfig(rName string) string {
+func testAccEventSubscriptionConfig_sourceIDsUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccEventSubscriptionSourceIDsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_db_event_subscription" "test" {
   name        = %[1]q

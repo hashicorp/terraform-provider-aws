@@ -28,7 +28,7 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -134,7 +134,7 @@ func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -217,7 +217,7 @@ func testAccCheckDBSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Te
 	}
 }
 
-func testAccDBSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

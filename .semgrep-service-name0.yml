@@ -175,8 +175,6 @@ rules:
     paths:
       include:
         - internal
-      exclude:
-        - internal/service/rds
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -281,7 +279,6 @@ rules:
         - internal/service/networkmanager
         - internal/service/organizations
         - internal/service/ram
-        - internal/service/rds
         - internal/service/resourcegroups
         - internal/service/resourcegroupstaggingapi
         - internal/service/route53domains
