@@ -17,7 +17,7 @@ import (
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 )
 
-func TestValidateAppAutoScalingPolicyImportInput(t *testing.T) {
+func TestValidatePolicyImportInput(t *testing.T) {
 	testCases := []struct {
 		input         string
 		errorExpected bool
