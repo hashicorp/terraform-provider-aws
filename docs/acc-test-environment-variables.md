@@ -1,4 +1,4 @@
-## Testing Environment Variable Dictionary
+# Acceptance Testing Environment Variable Dictionary
 
 Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the `internal/acctest` package.
 
