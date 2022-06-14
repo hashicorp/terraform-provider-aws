@@ -1,6 +1,7 @@
 package elasticbeanstalk
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 )
 
@@ -71,19 +72,19 @@ func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLif
 	appversion_lifecycle := make(map[string]interface{})
 
 	if rlc.ServiceRole != nil {
-		appversion_lifecycle["service_role"] = *rlc.ServiceRole
+		appversion_lifecycle["service_role"] = aws.StringValue(rlc.ServiceRole)
 	}
 
 	if vlc := rlc.VersionLifecycleConfig; vlc != nil {
-		if mar := vlc.MaxAgeRule; mar != nil && *mar.Enabled {
+		if mar := vlc.MaxAgeRule; mar != nil && aws.BoolValue(mar.Enabled) {
 			anything_enabled = true
-			appversion_lifecycle["max_age_in_days"] = *mar.MaxAgeInDays
-			appversion_lifecycle["delete_source_from_s3"] = *mar.DeleteSourceFromS3
+			appversion_lifecycle["max_age_in_days"] = aws.Int64Value(mar.MaxAgeInDays)
+			appversion_lifecycle["delete_source_from_s3"] = aws.BoolValue(mar.DeleteSourceFromS3)
 		}
-		if mcr := vlc.MaxCountRule; mcr != nil && *mcr.Enabled {
+		if mcr := vlc.MaxCountRule; mcr != nil && aws.BoolValue(mcr.Enabled) {
 			anything_enabled = true
-			appversion_lifecycle["max_count"] = *mcr.MaxCount
-			appversion_lifecycle["delete_source_from_s3"] = *mcr.DeleteSourceFromS3
+			appversion_lifecycle["max_count"] = aws.Int64Value(mcr.MaxCount)
+			appversion_lifecycle["delete_source_from_s3"] = aws.BoolValue(mcr.DeleteSourceFromS3)
 		}
 	}
 

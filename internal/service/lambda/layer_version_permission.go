@@ -12,11 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -130,7 +129,7 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading Lambda Layer Version Permission (%s): %w", d.Id(), err)
 	}
 
-	policyDoc := &iam.IAMPolicyDoc{}
+	policyDoc := &IAMPolicyDoc{}
 
 	if err := json.Unmarshal([]byte(aws.StringValue(layerVersionPolicyOutput.Policy)), policyDoc); err != nil {
 		return err

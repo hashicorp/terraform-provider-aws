@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -99,7 +99,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{guardduty.ThreatIntelSetStatusActivating, guardduty.ThreatIntelSetStatusDeactivating},
 		Target:     []string{guardduty.ThreatIntelSetStatusActive, guardduty.ThreatIntelSetStatusInactive},
-		Refresh:    guardDutyThreatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -234,7 +234,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 			guardduty.ThreatIntelSetStatusDeletePending,
 		},
 		Target:     []string{guardduty.ThreatIntelSetStatusDeleted},
-		Refresh:    guardDutyThreatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -247,7 +247,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func guardDutyThreatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
+func threatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.GetThreatIntelSetInput{
 			DetectorId:       aws.String(detectorID),

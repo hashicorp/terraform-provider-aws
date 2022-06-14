@@ -38,7 +38,7 @@ func ResourceRoleAlias() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      3600,
-				ValidateFunc: validation.IntBetween(900, 3600),
+				ValidateFunc: validation.IntBetween(900, 43200),
 			},
 		},
 	}

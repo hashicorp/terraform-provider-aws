@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
+subcategory: "Kinesis Analytics V2"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application"
 description: |-
@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example-flink-application"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.bucket
   key    = "example-flink-application"
   source = "flink-app.jar"
@@ -38,7 +38,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.example.arn
-          file_key   = aws_s3_bucket_object.example.key
+          file_key   = aws_s3_object.example.key
         }
       }
 
@@ -104,7 +104,7 @@ resource "aws_cloudwatch_log_stream" "example" {
 
 resource "aws_kinesisanalyticsv2_application" "example" {
   name                   = "example-sql-application"
-  runtime_environment    = "SQL-1.0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.example.arn
 
   application_configuration {
@@ -220,7 +220,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example-flink-application"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.bucket
   key    = "example-flink-application"
   source = "flink-app.jar"
@@ -236,7 +236,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.example.arn
-          file_key   = aws_s3_bucket_object.example.key
+          file_key   = aws_s3_object.example.key
         }
       }
 

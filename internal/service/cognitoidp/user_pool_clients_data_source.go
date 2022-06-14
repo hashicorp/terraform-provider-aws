@@ -20,6 +20,13 @@ func DataSourceUserPoolClients() *schema.Resource {
 				},
 				Computed: true,
 			},
+			"client_names": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed: true,
+			},
 			"user_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -37,6 +44,7 @@ func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	var clientIDs []string
+	var clientNames []string
 	err := conn.ListUserPoolClientsPages(input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -47,6 +55,7 @@ func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) err
 				continue
 			}
 
+			clientNames = append(clientNames, aws.StringValue(v.ClientName))
 			clientIDs = append(clientIDs, aws.StringValue(v.ClientId))
 		}
 
@@ -59,6 +68,7 @@ func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(userPoolID)
 	d.Set("client_ids", clientIDs)
+	d.Set("client_names", clientNames)
 
 	return nil
 }

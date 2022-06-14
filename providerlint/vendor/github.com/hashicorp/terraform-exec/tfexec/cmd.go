@@ -176,7 +176,7 @@ func (tf *Terraform) buildTerraformCmd(ctx context.Context, mergeEnv map[string]
 	cmd.Env = tf.buildEnv(mergeEnv)
 	cmd.Dir = tf.workingDir
 
-	tf.logger.Printf("[INFO] running Terraform command: %s", cmdString(cmd))
+	tf.logger.Printf("[INFO] running Terraform command: %s", cmd.String())
 
 	return cmd
 }

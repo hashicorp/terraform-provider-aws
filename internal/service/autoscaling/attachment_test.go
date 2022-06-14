@@ -18,10 +18,10 @@ func TestAccAutoScalingAttachment_elb(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAutocalingAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachment_elb(rInt),
@@ -62,10 +62,10 @@ func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAutocalingAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachment_alb(rInt),
@@ -180,7 +180,7 @@ func testAccCheckAutocalingAlbAttachmentExists(asgname string, targetGroupCount 
 }
 
 func testAccAttachment_alb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -215,7 +215,7 @@ resource "aws_lb_target_group" "test" {
   }
 
   tags = {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "TestAccAutoScalingAttachment_albTargetGroup"
   }
 }
 
@@ -244,7 +244,7 @@ resource "aws_lb_target_group" "another_test" {
   }
 
   tags = {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "TestAccAutoScalingAttachment_albTargetGroup"
   }
 }
 
@@ -286,7 +286,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAttachment_elb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -115,7 +115,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		IdempotencyToken:        aws.String(resource.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
 	}
-	validity, err := expandAcmpcaValidity(d.Get("validity").([]interface{}))
+	validity, err := expandValidity(d.Get("validity").([]interface{}))
 	if err != nil {
 		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
 	}
@@ -255,7 +255,7 @@ func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandAcmpcaValidity(l []interface{}) (*acmpca.Validity, error) {
+func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}

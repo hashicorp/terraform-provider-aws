@@ -1,0 +1,59 @@
+name: Semgrep Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - internal/**
+      - .semgrep.yml
+      - .semgrep-service-name*yml
+      - .github/workflows/semgrep-ci.yml
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+       fetch-depth: 0
+    - name: semgrep
+      uses: returntocorp/semgrep-action@v1
+  naming_semgrep0:
+    name: Semgrep Naming Scan A-C,EC2
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh 0
+  naming_semgrep1:
+    name: Semgrep Naming Scan C-G
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh 1
+  naming_semgrep2:
+    name: Semgrep Naming Scan G-Q
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh 2
+  naming_semgrep3:
+    name: Semgrep Naming Scan Q-Z
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh 3

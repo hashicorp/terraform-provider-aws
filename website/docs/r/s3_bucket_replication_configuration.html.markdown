@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_replication_configuration"
 description: |-
@@ -9,6 +9,8 @@ description: |-
 # Resource: aws_s3_bucket_replication_configuration
 
 Provides an independent configuration resource for S3 bucket [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html).
+
+~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `aws_s3_bucket_replication_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
 ## Example Usage
 
@@ -93,35 +95,51 @@ resource "aws_iam_role_policy_attachment" "replication" {
 
 resource "aws_s3_bucket" "destination" {
   bucket = "tf-test-bucket-destination-12345"
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "destination" {
+  bucket = aws_s3_bucket.destination.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket" "source" {
   provider = aws.central
   bucket   = "tf-test-bucket-source-12345"
-  acl      = "private"
+}
 
-  versioning {
-    enabled = true
-  }
+resource "aws_s3_bucket_acl" "source_bucket_acl" {
+  provider = aws.central
 
-  lifecycle {
-    ignore_changes = [
-      replication_configuration
-    ]
+  bucket = aws_s3_bucket.source.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  provider = aws.central
+
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
+  provider = aws.central
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.source]
+
   role   = aws_iam_role.replication.arn
   bucket = aws_s3_bucket.source.id
 
   rule {
-    id     = "foobar"
-    prefix = "foo"
+    id = "foobar"
+
+    filter {
+      prefix = "foo"
+    }
+
     status = "Enabled"
 
     destination {
@@ -139,40 +157,43 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
 resource "aws_s3_bucket" "east" {
   bucket = "tf-test-bucket-east-12345"
+}
 
-  versioning {
-    enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [
-      replication_configuration
-    ]
+resource "aws_s3_bucket_versioning" "east" {
+  bucket = aws_s3_bucket.east.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket" "west" {
-  provider = west
+  provider = aws.west
   bucket   = "tf-test-bucket-west-12345"
+}
 
-  versioning {
-    enabled = true
-  }
+resource "aws_s3_bucket_versioning" "west" {
+  provider = aws.west
 
-  lifecycle {
-    ignore_changes = [
-      replication_configuration
-    ]
+  bucket = aws_s3_bucket.west.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket_replication_configuration" "east_to_west" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.east]
+
   role   = aws_iam_role.east_replication.arn
   bucket = aws_s3_bucket.east.id
 
   rule {
-    id     = "foobar"
-    prefix = "foo"
+    id = "foobar"
+
+    filter {
+      prefix = "foo"
+    }
+
     status = "Enabled"
 
     destination {
@@ -183,12 +204,20 @@ resource "aws_s3_bucket_replication_configuration" "east_to_west" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "west_to_east" {
+  provider = aws.west
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.west]
+
   role   = aws_iam_role.west_replication.arn
   bucket = aws_s3_bucket.west.id
 
   rule {
-    id     = "foobar"
-    prefix = "foo"
+    id = "foobar"
+
+    filter {
+      prefix = "foo"
+    }
+
     status = "Enabled"
 
     destination {
@@ -199,36 +228,15 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 }
 ```
 
-## Usage Notes
-
-~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket.
-
-This resource implements the same features that are provided by the `replication_configuration` object of the [`aws_s3_bucket` resource](/docs/providers/aws/r/s3_bucket.html). To avoid conflicts or unexpected apply results, a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
-
-```
-lifecycle {
-  ignore_changes = [
-    replication_configuration
-  ]
-}
-```
-
-The `aws_s3_bucket_replication_configuration` resource provides the following features that are not available in the [`aws_s3_bucket` resource](/docs/providers/aws/r/s3_bucket.html):
-
-* `replica_modifications` - Added to the `source_selection_criteria` configuration object [documented below](#source_selection_criteria)
-* `metrics` - Added to the `destination` configuration object [documented below](#metrics)
-* `replication_time` - Added to the `destination` configuration object [documented below](#replication_time)
-* `existing_object_replication` - Added to the replication rule object [documented below](#existing_object_replication)
-
-Replication for existing objects requires activation by AWS Support.  See [userguide/replication-what-is-isnot-replicated](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication).
-
 ## Argument Reference
 
 The following arguments are supported:
 
 * `bucket` - (Required) The name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
-* `rule` - (Required) Set of configuration blocks describing the rules managing the replication [documented below](#rule).
+* `rule` - (Required) List of configuration blocks describing the rules managing the replication [documented below](#rule).
+* `token` - (Optional) A token to allow replication to be enabled on an Object Lock-enabled bucket. You must contact AWS support for the bucket's "Object Lock token".
+For more details, see [Using S3 Object Lock with replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html#object-lock-managing-replication).
 
 ### rule
 
@@ -236,21 +244,22 @@ The following arguments are supported:
 
 ~> **NOTE:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 
+~> **NOTE:** The `existing_object_replication` parameter is not supported by Amazon S3 at this time and should not be included in your `rule` configurations. Specifying this parameter will result in `MalformedXML` errors.
+To replicate existing objects, please refer to the [Replicating existing objects with S3 Batch Replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-batch-replication-batch.html) documentation in the Amazon S3 User Guide.
+
 The `rule` configuration block supports the following arguments:
 
 * `delete_marker_replication` - (Optional) Whether delete markers are replicated. This argument is only valid with V2 replication configurations (i.e., when `filter` is used)[documented below](#delete_marker_replication).
 * `destination` - (Required) Specifies the destination for the rule [documented below](#destination).
 * `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations [documented below](#existing_object_replication).
-* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter).
+* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter). If not specified, the `rule` will default to using `prefix`.
 * `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
-* `prefix` - (Optional, Conflicts with `filter`) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `prefix` - (Optional, Conflicts with `filter`, **Deprecated**) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length. Defaults to an empty string (`""`) if `filter` is not specified.
 * `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria [documented below](#source_selection_criteria).
 * `status` - (Required) The status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
 
 ### delete_marker_replication
-
-~> **NOTE:** This configuration format differs from that of `aws_s3_bucket`.
 
 ~> **NOTE:** This argument is only available with V2 replication configurations.
 
@@ -360,7 +369,8 @@ The `existing_object_replication` configuration block supports the following arg
 
 ### filter
 
-~> **NOTE:** With the `filter` argument, you must specify exactly one of `prefix`, `tag`, or `and`.  Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
+~> **NOTE:** The `filter` argument must be specified as either an empty configuration block (`filter {}`) to imply the rule requires no filter or with exactly one of `prefix`, `tag`, or `and`.
+Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
 The `filter` configuration block supports the following arguments:
 
@@ -396,8 +406,6 @@ source_selection_criteria {
 ```
 
 The `source_selection_criteria` configuration block supports the following arguments:
-
-~> **NOTE:** `sse_kms_encrypted_objects` configuration format differs here from the configuration in the [`aws_s3_bucket` resource](/docs/providers/aws/r/s3_bucket.html).
 
 * `replica_modifications` - (Optional) A configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `Enabled` to replicate modifications on replicas.
 

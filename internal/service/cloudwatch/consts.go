@@ -1,7 +1,8 @@
 package cloudwatch
 
 const (
-	errCodeAccessDenied = "AccessDenied"
+	ResDashboard   = "Dashboard"
+	ResMetricAlarm = "Metric Alarm"
 )
 
 const (

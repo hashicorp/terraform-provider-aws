@@ -12,7 +12,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -361,7 +361,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.CreateLoadBalancer(elbOpts)
 
 	// Some partitions may not support tag-on-create
-	if elbOpts.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+	if elbOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		elbOpts.Tags = nil
 		resp, err = conn.CreateLoadBalancer(elbOpts)
@@ -389,7 +389,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Load Balancer (%s): %s", d.Id(), err)
 			return resourceLoadBalancerUpdate(d, meta)
 		}
@@ -532,7 +532,25 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
-		_, err := conn.ModifyLoadBalancerAttributes(input)
+
+		// Not all attributes are supported in all partitions (e.g., ISO)
+		var err error
+		for {
+			_, err = conn.ModifyLoadBalancerAttributes(input)
+			if err == nil {
+				break
+			}
+
+			re := regexp.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
+			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
+				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[2], err)
+				input.Attributes = removeAttribute(input.Attributes, sm[2])
+				continue
+			}
+
+			break
+		}
+
 		if err != nil {
 			return fmt.Errorf("failure configuring LB attributes: %w", err)
 		}
@@ -606,7 +624,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 
 			_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
@@ -614,7 +632,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 				return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 			}
 
-			return resourceListenerRead(d, meta)
+			return resourceLoadBalancerRead(d, meta)
 		}
 
 		if err != nil {
@@ -658,12 +676,23 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
+func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*elbv2.LoadBalancerAttribute {
+	for i, a := range attributes {
+		if aws.StringValue(a.Key) == key {
+			return append(attributes[:i], attributes[i+1:]...)
+		}
+	}
+
+	log.Printf("[WARN] Unable to remove attribute %s from Load Balancer attributes: not found", key)
+	return attributes
+}
+
 // ALB automatically creates ENI(s) on creation
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -706,7 +735,7 @@ func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -745,7 +774,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 	return nil
 }
 
-func getLbNameFromArn(arn string) (string, error) {
+func getLBNameFromARN(arn string) (string, error) {
 	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
@@ -885,7 +914,7 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 
 	tags, err := ListTags(conn, d.Id())
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 		return nil
 	}

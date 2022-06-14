@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_pool_cidr"
 description: |-
@@ -57,6 +57,7 @@ resource "aws_vpc_ipam_pool" "ipv6_test_public" {
   locale         = "us-east-1"
   description    = "public ipv6"
   advertisable   = false
+  aws_service    = "ec2"
 }
 
 resource "aws_vpc_ipam_pool_cidr" "ipv6_test_public" {

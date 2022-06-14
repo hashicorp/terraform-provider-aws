@@ -21,15 +21,15 @@ func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketIntelligentTieringConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -54,15 +54,15 @@ func TestAccS3BucketIntelligentTieringConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketIntelligentTieringConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketIntelligentTieringConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,15 +78,15 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketIntelligentTieringConfigurationFilterPrefixConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p1/"),
@@ -108,7 +108,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 			{
 				Config: testAccBucketIntelligentTieringConfigurationFilterPrefixAndTagConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p2/"),
@@ -130,7 +130,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 			{
 				Config: testAccBucketIntelligentTieringConfigurationFilterTagConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
@@ -148,7 +148,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 			{
 				Config: testAccBucketIntelligentTieringConfigurationFilterPrefixAndTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p3/"),
@@ -167,7 +167,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 			{
 				Config: testAccBucketIntelligentTieringConfigurationFilterTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckBucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
@@ -340,7 +340,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccCheckS3BucketIntelligentTieringConfigurationExists(n string, v *s3.IntelligentTieringConfiguration) resource.TestCheckFunc {
+func testAccCheckBucketIntelligentTieringConfigurationExists(n string, v *s3.IntelligentTieringConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

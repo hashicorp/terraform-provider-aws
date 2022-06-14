@@ -34,6 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cors_config` - A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
 * `custom_headers_config` - Object that contains an attribute `items` that contains a list of Custom Headers See [Custom Header](#custom-header) for more information.
 * `security_headers_config` - A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
+* `server_timing_headers_config` - (Optional) A configuration for enabling the Server-Timing header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
 ### Cors Config
 
@@ -91,3 +92,8 @@ In addition to all arguments above, the following attributes are exported:
 * `override` - A Boolean value that determines whether CloudFront overrides the X-XSS-Protection HTTP response header received from the origin with the one specified in this response headers policy.
 * `protection` - A Boolean value that determines the value of the X-XSS-Protection HTTP response header. When this setting is true, the value of the X-XSS-Protection header is 1. When this setting is false, the value of the X-XSS-Protection header is 0.
 * `report_uri` - A Boolean value that determines whether CloudFront sets a reporting URI in the X-XSS-Protection header.
+
+### Server Timing Headers Config
+
+* `enabled` - A Boolean that determines whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `sampling_rate` - A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to.

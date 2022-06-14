@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -77,7 +77,7 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 	d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
 
 	// (Re)provision ALL accounts after making the above changes
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 

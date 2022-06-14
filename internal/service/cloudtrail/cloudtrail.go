@@ -1,21 +1,22 @@
 package cloudtrail
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceCloudTrail() *schema.Resource {
@@ -288,7 +289,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -367,10 +368,14 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if trail == nil {
-		log.Printf("[WARN] CloudTrail (%s) not found", d.Id())
+	if !d.IsNewResource() && trail == nil {
+		names.LogNotFoundRemoveState(names.CloudTrail, names.ErrActionReading, ResCloudTrail, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && trail == nil {
+		return names.Error(names.CloudTrail, names.ErrActionReading, ResCloudTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)
@@ -442,7 +447,7 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 			TrailName: aws.String(d.Id()),
 		})
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
+			if !tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeInsightNotEnabledException) {
 				return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
 			}
 		}
@@ -496,7 +501,7 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.UpdateTrail(&input)
 			if err != nil {

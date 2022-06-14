@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_gamelift_build: Add import support
+```
+```release-note:enhancement
+resource/aws_gamelift_build: Add `object_version` argument to `storage_location` block.
+```

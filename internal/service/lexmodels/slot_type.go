@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	LexSlotTypeCreateTimeout = 1 * time.Minute
-	LexSlotTypeUpdateTimeout = 1 * time.Minute
-	LexSlotTypeDeleteTimeout = 5 * time.Minute
+	slotTypeCreateTimeout = 1 * time.Minute
+	slotTypeUpdateTimeout = 1 * time.Minute
+	slotTypeDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceSlotType() *schema.Resource {
@@ -35,9 +35,9 @@ func ResourceSlotType() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexSlotTypeCreateTimeout),
-			Update: schema.DefaultTimeout(LexSlotTypeUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexSlotTypeDeleteTimeout),
+			Create: schema.DefaultTimeout(slotTypeCreateTimeout),
+			Update: schema.DefaultTimeout(slotTypeUpdateTimeout),
+			Delete: schema.DefaultTimeout(slotTypeDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -145,7 +145,7 @@ func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("enumeration_value"); ok {
-		input.EnumerationValues = expandLexEnumerationValues(v.(*schema.Set).List())
+		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
 	var output *lexmodelbuildingservice.PutSlotTypeOutput
@@ -192,7 +192,7 @@ func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
 
 	if output.EnumerationValues != nil {
-		d.Set("enumeration_value", flattenLexEnumerationValues(output.EnumerationValues))
+		d.Set("enumeration_value", flattenEnumerationValues(output.EnumerationValues))
 	}
 
 	version, err := FindLatestSlotTypeVersionByName(conn, d.Id())
@@ -218,7 +218,7 @@ func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("enumeration_value"); ok {
-		input.EnumerationValues = expandLexEnumerationValues(v.(*schema.Set).List())
+		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
@@ -252,12 +252,12 @@ func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Lex Slot Type (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitLexSlotTypeDeleted(conn, d.Id())
+	_, err = waitSlotTypeDeleted(conn, d.Id())
 
 	return err
 }
 
-func flattenLexEnumerationValues(values []*lexmodelbuildingservice.EnumerationValue) (flattened []map[string]interface{}) {
+func flattenEnumerationValues(values []*lexmodelbuildingservice.EnumerationValue) (flattened []map[string]interface{}) {
 	for _, value := range values {
 		flattened = append(flattened, map[string]interface{}{
 			"synonyms": flex.FlattenStringList(value.Synonyms),
@@ -268,7 +268,7 @@ func flattenLexEnumerationValues(values []*lexmodelbuildingservice.EnumerationVa
 	return
 }
 
-func expandLexEnumerationValues(rawValues []interface{}) []*lexmodelbuildingservice.EnumerationValue {
+func expandEnumerationValues(rawValues []interface{}) []*lexmodelbuildingservice.EnumerationValue {
 	enums := make([]*lexmodelbuildingservice.EnumerationValue, 0, len(rawValues))
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})

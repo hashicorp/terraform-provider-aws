@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -14,13 +14,10 @@ import (
 
 const (
 	// Associated is the member status naming for regions that do not support Organizations
-	SecurityHubMemberStatusAssociated = "Associated"
-	SecurityHubMemberStatusCreated    = "Created"
-	SecurityHubMemberStatusInvited    = "Invited"
-	SecurityHubMemberStatusEnabled    = "Enabled"
-	SecurityHubMemberStatusRemoved    = "Removed"
-	SecurityHubMemberStatusResigned   = "Resigned"
-	SecurityHubMemberStatusDeleted    = "Deleted"
+	memberStatusAssociated = "Associated"
+	memberStatusInvited    = "Invited"
+	memberStatusEnabled    = "Enabled"
+	memberStatusResigned   = "Resigned"
 )
 
 func ResourceMember() *schema.Resource {
@@ -111,7 +108,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -134,7 +131,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	status := aws.StringValue(member.MemberStatus)
 	d.Set("member_status", status)
 
-	invited := status == SecurityHubMemberStatusInvited || status == SecurityHubMemberStatusEnabled || status == SecurityHubMemberStatusAssociated || status == SecurityHubMemberStatusResigned
+	invited := status == memberStatusInvited || status == memberStatusEnabled || status == memberStatusAssociated || status == memberStatusResigned
 	d.Set("invite", invited)
 
 	return nil
@@ -146,7 +143,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -157,7 +154,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

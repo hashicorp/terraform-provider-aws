@@ -10,7 +10,6 @@ on:
       - .github/workflows/terraform_provider.yml
       - .go-version
       - .golangci.yml
-      - .semgrep.yml
       - internal/**
       - providerlint/**
       - docs/index.md
@@ -20,6 +19,7 @@ on:
       - go.sum
       - GNUmakefile
       - main.go
+      - names/**
       - staticcheck.conf
       - tools/**
       - website/**
@@ -33,13 +33,11 @@ jobs:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
-    - uses: actions/cache@v2
+          go-version-file: .go-version
+    - uses: actions/cache@v3
       continue-on-error: true
       id: cache-go-pkg-mod
       timeout-minutes: 2
@@ -54,32 +52,30 @@ jobs:
     needs: [go_mod_download]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/cache@v2
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
       continue-on-error: true
       id: cache-terraform-plugin-dir
       timeout-minutes: 2
       with:
         path: terraform-plugin-dir
         key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
       name: go env
       run: |
         echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ env.GOCACHE }}
         key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -92,8 +88,8 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/cache@v2
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
       continue-on-error: true
       id: cache-terraform-providers-schema
       timeout-minutes: 2
@@ -101,13 +97,13 @@ jobs:
         path: terraform-providers-schema
         key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
     - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       timeout-minutes: 2
       with:
         path: terraform-plugin-dir
         key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
     - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-      uses: hashicorp/setup-terraform@v1
+      uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: ${{ env.TERRAFORM_VERSION }}
         terraform_wrapper: false
@@ -127,23 +123,21 @@ jobs:
     # needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
         echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ${{ env.GOCACHE }}
         key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
@@ -158,29 +152,27 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
         echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ${{ env.GOCACHE }}
         key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go install golang.org/x/tools/cmd/goimports
+    - run: go install golang.org/x/tools/cmd/goimports@latest
     - run: make gen
     - name: Check for Git Differences
       run: |
@@ -192,25 +184,23 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
         echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ${{ env.GOCACHE }}
         key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
@@ -218,14 +208,19 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v13.1
+      uses: tj-actions/changed-files@v22.2
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
         for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          if [[ "${file}" == internal/* ]]; then
-            echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
+          if [ "${file}" = "" ]; then
+            continue
           fi
+          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.*|/ec2/generate/.* ]]; then
+            echo "Skipping changed file: ${file}"
+            continue
+          fi
+          echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
         done
         cat /tmp/dirs_changed_all | sort | uniq > /tmp/pkgs_changed
         echo "All packages changed:"
@@ -234,54 +229,62 @@ jobs:
           if [ "${pkg}" = "" ]; then
             continue
           fi
-          if [[ "${pkg}" == */test-fixtures ]]; then
+          echo -n "Finding dependents for ${pkg}? "
+          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate|/ec2/generate/ ]]; then
+            echo "No"
             continue
           fi
+          c=0
           while read file; do
             if [ "${file}" = "" ]; then
               continue
             fi
+            if [[ "${file}" != *.go ]]; then
+              continue
+            fi
+            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate|/ec2/generate/ ]]; then
+              continue
+            fi
+            c=$((c+1))
             echo $( dirname "${file}" | xargs ) >> /tmp/dep_dirs_all
-          done <<< $( grep -l "github.com/hashicorp/terraform-provider-aws/${pkg}" internal/**/*.go )
+          done <<< $( grep -rl "\"github.com/hashicorp/terraform-provider-aws/${pkg}\"" internal/* )
+          echo "Yes, ${c} found"
         done </tmp/pkgs_changed
+        echo "Just dependents:"
+        cat /tmp/dep_dirs_all | sort | uniq
         cat /tmp/pkgs_changed >> /tmp/dep_dirs_all
         cat /tmp/dep_dirs_all | sort | uniq > /tmp/dep_pkgs
-        echo "All dependent packages:"
+        echo "All packages to test:"
         cat /tmp/dep_pkgs
       id: changed-packages
     - name: Run tests for changed packages
       run: |
-        while read pkg; do
-          if [ "${pkg}" = "internal/sweep" ]; then
-            continue
-          fi
-          if [[ "${pkg}" == */test-fixtures ]]; then
-            continue
-          fi
-          go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
-        done </tmp/dep_pkgs
-
+        if [ $( cat /tmp/dep_pkgs | wc -l | xargs ) -gt 150 ]; then
+          go test ./...
+        else
+          while read pkg; do
+            go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
+          done </tmp/dep_pkgs
+        fi
   golangci-lint:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
         echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ${{ env.GOCACHE }}
         key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
@@ -295,23 +298,21 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
     # See also: https://github.com/actions/setup-go/issues/54
     - name: go env
       run: |
         echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ${{ env.GOCACHE }}
         key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
@@ -320,33 +321,22 @@ jobs:
     - run: cd tools && go install github.com/pavius/impi/cmd/impi
     - run: impi --local . --scheme stdThirdPartyLocal ./...
 
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-       fetch-depth: 0
-    - name: semgrep
-      uses: returntocorp/semgrep-action@v1
-
   tfproviderdocs:
     needs: [terraform_providers_schema]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
-        go-version: ${{ env.GO_VERSION }}
-    - uses: actions/cache@v2
+          go-version-file: .go-version
+    - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/bflad/tfproviderdocs
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       timeout-minutes: 2
       with:
         path: terraform-providers-schema
@@ -367,25 +357,23 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: .go-version
       # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:

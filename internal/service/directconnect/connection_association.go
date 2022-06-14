@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,10 +77,10 @@ func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{})
 func resourceConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	return deleteDirectConnectConnectionLAGAssociation(conn, d.Id(), d.Get("lag_id").(string))
+	return deleteConnectionLAGAssociation(conn, d.Id(), d.Get("lag_id").(string))
 }
 
-func deleteDirectConnectConnectionLAGAssociation(conn *directconnect.DirectConnect, connectionID, lagID string) error {
+func deleteConnectionLAGAssociation(conn *directconnect.DirectConnect, connectionID, lagID string) error {
 	input := &directconnect.DisassociateConnectionFromLagInput{
 		ConnectionId: aws.String(connectionID),
 		LagId:        aws.String(lagID),

@@ -1,5 +1,5 @@
 ---
-subcategory: "Account"
+subcategory: "Account Management"
 layout: "aws"
 page_title: "AWS: aws_account_alternate_contact"
 description: |-
@@ -38,6 +38,15 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+`aws_account_alternate_contact` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`)
+- `update` - (Default `5 minutes`)
+- `delete` - (Default `5 minutes`)
 
 ## Import
 

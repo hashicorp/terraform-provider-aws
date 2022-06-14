@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -94,6 +94,26 @@ func ResourceTrigger() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+			},
+			"event_batching_condition": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"batch_size": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+						},
+						"batch_window": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      900,
+							ValidateFunc: validation.IntBetween(1, 900),
+						},
+					},
+				},
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -186,18 +206,23 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	triggerType := d.Get("type").(string)
 
 	input := &glue.CreateTriggerInput{
-		Actions: expandGlueActions(d.Get("actions").([]interface{})),
-		Name:    aws.String(name),
-		Tags:    Tags(tags.IgnoreAWS()),
-		Type:    aws.String(triggerType),
+		Actions:         expandActions(d.Get("actions").([]interface{})),
+		Name:            aws.String(name),
+		Tags:            Tags(tags.IgnoreAWS()),
+		Type:            aws.String(triggerType),
+		StartOnCreation: aws.Bool(d.Get("start_on_creation").(bool)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("event_batching_condition"); ok {
+		input.EventBatchingCondition = expandEventBatchingCondition(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("predicate"); ok {
-		input.Predicate = expandGluePredicate(v.([]interface{}))
+		input.Predicate = expandPredicate(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
@@ -209,7 +234,13 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("enabled").(bool) && triggerType != glue.TriggerTypeOnDemand {
-		input.StartOnCreation = aws.Bool(true)
+		start := true
+
+		if triggerType == glue.TriggerTypeEvent {
+			start = false
+		}
+
+		input.StartOnCreation = aws.Bool(start)
 	}
 
 	if v, ok := d.GetOk("workflow_name"); ok {
@@ -219,9 +250,8 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("start_on_creation"); ok {
 		input.StartOnCreation = aws.Bool(v.(bool))
 	}
-
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateTrigger(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
@@ -243,7 +273,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
 	if _, err := waitTriggerCreated(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Created: %w", d.Id(), err)
@@ -271,7 +301,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := FindTriggerByName(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -286,7 +316,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err := d.Set("actions", flattenGlueActions(trigger.Actions)); err != nil {
+	if err := d.Set("actions", flattenActions(trigger.Actions)); err != nil {
 		return fmt.Errorf("error setting actions: %w", err)
 	}
 
@@ -305,15 +335,19 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	state := aws.StringValue(trigger.State)
 	d.Set("state", state)
 
-	if aws.StringValue(trigger.Type) == glue.TriggerTypeOnDemand {
+	if aws.StringValue(trigger.Type) == glue.TriggerTypeOnDemand || aws.StringValue(trigger.Type) == glue.TriggerTypeEvent {
 		enabled = (state == glue.TriggerStateCreated || state == glue.TriggerStateCreating) && d.Get("enabled").(bool)
 	} else {
 		enabled = (state == glue.TriggerStateActivated || state == glue.TriggerStateActivating)
 	}
 	d.Set("enabled", enabled)
 
-	if err := d.Set("predicate", flattenGluePredicate(trigger.Predicate)); err != nil {
+	if err := d.Set("predicate", flattenPredicate(trigger.Predicate)); err != nil {
 		return fmt.Errorf("error setting predicate: %w", err)
+	}
+
+	if err := d.Set("event_batching_condition", flattenEventBatchingCondition(trigger.EventBatchingCondition)); err != nil {
+		return fmt.Errorf("error setting event_batching_condition: %w", err)
 	}
 
 	d.Set("name", trigger.Name)
@@ -345,9 +379,9 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	if d.HasChanges("actions", "description", "predicate", "schedule") {
+	if d.HasChanges("actions", "description", "predicate", "schedule", "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
-			Actions: expandGlueActions(d.Get("actions").([]interface{})),
+			Actions: expandActions(d.Get("actions").([]interface{})),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -355,12 +389,17 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("predicate"); ok {
-			triggerUpdate.Predicate = expandGluePredicate(v.([]interface{}))
+			triggerUpdate.Predicate = expandPredicate(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("schedule"); ok {
 			triggerUpdate.Schedule = aws.String(v.(string))
 		}
+
+		if v, ok := d.GetOk("event_batching_condition"); ok {
+			triggerUpdate.EventBatchingCondition = expandEventBatchingCondition(v.([]interface{}))
+		}
+
 		input := &glue.UpdateTriggerInput{
 			Name:          aws.String(d.Id()),
 			TriggerUpdate: triggerUpdate,
@@ -418,14 +457,14 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Trigger: %s", d.Id())
-	err := deleteGlueTrigger(conn, d.Id())
+	err := deleteTrigger(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting Glue Trigger (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
 	if _, err := waitTriggerDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Deleted: %w", d.Id(), err)
@@ -434,14 +473,14 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteGlueTrigger(conn *glue.Glue, Name string) error {
+func deleteTrigger(conn *glue.Glue, Name string) error {
 	input := &glue.DeleteTriggerInput{
 		Name: aws.String(Name),
 	}
 
 	_, err := conn.DeleteTrigger(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err
@@ -450,7 +489,7 @@ func deleteGlueTrigger(conn *glue.Glue, Name string) error {
 	return nil
 }
 
-func expandGlueActions(l []interface{}) []*glue.Action {
+func expandActions(l []interface{}) []*glue.Action {
 	actions := []*glue.Action{}
 
 	for _, mRaw := range l {
@@ -466,14 +505,12 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 			action.JobName = aws.String(v)
 		}
 
-		argumentsMap := make(map[string]string)
-		for k, v := range m["arguments"].(map[string]interface{}) {
-			argumentsMap[k] = v.(string)
+		if v, ok := m["arguments"].(map[string]interface{}); ok && len(v) > 0 {
+			action.Arguments = flex.ExpandStringMap(v)
 		}
-		action.Arguments = aws.StringMap(argumentsMap)
 
-		if v, ok := m["timeout"]; ok && v.(int) > 0 {
-			action.Timeout = aws.Int64(int64(v.(int)))
+		if v, ok := m["timeout"].(int); ok && v > 0 {
+			action.Timeout = aws.Int64(int64(v))
 		}
 
 		if v, ok := m["security_configuration"].(string); ok && v != "" {
@@ -481,7 +518,7 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 		}
 
 		if v, ok := m["notification_property"].([]interface{}); ok && len(v) > 0 {
-			action.NotificationProperty = expandGlueTriggerNotificationProperty(v)
+			action.NotificationProperty = expandTriggerNotificationProperty(v)
 		}
 
 		actions = append(actions, action)
@@ -490,19 +527,19 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 	return actions
 }
 
-func expandGlueTriggerNotificationProperty(l []interface{}) *glue.NotificationProperty {
+func expandTriggerNotificationProperty(l []interface{}) *glue.NotificationProperty {
 	m := l[0].(map[string]interface{})
 
 	property := &glue.NotificationProperty{}
 
-	if v, ok := m["notify_delay_after"]; ok && v.(int) > 0 {
-		property.NotifyDelayAfter = aws.Int64(int64(v.(int)))
+	if v, ok := m["notify_delay_after"].(int); ok && v > 0 {
+		property.NotifyDelayAfter = aws.Int64(int64(v))
 	}
 
 	return property
 }
 
-func expandGlueConditions(l []interface{}) []*glue.Condition {
+func expandConditions(l []interface{}) []*glue.Condition {
 	conditions := []*glue.Condition{}
 
 	for _, mRaw := range l {
@@ -534,21 +571,21 @@ func expandGlueConditions(l []interface{}) []*glue.Condition {
 	return conditions
 }
 
-func expandGluePredicate(l []interface{}) *glue.Predicate {
+func expandPredicate(l []interface{}) *glue.Predicate {
 	m := l[0].(map[string]interface{})
 
 	predicate := &glue.Predicate{
-		Conditions: expandGlueConditions(m["conditions"].([]interface{})),
+		Conditions: expandConditions(m["conditions"].([]interface{})),
 	}
 
-	if v, ok := m["logical"]; ok && v.(string) != "" {
-		predicate.Logical = aws.String(v.(string))
+	if v, ok := m["logical"].(string); ok && v != "" {
+		predicate.Logical = aws.String(v)
 	}
 
 	return predicate
 }
 
-func flattenGlueActions(actions []*glue.Action) []interface{} {
+func flattenActions(actions []*glue.Action) []interface{} {
 	l := []interface{}{}
 
 	for _, action := range actions {
@@ -570,7 +607,7 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 		}
 
 		if v := action.NotificationProperty; v != nil {
-			m["notification_property"] = flattenGlueTriggerNotificationProperty(v)
+			m["notification_property"] = flattenTriggerNotificationProperty(v)
 		}
 
 		l = append(l, m)
@@ -579,7 +616,7 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 	return l
 }
 
-func flattenGlueConditions(conditions []*glue.Condition) []interface{} {
+func flattenConditions(conditions []*glue.Condition) []interface{} {
 	l := []interface{}{}
 
 	for _, condition := range conditions {
@@ -609,26 +646,53 @@ func flattenGlueConditions(conditions []*glue.Condition) []interface{} {
 	return l
 }
 
-func flattenGluePredicate(predicate *glue.Predicate) []map[string]interface{} {
+func flattenPredicate(predicate *glue.Predicate) []map[string]interface{} {
 	if predicate == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"conditions": flattenGlueConditions(predicate.Conditions),
+		"conditions": flattenConditions(predicate.Conditions),
 		"logical":    aws.StringValue(predicate.Logical),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenGlueTriggerNotificationProperty(property *glue.NotificationProperty) []map[string]interface{} {
+func flattenTriggerNotificationProperty(property *glue.NotificationProperty) []map[string]interface{} {
 	if property == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"notify_delay_after": aws.Int64Value(property.NotifyDelayAfter),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandEventBatchingCondition(l []interface{}) *glue.EventBatchingCondition {
+	m := l[0].(map[string]interface{})
+
+	ebc := &glue.EventBatchingCondition{
+		BatchSize: aws.Int64(int64(m["batch_size"].(int))),
+	}
+
+	if v, ok := m["batch_window"].(int); ok && v > 0 {
+		ebc.BatchWindow = aws.Int64(int64(v))
+	}
+
+	return ebc
+}
+
+func flattenEventBatchingCondition(ebc *glue.EventBatchingCondition) []map[string]interface{} {
+	if ebc == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"batch_size":   aws.Int64Value(ebc.BatchSize),
+		"batch_window": aws.Int64Value(ebc.BatchWindow),
 	}
 
 	return []map[string]interface{}{m}

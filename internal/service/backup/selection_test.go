@@ -20,10 +20,10 @@ func TestAccBackupSelection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigBasic(rName),
@@ -47,10 +47,10 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigBasic(rName),
@@ -71,10 +71,10 @@ func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigBasic(rName),
@@ -95,10 +95,10 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigWithTags(rName),
@@ -117,16 +117,16 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 	})
 }
 
-func TestAccBackupSelection_ConditionsWithTags(t *testing.T) {
+func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigWithConditionsTags(rName),
@@ -155,10 +155,10 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigWithResources(rName),
@@ -183,10 +183,10 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigWithNotResources(rName),
@@ -211,10 +211,10 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSelectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigBasic(rName),
@@ -316,14 +316,11 @@ func testAccSelectionImportStateIDFunc(resourceName string) resource.ImportState
 
 func testAccBackupSelectionConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
-}
+data "aws_caller_identity" "current" {}
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -356,9 +353,7 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
-  condition {}
 
-  not_resources = []
   resources = [
     "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
@@ -387,9 +382,6 @@ resource "aws_backup_selection" "test" {
     key   = "boo"
     value = "far"
   }
-
-  condition {}
-  not_resources = []
 
   resources = [
     "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
@@ -436,7 +428,6 @@ resource "aws_backup_selection" "test" {
     }
   }
 
-  not_resources = []
   resources = [
     "arn:${data.aws_partition.current.partition}:rds:*:*:cluster:*",
     "arn:${data.aws_partition.current.partition}:rds:*:*:db:*"
@@ -481,9 +472,6 @@ resource "aws_backup_selection" "test" {
     value = "bar"
   }
 
-  condition {}
-  not_resources = []
-
   resources = aws_ebs_volume.test[*].arn
 }
 `, rName))
@@ -504,7 +492,6 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
-  condition {}
 
   not_resources = ["arn:${data.aws_partition.current.partition}:fsx:*"]
   resources     = ["*"]
@@ -528,8 +515,6 @@ resource "aws_backup_selection" "test" {
     value = "bar2"
   }
 
-  condition {}
-  not_resources = []
   resources = [
     "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]

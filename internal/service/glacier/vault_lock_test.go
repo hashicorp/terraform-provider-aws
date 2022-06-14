@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,10 +21,10 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultLockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glacier.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfigCompleteLock(rName, false),
@@ -53,10 +53,10 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultLockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glacier.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfigCompleteLock(rName, true),
@@ -85,10 +85,10 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultLockDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glacier.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockPolicyOrderConfig(rName, false),
@@ -153,7 +153,7 @@ func testAccCheckVaultLockDestroy(s *terraform.State) error {
 		}
 		output, err := conn.GetVaultLock(input)
 
-		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

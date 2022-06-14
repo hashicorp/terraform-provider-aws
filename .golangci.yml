@@ -17,6 +17,7 @@ linters:
   enable:
     - deadcode
     - errcheck
+    - exportloopref
     - gofmt
     - gomnd
     - gosimple
@@ -47,11 +48,7 @@ linters-settings:
           - request.ConstantWaiterDelay
           - request.WithWaiterMaxAttempts
           # AWS Provider
-          - mapMaxItems
-          - rootStatementSchema
-          - webACLRootStatementSchema
           - nullable.*
-          - sweep.SweepOrchestratorContext
           # Terraform Plugin SDK
           - resource.Retry
           - schema.DefaultTimeout
@@ -72,4 +69,4 @@ linters-settings:
       - gomnd
 
 run:
-  timeout: 25m
+  timeout: 35m

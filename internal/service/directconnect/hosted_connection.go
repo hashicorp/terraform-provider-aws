@@ -155,5 +155,5 @@ func resourceHostedConnectionRead(d *schema.ResourceData, meta interface{}) erro
 func resourceHostedConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	return deleteDirectConnectConnection(conn, d.Id(), waitHostedConnectionDeleted)
+	return deleteConnection(conn, d.Id(), waitHostedConnectionDeleted)
 }
