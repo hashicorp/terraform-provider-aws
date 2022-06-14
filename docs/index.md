@@ -8,21 +8,21 @@ The AWS Provider is the work of thousands of contributors, and is maintained by 
 
 Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by introducing the resources and datasources required to manage configuration of the service.
 
-- [Add Service Client](add-a-new-service#add-a-service-client)
-- [Perform Service Design](add-a-new-service#perform-service-design)
-- [Add a new resource](add-a-new-service#add-a-new-resource)
+- [Add Service Client](add-a-new-service.md#add-a-service-client)
+- [Perform Service Design](add-a-new-service.md#perform-service-design)
+- [Add a New Resource](add-a-new-service.md#add-a-new-resource)
 
 ### Add a New Resource to the Provider
 
 Allow the management of a logical resource within AWS by adding a new resource to the Terraform AWS Provider.
 
-- [Name the Resource](add-a-new-resource#add-a-new-resource)
-- [Fork the Provider](add-a-new-resource#fork-the-provider)
-- [Fill out the Resource Schema](add-a-new-resource#fill-out-the-resource-schema)
-- [Implement CRUD Handlers](add-a-new-resource#implement-crud-handlers)
-- [Write Passing Acceptance Tests](add-a-new-resource#write-passing-acceptance-tests)
-- [Create Documentation for the Resource](add-a-new-resource#create-documentation-for-the-resource)
-- [Ensure Format and Lint Checks are Passing](add-a-new-resource#ensure-format-and-link-checks-are-passing)
+- [Name the Resource](add-a-new-resource.md#add-a-new-resource)
+- [Fork the Provider](add-a-new-resource.md#fork-the-provider)
+- [Fill out the Resource Schema](add-a-new-resource.md#fill-out-the-resource-schema)
+- [Implement CRUD Handlers](add-a-new-resource.md#implement-crud-handlers)
+- [Write Passing Acceptance Tests](add-a-new-resource.md#write-passing-acceptance-tests)
+- [Create Documentation for the Resource](add-a-new-resource.md#create-documentation-for-the-resource)
+- [Ensure Format and Lint Checks are Passing](add-a-new-resource.md#ensure-format-and-link-checks-are-passing)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
@@ -31,13 +31,13 @@ Allow the management of a logical resource within AWS by adding a new resource t
 Allow reading an existing AWS resource by id or filter, and allow its use within Terraform configurations.
 
 
-- [Name the Datasource](add-a-new-datasource#add-a-new-datasource)
-- [Fork the Provider](add-a-new-datasource#fork-the-provider)
-- [Fill out the Datasource Schema](add-a-new-datasource#fill-out-the-datasource-schema)
-- [Implement CRUD Handlers](add-a-new-datasource#implement-crud-handlers)
-- [Write Passing Acceptance Tests](add-a-new-datasource#write-passing-acceptance-tests)
-- [Create Documentation for the Resource](add-a-new-resource#create-documentation-for-the-resource)
-- [Ensure Format and Lint Checks are Passing](add-a-new-datasource#ensure-format-and-link-checks-are-passing)
+- [Name the Datasource](add-a-new-datasource.md#add-a-new-datasource)
+- [Fork the Provider](add-a-new-datasource.md#fork-the-provider)
+- [Fill out the Datasource Schema](add-a-new-datasource.md#fill-out-the-datasource-schema)
+- [Implement CRUD Handlers](add-a-new-datasource.md#implement-crud-handlers)
+- [Write Passing Acceptance Tests](add-a-new-datasource.md#write-passing-acceptance-tests)
+- [Create Documentation for the Resource](add-a-new-resource.md#create-documentation-for-the-resource)
+- [Ensure Format and Lint Checks are Passing](add-a-new-datasource.md#ensure-format-and-link-checks-are-passing)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
@@ -45,20 +45,20 @@ Allow reading an existing AWS resource by id or filter, and allow its use within
 
 New regions are immediately usable with the provider with the caveat that a configuration workaround is required to skip validation of the region during cli operations. A small set of changes are required to makes this workaround necessary.
 
-- [Add a new Region](add-a-new-region)
+- [Add a New Region](add-a-new-region.md)
 
 
 ### Fix a bug, or make an enhancement to a resource or datasource
 
 These constitute the majority of pull requests submitted, many of which we address and merge regardless of priority in our regular internal gardening days.
 
-- [Making small changes to existing resources.](bugs-and-enhancements)
+- [Making Small Changes to Existing Resources.](bugs-and-enhancements.md)
 
 ### Add Resource Name Generation Support
 
 Allow a resource, to either fully, or partially generate its own resource names. TODO:This can be useful.
 
-- [Resource Name Generation](resource-name-generation)
+- [Resource Name Generation](resource-name-generation.md)
 
 ### Add Tagging support for an existing Resource
 
@@ -66,17 +66,17 @@ Many AWS resources allow [assigning metadata via tags](https://docs.aws.amazon.c
 
 - [Add tag support for a resource](resource-tagging)
 
-### Add Import support for a Resource
+### Add Import Support for a Resource
 
 Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this may not have been done.
 
-- [Add import support](add-import-support.md)
+- [Add Import Support](add-import-support.md)
 
 ### End User Documentation Changes
 
 The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process.
 
-- [How to modify provider documentation](documentation-changes)
+- [How to Modify Provider Documentation](documentation-changes.md)
 
 ### Report a bug, or make a feature request
 
