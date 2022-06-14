@@ -14,6 +14,10 @@ ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
 endif
 
+ifneq ($(origin SWEEPERS), undefined)
+	SWEEPARGS = -sweep-run='$(SWEEPERS)'
+endif
+
 default: build
 
 build: fmtcheck
