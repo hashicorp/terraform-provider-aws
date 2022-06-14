@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 )
 
-// Custom Cloudfront listing functions using similar formatting as other service generated code.
+// Custom CloudFront listing functions using similar formatting as other service generated code.
 
 func ListCachePoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
 	for {

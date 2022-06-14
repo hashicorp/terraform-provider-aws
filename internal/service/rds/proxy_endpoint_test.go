@@ -25,10 +25,10 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointConfig(rName),
@@ -67,10 +67,10 @@ func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointTargetRoleConfig(rName),
@@ -98,10 +98,10 @@ func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointVPCSecurityGroupIds1Config(rName),
@@ -139,10 +139,10 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointTags1Config(rName, "key1", "value1"),
@@ -187,10 +187,10 @@ func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointConfig(rName),
@@ -213,10 +213,10 @@ func TestAccRDSProxyEndpoint_Disappears_proxy(t *testing.T) {
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProxyEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyEndpointConfig(rName),

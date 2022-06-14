@@ -23,13 +23,13 @@ func TestAccVPC_basic(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfig,
+				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
@@ -70,13 +70,13 @@ func TestAccVPC_disappears(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfig,
+				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), resourceName),
@@ -92,13 +92,13 @@ func TestAccVPC_tags(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -111,7 +111,7 @@ func TestAccVPC_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -120,7 +120,7 @@ func TestAccVPC_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCTags1Config("key2", "value2"),
+				Config: testAccVPCConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -140,12 +140,12 @@ func TestAccVPC_DefaultTags_providerOnly(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVpcConfig,
+					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -162,7 +162,7 @@ func TestAccVPC_DefaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
-					testAccVpcConfig,
+					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -175,7 +175,7 @@ func TestAccVPC_DefaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
-					testAccVpcConfig,
+					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -197,10 +197,10 @@ func TestAccVPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -212,7 +212,7 @@ func TestAccVPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccVpcConfig,
+					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -239,12 +239,12 @@ func TestAccVPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccVpcConfig,
+					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -254,7 +254,7 @@ func TestAccVPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -281,12 +281,12 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVPCTags1Config("resourcekey1", "resourcevalue1"),
+					testAccVPCConfig_tags1("resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -305,7 +305,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVPCTags2Config("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
+					testAccVPCConfig_tags2("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -321,7 +321,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
-					testAccVPCTags1Config("resourcekey3", "resourcevalue3"),
+					testAccVPCConfig_tags1("resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -345,12 +345,12 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccVPCTags1Config("overlapkey1", "resourcevalue1"),
+					testAccVPCConfig_tags1("overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -367,7 +367,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccVPCTags2Config("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
+					testAccVPCConfig_tags2("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -382,7 +382,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccVPCTags1Config("overlapkey1", "resourcevalue2"),
+					testAccVPCConfig_tags1("overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -408,7 +408,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccVPCTags1Config("overlapkey", "overlapvalue"),
+					testAccVPCConfig_tags1("overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
@@ -432,10 +432,10 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -453,7 +453,7 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -488,10 +488,10 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTags,
+				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -507,7 +507,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccVPCWithIgnoreChangesConfig_DynamicTags,
+				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -534,27 +534,27 @@ func TestAccVPC_defaultAndIgnoreTags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
+					testAccCheckVPCUpdateTags(&vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccVPCTags1Config("key1", "value1"),
+					testAccVPCConfig_tags1("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccVPCTags1Config("key1", "value1"),
+					testAccVPCConfig_tags1("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -571,22 +571,22 @@ func TestAccVPC_ignoreTags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVpcDestroy,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTags1Config("key1", "value1"),
+				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckVPCUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCTags1Config("key1", "value1"),
+				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCConfig_tags1("key1", "value1"),
 				PlanOnly: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCTags1Config("key1", "value1"),
+				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCConfig_tags1("key1", "value1"),
 				PlanOnly: true,
 			},
 		},
@@ -600,13 +600,13 @@ func TestAccVPC_tenancy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigDedicatedTenancy(rName),
+				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpcDedicated),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
@@ -618,19 +618,19 @@ func TestAccVPC_tenancy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcConfigDefault(rName),
+				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpcDefault),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
-					testAccCheckVpcIdsEqual(&vpcDedicated, &vpcDefault),
+					testAccCheckVPCIDsEqual(&vpcDedicated, &vpcDefault),
 				),
 			},
 			{
-				Config: testAccVpcConfigDedicatedTenancy(rName),
+				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpcDedicated),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
-					testAccCheckVpcIdsNotEqual(&vpcDedicated, &vpcDefault),
+					testAccCheckVPCIDsNotEqual(&vpcDedicated, &vpcDefault),
 				),
 			},
 		},
@@ -643,20 +643,20 @@ func TestAccVPC_updateDNSHostnames(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigDefault(rName),
+				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "false"),
 				),
 			},
 			{
-				Config: testAccVpcConfigEnableDNSHostnames(rName),
+				Config: testAccVPCConfig_enableDNSHostnames(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
@@ -673,13 +673,13 @@ func TestAccVPC_bothDNSOptionsSet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigBothDnsOptions(rName),
+				Config: testAccVPCConfig_bothDNSOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
@@ -702,13 +702,13 @@ func TestAccVPC_disabledDNSSupport(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigDisabledDnsSupport(rName),
+				Config: testAccVPCConfig_disabledDNSSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "false"),
@@ -729,13 +729,13 @@ func TestAccVPC_classicLinkOptionSet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigClassicLinkOption(rName),
+				Config: testAccVPCConfig_classicLinkOption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "true"),
@@ -756,13 +756,13 @@ func TestAccVPC_classicLinkDNSSupportOptionSet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigClassicLinkDnsSupportOption(rName),
+				Config: testAccVPCConfig_classicLinkDNSSupportOption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "true"),
@@ -783,13 +783,13 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(rName, true),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -804,7 +804,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(rName, false),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
@@ -814,7 +814,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(rName, true),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -834,13 +834,13 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckLocalZoneAvailable(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckLocalZoneAvailable(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithOptionalNetworkBorderGroup(rName, true),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -857,7 +857,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithOptionalNetworkBorderGroup(rName, false),
+				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -872,7 +872,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	})
 }
 
-func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
+func TestAccVPC_IPAMIPv4BasicNetmask(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -882,23 +882,23 @@ func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcIpamIpv4(rName, 28),
+				Config: testAccVPCConfig_ipamIPv4(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidrPrefix(&vpc, "28"),
+					testAccCheckVPCCIDRPrefix(&vpc, "28"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
+func TestAccVPC_IPAMIPv4BasicExplicitCIDR(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -909,13 +909,13 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcIpamIpv4ExplicitCidr(rName, cidr),
+				Config: testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", cidr),
@@ -925,7 +925,7 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcDestroy(s *terraform.State) error {
+func testAccCheckVPCDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -949,7 +949,7 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckVPCUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -957,7 +957,7 @@ func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string)
 	}
 }
 
-func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
+func testAccCheckVPCCIDRPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if strings.Split(aws.StringValue(vpc.CidrBlock), "/")[1] != expected {
 			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(vpc.CidrBlock), expected)
@@ -967,7 +967,7 @@ func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheck
 	}
 }
 
-func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+func testAccCheckVPCIDsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(vpc1.VpcId) != aws.StringValue(vpc2.VpcId) {
 			return fmt.Errorf("VPC IDs are not equal")
@@ -977,7 +977,7 @@ func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+func testAccCheckVPCIDsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(vpc1.VpcId) == aws.StringValue(vpc2.VpcId) {
 			return fmt.Errorf("VPC IDs are equal")
@@ -987,13 +987,13 @@ func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 	}
 }
 
-const testAccVpcConfig = `
+const testAccVPCConfig_basic = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
 `
 
-func testAccVPCTags1Config(tagKey1, tagValue1 string) string {
+func testAccVPCConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1005,7 +1005,7 @@ resource "aws_vpc" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccVPCTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1018,7 +1018,7 @@ resource "aws_vpc" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals(localTagKey1, localTagValue1 string) string {
+func testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals(localTagKey1, localTagValue1 string) string {
 	return fmt.Sprintf(`
 locals {
   tags = {
@@ -1043,7 +1043,7 @@ resource "aws_vpc" "test" {
 `, localTagKey1, localTagValue1)
 }
 
-const testAccVPCWithIgnoreChangesConfig_DynamicTags = `
+const testAccVPCConfig_ignoreChangesDynamicTags = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1060,7 +1060,7 @@ resource "aws_vpc" "test" {
 }
 `
 
-func testAccVpcConfigAssignGeneratedIpv6CidrBlock(rName string, assignGeneratedIpv6CidrBlock bool) string {
+func testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName string, assignGeneratedIpv6CidrBlock bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = %[2]t
@@ -1073,7 +1073,7 @@ resource "aws_vpc" "test" {
 `, rName, assignGeneratedIpv6CidrBlock)
 }
 
-func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string {
+func testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1107,7 +1107,7 @@ resource "aws_vpc" "test" {
 `, rName, localZoneNetworkBorderGroup)
 }
 
-func testAccVpcConfigDefault(rName string) string {
+func testAccVPCConfig_default(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1119,7 +1119,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcConfigEnableDNSHostnames(rName string) string {
+func testAccVPCConfig_enableDNSHostnames(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
@@ -1132,7 +1132,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcConfigDedicatedTenancy(rName string) string {
+func testAccVPCConfig_dedicatedTenancy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   instance_tenancy = "dedicated"
@@ -1145,7 +1145,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcConfigBothDnsOptions(rName string) string {
+func testAccVPCConfig_bothDNSOptions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.2.0.0/16"
@@ -1159,7 +1159,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcConfigDisabledDnsSupport(rName string) string {
+func testAccVPCConfig_disabledDNSSupport(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block         = "10.2.0.0/16"
@@ -1172,7 +1172,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcConfigClassicLinkOption(rName string) string {
+func testAccVPCConfig_classicLinkOption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block         = "172.2.0.0/16"
@@ -1185,7 +1185,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcConfigClassicLinkDnsSupportOption(rName string) string {
+func testAccVPCConfig_classicLinkDNSSupportOption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                     = "172.2.0.0/16"
@@ -1199,7 +1199,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVpcIPv4IPAMConfigBase(rName string) string {
+func testAccIPAMIPv4Config_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1230,8 +1230,8 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 `, rName)
 }
 
-func testAccVpcIpamIpv4(rName string, netmaskLength int) string {
-	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
+func testAccVPCConfig_ipamIPv4(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
   ipv4_netmask_length = %[2]d
@@ -1245,8 +1245,8 @@ resource "aws_vpc" "test" {
 `, rName, netmaskLength))
 }
 
-func testAccVpcIpamIpv4ExplicitCidr(rName, cidr string) string {
-	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
+func testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr string) string {
+	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr_block        = %[2]q

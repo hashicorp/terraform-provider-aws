@@ -16,10 +16,10 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
+func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var association appsync.ApiAssociation
-	appsyncCertDomain := getAppsyncCertDomain(t)
+	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
@@ -28,12 +28,12 @@ func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDomainNameApiAssociationDestroy,
+		CheckDestroy:      testAccCheckDomainNameAPIAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncDomainNameApiAssociationConfig(appsyncCertDomain, rName),
+				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
+					testAccCheckDomainNameAPIAssociationExists(resourceName, &association),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 				),
@@ -44,9 +44,9 @@ func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppsyncDomainNameApiAssociationUpdatedConfig(appsyncCertDomain, rName),
+				Config: testAccDomainNameAPIAssociationConfig_updated(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
+					testAccCheckDomainNameAPIAssociationExists(resourceName, &association),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test2", "id"),
 				),
@@ -55,10 +55,10 @@ func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccAppSyncDomainNameApiAssociation_disappears(t *testing.T) {
+func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	var association appsync.ApiAssociation
 	var providers []*schema.Provider
-	appsyncCertDomain := getAppsyncCertDomain(t)
+	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
@@ -67,13 +67,13 @@ func testAccAppSyncDomainNameApiAssociation_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDomainNameApiAssociationDestroy,
+		CheckDestroy:      testAccCheckDomainNameAPIAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncDomainNameApiAssociationConfig(appsyncCertDomain, rName),
+				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceDomainNameApiAssociation(), resourceName),
+					testAccCheckDomainNameAPIAssociationExists(resourceName, &association),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceDomainNameAPIAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,14 +81,14 @@ func testAccAppSyncDomainNameApiAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainNameApiAssociationDestroy(s *terraform.State) error {
+func testAccCheckDomainNameAPIAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_domain_name" {
 			continue
 		}
 
-		association, err := tfappsync.FindDomainNameApiAssociationByID(conn, rs.Primary.ID)
+		association, err := tfappsync.FindDomainNameAPIAssociationByID(conn, rs.Primary.ID)
 		if err == nil {
 			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 				return nil
@@ -106,7 +106,7 @@ func testAccCheckDomainNameApiAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameApiAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
+func testAccCheckDomainNameAPIAssociationExists(resourceName string, DomainNameAPIAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -115,7 +115,7 @@ func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameA
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
-		association, err := tfappsync.FindDomainNameApiAssociationByID(conn, rs.Primary.ID)
+		association, err := tfappsync.FindDomainNameAPIAssociationByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -124,13 +124,13 @@ func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameA
 			return fmt.Errorf("Appsync Domain Name %q not found", rs.Primary.ID)
 		}
 
-		*DomainNameApiAssociation = *association
+		*DomainNameAPIAssociation = *association
 
 		return nil
 	}
 }
 
-func testAccAppsyncDomainNameApiAssociationBaseConfig(domain, rName string) string {
+func testAccDomainNameAPIAssociationBaseConfig(domain, rName string) string {
 	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   provider    = "awsalternate"
@@ -150,8 +150,8 @@ resource "aws_appsync_graphql_api" "test" {
 `, domain, rName)
 }
 
-func testAccAppsyncDomainNameApiAssociationConfig(domain, rName string) string {
-	return testAccAppsyncDomainNameApiAssociationBaseConfig(domain, rName) + `
+func testAccDomainNameAPIAssociationConfig_basic(domain, rName string) string {
+	return testAccDomainNameAPIAssociationBaseConfig(domain, rName) + `
 resource "aws_appsync_domain_name_api_association" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   domain_name = aws_appsync_domain_name.test.domain_name
@@ -159,8 +159,8 @@ resource "aws_appsync_domain_name_api_association" "test" {
 `
 }
 
-func testAccAppsyncDomainNameApiAssociationUpdatedConfig(domain, rName string) string {
-	return testAccAppsyncDomainNameApiAssociationBaseConfig(domain, rName) + fmt.Sprintf(`
+func testAccDomainNameAPIAssociationConfig_updated(domain, rName string) string {
+	return testAccDomainNameAPIAssociationBaseConfig(domain, rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test2" {
   authentication_type = "API_KEY"
   name                = "%[1]s-2"

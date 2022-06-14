@@ -99,9 +99,11 @@ A correct example is `accessanalyzer_analyzer.html.markdown`. An incorrect examp
 
 Write multiword names in Go using _MixedCaps_ (or _mixedCaps_) rather than underscores.
 
+For more details on capitalizations we enforce with CI Semgrep tests, see the [Caps List](../../names/caps.md).
+
 Initialisms and other abbreviations are a key difference between many camel/Pascal case interpretations and mixedCaps. **Abbreviations in mixedCaps should be the correct, human-readable case.** After all, names in code _are for humans_. (The mixedCaps convention aligns with HashiCorp's emphasis on pragmatism and beauty.)
 
-For example, an initialism such as "VPC" should either be all capitalized ("VPC") or all lower case ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb." Some services in the AWS SDK for Go, typically older services, do not follow this Go convention.
+For example, an initialism such as "VPC" should either be all capitalized ("VPC") or all lower case ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
 
 ### Rule
 

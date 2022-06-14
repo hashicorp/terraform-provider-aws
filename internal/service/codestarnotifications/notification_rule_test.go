@@ -15,15 +15,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// For PreCheck, using acctest.PreCheckPartitionHasService does not work for
+// codestarnotifications because it gives false positives always saying the
+// partition (aws or GovCloud) does not support the service
+
 func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleBasicConfig(rName),
@@ -51,10 +55,10 @@ func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleStatusConfig(rName, codestarnotifications.NotificationRuleStatusDisabled),
@@ -88,10 +92,10 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleTargets1Config(rName),
@@ -125,10 +129,10 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleTags1Config(rName),
@@ -168,10 +172,10 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNotificationRuleDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleEventTypeIds1Config(rName),
@@ -237,6 +241,24 @@ func testAccCheckNotificationRuleDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccPreCheck(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn
+
+	input := &codestarnotifications.ListTargetsInput{
+		MaxResults: aws.Int64(1),
+	}
+
+	_, err := conn.ListTargets(input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccNotificationRuleBaseConfig(rName string) string {

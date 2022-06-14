@@ -454,9 +454,8 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	t, err := FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
-			tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) ||
-			regexp.MustCompile(" not found$").MatchString(err.Error()) {
+		if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) ||
+			regexp.MustCompile(" not found$").MatchString(err.Error())) {
 			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -517,7 +516,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if t.InputTransformer != nil {
-		if err := d.Set("input_transformer", flattenCloudWatchInputTransformer(t.InputTransformer)); err != nil {
+		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
 			return fmt.Errorf("Error setting input_transformer error: %w", err)
 		}
 	}
@@ -1005,7 +1004,7 @@ func flattenTargetHTTPParameters(apiObject *eventbridge.HttpParameters) map[stri
 	return tfMap
 }
 
-func flattenCloudWatchInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
+func flattenInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
 	config := make(map[string]interface{})
 	inputPathsMap := make(map[string]string)
 	for k, v := range inputTransformer.InputPathsMap {

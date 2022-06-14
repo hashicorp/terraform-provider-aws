@@ -43,6 +43,3 @@ no-space-in-code: false
 
 # MD040
 fenced-code-language: false
-
-# MD047
-single-trailing-newline: false

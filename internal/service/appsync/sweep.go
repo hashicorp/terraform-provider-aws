@@ -172,7 +172,7 @@ func sweepDomainNameAssociations(region string) error {
 
 		for _, dm := range output.DomainNameConfigs {
 
-			r := ResourceDomainNameApiAssociation()
+			r := ResourceDomainNameAPIAssociation()
 			d := r.Data(nil)
 
 			id := aws.StringValue(dm.DomainName)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -779,16 +778,16 @@ func (r *Resource) Apply(
 	rt := ResourceTimeout{}
 	if _, ok := d.Meta[TimeoutKey]; ok {
 		if err := rt.DiffDecode(d); err != nil {
-			log.Printf("[ERR] Error decoding ResourceTimeout: %s", err)
+			logging.HelperSchemaError(ctx, "Error decoding ResourceTimeout", map[string]interface{}{logging.KeyError: err})
 		}
 	} else if s != nil {
 		if _, ok := s.Meta[TimeoutKey]; ok {
 			if err := rt.StateDecode(s); err != nil {
-				log.Printf("[ERR] Error decoding ResourceTimeout: %s", err)
+				logging.HelperSchemaError(ctx, "Error decoding ResourceTimeout", map[string]interface{}{logging.KeyError: err})
 			}
 		}
 	} else {
-		log.Printf("[DEBUG] No meta timeoutkey found in Apply()")
+		logging.HelperSchemaDebug(ctx, "No meta timeoutkey found in Apply()")
 	}
 	data.timeouts = &rt
 
@@ -873,10 +872,10 @@ func (r *Resource) Diff(
 
 	if instanceDiff != nil {
 		if err := t.DiffEncode(instanceDiff); err != nil {
-			log.Printf("[ERR] Error encoding timeout to instance diff: %s", err)
+			logging.HelperSchemaError(ctx, "Error encoding timeout to instance diff", map[string]interface{}{logging.KeyError: err})
 		}
 	} else {
-		log.Printf("[DEBUG] Instance Diff is nil in Diff()")
+		logging.HelperSchemaDebug(ctx, "Instance Diff is nil in Diff()")
 	}
 
 	return instanceDiff, err
@@ -972,7 +971,7 @@ func (r *Resource) RefreshWithoutUpgrade(
 	rt := ResourceTimeout{}
 	if _, ok := s.Meta[TimeoutKey]; ok {
 		if err := rt.StateDecode(s); err != nil {
-			log.Printf("[ERR] Error decoding ResourceTimeout: %s", err)
+			logging.HelperSchemaError(ctx, "Error decoding ResourceTimeout", map[string]interface{}{logging.KeyError: err})
 		}
 	}
 

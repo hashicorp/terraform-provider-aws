@@ -23,10 +23,10 @@ func TestAccRDSClusterRoleAssociation_basic(t *testing.T) {
 	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterRoleAssociationConfig(rName),
@@ -52,10 +52,10 @@ func TestAccRDSClusterRoleAssociation_disappears(t *testing.T) {
 	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterRoleAssociationConfig(rName),
@@ -76,10 +76,10 @@ func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 	clusterResourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterRoleAssociationConfig(rName),
@@ -100,10 +100,10 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterRoleAssociationConfig(rName),
@@ -176,22 +176,13 @@ func testAccCheckClusterRoleAssociationDestroy(s *terraform.State) error {
 }
 
 func testAccClusterRoleAssociationConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_iam_policy_document" "rds_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    effect  = "Allow"
-
-    principals {
-      identifiers = ["rds.amazonaws.com"]
-      type        = "Service"
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
-  name               = %[1]q
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster_role_association" "test" {
+  db_cluster_identifier = aws_rds_cluster.test.id
+  feature_name          = "s3Import"
+  role_arn              = aws_iam_role.test.arn
 }
 
 resource "aws_rds_cluster" "test" {
@@ -206,10 +197,24 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot     = true
 }
 
-resource "aws_rds_cluster_role_association" "test" {
-  db_cluster_identifier = aws_rds_cluster.test.id
-  feature_name          = "s3Import"
-  role_arn              = aws_iam_role.test.arn
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
+  name               = %[1]q
+
+  # ensure IAM role is created just before association to exercise IAM eventual consistency
+  depends_on = [aws_rds_cluster.test]
+}
+
+data "aws_iam_policy_document" "rds_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+
+    principals {
+      identifiers = ["rds.amazonaws.com"]
+      type        = "Service"
+    }
+  }
 }
 `, rName))
 }

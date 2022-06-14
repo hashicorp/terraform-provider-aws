@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -37,13 +37,13 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHoursOfOperationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Created"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -65,7 +65,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Updated"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -92,13 +92,13 @@ func testAccHoursOfOperation_disappears(t *testing.T) {
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHoursOfOperationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Disappear"),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
@@ -162,15 +162,17 @@ func testAccCheckHoursOfOperationDestroy(s *terraform.State) error {
 			InstanceId:         aws.String(instanceID),
 		}
 
-		_, experr := conn.DescribeHoursOfOperation(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		_, err = conn.DescribeHoursOfOperation(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
@@ -185,7 +187,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccHoursOfOperationBasicConfig(rName, rName2, label string) string {
+func testAccHoursOfOperationConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccHoursOfOperationBaseConfig(rName),
 		fmt.Sprintf(`

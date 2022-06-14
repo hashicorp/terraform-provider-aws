@@ -26,7 +26,7 @@
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
         - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
-        - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-tests)
+        - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-testing)
         - [Acceptance Test Concurrency](#acceptance-test-concurrency)
     - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
@@ -243,10 +243,10 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDashboardDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig(rInt),
@@ -448,7 +448,7 @@ resource "aws_example_thing" "test" {
 These test configurations are typical implementations we have found or allow testing to implement best practices easier, since the Terraform AWS Provider testing is expected to run against various AWS Regions and Partitions.
 
 - `acctest.AvailableEC2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`. Use `acctest.AvailableEC2InstanceTypeForRegionNamed("name", "type1", "type2", ...)` to specify a name for the data source
-- `acctest.ConfigLatestAmazonLinuxHvmEbsAmi()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
+- `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
 
 #### Randomized Naming
 
@@ -556,10 +556,10 @@ func TestAccExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -754,10 +754,10 @@ func TestAccExampleThing_disappears(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -797,10 +797,10 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
   resourceName := "aws_example_child_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckExampleChildThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleChildThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -827,10 +827,10 @@ func TestAccExampleThing_Description(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
@@ -1169,10 +1169,10 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckExampleThingDestroy,
+    PreCheck:          func() { acctest.PreCheck(t) },
+    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
+    ProviderFactories: acctest.ProviderFactories,
+    CheckDestroy:      testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),
@@ -1358,7 +1358,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {

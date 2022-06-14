@@ -82,6 +82,26 @@ func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	}
 }
 
+func statusDBClusterActivityStream(conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBClusterWithActivityStream(conn, dbClusterArn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.StringValue(output.ActivityStreamStatus), nil
+	}
+}
+
 func statusDBInstanceAutomatedBackup(conn *rds.RDS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBInstanceAutomatedBackupByARN(conn, arn)
@@ -119,5 +139,21 @@ func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceA
 		}
 
 		return output, strconv.FormatBool(false), nil
+	}
+}
+
+func statusDBProxy(conn *rds.RDS, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBProxyByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }

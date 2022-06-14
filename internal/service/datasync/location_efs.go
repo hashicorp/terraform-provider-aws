@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -92,7 +93,7 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationEfsInput{
-		Ec2Config:        expandDataSyncEc2Config(d.Get("ec2_config").([]interface{})),
+		Ec2Config:        expandEC2Config(d.Get("ec2_config").([]interface{})),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
 		Tags:             Tags(tags.IgnoreAWS()),
@@ -139,7 +140,7 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", output.LocationArn)
 
-	if err := d.Set("ec2_config", flattenDataSyncEc2Config(output.Ec2Config)); err != nil {
+	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return fmt.Errorf("error setting ec2_config: %s", err)
 	}
 
@@ -199,4 +200,32 @@ func resourceLocationEFSDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func flattenEC2Config(ec2Config *datasync.Ec2Config) []interface{} {
+	if ec2Config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"security_group_arns": flex.FlattenStringSet(ec2Config.SecurityGroupArns),
+		"subnet_arn":          aws.StringValue(ec2Config.SubnetArn),
+	}
+
+	return []interface{}{m}
+}
+
+func expandEC2Config(l []interface{}) *datasync.Ec2Config {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	ec2Config := &datasync.Ec2Config{
+		SecurityGroupArns: flex.ExpandStringSet(m["security_group_arns"].(*schema.Set)),
+		SubnetArn:         aws.String(m["subnet_arn"].(string)),
+	}
+
+	return ec2Config
 }

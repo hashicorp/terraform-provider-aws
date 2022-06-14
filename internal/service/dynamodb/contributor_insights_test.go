@@ -17,17 +17,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccContributorInsights_basic(t *testing.T) {
+func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 	var conf dynamodb.DescribeContributorInsightsOutput
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	indexName := fmt.Sprintf("%s-index", rName)
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContributorInsightsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContributorInsightsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorInsightsBasicConfig(rName, ""),
@@ -52,16 +52,16 @@ func TestAccContributorInsights_basic(t *testing.T) {
 	})
 }
 
-func TestAccContributorInsights_disappears(t *testing.T) {
+func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 	var conf dynamodb.DescribeContributorInsightsOutput
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContributorInsightsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContributorInsightsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorInsightsBasicConfig(rName, ""),

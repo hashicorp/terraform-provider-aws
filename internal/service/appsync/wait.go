@@ -10,15 +10,15 @@ import (
 const (
 	apiCacheAvailableTimeout           = 60 * time.Minute
 	apiCacheDeletedTimeout             = 60 * time.Minute
-	domainNameApiAssociationTimeout    = 60 * time.Minute
-	domainNameApiDisassociationTimeout = 60 * time.Minute
+	domainNameAPIAssociationTimeout    = 60 * time.Minute
+	domainNameAPIDisassociationTimeout = 60 * time.Minute
 )
 
-func waitApiCacheAvailable(conn *appsync.AppSync, id string) error {
+func waitAPICacheAvailable(conn *appsync.AppSync, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appsync.ApiCacheStatusCreating, appsync.ApiCacheStatusModifying},
 		Target:  []string{appsync.ApiCacheStatusAvailable},
-		Refresh: StatusApiCache(conn, id),
+		Refresh: StatusAPICache(conn, id),
 		Timeout: apiCacheAvailableTimeout,
 	}
 
@@ -27,11 +27,11 @@ func waitApiCacheAvailable(conn *appsync.AppSync, id string) error {
 	return err
 }
 
-func waitApiCacheDeleted(conn *appsync.AppSync, id string) error {
+func waitAPICacheDeleted(conn *appsync.AppSync, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appsync.ApiCacheStatusDeleting},
 		Target:  []string{},
-		Refresh: StatusApiCache(conn, id),
+		Refresh: StatusAPICache(conn, id),
 		Timeout: apiCacheDeletedTimeout,
 	}
 
@@ -40,12 +40,12 @@ func waitApiCacheDeleted(conn *appsync.AppSync, id string) error {
 	return err
 }
 
-func waitDomainNameApiAssociation(conn *appsync.AppSync, id string) error {
+func waitDomainNameAPIAssociation(conn *appsync.AppSync, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appsync.AssociationStatusProcessing},
 		Target:  []string{appsync.AssociationStatusSuccess},
-		Refresh: statusDomainNameApiAssociation(conn, id),
-		Timeout: domainNameApiAssociationTimeout,
+		Refresh: statusDomainNameAPIAssociation(conn, id),
+		Timeout: domainNameAPIAssociationTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -53,12 +53,12 @@ func waitDomainNameApiAssociation(conn *appsync.AppSync, id string) error {
 	return err
 }
 
-func waitDomainNameApiDisassociation(conn *appsync.AppSync, id string) error {
+func waitDomainNameAPIDisassociation(conn *appsync.AppSync, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appsync.AssociationStatusProcessing},
 		Target:  []string{},
-		Refresh: statusDomainNameApiAssociation(conn, id),
-		Timeout: domainNameApiDisassociationTimeout,
+		Refresh: statusDomainNameAPIAssociation(conn, id),
+		Timeout: domainNameAPIDisassociationTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

@@ -26,7 +26,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonVersionDataSourceConfig_Basic(rName, addonName, true),
+				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
@@ -35,7 +35,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAddonVersionDataSourceConfig_Basic(rName, addonName, false),
+				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
@@ -47,8 +47,8 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAddonVersionDataSourceConfig_Basic(rName, addonName string, mostRecent bool) string {
-	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonVersionDataSourceConfig_basic(rName, addonName string, mostRecent bool) string {
+	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
 data "aws_eks_addon_version" "test" {
   addon_name         = %[2]q
   kubernetes_version = aws_eks_cluster.test.version

@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_distribution_configuration"
 description: |-
@@ -24,13 +24,13 @@ resource "aws_imagebuilder_distribution_configuration" "example" {
 
       name = "example-{{ imagebuilder:buildDate }}"
 
-      launch_template_configuration {
-        launch_template_id = "lt-0aaa1bcde2ff3456"
-      }
-
       launch_permission {
         user_ids = ["123456789012"]
       }
+    }
+
+    launch_template_configuration {
+      launch_template_id = "lt-0aaa1bcde2ff3456"
     }
 
     region = "us-east-1"

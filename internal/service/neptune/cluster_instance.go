@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -246,7 +245,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Creating Neptune Instance: %s", createOpts)
 
 	var resp *neptune.CreateDBInstanceOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
@@ -422,7 +421,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Send Neptune Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] Neptune Instance Modification request: %#v", req)
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {

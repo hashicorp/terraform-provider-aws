@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceImagePipelines() *schema.Resource {
@@ -18,7 +19,7 @@ func DataSourceImagePipelines() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": namevaluesfilters.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -34,7 +35,7 @@ func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) erro
 	input := &imagebuilder.ListImagePipelinesInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
 	var results []*imagebuilder.ImagePipeline

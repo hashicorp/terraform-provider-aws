@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	Wafv2WebACLAssociationCreateTimeout = 5 * time.Minute
+	WebACLAssociationCreateTimeout = 5 * time.Minute
 )
 
 func ResourceWebACLAssociation() *schema.Resource {
@@ -63,7 +63,7 @@ func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		WebACLArn:   aws.String(webAclArn),
 	}
 
-	err := resource.Retry(Wafv2WebACLAssociationCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(WebACLAssociationCreateTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateWebACL(params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {

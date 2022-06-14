@@ -315,24 +315,24 @@ func ExpandStorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
 				dataExport.OutputSchemaVersion = aws.String(v.(string))
 			}
 
-			dataExport.Destination = expandS3AnalyticsExportDestination(bar["destination"].([]interface{}))
+			dataExport.Destination = expandAnalyticsExportDestination(bar["destination"].([]interface{}))
 		}
 	}
 
 	return result
 }
 
-func expandS3AnalyticsExportDestination(edl []interface{}) *s3.AnalyticsExportDestination {
+func expandAnalyticsExportDestination(edl []interface{}) *s3.AnalyticsExportDestination {
 	result := &s3.AnalyticsExportDestination{}
 
 	if len(edl) != 0 && edl[0] != nil {
 		edm := edl[0].(map[string]interface{})
-		result.S3BucketDestination = expandS3AnalyticsS3BucketDestination(edm["s3_bucket_destination"].([]interface{}))
+		result.S3BucketDestination = expandAnalyticsBucketDestination(edm["s3_bucket_destination"].([]interface{}))
 	}
 	return result
 }
 
-func expandS3AnalyticsS3BucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDestination {
+func expandAnalyticsBucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDestination {
 	result := &s3.AnalyticsS3BucketDestination{}
 
 	if len(bdl) != 0 && bdl[0] != nil {
@@ -358,16 +358,15 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 	}
 
 	result := make(map[string]interface{})
-	if analyticsFilter.And != nil {
-		and := *analyticsFilter.And
+	if and := analyticsFilter.And; and != nil {
 		if and.Prefix != nil {
-			result["prefix"] = *and.Prefix
+			result["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
 			result["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
 		}
 	} else if analyticsFilter.Prefix != nil {
-		result["prefix"] = *analyticsFilter.Prefix
+		result["prefix"] = aws.StringValue(analyticsFilter.Prefix)
 	} else if analyticsFilter.Tag != nil {
 		tags := []*s3.Tag{
 			analyticsFilter.Tag,
@@ -390,7 +389,7 @@ func FlattenStorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) 
 		de["output_schema_version"] = aws.StringValue(dataExport.OutputSchemaVersion)
 	}
 	if dataExport.Destination != nil {
-		de["destination"] = flattenS3AnalyticsExportDestination(dataExport.Destination)
+		de["destination"] = flattenAnalyticsExportDestination(dataExport.Destination)
 	}
 	result := map[string]interface{}{
 		"data_export": []interface{}{de},
@@ -399,19 +398,19 @@ func FlattenStorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) 
 	return []map[string]interface{}{result}
 }
 
-func flattenS3AnalyticsExportDestination(destination *s3.AnalyticsExportDestination) []interface{} {
+func flattenAnalyticsExportDestination(destination *s3.AnalyticsExportDestination) []interface{} {
 	if destination == nil || destination.S3BucketDestination == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"s3_bucket_destination": flattenS3AnalyticsS3BucketDestination(destination.S3BucketDestination),
+			"s3_bucket_destination": flattenAnalyticsBucketDestination(destination.S3BucketDestination),
 		},
 	}
 }
 
-func flattenS3AnalyticsS3BucketDestination(bucketDestination *s3.AnalyticsS3BucketDestination) []interface{} {
+func flattenAnalyticsBucketDestination(bucketDestination *s3.AnalyticsS3BucketDestination) []interface{} {
 	if bucketDestination == nil {
 		return nil
 	}

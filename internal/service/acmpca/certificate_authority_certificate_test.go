@@ -20,10 +20,10 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificate_RootCA(commonName),
@@ -51,10 +51,10 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificate_RootCA(commonName),
@@ -85,10 +85,10 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificate_SubordinateCA(commonName),

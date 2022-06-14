@@ -19,13 +19,13 @@ func TestAccOpsWorksPHPAppLayer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_php_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPHPAppLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPHPAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPHPAppLayerVPCCreateConfig(rName),
+				Config: testAccPHPAppLayerConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName)),
@@ -44,13 +44,13 @@ func TestAccOpsWorksPHPAppLayer_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_php_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPHPAppLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPHPAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPHPAppLayerTags1Config(rName, "key1", "value1"),
+				Config: testAccPHPAppLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -63,7 +63,7 @@ func TestAccOpsWorksPHPAppLayer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPHPAppLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPHPAppLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -72,7 +72,7 @@ func TestAccOpsWorksPHPAppLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPHPAppLayerTags1Config(rName, "key2", "value2"),
+				Config: testAccPHPAppLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -87,9 +87,9 @@ func testAccCheckPHPAppLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_php_app_layer", s)
 }
 
-func testAccPHPAppLayerVPCCreateConfig(rName string) string {
+func testAccPHPAppLayerConfig_vpcCreate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_php_app_layer" "test" {
@@ -104,9 +104,9 @@ resource "aws_opsworks_php_app_layer" "test" {
 `, rName))
 }
 
-func testAccPHPAppLayerTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccPHPAppLayerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_php_app_layer" "test" {
@@ -125,9 +125,9 @@ resource "aws_opsworks_php_app_layer" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccPHPAppLayerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPHPAppLayerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_php_app_layer" "test" {

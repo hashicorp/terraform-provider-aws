@@ -21,10 +21,10 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRequestValidatorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRequestValidatorConfig(rName),
@@ -66,10 +66,10 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRequestValidatorDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRequestValidatorConfig(rName),

@@ -22,15 +22,15 @@ func TestAccSESTemplate_basic(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTemplateResourceBasic1Config(rName),
+				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplateExists(resourceName, &template),
+					testAccCheckTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "html", "html"),
 					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
@@ -53,15 +53,15 @@ func TestAccSESTemplate_update(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTemplateResourceBasic1Config(rName),
+				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplateExists(resourceName, &template),
+					testAccCheckTemplateExists(resourceName, &template),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("template/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "html", "html"),
@@ -75,9 +75,9 @@ func TestAccSESTemplate_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckTemplateResourceBasic2Config(rName),
+				Config: testAccTemplateConfig_resourceBasic2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplateExists(resourceName, &template),
+					testAccCheckTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "html", "html"),
 					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
@@ -85,9 +85,9 @@ func TestAccSESTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckTemplateResourceBasic3Config(rName),
+				Config: testAccTemplateConfig_resourceBasic3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplateExists(resourceName, &template),
+					testAccCheckTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "html", "html update"),
 					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
@@ -104,15 +104,15 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTemplateResourceBasic1Config(rName),
+				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplateExists(resourceName, &template),
+					testAccCheckTemplateExists(resourceName, &template),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -121,7 +121,7 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSesTemplateExists(pr string, template *ses.Template) resource.TestCheckFunc {
+func testAccCheckTemplateExists(pr string, template *ses.Template) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 		rs, ok := s.RootModule().Resources[pr]
@@ -152,7 +152,7 @@ func testAccCheckSesTemplateExists(pr string, template *ses.Template) resource.T
 	}
 }
 
-func testAccCheckSesTemplateDestroy(s *terraform.State) error {
+func testAccCheckTemplateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -186,7 +186,7 @@ func testAccCheckSesTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckTemplateResourceBasic1Config(name string) string {
+func testAccTemplateConfig_resourceBasic1(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"
@@ -196,7 +196,7 @@ resource "aws_ses_template" "test" {
 `, name)
 }
 
-func testAccCheckTemplateResourceBasic2Config(name string) string {
+func testAccTemplateConfig_resourceBasic2(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"
@@ -207,7 +207,7 @@ resource "aws_ses_template" "test" {
 `, name)
 }
 
-func testAccCheckTemplateResourceBasic3Config(name string) string {
+func testAccTemplateConfig_resourceBasic3(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"

@@ -146,7 +146,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfig = expandCloudformationLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.LoggingConfig = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("type"); ok {
@@ -204,7 +204,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("execution_role_arn", output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
-		if err := d.Set("logging_config", []interface{}{flattenCloudformationLoggingConfig(output.LoggingConfig)}); err != nil {
+		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting logging_config: %w", err))
 		}
 	} else {
@@ -295,7 +295,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 
-func expandCloudformationLoggingConfig(tfMap map[string]interface{}) *cloudformation.LoggingConfig {
+func expandLoggingConfig(tfMap map[string]interface{}) *cloudformation.LoggingConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -313,7 +313,7 @@ func expandCloudformationLoggingConfig(tfMap map[string]interface{}) *cloudforma
 	return apiObject
 }
 
-func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
+func expandOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
 	if tfMap == nil {
 		return nil
 	}
@@ -339,10 +339,22 @@ func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *clo
 		apiObject.RegionOrder = flex.ExpandStringSet(v)
 	}
 
+	if ftc, ftp := aws.Int64Value(apiObject.FailureToleranceCount), aws.Int64Value(apiObject.FailureTolerancePercentage); ftp == 0 {
+		apiObject.FailureTolerancePercentage = nil
+	} else if ftc == 0 {
+		apiObject.FailureToleranceCount = nil
+	}
+
+	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcp == 0 {
+		apiObject.MaxConcurrentPercentage = nil
+	} else if mcc == 0 {
+		apiObject.MaxConcurrentCount = nil
+	}
+
 	return apiObject
 }
 
-func flattenCloudformationLoggingConfig(apiObject *cloudformation.LoggingConfig) map[string]interface{} {
+func flattenLoggingConfig(apiObject *cloudformation.LoggingConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

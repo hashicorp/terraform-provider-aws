@@ -25,10 +25,10 @@ func TestAccECSService_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig(rName),
@@ -58,10 +58,10 @@ func TestAccECSService_basicImport(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceFamilyAndRevisionConfig(rName),
@@ -96,10 +96,10 @@ func TestAccECSService_disappears(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig(rName),
@@ -119,10 +119,10 @@ func TestAccECSService_PlacementStrategy_unnormalized(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceInterchangeablePlacementStrategyConfig(rName),
@@ -140,10 +140,10 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceCapacityProviderStrategyConfig(rName, 1, 0, false),
@@ -167,10 +167,10 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceCapacityProviderStrategyConfig(rName, 1, 0, true),
@@ -195,10 +195,10 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceUpdateCapacityProviderStrategyRemoveConfig(rName),
@@ -235,10 +235,10 @@ func TestAccECSService_CapacityProviderStrategy_multiple(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceMultipleCapacityProviderStrategiesConfig(rName),
@@ -257,10 +257,10 @@ func TestAccECSService_familyAndRevision(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceFamilyAndRevisionConfig(rName),
@@ -286,10 +286,10 @@ func TestAccECSService_renamedCluster(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceRenamedClusterConfig(rName),
@@ -320,10 +320,10 @@ func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceHealthCheckGracePeriodSecondsConfig(rName, -1),
@@ -364,10 +364,10 @@ func TestAccECSService_iamRole(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceIAMRoleConfig(rName),
@@ -385,10 +385,10 @@ func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDeploymentControllerTypeCodeDeployConfig(rName),
@@ -421,10 +421,10 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 1, 100),
@@ -459,10 +459,10 @@ func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDeploymentControllerTypeExternalConfig(rName),
@@ -490,10 +490,10 @@ func TestAccECSService_DeploymentValues_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDeploymentValuesConfig(rName),
@@ -514,10 +514,10 @@ func TestAccECSService_DeploymentValues_minZeroMaxOneHundred(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDeploymentPercentsConfig(rName, 0, 100),
@@ -537,10 +537,10 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDeploymentCircuitBreakerConfig(rName),
@@ -562,10 +562,10 @@ func TestAccECSService_loadBalancerChanges(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLBChangesConfig(rName),
@@ -591,10 +591,10 @@ func TestAccECSService_clusterName(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceClusterNameConfig(rName),
@@ -613,10 +613,10 @@ func TestAccECSService_alb(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceALBConfig(rName),
@@ -635,10 +635,10 @@ func TestAccECSService_multipleTargetGroups(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceMultipleTargetGroupsConfig(rName),
@@ -657,10 +657,10 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig(rName),
@@ -689,10 +689,10 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig(rName),
@@ -742,10 +742,10 @@ func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServicePlacementStrategyTypeConfig(rName, ""),
@@ -761,10 +761,10 @@ func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePlacementConstraintConfig(rName),
@@ -791,10 +791,10 @@ func TestAccECSService_PlacementConstraints_emptyExpression(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePlacementConstraintEmptyExpressionConfig(rName),
@@ -813,10 +813,10 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLaunchTypeFargateConfig(rName, false),
@@ -853,10 +853,10 @@ func TestAccECSService_LaunchTypeFargate_platformVersion(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLaunchTypeFargateAndPlatformVersionConfig(rName, "1.3.0"),
@@ -889,10 +889,10 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Wait for the ECS Cluster to reach a steady state w/specified count
@@ -922,10 +922,10 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLaunchTypeFargateNoWaitConfig(rName),
@@ -963,10 +963,10 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkConfigurationConfig(rName),
@@ -996,10 +996,10 @@ func TestAccECSService_DaemonSchedulingStrategy_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDaemonSchedulingStrategyConfig(rName),
@@ -1018,10 +1018,10 @@ func TestAccECSService_DaemonSchedulingStrategy_setDeploymentMinimum(t *testing.
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDaemonSchedulingStrategySetDeploymentMinimumConfig(rName),
@@ -1040,10 +1040,10 @@ func TestAccECSService_replicaSchedulingStrategy(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceReplicaSchedulingStrategyConfig(rName),
@@ -1062,10 +1062,10 @@ func TestAccECSService_ServiceRegistries_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceServiceRegistriesConfig(rName),
@@ -1084,10 +1084,10 @@ func TestAccECSService_ServiceRegistries_container(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceServiceRegistriesContainerConfig(rName),
@@ -1112,10 +1112,10 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceServiceRegistriesChangesConfig(rName, serviceDiscoveryName),
@@ -1141,10 +1141,10 @@ func TestAccECSService_Tags_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceTags1Config(rName, "key1", "value1"),
@@ -1190,10 +1190,10 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceManagedTagsConfig(rName),
@@ -1213,10 +1213,10 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePropagateTagsConfig(rName, "SERVICE"),
@@ -1250,10 +1250,10 @@ func TestAccECSService_executeCommand(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceExecuteCommandConfig(rName, true),

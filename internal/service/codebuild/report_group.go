@@ -1,17 +1,19 @@
 package codebuild
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceReportGroup() *schema.Resource {
@@ -132,14 +134,24 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	reportGroup, err := FindReportGroupByARN(conn, d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error Listing CodeBuild Report Groups: %w", err)
+		return names.Error(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && reportGroup == nil {
+		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	if reportGroup == nil {
-		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return names.Error(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", reportGroup.Arn)

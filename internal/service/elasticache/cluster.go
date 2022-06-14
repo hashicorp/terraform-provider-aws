@@ -6,18 +6,19 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,8 +26,8 @@ import (
 )
 
 const (
-	elasticacheDefaultRedisPort     = "6379"
-	elasticacheDefaultMemcachedPort = "11211"
+	defaultRedisPort     = "6379"
+	defaultMemcachedPort = "11211"
 )
 
 const (
@@ -52,6 +53,12 @@ func ResourceCluster() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Default:      "true",
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -200,7 +207,7 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == elasticacheDefaultRedisPort || old == elasticacheDefaultMemcachedPort) {
+					if !d.IsNewResource() && new == "0" && (old == defaultRedisPort || old == defaultMemcachedPort) {
 						return true
 					}
 					return false
@@ -297,7 +304,7 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
 			CustomizeDiffValidateClusterEngineVersion,
-			CustomizeDiffEngineVersion,
+			customizeDiffEngineVersionForceNewOnDowngrade,
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
@@ -340,8 +347,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
-		req.EngineVersion = aws.String(v.(string))
+	version := d.Get("engine_version").(string)
+	if version != "" {
+		req.EngineVersion = aws.String(version)
+	}
+
+	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			req.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 	}
 
 	if v, ok := d.GetOk("port"); ok {
@@ -473,7 +487,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if c.NotificationConfiguration != nil {
-		if *c.NotificationConfiguration.TopicStatus == "active" {
+		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -520,9 +534,14 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("node_type", c.CacheNodeType)
 
 	d.Set("engine", c.Engine)
-	if err := setEngineVersionFromCacheCluster(d, c); err != nil {
-		return err
+	if aws.StringValue(c.Engine) == engineRedis {
+		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
+			return err
+		}
+	} else {
+		setEngineVersionMemcached(d, c.EngineVersion)
 	}
+	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
 	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
@@ -537,21 +556,6 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	}
 
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
-
-	return nil
-}
-
-func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
-	engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
-	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
-	}
-	if engineVersion.Segments()[0] < 6 {
-		d.Set("engine_version", engineVersion.String())
-	} else {
-		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
-	}
-	d.Set("engine_version_actual", engineVersion.String())
 
 	return nil
 }
@@ -594,7 +598,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
 		for _, previous := range previousLogDeliveryConfig {
 			logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
-			//if something was removed, send an empty request
+			// if something was removed, send an empty request
 			if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
 				req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
 			}
@@ -620,6 +624,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("auto_minor_version_upgrade") {
+		v := d.Get("auto_minor_version_upgrade")
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			req.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 		requestUpdate = true
 	}
 
@@ -729,10 +741,10 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			"id":                *node.CacheNodeId,
-			"address":           *node.Endpoint.Address,
-			"port":              int(*node.Endpoint.Port),
-			"availability_zone": *node.CustomerAvailabilityZone,
+			"id":                aws.StringValue(node.CacheNodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
 		})
 	}
 
@@ -745,7 +757,7 @@ func (b byCacheNodeId) Len() int      { return len(b) }
 func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byCacheNodeId) Less(i, j int) bool {
 	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		*b[i].CacheNodeId < *b[j].CacheNodeId
+		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {

@@ -30,7 +30,7 @@ func ExpandClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguratio
 	return scalingConfiguration
 }
 
-func flattenRDSScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
+func flattenScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
 	if scalingConfigurationInfo == nil {
 		return []interface{}{}
 	}
@@ -44,6 +44,42 @@ func flattenRDSScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 	}
 
 	return []interface{}{m}
+}
+
+func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.ServerlessV2ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ServerlessV2ScalingConfiguration{}
+
+	if v, ok := tfMap["max_capacity"].(float64); ok && v != 0.0 {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfigurationInfo(apiObject *rds.ServerlessV2ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap["max_capacity"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Float64Value(v)
+	}
+
+	return tfMap
 }
 
 func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfiguration {

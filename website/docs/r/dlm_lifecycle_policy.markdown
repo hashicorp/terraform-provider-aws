@@ -1,5 +1,5 @@
 ---
-subcategory: "Data Lifecycle Manager (DLM)"
+subcategory: "DLM (Data Lifecycle Manager)"
 layout: "aws"
 page_title: "AWS: aws_dlm_lifecycle_policy"
 description: |-
@@ -106,6 +106,8 @@ resource "aws_dlm_lifecycle_policy" "example" {
 
 ```terraform
 # ...other configuration...
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
   provider = aws.alternate
 
@@ -120,7 +122,7 @@ resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -247,7 +249,7 @@ The following arguments are supported:
 
 #### Action arguments
 
-* `cross_region_copy` - (Optional) The rule for copying shared snapshots across Regions. See the [`cross_region_copy` configuration](#acion-cross-region-copy-arguments) block.
+* `cross_region_copy` - (Optional) The rule for copying shared snapshots across Regions. See the [`cross_region_copy` configuration](#action-cross-region-copy-rule-arguments) block.
 * `name` - (Optional) A descriptive name for the action.
 
 ##### Action Cross Region Copy Rule arguments

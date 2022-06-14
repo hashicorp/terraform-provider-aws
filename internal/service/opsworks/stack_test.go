@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -30,12 +30,12 @@ func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackNoVPCCreateConfig(rName),
+				Config: testAccStackConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, false, &opsstack),
 					testAccCheckCreateStackAttributes(rName),
@@ -61,12 +61,12 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackNoVPCCreateConfig(rName),
+				Config: testAccStackConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, false, &before),
 				),
@@ -77,7 +77,7 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStackNoVPCCreateUpdateServiceRoleConfig(rName),
+				Config: testAccStackConfig_noVPCCreateUpdateServiceRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, false, &after),
 					testAccCheckStackRecreated(t, &before, &after),
@@ -98,12 +98,12 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackVPCCreateConfig(rName),
+				Config: testAccStackConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, true, &opsstack),
 					testAccCheckCreateStackAttributes(rName),
@@ -115,14 +115,14 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStackVPCUpdateConfig(rName),
+				Config: testAccStackConfig_vpcUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, true, &opsstack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2015.09"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
@@ -147,12 +147,12 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackNoVPCCreateTagsConfig(rName),
+				Config: testAccStackConfig_noVPCCreateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, false, &opsstack),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -165,7 +165,7 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStackNoVPCUpdateTagsConfig(rName),
+				Config: testAccStackConfig_noVPCUpdateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, false, &opsstack),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -191,19 +191,19 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_CustomCookbooks_Set(rName),
+				Config: testAccStackConfig_customCookbooksSet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, true, &opsstack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
@@ -230,13 +230,13 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 	// This test cannot be parallel with other tests, because it changes the provider region in a non-standard way
 	// https://github.com/hashicorp/terraform-provider-aws/issues/21887
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStackDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStack_classicEndpoint(rName),
+				Config: testAccStackConfig_classicEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, false, &opsstack),
 				),
@@ -248,7 +248,7 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 			},
 			// Ensure that changing region results in no plan
 			{
-				Config:   testAccStack_regionalEndpoint(rName),
+				Config:   testAccStackConfig_regionalEndpoint(rName),
 				PlanOnly: true,
 			},
 		},
@@ -280,7 +280,7 @@ func testAccPreCheckStacks(t *testing.T) {
 	}
 }
 
-func testAccStack_classicEndpoint(rName string) string {
+func testAccStackConfig_classicEndpoint(rName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -367,7 +367,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 `, rName) //lintignore:AWSAT003,AT004
 }
 
-func testAccStack_regionalEndpoint(rName string) string {
+func testAccStackConfig_regionalEndpoint(rName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
@@ -465,7 +465,7 @@ func testAccCheckCreateStackAttributes(rName string) resource.TestCheckFunc {
 		resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 		resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
 		resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-		resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+		resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
 		resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 		resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 	)
@@ -526,24 +526,24 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.DescribeStacks(req)
+
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "ResourceNotFoundException" {
-					// not found, all good
-					return nil
-				}
-			}
 			return err
 		}
 	}
-	return fmt.Errorf("Fall through error for OpsWorks stack test")
+
+	return nil
 }
 
 //////////////////////////////////////////////////
 //// Helper configs for the necessary IAM objects
 //////////////////////////////////////////////////
 
-func testAccStackNoVPCCreateConfig(rName string) string {
+func testAccStackConfig_noVPCCreate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -642,7 +642,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 `, rName))
 }
 
-func testAccStackNoVPCCreateTagsConfig(rName string) string {
+func testAccStackConfig_noVPCCreateTags(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -745,7 +745,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 `, rName))
 }
 
-func testAccStackNoVPCUpdateTagsConfig(rName string) string {
+func testAccStackConfig_noVPCUpdateTags(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -848,7 +848,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 `, rName))
 }
 
-func testAccStackNoVPCCreateUpdateServiceRoleConfig(rName string) string {
+func testAccStackConfig_noVPCCreateUpdateServiceRole(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -996,7 +996,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 //// Tests for the VPC case
 ////////////////////////////
 
-func testAccStackVPCCreateConfig(rName string) string {
+func testAccStackConfig_vpcCreate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1115,7 +1115,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 `, rName))
 }
 
-func testAccStackVPCUpdateConfig(rName string) string {
+func testAccStackConfig_vpcUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1245,7 +1245,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 // Helpers for Custom Cookbook properties
 /////////////////////////////////////////
 
-func testAccStackConfig_CustomCookbooks_Set(rName string) string {
+func testAccStackConfig_customCookbooksSet(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1403,6 +1403,6 @@ const sshKey = "-----BEGIN RSA PRIVATE KEY-----" +
 	"tmm0+hpmkjX7jiPcljjs8S8gh+uCWieJoO4JNPk2SXRiePpYgKzdlg==" +
 	"-----END RSA PRIVATE KEY-----"
 
-const customJson = `{
+const customJSON = `{
   "key": "value"
 }`

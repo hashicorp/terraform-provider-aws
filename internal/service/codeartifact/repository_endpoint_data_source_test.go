@@ -10,14 +10,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
+func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "npm"),
@@ -51,14 +51,14 @@ func testAccCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepositoryEndpointDataSource_owner(t *testing.T) {
+func testAccRepositoryEndpointDataSource_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRepositoryEndpointOwnerConfig(rName),

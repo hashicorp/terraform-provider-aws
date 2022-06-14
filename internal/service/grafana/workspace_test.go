@@ -18,32 +18,33 @@ import (
 func TestAccGrafana_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Workspace": {
-			"saml":                     testAccGrafanaWorkspace_saml,
-			"sso":                      testAccGrafanaWorkspace_sso,
-			"disappears":               testAccGrafanaWorkspace_disappears,
-			"organization":             testAccGrafanaWorkspace_organization,
-			"dataSources":              testAccGrafanaWorkspace_dataSources,
-			"permissionType":           testAccGrafanaWorkspace_permissionType,
-			"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
+			"saml":                     testAccWorkspace_saml,
+			"sso":                      testAccWorkspace_sso,
+			"disappears":               testAccWorkspace_disappears,
+			"organization":             testAccWorkspace_organization,
+			"dataSources":              testAccWorkspace_dataSources,
+			"permissionType":           testAccWorkspace_permissionType,
+			"notificationDestinations": testAccWorkspace_notificationDestinations,
+			"tags":                     testAccWorkspace_tags,
 		},
 		"DataSource": {
-			"basic": testAccGrafanaWorkspaceDataSource_basic,
+			"basic": testAccWorkspaceDataSource_basic,
 		},
 		"LicenseAssociation": {
-			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
+			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
 		},
 		"SamlConfiguration": {
-			"basic":         testAccGrafanaWorkspaceSamlConfiguration_basic,
-			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
-			"assertions":    testAccGrafanaWorkspaceSamlConfiguration_assertions,
+			"basic":         testAccWorkspaceSamlConfiguration_basic,
+			"loginValidity": testAccWorkspaceSamlConfiguration_loginValidity,
+			"assertions":    testAccWorkspaceSamlConfiguration_assertions,
 		},
 		"RoleAssociation": {
-			"usersAdmin":           testAccGrafanaRoleAssociation_usersAdmin,
-			"usersEditor":          testAccGrafanaRoleAssociation_usersEditor,
-			"groupsAdmin":          testAccGrafanaRoleAssociation_groupsAdmin,
-			"groupsEditor":         testAccGrafanaRoleAssociation_groupsEditor,
-			"usersAndGroupsAdmin":  testAccGrafanaRoleAssociation_usersAndGroupsAdmin,
-			"usersAndGroupsEditor": testAccGrafanaRoleAssociation_usersAndGroupsEditor,
+			"usersAdmin":           testAccRoleAssociation_usersAdmin,
+			"usersEditor":          testAccRoleAssociation_usersEditor,
+			"groupsAdmin":          testAccRoleAssociation_groupsAdmin,
+			"groupsEditor":         testAccRoleAssociation_groupsEditor,
+			"usersAndGroupsAdmin":  testAccRoleAssociation_usersAndGroupsAdmin,
+			"usersAndGroupsEditor": testAccRoleAssociation_usersAndGroupsEditor,
 		},
 	}
 
@@ -60,16 +61,16 @@ func TestAccGrafana_serial(t *testing.T) {
 	}
 }
 
-func testAccGrafanaWorkspace_saml(t *testing.T) {
+func testAccWorkspace_saml(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"),
@@ -91,6 +92,7 @@ func testAccGrafanaWorkspace_saml(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -102,7 +104,7 @@ func testAccGrafanaWorkspace_saml(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_sso(t *testing.T) {
+func testAccWorkspace_sso(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -113,9 +115,9 @@ func testAccGrafanaWorkspace_sso(t *testing.T) {
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
 			acctest.PreCheckSSOAdminInstances(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "AWS_SSO"),
@@ -137,6 +139,7 @@ func testAccGrafanaWorkspace_sso(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -148,15 +151,15 @@ func testAccGrafanaWorkspace_sso(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_disappears(t *testing.T) {
+func testAccWorkspace_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"),
@@ -170,7 +173,7 @@ func testAccGrafanaWorkspace_disappears(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_organization(t *testing.T) {
+func testAccWorkspace_organization(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -181,9 +184,9 @@ func testAccGrafanaWorkspace_organization(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigOrganization(rName),
@@ -205,16 +208,60 @@ func testAccGrafanaWorkspace_organization(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_dataSources(t *testing.T) {
+func testAccWorkspace_tags(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccWorkspace_dataSources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigDataSources(rName),
@@ -250,15 +297,15 @@ func testAccGrafanaWorkspace_dataSources(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_permissionType(t *testing.T) {
+func testAccWorkspace_permissionType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigPermissionType(rName, "CUSTOMER_MANAGED"),
@@ -283,15 +330,15 @@ func testAccGrafanaWorkspace_permissionType(t *testing.T) {
 	})
 }
 
-func testAccGrafanaWorkspace_notificationDestinations(t *testing.T) {
+func testAccWorkspace_notificationDestinations(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"),
@@ -371,6 +418,41 @@ resource "aws_organizations_organizational_unit" "test" {
   parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 `, rName))
+}
+
+func testAccWorkspaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+}
+  `, rName, tagKey1, tagValue1))
+}
+
+func testAccWorkspaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+}
+  `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccWorkspaceConfigDataSources(rName string) string {

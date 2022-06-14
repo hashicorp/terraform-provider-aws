@@ -43,3 +43,37 @@ func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, global
 
 	return err
 }
+
+func waitEventSubscriptionActive(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.EventSubscription, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"creating", "modifying"},
+		Target:  []string{"active"},
+		Refresh: statusEventSubscription(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.EventSubscription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"deleting"},
+		Target:  []string{},
+		Refresh: statusEventSubscription(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}

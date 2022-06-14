@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -20,16 +19,107 @@ import (
 	testing "github.com/mitchellh/go-testing-interface"
 )
 
-type providerFactories struct {
-	legacy  map[string]func() (*schema.Provider, error)
-	protov5 map[string]func() (tfprotov5.ProviderServer, error)
-	protov6 map[string]func() (tfprotov6.ProviderServer, error)
+// protov5ProviderFactory is a function which is called to start a protocol
+// version 5 provider server.
+type protov5ProviderFactory func() (tfprotov5.ProviderServer, error)
+
+// protov5ProviderFactories is a mapping of provider addresses to provider
+// factory for protocol version 5 provider servers.
+type protov5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
+// merge combines provider factories.
+//
+// In case of an overlapping entry, the later entry will overwrite the previous
+// value.
+func (pf protov5ProviderFactories) merge(otherPfs ...protov5ProviderFactories) protov5ProviderFactories {
+	result := make(protov5ProviderFactories)
+
+	for name, providerFactory := range pf {
+		result[name] = providerFactory
+	}
+
+	for _, otherPf := range otherPfs {
+		for name, providerFactory := range otherPf {
+			result[name] = providerFactory
+		}
+	}
+
+	return result
 }
 
-func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *plugintest.WorkingDir, factories providerFactories) error {
+// protov6ProviderFactory is a function which is called to start a protocol
+// version 6 provider server.
+type protov6ProviderFactory func() (tfprotov6.ProviderServer, error)
+
+// protov6ProviderFactories is a mapping of provider addresses to provider
+// factory for protocol version 6 provider servers.
+type protov6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
+
+// merge combines provider factories.
+//
+// In case of an overlapping entry, the later entry will overwrite the previous
+// value.
+func (pf protov6ProviderFactories) merge(otherPfs ...protov6ProviderFactories) protov6ProviderFactories {
+	result := make(protov6ProviderFactories)
+
+	for name, providerFactory := range pf {
+		result[name] = providerFactory
+	}
+
+	for _, otherPf := range otherPfs {
+		for name, providerFactory := range otherPf {
+			result[name] = providerFactory
+		}
+	}
+
+	return result
+}
+
+// sdkProviderFactory is a function which is called to start a SDK provider
+// server.
+type sdkProviderFactory func() (*schema.Provider, error)
+
+// protov6ProviderFactories is a mapping of provider addresses to provider
+// factory for protocol version 6 provider servers.
+type sdkProviderFactories map[string]func() (*schema.Provider, error)
+
+// merge combines provider factories.
+//
+// In case of an overlapping entry, the later entry will overwrite the previous
+// value.
+func (pf sdkProviderFactories) merge(otherPfs ...sdkProviderFactories) sdkProviderFactories {
+	result := make(sdkProviderFactories)
+
+	for name, providerFactory := range pf {
+		result[name] = providerFactory
+	}
+
+	for _, otherPf := range otherPfs {
+		for name, providerFactory := range otherPf {
+			result[name] = providerFactory
+		}
+	}
+
+	return result
+}
+
+type providerFactories struct {
+	legacy  sdkProviderFactories
+	protov5 protov5ProviderFactories
+	protov6 protov6ProviderFactories
+}
+
+func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *plugintest.WorkingDir, factories *providerFactories) error {
 	// don't point to this as a test failure location
 	// point to whatever called it
 	t.Helper()
+
+	// This should not happen, but prevent panics just in case.
+	if factories == nil {
+		err := fmt.Errorf("Provider factories are missing to run Terraform command. Please report this bug in the testing framework.")
+		logging.HelperResourceError(ctx, err.Error())
+		return err
+	}
 
 	// Run the providers in the same process as the test runner using the
 	// reattach behavior in Terraform. This ensures we get test coverage
@@ -42,6 +132,14 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 	// we're skipping the handshake because Terraform didn't launch the
 	// plugins.
 	os.Setenv("PLUGIN_PROTOCOL_VERSIONS", "5")
+
+	// Acceptance testing does not need to call checkpoint as the output
+	// is not accessible, nor desirable if explicitly using
+	// TF_ACC_TERRAFORM_PATH or TF_ACC_TERRAFORM_VERSION environment variables.
+	//
+	// Avoid calling (tfexec.Terraform).SetEnv() as it will stop copying
+	// os.Environ() and prevents TF_VAR_ environment variable usage.
+	os.Setenv("CHECKPOINT_DISABLE", "1")
 
 	// Terraform 0.12.X and 0.13.X+ treat namespaceless providers
 	// differently in terms of what namespace they default to. So we're
@@ -322,7 +420,7 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 	// started.
 	err := f()
 	if err != nil {
-		log.Printf("[WARN] Got error running Terraform: %s", err)
+		logging.HelperResourceWarn(ctx, "Error running Terraform CLI command", map[string]interface{}{logging.KeyError: err})
 	}
 
 	logging.HelperResourceTrace(ctx, "Called wrapped Terraform CLI command")

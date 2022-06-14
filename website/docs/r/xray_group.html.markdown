@@ -1,5 +1,5 @@
 ---
-subcategory: "XRay"
+subcategory: "X-Ray"
 layout: "aws"
 page_title: "AWS: aws_xray_group"
 description: |-

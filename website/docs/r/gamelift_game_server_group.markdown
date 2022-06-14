@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_game_server_group"
 description: |-
-  Provides a Gamelift Game Server Group resource.
+  Provides a GameLift Game Server Group resource.
 ---
 
 # Resource: aws_gamelift_game_server_group
 
-Provides an Gamelift Game Server Group resource.
+Provides an GameLift Game Server Group resource.
 
 ## Example Usage
 
@@ -87,7 +87,7 @@ resource "aws_gamelift_game_server_group" "example" {
 }
 ```
 
-### Example IAM Role for Gamelift Game Server Group
+### Example IAM Role for GameLift Game Server Group
 
 ```terraform
 data "aws_partition" "current" {}
@@ -183,8 +183,8 @@ You can specify the template using either the template name or ID.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the Gamelift Game Server Group.
-* `arn` - The ARN of the Gamelift Game Server Group.
+* `id` - The name of the GameLift Game Server Group.
+* `arn` - The ARN of the GameLift Game Server Group.
 * `auto_scaling_group_arn` - The ARN of the created EC2 Auto Scaling group.
 
 ## Timeouts
@@ -192,12 +192,12 @@ In addition to all arguments above, the following attributes are exported:
 `aws_gamelift_game_server_group` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-* `create` - (Default `10 minutes`) How long to wait for the Gamelift Game Server Group to be created.
-* `delete` - (Default `30 minutes`) How long to wait for the Gamelift Game Server Group to be deleted.
+* `create` - (Default `10 minutes`) How long to wait for the GameLift Game Server Group to be created.
+* `delete` - (Default `30 minutes`) How long to wait for the GameLift Game Server Group to be deleted.
 
 ## Import
 
-Gamelift Game Server Group can be imported using the `name`, e.g.
+GameLift Game Server Group can be imported using the `name`, e.g.
 
 ```
 $ terraform import aws_gamelift_game_server_group.example example

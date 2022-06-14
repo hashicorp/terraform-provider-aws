@@ -21,10 +21,10 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyNameConfig(rName),
@@ -53,10 +53,10 @@ func TestAccAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyDescriptionConfig(rName, rName),
@@ -86,10 +86,10 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyFinalBakeTimeConfig(rName, 60),
@@ -131,10 +131,10 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyNameConfig(rName),
@@ -153,10 +153,10 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyTags1(rName, "key1", "value1"),
@@ -192,7 +192,7 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigDeploymentStrategyDestroy(s *terraform.State) error {
+func testAccCheckDeploymentStrategyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {

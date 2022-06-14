@@ -1,5 +1,5 @@
 ---
-subcategory: "Synthetics"
+subcategory: "CloudWatch Synthetics"
 layout: "aws"
 page_title: "AWS: aws_synthetics_canary"
 description: |-
@@ -60,8 +60,8 @@ The following arguments are optional:
 
 ### s3_encryption
 
-* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE-S3` and `SSE-KMS`.
-* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE-KMS` for `encryption_mode`.
+* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE_S3` and `SSE_KMS`.
+* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE_KMS` for `encryption_mode`.
 
 ### schedule
 

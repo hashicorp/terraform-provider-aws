@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-const DefaultKmsKeyAlias = "alias/aws/s3"
+const DefaultKMSKeyAlias = "alias/aws/s3"
 
 // These should be defined in the AWS SDK for Go. There is an open issue https://github.com/aws/aws-sdk-go/issues/2683
 const (
