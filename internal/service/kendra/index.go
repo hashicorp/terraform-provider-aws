@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	// Allow IAM role to become visible to the index
+	propagationTimeout = 2 * time.Minute
 )
 
 func ResourceIndex() *schema.Resource {
@@ -375,15 +381,32 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Creating Kendra Index %#v", input)
-	output, err := conn.CreateIndex(ctx, input)
+
+	outputRaw, err := tfresource.RetryWhen(
+		propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateIndex(ctx, input)
+		},
+		func(err error) (bool, error) {
+			var validationException *types.ValidationException
+
+			if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), "Please make sure your role exists and has `kendra.amazonaws.com` as trusted entity") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return diag.Errorf("error creating Kendra Index (%s): %s", name, err)
 	}
 
-	if output == nil {
+	if outputRaw == nil {
 		return diag.Errorf("error creating Kendra Index (%s): empty output", name)
 	}
+
+	output := outputRaw.(*kendra.CreateIndexOutput)
 
 	d.SetId(aws.ToString(output.Id))
 

@@ -3,10 +3,8 @@ package kendra_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -47,24 +45,12 @@ func TestAccKendraIndex_basic(t *testing.T) {
 	description := "basic"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
@@ -110,24 +96,12 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_serverSideEncryption(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
@@ -157,24 +131,12 @@ func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
 	updatedStorageCapacityUnits := 2
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, originalQueryCapacityUnits, originalStorageCapacityUnits),
 				Check: resource.ComposeTestCheckFunc(
@@ -211,24 +173,12 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 	updatedDescription := "updated description"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
@@ -262,24 +212,12 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	description := "description"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
@@ -315,24 +253,12 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 	updatedUserNameAttributeField := "usernames"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, originalGroupAttributeField, originalUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
@@ -381,24 +307,12 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	description := "description"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
@@ -444,24 +358,12 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 	description := "description"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
@@ -494,24 +396,12 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	description := "disappears"
 	resourceName := "aws_kendra_index.test"
 
-	propagationSleep := func() resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow IAM role to become visible to Kendra")
-			time.Sleep(30 * time.Second)
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckIndexDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIndexConfig_base(rName, rName2),
-				Check:  propagationSleep(),
-			},
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
@@ -572,7 +462,7 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 	}
 }
 
-func testAccIndexConfig_base(rName, rName2 string) string {
+func testAccIndexConfigBase(rName, rName2 string) string {
 	// Kendra IAM policies: https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -699,7 +589,7 @@ resource "aws_iam_role" "access_sm" {
 
 func testAccIndexConfig_basic(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -715,7 +605,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_capacityUnits(rName, rName2, rName3 string, queryCapacityUnits, storageCapacityUnits int) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name     = %[1]q
@@ -735,7 +625,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -751,7 +641,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_serverSideEncryption(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name     = %[1]q
@@ -766,7 +656,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_userTokenJSON(rName, rName2, rName3, groupAttributeField, userNameAttributeField string) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name     = %[1]q
@@ -784,7 +674,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_tags(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
@@ -801,7 +691,7 @@ resource "aws_kendra_index" "test" {
 
 func testAccIndexConfig_tagsUpdated(rName, rName2, rName3, description string) string {
 	return acctest.ConfigCompose(
-		testAccIndexConfig_base(rName, rName2),
+		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_kendra_index" "test" {
   name        = %[1]q
