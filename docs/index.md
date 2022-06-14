@@ -74,7 +74,7 @@ Adding import support allows `terraform import` to be run targeting an existing 
 
 ### End User Documentation Changes
 
-The provider documentation is displayed on the <a href="https://registry.terraform.io/providers/hashicorp/aws/latest">Terraform Registry and is sourced and refreshed from the provider repository during the release process.
+The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process.
 
 - [How to modify provider documentation](documentation-changes)
 
@@ -83,4 +83,4 @@ The provider documentation is displayed on the <a href="https://registry.terrafo
 In both cases follow the template laid out in the submission forms. Details are important, it can take a considerable amount of time for the maintainers to reproduce issues. So bug reports without full reproductions are likely to be uninvestigated, or in some case closed.
 
 - [Report a Bug](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md)
-- [Submit a Feature Request](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md)    
+- [Submit a Feature Request](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md)

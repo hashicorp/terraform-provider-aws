@@ -29,15 +29,15 @@ Support for region validation requires that the provider has an updated AWS Go S
 
 - Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
 - Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
-- Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base) 
+- Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
 
 #### Update Terraform Core (S3 Backend)
 
 [core](https://github.com/hashicorp/terraform)
 
 - Update [aws-go-sdk](https://github.com/aws/aws-sdk-go)
-- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2) 
-- Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base) 
+- Update [aws-go-sdk-v2](https://github.com/aws/aws-sdk-go-v2)
+- Update [aws-go-sdk-base](https://github.com/hashicorp/aws-sdk-go-base)
 
 ```shell
 go get github.com/aws/aws-sdk-go@v#.#.#

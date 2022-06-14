@@ -14,7 +14,7 @@ If this is the first addition of a resource or datasource for a new service, ple
 
 For a new resources use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-#### Name the datasource: 
+#### Name the datasource:
 
 Either by creating the file manually, or using `skaff` to generate a template.
 
@@ -43,7 +43,7 @@ You will need at minimum:
 - Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
 - Per Attribute Tests - For each attribute a test should exists which tests that particular attribute in isolation alongside any required fields.
 
-#### Create documentation for the resource. 
+#### Create documentation for the resource
 
 Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
 
