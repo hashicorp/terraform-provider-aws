@@ -10,6 +10,7 @@ on:
       - internal/**
       - .semgrep.yml
       - .semgrep-service-name*yml
+      - .github/workflows/semgrep-ci.yml
 
 jobs:
   semgrep:
@@ -28,7 +29,7 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name0.yml
+    - run: .github/scripts/semgrep.sh 0
   naming_semgrep1:
     name: Semgrep Naming Scan C-G
     runs-on: ubuntu-latest
@@ -37,7 +38,7 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name1.yml
+    - run: .github/scripts/semgrep.sh 1
   naming_semgrep2:
     name: Semgrep Naming Scan G-Q
     runs-on: ubuntu-latest
@@ -46,7 +47,7 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name2.yml
+    - run: .github/scripts/semgrep.sh 2
   naming_semgrep3:
     name: Semgrep Naming Scan Q-Z
     runs-on: ubuntu-latest
@@ -55,4 +56,4 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name3.yml
+    - run: .github/scripts/semgrep.sh 3

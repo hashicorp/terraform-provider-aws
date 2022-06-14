@@ -51,34 +51,40 @@ func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface
 	plID := d.Get("prefix_list_id").(string)
 	id := ManagedPrefixListEntryCreateID(plID, cidr)
 
-	pl, err := FindManagedPrefixListByID(conn, plID)
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", plID, err)
-	}
-
 	addPrefixListEntry := &ec2.AddPrefixListEntry{Cidr: aws.String(cidr)}
 
 	if v, ok := d.GetOk("description"); ok {
 		addPrefixListEntry.Description = aws.String(v.(string))
 	}
 
-	input := &ec2.ModifyManagedPrefixListInput{
-		AddEntries:     []*ec2.AddPrefixListEntry{addPrefixListEntry},
-		CurrentVersion: pl.Version,
-		PrefixListId:   aws.String(plID),
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = conn.ModifyManagedPrefixList(input)
+		pl, err := FindManagedPrefixListByID(conn, plID)
+
+		if err != nil {
+			return nil, fmt.Errorf("error reading VPC Managed Prefix List (%s): %w", plID, err)
+		}
+
+		input := &ec2.ModifyManagedPrefixListInput{
+			AddEntries:     []*ec2.AddPrefixListEntry{addPrefixListEntry},
+			CurrentVersion: pl.Version,
+			PrefixListId:   aws.String(plID),
+		}
+
+		return conn.ModifyManagedPrefixList(input)
+	}, "IncorrectState", "PrefixListVersionMismatch")
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Managed Prefix List Entry (%s): %w", id, err)
+		return fmt.Errorf("error creating VPC Managed Prefix List Entry (%s): %w", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := WaitManagedPrefixListModified(conn, plID); err != nil {
-		return fmt.Errorf("error waiting for EC2 Managed Prefix List Entry (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for VPC Managed Prefix List Entry (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceManagedPrefixListEntryRead(d, meta)
@@ -98,13 +104,13 @@ func resourceManagedPrefixListEntryRead(d *schema.ResourceData, meta interface{}
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 Managed Prefix List Entry (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VPC Managed Prefix List Entry (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List Entry (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading VPC Managed Prefix List Entry (%s): %w", d.Id(), err)
 	}
 
 	entry := outputRaw.(*ec2.PrefixListEntry)
@@ -121,31 +127,37 @@ func resourceManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface
 	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing VPC Managed Prefix List Entry ID (%s): %w", d.Id(), err)
 	}
 
-	pl, err := FindManagedPrefixListByID(conn, plID)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
+
+		pl, err := FindManagedPrefixListByID(conn, plID)
+
+		if err != nil {
+			return nil, fmt.Errorf("error reading VPC Managed Prefix List (%s): %w", plID, err)
+		}
+
+		input := &ec2.ModifyManagedPrefixListInput{
+			CurrentVersion: pl.Version,
+			PrefixListId:   aws.String(plID),
+			RemoveEntries:  []*ec2.RemovePrefixListEntry{{Cidr: aws.String(cidr)}},
+		}
+
+		return conn.ModifyManagedPrefixList(input)
+	}, "IncorrectState", "PrefixListVersionMismatch")
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", plID, err)
-	}
-
-	input := &ec2.ModifyManagedPrefixListInput{
-		CurrentVersion: pl.Version,
-		PrefixListId:   aws.String(plID),
-		RemoveEntries:  []*ec2.RemovePrefixListEntry{{Cidr: aws.String(cidr)}},
-	}
-
-	_, err = conn.ModifyManagedPrefixList(input)
-
-	if err != nil {
-		return fmt.Errorf("error deleting EC2 Managed Prefix List Entry (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting VPC Managed Prefix List Entry (%s): %w", d.Id(), err)
 	}
 
 	_, err = WaitManagedPrefixListModified(conn, plID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Managed Prefix List Entry (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for VPC Managed Prefix List Entry (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

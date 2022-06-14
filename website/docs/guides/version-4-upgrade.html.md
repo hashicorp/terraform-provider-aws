@@ -3297,7 +3297,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
 
 ## Data Source: aws_subnet_ids
 
-The `aws_subnet_ids` data source has been deprecated and will be removed removed in a future version. Use the `aws_subnets` data source instead.
+The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the `aws_subnets` data source instead.
 
 For example, change a configuration such as
 

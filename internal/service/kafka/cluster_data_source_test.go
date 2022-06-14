@@ -22,7 +22,7 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers", resourceName, "bootstrap_brokers"),
@@ -44,7 +44,7 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q

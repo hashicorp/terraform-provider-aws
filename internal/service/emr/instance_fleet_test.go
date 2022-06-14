@@ -27,7 +27,7 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceFleetConfig(rName),
+				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
@@ -55,7 +55,7 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceFleetConfig(rName),
+				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
@@ -63,7 +63,7 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceFleetZeroCountConfig(rName),
+				Config: testAccInstanceFleetConfig_zeroCount(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
@@ -91,7 +91,7 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceFleetEBSBasicConfig(rName),
+				Config: testAccInstanceFleetConfig_ebsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
@@ -119,7 +119,7 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceFleetFullConfig(rName),
+				Config: testAccInstanceFleetConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
@@ -149,7 +149,7 @@ func TestAccEMRInstanceFleet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceFleetConfig(rName),
+				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceFleetExists(resourceName, &fleet),
 					// EMR Instance Fleet can only be scaled down and are not removed until the
@@ -451,7 +451,7 @@ resource "aws_emr_cluster" "test" {
 }
 `
 
-func testAccInstanceFleetConfig(r string) string {
+func testAccInstanceFleetConfig_basic(r string) string {
 	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
@@ -474,7 +474,7 @@ resource "aws_emr_instance_fleet" "task" {
 `, r)
 }
 
-func testAccInstanceFleetZeroCountConfig(r string) string {
+func testAccInstanceFleetConfig_zeroCount(r string) string {
 	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
@@ -497,7 +497,7 @@ resource "aws_emr_instance_fleet" "task" {
 `, r)
 }
 
-func testAccInstanceFleetEBSBasicConfig(r string) string {
+func testAccInstanceFleetConfig_ebsBasic(r string) string {
 	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
@@ -529,7 +529,7 @@ resource "aws_emr_instance_fleet" "task" {
 `, r)
 }
 
-func testAccInstanceFleetFullConfig(r string) string {
+func testAccInstanceFleetConfig_full(r string) string {
 	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id

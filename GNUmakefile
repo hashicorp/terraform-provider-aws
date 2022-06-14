@@ -27,6 +27,7 @@ gen:
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/*_gen.go
+	rm -f names/caps.md
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	go generate ./...
