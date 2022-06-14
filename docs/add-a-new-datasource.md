@@ -14,7 +14,7 @@ If this is the first addition of a resource or datasource for a new service, ple
 
 For a new resources use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-#### Name the datasource:
+#### Name the datasource
 
 Either by creating the file manually, or using `skaff` to generate a template.
 
@@ -62,7 +62,7 @@ make docs-lint # run documentation linters
 
 See [Raising a Pull Request](raising-a-pull-request.md).
 
-#### Wait for prioritization.
+#### Wait for prioritization
 
-In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our Prioritization guide TODO for full details of the process.
+In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our [prioritization](prioritization.md) guide for full details of the process.
 

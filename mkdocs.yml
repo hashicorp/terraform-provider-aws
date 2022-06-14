@@ -19,6 +19,7 @@ nav:
     - Adding Import Support: add-import-support.md
     - Adding Resource Filtering Support: resource-filtering.md
     - Adding Resource Name Generation: resource-name-generation.md
+    - Adding Resource Tagging Support: resource-tagging.md
     - Adding a Tag Resource: adding-a-tag-resource.md
     - Bugs and Enhancements: bugs-and-enhancements.md
   - Acceptance Testing:
