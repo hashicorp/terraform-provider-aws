@@ -8,6 +8,7 @@ FEATURES:
 
 BUG FIXES:
 
+* resource/aws_dynamodb_table_item: Fix to remove attribute from table item on update ([#25326](https://github.com/hashicorp/terraform-provider-aws/issues/25326))
 * resource/aws_ec2_managed_prefix_list_entry: Fix error when attempting to create or delete multiple list entries ([#25046](https://github.com/hashicorp/terraform-provider-aws/issues/25046))
 
 ## 4.18.0 (June 10, 2022)
