@@ -1,6 +1,8 @@
+# Adding a New AWS Service
+
 AWS frequently launches new services, and Terraform support is frequently desired by the community shortly after launch. Depending on the API surface area of the new service, this could be a major undertaking. The following steps should be followed to prepare for adding the resources that allow for Terraform management of that service.
 
-### Add a Service Client
+## Add a Service Client
 
 
 Before new resources are submitted, please raise a separate pull request containing just the new AWS Go SDK service client. Doing so will pull the AWS Go SDK service code into the project at the current version. Since the AWS Go SDK is updated frequently, these pull requests can easily have merge conflicts or be out of date. The maintainers prioritize reviewing and merging these quickly to prevent those situations.
@@ -18,7 +20,7 @@ To add an AWS Go SDK service client:
   go mod tidy
   ```
 
-### Perform Service Design
+## Perform Service Design
 
 Before adding a new service to the provider its a good idea to familiarize yourself with the primary workflows practitioners are likely to want to accomplish with the provider to ensure the provider design can solve for for this. Its not always necessary to cover 100% of the AWS service offering to unblock most workflows.
 
