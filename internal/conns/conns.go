@@ -1742,6 +1742,15 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.LightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		switch r.Operation.Name {
+		case "CreateContainerService", "UpdateContainerService", "DeleteContainerService":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, " Please try again in a few minutes") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.OrganizationsConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
