@@ -50,7 +50,8 @@ The following arguments are supported:
   e.g., `CONTAINS`, `CONTAINS_WORD` or `EXACTLY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-PositionalConstraint)
   for all supported values.
-* `target_string` - (Optional) The value that you want to search forE.g., `HEADER`, `METHOD` or `BODY`.
+* `target_string` - (Optional) The value that you want to search for.
+  e.g., `badrefer1`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-TargetString)
   for all supported values.
 * `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
