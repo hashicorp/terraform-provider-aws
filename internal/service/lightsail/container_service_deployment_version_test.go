@@ -584,7 +584,7 @@ resource "aws_lightsail_container_service_deployment_version" "test" {
     container_name = %[1]q
     image          = "amazon/amazon-lightsail:hello-world"
     ports = {
-     %[2]q = %[3]q
+      %[2]q = %[3]q
     }
   }
 
@@ -602,7 +602,7 @@ resource "aws_lightsail_container_service_deployment_version" "test" {
     container_name = %[1]q
     image          = "amazon/amazon-lightsail:hello-world"
     ports = {
-	  %[2]q = %[3]q
+      %[2]q = %[3]q
       %[4]q = %[5]q
     }
   }
