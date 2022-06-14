@@ -134,7 +134,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/batch
         - internal/service/devicefarm
     patterns:
       - pattern: func $NAME( ... ) { ... }
@@ -151,7 +150,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/batch
         - internal/service/devicefarm
     patterns:
       - pattern: const $NAME = ...
@@ -168,7 +166,6 @@ rules:
       include:
         - internal
       exclude:
-        - internal/service/batch
         - internal/service/devicefarm
     patterns:
       - pattern: var $NAME = ...
@@ -243,7 +240,6 @@ rules:
         - internal/service/appstream
         - internal/service/autoscaling
         - internal/service/backup
-        - internal/service/batch
         - internal/service/budgets
         - internal/service/ce
         - internal/service/chime
@@ -1066,6 +1062,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)AutoScalingPlans"
     severity: WARNING
+  - id: batch-in-func-name
+    languages:
+      - go
+    message: Do not use "Batch" in func name inside batch package
+    paths:
+      include:
+        - internal/service/batch
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Batch"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: batch-in-test-name
+    languages:
+      - go
+    message: Include "Batch" in test name
+    paths:
+      include:
+        - internal/service/batch/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBatch"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: batch-in-const-name
+    languages:
+      - go
+    message: Do not use "Batch" in const name inside batch package
+    paths:
+      include:
+        - internal/service/batch
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Batch"
+    severity: WARNING
+  - id: batch-in-var-name
+    languages:
+      - go
+    message: Do not use "Batch" in var name inside batch package
+    paths:
+      include:
+        - internal/service/batch
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Batch"
+    severity: WARNING    
   - id: ce-in-func-name
     languages:
       - go
