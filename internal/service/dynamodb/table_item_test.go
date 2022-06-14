@@ -15,10 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDynamoDBTableItem_basic(t *testing.T) {
+func TestAccTableItem_basic(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	hashKey := "hashKey"
 	itemContent := `{
 	"hashKey": {"S": "something"},
@@ -48,10 +48,10 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
+func TestAccTableItem_rangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
 	itemContent := `{
@@ -84,11 +84,11 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
+func TestAccTableItem_withMultipleItems(t *testing.T) {
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
 	firstItem := `{
@@ -135,7 +135,7 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
+func TestAccTableItem_wonkyItems(t *testing.T) {
 	var conf1 dynamodb.GetItemOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -172,10 +172,10 @@ func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableItem_update(t *testing.T) {
+func TestAccTableItem_update(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	hashKey := "hashKey"
 
 	itemBefore := `{
@@ -222,10 +222,10 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
+func TestAccTableItem_updateWithRangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
 
