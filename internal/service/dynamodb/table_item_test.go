@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDynamoDBTableItem_basic(t *testing.T) {
@@ -286,21 +286,16 @@ func testAccCheckItemDestroy(s *terraform.State) error {
 			return err
 		}
 
-		result, err := conn.GetItem(&dynamodb.GetItemInput{
-			TableName:      aws.String(attrs["table_name"]),
-			ConsistentRead: aws.Bool(true),
-			Key:            tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"]),
-			//ProjectionExpression:     tfdynamodb.BuildProjectionExpression(attributes),
-			//ExpressionAttributeNames: tfdynamodb.BuildExpressionAttributeNames(attributes),
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-				return nil
-			}
-			return fmt.Errorf("Error retrieving DynamoDB table item: %s", err)
+		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+
+		_, err = tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		if result.Item == nil {
-			return nil
+
+		if err != nil {
+			return err
 		}
 
 		return fmt.Errorf("DynamoDB table item %s still exists.", rs.Primary.ID)
@@ -328,15 +323,12 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 			return err
 		}
 
-		result, err := conn.GetItem(&dynamodb.GetItemInput{
-			TableName:                aws.String(attrs["table_name"]),
-			ConsistentRead:           aws.Bool(true),
-			Key:                      tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"]),
-			ProjectionExpression:     tfdynamodb.BuildProjectionExpression(attributes),
-			ExpressionAttributeNames: tfdynamodb.BuildExpressionAttributeNames(attributes),
-		})
+		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+
+		result, err := tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
+
 		if err != nil {
-			return fmt.Errorf("Problem getting table item '%s': %s", rs.Primary.ID, err)
+			return err
 		}
 
 		*item = *result

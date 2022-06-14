@@ -10,8 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -179,25 +181,17 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	result, err := conn.GetItem(&dynamodb.GetItemInput{
-		TableName:      aws.String(tableName),
-		ConsistentRead: aws.Bool(true),
-		Key:            BuildTableItemqueryKey(attributes, hashKey, rangeKey),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Dynamodb Table Item (%s) not found, error code (404)", d.Id())
-			d.SetId("")
-			return nil
-		}
+	key := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+	result, err := FindTableItem(conn, tableName, key)
 
-		return fmt.Errorf("Error retrieving DynamoDB table item: %s", err)
-	}
-
-	if result.Item == nil {
-		log.Printf("[WARN] Dynamodb Table Item (%s) not found", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Dynamodb Table Item (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading DynamoDB Table Item (%s): %w", d.Id(), err)
 	}
 
 	// The record exists, now test if it differs from what is desired
@@ -238,6 +232,33 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // Helpers
+
+func FindTableItem(conn *dynamodb.DynamoDB, tableName string, key map[string]*dynamodb.AttributeValue) (*dynamodb.GetItemOutput, error) {
+	in := &dynamodb.GetItemInput{
+		TableName:      aws.String(tableName),
+		ConsistentRead: aws.Bool(true),
+		Key:            key,
+	}
+
+	out, err := conn.GetItem(in)
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Item == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
 
 func BuildExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
 	names := map[string]*string{}
