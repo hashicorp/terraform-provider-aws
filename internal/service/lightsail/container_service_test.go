@@ -31,7 +31,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigBasic(rName),
+				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -55,7 +55,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContainerServiceConfigScale(rName),
+				Config: testAccContainerServiceConfig_Scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
@@ -80,7 +80,7 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigBasic(rName),
+				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceContainerService(), resourceName),
@@ -107,14 +107,14 @@ func TestAccLightsailContainerService_Name(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigBasic(rName1),
+				Config: testAccContainerServiceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
-				Config: testAccContainerServiceConfigBasic(rName2),
+				Config: testAccContainerServiceConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -139,14 +139,14 @@ func TestAccLightsailContainerService_IsDisabled(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigBasic(rName),
+				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "false"),
 				),
 			},
 			{
-				Config: testAccContainerServiceConfigIsDisabled(rName),
+				Config: testAccContainerServiceConfig_Disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "true"),
@@ -171,14 +171,14 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigBasic(rName),
+				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "power", lightsail.ContainerServicePowerNameNano),
 				),
 			},
 			{
-				Config: testAccContainerServiceConfigPower(rName),
+				Config: testAccContainerServiceConfig_Power(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "power", lightsail.ContainerServicePowerNameMicro),
@@ -202,7 +202,7 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccContainerServiceConfigPublicDomainNames(rName),
+				Config:      testAccContainerServiceConfig_PublicDomainNames(rName),
 				ExpectError: regexp.MustCompile(`do not exist`),
 			},
 		},
@@ -224,14 +224,14 @@ func TestAccLightsailContainerService_Scale(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigBasic(rName),
+				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 				),
 			},
 			{
-				Config: testAccContainerServiceConfigScale(rName),
+				Config: testAccContainerServiceConfig_Scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
@@ -257,7 +257,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfigTag1(rName, "key1", "value1"),
+				Config: testAccContainerServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -270,7 +270,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContainerServiceConfigTag2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccContainerServiceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -279,7 +279,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContainerServiceConfigTag1(rName, "key2", "value2"),
+				Config: testAccContainerServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -334,7 +334,7 @@ func testAccCheckContainerServiceExists(resourceName string) resource.TestCheckF
 	}
 }
 
-func testAccContainerServiceConfigBasic(rName string) string {
+func testAccContainerServiceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
@@ -344,7 +344,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfigIsDisabled(rName string) string {
+func testAccContainerServiceConfig_Disabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name        = %q
@@ -355,7 +355,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfigPower(rName string) string {
+func testAccContainerServiceConfig_Power(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
@@ -365,7 +365,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfigPublicDomainNames(rName string) string {
+func testAccContainerServiceConfig_PublicDomainNames(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
@@ -385,7 +385,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfigScale(rName string) string {
+func testAccContainerServiceConfig_Scale(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
@@ -395,7 +395,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfigTag1(rName, tagKey1, tagValue1 string) string {
+func testAccContainerServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %[1]q
@@ -409,7 +409,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccContainerServiceConfigTag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccContainerServiceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q

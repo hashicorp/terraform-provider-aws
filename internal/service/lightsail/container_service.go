@@ -146,7 +146,7 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("public_domain_names"); ok {
-		input.PublicDomainNames = expandLightsailContainerServicePublicDomainNames(v.([]interface{}))
+		input.PublicDomainNames = expandContainerServicePublicDomainNames(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -206,7 +206,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("scale", cs.Scale)
 	d.Set("is_disabled", cs.IsDisabled)
 
-	if err := d.Set("public_domain_names", flattenLightsailContainerServicePublicDomainNames(cs.PublicDomainNames)); err != nil {
+	if err := d.Set("public_domain_names", flattenContainerServicePublicDomainNames(cs.PublicDomainNames)); err != nil {
 		return diag.Errorf("error setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set("arn", cs.Arn)
@@ -235,7 +235,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		publicDomainNames, _ := lightsailContainerServicePublicDomainNamesChanged(d)
+		publicDomainNames, _ := containerServicePublicDomainNamesChanged(d)
 
 		input := &lightsail.UpdateContainerServiceInput{
 			ServiceName:       aws.String(d.Id()),
@@ -296,7 +296,7 @@ func resourceContainerServiceDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func expandLightsailContainerServicePublicDomainNames(rawPublicDomainNames []interface{}) map[string][]*string {
+func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{}) map[string][]*string {
 	if len(rawPublicDomainNames) == 0 {
 		return nil
 	}
@@ -325,7 +325,7 @@ func expandLightsailContainerServicePublicDomainNames(rawPublicDomainNames []int
 	return resultMap
 }
 
-func flattenLightsailContainerServicePublicDomainNames(domainNames map[string][]*string) []interface{} {
+func flattenContainerServicePublicDomainNames(domainNames map[string][]*string) []interface{} {
 	if domainNames == nil {
 		return []interface{}{}
 	}
@@ -348,10 +348,10 @@ func flattenLightsailContainerServicePublicDomainNames(domainNames map[string][]
 	}
 }
 
-func lightsailContainerServicePublicDomainNamesChanged(d *schema.ResourceData) (map[string][]*string, bool) {
+func containerServicePublicDomainNamesChanged(d *schema.ResourceData) (map[string][]*string, bool) {
 	o, n := d.GetChange("public_domain_names")
-	oldPublicDomainNames := expandLightsailContainerServicePublicDomainNames(o.([]interface{}))
-	newPublicDomainNames := expandLightsailContainerServicePublicDomainNames(n.([]interface{}))
+	oldPublicDomainNames := expandContainerServicePublicDomainNames(o.([]interface{}))
+	newPublicDomainNames := expandContainerServicePublicDomainNames(n.([]interface{}))
 
 	changed := !reflect.DeepEqual(oldPublicDomainNames, newPublicDomainNames)
 	if changed {
