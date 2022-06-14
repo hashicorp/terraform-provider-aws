@@ -54,7 +54,7 @@ Add a file covering the use of the new resource in `website/docs/r/<service>_<na
 
 Run `go fmt` to format your code, and install and run all linters to detect and resolve any structural issues with the implementation or documentation.
 
-```bash
+```sh
 go fmt
 make tools     # install linters and dependencies
 make lint      # run provider linters

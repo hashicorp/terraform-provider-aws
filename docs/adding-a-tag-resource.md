@@ -170,7 +170,7 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_{service}_tag` can be imported by using the {SERVICE} resource identifier and key, separated by a comma (`,`), e.g.
 
-```
+```console
 $ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
 ```
 ``````

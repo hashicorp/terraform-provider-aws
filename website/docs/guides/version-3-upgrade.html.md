@@ -831,7 +831,7 @@ Switch your Terraform configuration to the `OAuthToken` element in the `action` 
 
 For example, given this previous configuration:
 
-```bash
+```console
 $ GITHUB_TOKEN=<token> terraform apply
 ```
 
@@ -862,7 +862,7 @@ resource "aws_codepipeline" "example" {
 
 The configuration could be updated as follows:
 
-```bash
+```console
 $ TF_VAR_github_token=<token> terraform apply
 ```
 

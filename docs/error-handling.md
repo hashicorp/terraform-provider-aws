@@ -89,7 +89,7 @@ The recommendation for error message checking is to be just specific enough to c
 
 For example, given this error code and message:
 
-```
+```sh
 InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
 ```
 
@@ -157,7 +157,7 @@ Invoked in the resource via the `schema.Resource` type `Create`/`CreateContext` 
 
 During resource creation, Terraform CLI expects either a properly applied state for the new resource or an error. To signal proper resource existence, the Terraform Plugin SDK uses an underlying resource identifier (set via `d.SetId(/* some value */)`). If for some reason the resource creation is returned without an error, but also without the resource identifier being set, Terraform CLI will return an error such as:
 
-```
+```sh
 Error: Provider produced inconsistent result after apply
 
 When applying changes to aws_sns_topic_subscription.sqs,

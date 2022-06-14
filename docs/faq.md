@@ -57,7 +57,7 @@ Please note that this new region requires a manual process to enable in your acc
 
 If the region is not enabled properly, or the enablement process is still in progress, you may receive errors like these:
 
-```
+```console
 $ terraform apply
 
 Error: error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid.
