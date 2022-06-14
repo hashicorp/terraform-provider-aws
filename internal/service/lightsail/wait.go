@@ -2,6 +2,7 @@ package lightsail
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -95,6 +96,29 @@ func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Lightsail,
 	if output, ok := outputRaw.(*lightsail.ContainerService); ok {
 		if detail := output.StateDetail; detail != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(detail.Code), aws.StringValue(detail.Message)))
+		}
+
+		return err
+	}
+
+	return err
+}
+
+func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *lightsail.Lightsail, serviceName string, version int, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{lightsail.ContainerServiceDeploymentStateActivating},
+		Target:     []string{lightsail.ContainerServiceDeploymentStateActive},
+		Refresh:    statusContainerServiceDeploymentVersion(ctx, conn, serviceName, version),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lightsail.ContainerServiceDeployment); ok {
+		if aws.StringValue(output.State) == lightsail.ContainerServiceDeploymentStateFailed {
+			tfresource.SetLastError(err, errors.New("The deployment failed. Use the GetContainerLog action to view the log events for the containers in the deployment to try to determine the reason for the failure."))
 		}
 
 		return err

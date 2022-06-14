@@ -36,7 +36,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "power", "nano"),
+					resource.TestCheckResourceAttr(resourceName, "power", lightsail.ContainerServicePowerNameNano),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -174,14 +174,14 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 				Config: testAccContainerServiceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "power", "nano"),
+					resource.TestCheckResourceAttr(resourceName, "power", lightsail.ContainerServicePowerNameNano),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfigPower(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "power", "micro"),
+					resource.TestCheckResourceAttr(resourceName, "power", lightsail.ContainerServicePowerNameMicro),
 				),
 			},
 		},
@@ -418,7 +418,7 @@ resource "aws_lightsail_container_service" "test" {
 
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)

@@ -1744,8 +1744,13 @@ func (c *Config) Client() (interface{}, error) {
 
 	client.LightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		switch r.Operation.Name {
-		case "CreateContainerService", "UpdateContainerService", "DeleteContainerService":
-			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, " Please try again in a few minutes") {
+		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
+				r.Retryable = aws.Bool(true)
+			}
+		case "DeleteContainerService":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
+				tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
