@@ -63,7 +63,7 @@ make docs-lint # run documentation linters
 
 ### Raise a Pull Request
 
-See [Raising a Pull Request](raising-a-pull-request).
+See [Raising a Pull Request](raising-a-pull-request.md).
 
 ### Wait for Prioritization
 

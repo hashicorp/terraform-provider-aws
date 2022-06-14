@@ -64,7 +64,7 @@ Allow a resource, to either fully, or partially generate its own resource names.
 
 Many AWS resources allow [assigning metadata via tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) which can be enormously useful to manage and track cloud resources from a governance and cost perspective. Often though, new aws services or features are launched without tagging support, which can follow later. In this case tagging support will need to be explicitly added to those resources. Typically this support follows an established pattern so support is normally straightforward to add.
 
-- [Add tag support for a resource](resource-tagging)
+- [Add tag support for a resource](resource-tagging.md)
 
 ### Add Import Support for a Resource
 
