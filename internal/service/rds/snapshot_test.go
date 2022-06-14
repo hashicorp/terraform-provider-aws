@@ -28,12 +28,12 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDbSnapshotDestroy,
+		CheckDestroy:      testAccCheckDBSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
 				),
@@ -60,12 +60,12 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDbSnapshotDestroy,
+		CheckDestroy:      testAccCheckDBSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -78,7 +78,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -87,7 +87,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -109,13 +109,13 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDbSnapshotDestroy,
+		CheckDestroy:      testAccCheckDBSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
-					testAccCheckDbSnapshotDisappears(&v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,7 +123,7 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
+func testAccCheckDBSnapshotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -155,7 +155,7 @@ func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckDBSnapshotExists(n string, v *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -183,7 +183,7 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 	}
 }
 
-func testAccCheckDbSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckDBSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 

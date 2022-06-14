@@ -64,7 +64,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyTagsConfig1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -77,7 +77,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -86,7 +86,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyTagsConfig1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

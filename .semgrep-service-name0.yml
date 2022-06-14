@@ -175,8 +175,6 @@ rules:
     paths:
       include:
         - internal
-      exclude:
-        - internal/service/rds
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
