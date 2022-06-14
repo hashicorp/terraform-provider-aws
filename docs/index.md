@@ -16,13 +16,13 @@ Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by 
 
 Allow the management of a logical resource within AWS by adding a new resource to the Terraform AWS Provider.
 
-- [Name the resource](add-a-new-resource#add-a-new-resource)
+- [Name the Resource](add-a-new-resource#add-a-new-resource)
 - [Fork the Provider](add-a-new-resource#fork-the-provider)
 - [Fill out the Resource Schema](add-a-new-resource#fill-out-the-resource-schema)
 - [Implement CRUD Handlers](add-a-new-resource#implement-crud-handlers)
-- [Write passing Acceptance Tests](add-a-new-resource#write-passing-acceptance-tests)
+- [Write Passing Acceptance Tests](add-a-new-resource#write-passing-acceptance-tests)
 - [Create Documentation for the Resource](add-a-new-resource#create-documentation-for-the-resource)
-- [Ensure format and lint checks are passing](add-a-new-resource#ensure-format-and-link-checks-are-passing)
+- [Ensure Format and Lint Checks are Passing](add-a-new-resource#ensure-format-and-link-checks-are-passing)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
@@ -31,13 +31,13 @@ Allow the management of a logical resource within AWS by adding a new resource t
 Allow reading an existing AWS resource by id or filter, and allow its use within Terraform configurations.
 
 
-- [Name the resource](add-a-new-datasource#add-a-new-datasource)
+- [Name the Datasource](add-a-new-datasource#add-a-new-datasource)
 - [Fork the Provider](add-a-new-datasource#fork-the-provider)
-- [Fill out the Resource Schema](add-a-new-datasource#fill-out-the-datasource-schema)
+- [Fill out the Datasource Schema](add-a-new-datasource#fill-out-the-datasource-schema)
 - [Implement CRUD Handlers](add-a-new-datasource#implement-crud-handlers)
-- [Write passing Acceptance Tests](add-a-new-datasource#write-passing-acceptance-tests)
+- [Write Passing Acceptance Tests](add-a-new-datasource#write-passing-acceptance-tests)
 - [Create Documentation for the Resource](add-a-new-resource#create-documentation-for-the-resource)
-- [Ensure format and lint checks are passing](add-a-new-datasource#ensure-format-and-link-checks-are-passing)
+- [Ensure Format and Lint Checks are Passing](add-a-new-datasource#ensure-format-and-link-checks-are-passing)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
