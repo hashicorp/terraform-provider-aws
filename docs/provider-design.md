@@ -4,21 +4,6 @@ _Please Note: This documentation is intended for Terraform AWS Provider code dev
 
 The Terraform AWS Provider follows the guidelines established in the [HashiCorp Provider Design Principles](https://www.terraform.io/plugin/hashicorp-provider-design-principles). That general documentation provides many high-level design points gleaned from years of experience with Terraform's design and implementation concepts. Sections below will expand on specific design details between that documentation and this provider, while others will capture other pertinent information that may not be covered there. Other pages of the contributing guide cover implementation details such as code, testing, and documentation specifics.
 
-- [API and SDK Boundary](#api-and-sdk-boundary)
-- [Infrastructure as Code Suitability](#infrastructure-as-code-suitability)
-- [Resource Type Considerations](#resource-type-considerations)
-    - [Authorization and Acceptance Resources](#authorization-and-acceptance-resources)
-    - [Cross-Service Functionality](#cross-service-functionality)
-    - [Data Sources](#data-sources)
-        - [Plural Data Sources](#plural-data-sources)
-        - [Singular Data Sources](#singular-data-sources)
-    - [IAM Resource-Based Policy Resources](#iam-resource-based-policy-resources)
-    - [Managing Resource Running State](#managing-resource-running-state)
-    - [Task Execution and Waiter Resources](#task-execution-and-waiter-resources)
-    - [Versioned Resources](#versioned-resources)
-- [Other Considerations](#other-considerations)
-    - [AWS Credential Exfiltration](#aws-credential-exfiltration)
-
 ## API and SDK Boundary
 
 The AWS provider implements support for the [AWS](https://aws.amazon.com/) service APIs using the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/). The API and SDK limits extend to the provider. In general, SDK operations manage the lifecycle of AWS components, such as creating, describing, updating, and deleting a database. Operations do not usually handle functionality within those components, such as executing a query on a database. If you are interested in other APIs/SDKs, we invite you to view the many Terraform Providers available, as each has a community of domain expertise.
