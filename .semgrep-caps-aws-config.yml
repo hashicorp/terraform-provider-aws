@@ -367,7 +367,6 @@ rules:
         - internal/service/cloudsearch
         - internal/service/cloudtrail
         - internal/service/cloudwatch
-        - internal/service/codeartifact
         - internal/service/codecommit
         - internal/service/codepipeline
         - internal/service/codestarconnections
@@ -433,18 +432,6 @@ rules:
     paths:
       include:
         - internal/service/**/*_test.go
-      exclude:
-        - internal/service/appmesh
-        - internal/service/codeartifact
-        - internal/service/codecommit
-        - internal/service/ecr
-        - internal/service/ecrpublic
-        - internal/service/ecs
-        - internal/service/elasticbeanstalk
-        - internal/service/events
-        - internal/service/kinesis
-        - internal/service/meta
-        - internal/service/rds
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"

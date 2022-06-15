@@ -21,7 +21,7 @@ func TestAccCodeCommitApprovalRuleTemplateDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckApprovalRuleTemplateDataSourceConfig(rName),
+				Config: testAccApprovalRuleTemplateDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -36,7 +36,7 @@ func TestAccCodeCommitApprovalRuleTemplateDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckApprovalRuleTemplateDataSourceConfig(rName string) string {
+func testAccApprovalRuleTemplateDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

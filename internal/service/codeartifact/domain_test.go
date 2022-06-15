@@ -27,7 +27,7 @@ func testAccDomain_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainBasicConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
@@ -60,7 +60,7 @@ func testAccDomain_defaultEncryptionKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainDefaultEncryptionKeyConfig(rName),
+				Config: testAccDomainConfig_defaultEncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
@@ -92,7 +92,7 @@ func testAccDomain_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTags1Config(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,7 +105,7 @@ func testAccDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -114,7 +114,7 @@ func testAccDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainTags1Config(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,7 +135,7 @@ func testAccDomain_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainDefaultEncryptionKeyConfig(rName),
+				Config: testAccDomainConfig_defaultEncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
@@ -207,7 +207,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDomainBasicConfig(rName string) string {
+func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -221,7 +221,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
   domain = %[1]q
@@ -233,7 +233,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDomainTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
   domain = %[1]q
@@ -246,7 +246,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDomainDefaultEncryptionKeyConfig(rName string) string {
+func testAccDomainConfig_defaultEncryptionKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
   domain = %[1]q

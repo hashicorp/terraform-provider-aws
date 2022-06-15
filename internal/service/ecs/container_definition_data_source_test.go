@@ -22,7 +22,7 @@ func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckContainerDefinitionDataSourceConfig(clusterName, tdName, svcName),
+				Config: testAccContainerDefinitionDataSourceConfig_basic(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "image", "mongo:latest"),
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "image_digest", "latest"),
@@ -36,7 +36,7 @@ func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T
 	})
 }
 
-func testAccCheckContainerDefinitionDataSourceConfig(clusterName, tdName, svcName string) string {
+func testAccContainerDefinitionDataSourceConfig_basic(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = "%s"
