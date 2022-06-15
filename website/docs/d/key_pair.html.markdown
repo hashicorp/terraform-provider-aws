@@ -12,11 +12,13 @@ Use this data source to get information about a specific EC2 Key Pair.
 
 ## Example Usage
 
-The following example shows how to get a EC2 Key Pair from its name.
+The following example shows how to get a EC2 Key Pair including the public key material from its name.
 
 ```terraform
 data "aws_key_pair" "example" {
-  key_name = "test"
+  key_name           = "test"
+  include_public_key = true
+
   filter {
     name   = "tag:Component"
     values = ["web"]
@@ -44,6 +46,7 @@ whose data will be exported as attributes.
 
 * `key_pair_id` - (Optional) The Key Pair ID.
 * `key_name` - (Optional) The Key Pair name.
+* `include_public_key` - (Optional) Whether to include the public key material in the response.
 * `filter` -  (Optional) Custom filter block as described below.
 
 ### filter Configuration Block
@@ -60,4 +63,5 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the Key Pair.
 * `arn` - The ARN of the Key Pair.
 * `fingerprint` - The SHA-1 digest of the DER encoded private key.
+* `public_key` - The public key material.
 * `tags` - Any tags assigned to the Key Pair.
