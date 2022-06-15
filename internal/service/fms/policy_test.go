@@ -358,15 +358,15 @@ resource "aws_fms_policy" "test" {
     type                 = "WAF"
     managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
 
-	policy_option {
-	  network_firewall_policy {
+    policy_option {
+      network_firewall_policy {
         firewall_deployment_model = "CENTRALIZED"
       }
 
-	  thirdparty_firewall_policy {
-		firewall_deployment_model = "DISTRIBUTED"
-	  }
-	}
+      thirdparty_firewall_policy {
+        firewall_deployment_model = "DISTRIBUTED"
+      }
+    }
   }
 
   depends_on = [aws_fms_admin_account.test]
