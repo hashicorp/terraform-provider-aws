@@ -21,3 +21,6 @@ Most contributions to the provider will take the form of small additions or bug-
 - __Dependency updates__: Create a separate PR if you are updating dependencies.
    This is to avoid conflicts as version updates tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
+- __Changelog entry__: Assuming the code change affects Terraform operators,
+   the relevant PR ought to include a user-facing [changelog entry](changelog-process.md)
+   describing the new behavior.
