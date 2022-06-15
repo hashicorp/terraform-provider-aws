@@ -29,6 +29,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"arn": {
@@ -38,12 +39,15 @@ func ResourceAnomalySubscription() *schema.Resource {
 			"frequency": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{costexplorer.AnomalySubscriptionFrequencyDaily, costexplorer.AnomalySubscriptionFrequencyImmediate, costexplorer.AnomalySubscriptionFrequencyWeekly}, false),
+				ValidateFunc: validation.StringInSlice(costexplorer.AnomalySubscriptionFrequency_Values(), false),
 			},
 			"monitor_arn_list": {
 				Type:     schema.TypeList,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`arn:aws[-a-z0-9]*:[a-z0-9]+:[-a-z0-9]*:[0-9]{12}:[-a-zA-Z0-9/:_]+`), "Must be a valid anomaly monitor ARN"),
+				},
 			},
 			"subscriber": {
 				Type:     schema.TypeSet,
@@ -63,8 +67,9 @@ func ResourceAnomalySubscription() *schema.Resource {
 				},
 			},
 			"threshold": {
-				Type:     schema.TypeFloat,
-				Required: true,
+				Type:         schema.TypeFloat,
+				Required:     true,
+				ValidateFunc: validation.FloatAtLeast(0.0),
 			},
 			"name": {
 				Type:     schema.TypeString,
