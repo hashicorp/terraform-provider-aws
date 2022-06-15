@@ -394,7 +394,6 @@ rules:
         - internal/service/grafana
         - internal/service/guardduty
         - internal/service/iam
-        - internal/service/identitystore
         - internal/service/iot
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
