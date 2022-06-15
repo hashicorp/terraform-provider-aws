@@ -914,9 +914,9 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	// override hosted_zone_id from flattenDistributionConfig
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+		d.Set("hosted_zone_id", cnRoute53ZoneID)
 	} else {
-		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+		d.Set("hosted_zone_id", route53ZoneID)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))

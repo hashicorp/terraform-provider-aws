@@ -19,7 +19,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_budgets_budget_action", &resource.Sweeper{
 		Name: "aws_budgets_budget_action",
-		F:    sweepBudgetActionss,
+		F:    sweepBudgetActions,
 	})
 
 	resource.AddTestSweepers("aws_budgets_budget", &resource.Sweeper{
@@ -28,7 +28,7 @@ func init() {
 	})
 }
 
-func sweepBudgetActionss(region string) error {
+func sweepBudgetActions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -78,7 +78,7 @@ func sweepBudgetActionss(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepBudgets(region string) error {
+func sweepBudgets(region string) error { // nosemgrep:budgets-in-func-name
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
