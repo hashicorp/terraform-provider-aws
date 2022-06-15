@@ -10,12 +10,12 @@ func TestAccFMS_serial(t *testing.T) {
 			"basic": testAccAdminAccount_basic,
 		},
 		"Policy": {
-			"basic":                  TestAccPolicy_basic,
-			"cloudfrontDistribution": TestAccPolicy_cloudFrontDistribution,
-			"includeMap":             TestAccPolicy_includeMap,
-			"update":                 TestAccPolicy_update,
-			"resourceTags":           TestAccPolicy_resourceTags,
-			"tags":                   TestAccPolicy_tags,
+			"basic":                  TestAccFMSPolicy_basic,
+			"cloudfrontDistribution": TestAccFMSPolicy_cloudFrontDistribution,
+			"includeMap":             TestAccFMSPolicy_includeMap,
+			"update":                 TestAccFMSPolicy_update,
+			"resourceTags":           TestAccFMSPolicy_resourceTags,
+			"tags":                   TestAccFMSPolicy_tags,
 		},
 	}
 

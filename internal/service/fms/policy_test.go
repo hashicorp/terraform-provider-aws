@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccPolicy_basic(t *testing.T) {
+func TestAccFMSPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
@@ -50,7 +50,7 @@ func TestAccPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccPolicy_cloudFrontDistribution(t *testing.T) {
+func TestAccFMSPolicy_cloudFrontDistribution(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
@@ -83,7 +83,7 @@ func TestAccPolicy_cloudFrontDistribution(t *testing.T) {
 	})
 }
 
-func TestAccPolicy_includeMap(t *testing.T) {
+func TestAccFMSPolicy_includeMap(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
@@ -116,7 +116,7 @@ func TestAccPolicy_includeMap(t *testing.T) {
 	})
 }
 
-func TestAccPolicy_update(t *testing.T) {
+func TestAccFMSPolicy_update(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
@@ -147,7 +147,7 @@ func TestAccPolicy_update(t *testing.T) {
 	})
 }
 
-func TestAccPolicy_policyOption(t *testing.T) {
+func TestAccFMSPolicy_policyOption(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
@@ -188,7 +188,7 @@ func TestAccPolicy_policyOption(t *testing.T) {
 	})
 }
 
-func TestAccPolicy_resourceTags(t *testing.T) {
+func TestAccFMSPolicy_resourceTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
@@ -223,7 +223,7 @@ func TestAccPolicy_resourceTags(t *testing.T) {
 	})
 }
 
-func TestAccPolicy_tags(t *testing.T) {
+func TestAccFMSPolicy_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
