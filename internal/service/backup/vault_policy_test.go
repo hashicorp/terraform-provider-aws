@@ -27,7 +27,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultPolicyConfig(rName),
+				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Id\":\"default\".+"))),
@@ -38,7 +38,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupVaultPolicyConfigUpdated(rName),
+				Config: testAccVaultPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Id\":\"default\".+")),
@@ -61,7 +61,7 @@ func TestAccBackupVaultPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultPolicyConfig(rName),
+				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultPolicy(), resourceName),
@@ -85,7 +85,7 @@ func TestAccBackupVaultPolicy_Disappears_vault(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultPolicyConfig(rName),
+				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), vaultResourceName),
@@ -108,13 +108,13 @@ func TestAccBackupVaultPolicy_ignoreEquivalent(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultPolicyConfig(rName),
+				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("\"Version\":\"2012-10-17\""))),
 			},
 			{
-				Config:   testAccBackupVaultPolicyNewOrderConfig(rName),
+				Config:   testAccVaultPolicyConfig_newOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -129,7 +129,7 @@ func testAccCheckVaultPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfbackup.FindBackupVaultAccessPolicyByName(conn, rs.Primary.ID)
+		_, err := tfbackup.FindVaultAccessPolicyByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -158,7 +158,7 @@ func testAccCheckVaultPolicyExists(name string, vault *backup.GetBackupVaultAcce
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
-		output, err := tfbackup.FindBackupVaultAccessPolicyByName(conn, rs.Primary.ID)
+		output, err := tfbackup.FindVaultAccessPolicyByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -170,7 +170,7 @@ func testAccCheckVaultPolicyExists(name string, vault *backup.GetBackupVaultAcce
 	}
 }
 
-func testAccBackupVaultPolicyConfig(rName string) string {
+func testAccVaultPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -205,7 +205,7 @@ resource "aws_backup_vault_policy" "test" {
 `, rName)
 }
 
-func testAccBackupVaultPolicyConfigUpdated(rName string) string {
+func testAccVaultPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -241,7 +241,7 @@ resource "aws_backup_vault_policy" "test" {
 `, rName)
 }
 
-func testAccBackupVaultPolicyNewOrderConfig(rName string) string {
+func testAccVaultPolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = %[1]q

@@ -29,7 +29,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportPlanConfig(rName, rName2, originalDescription),
+				Config: testAccReportPlanConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -52,7 +52,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReportPlanConfig(rName, rName2, updatedDescription),
+				Config: testAccReportPlanConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -87,7 +87,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportPlanConfig(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -110,7 +110,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReportPlanConfigTags1(rName, rName2, description),
+				Config: testAccReportPlanConfig_tags1(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -134,7 +134,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReportPlanConfigTags2(rName, rName2, description),
+				Config: testAccReportPlanConfig_tags2(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -171,7 +171,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportPlanConfig(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -194,7 +194,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReportPlanReportDeliveryChannelConfig(rName, rName2, description),
+				Config: testAccReportPlanConfig_deliveryChannel(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -230,7 +230,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckReportPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportPlanConfig(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(resourceName, &reportPlan),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceReportPlan(), resourceName),
@@ -320,7 +320,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
 `, bucketName)
 }
 
-func testAccReportPlanConfig(rName, rName2, label string) string {
+func testAccReportPlanConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
@@ -344,7 +344,7 @@ resource "aws_backup_report_plan" "test" {
 `, rName2, label))
 }
 
-func testAccReportPlanConfigTags1(rName, rName2, label string) string {
+func testAccReportPlanConfig_tags1(rName, rName2, label string) string {
 	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
@@ -369,7 +369,7 @@ resource "aws_backup_report_plan" "test" {
 `, rName2, label))
 }
 
-func testAccReportPlanConfigTags2(rName, rName2, label string) string {
+func testAccReportPlanConfig_tags2(rName, rName2, label string) string {
 	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
@@ -395,7 +395,7 @@ resource "aws_backup_report_plan" "test" {
 `, rName2, label))
 }
 
-func testAccReportPlanReportDeliveryChannelConfig(rName, rName2, label string) string {
+func testAccReportPlanConfig_deliveryChannel(rName, rName2, label string) string {
 	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
