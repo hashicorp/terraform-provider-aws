@@ -13,7 +13,7 @@ Implementing server-side filtering support for Terraform AWS Provider resources 
 
 This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
 
-More details about this code generation can be found in the [namevaluesfilters documentation](../internal/generate/namevaluesfilters/README.md).
+More details about this code generation can be found in the [namevaluesfilters documentation](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/namevaluesfilters/README.md).
 
 - Open the AWS Go SDK documentation for the service, e.g., for [`service/rds`](https://docs.aws.amazon.com/sdk-for-go/api/service/rds/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `internal/generate/namevaluesfilters/generators/servicefilters/main.go`.
