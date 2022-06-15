@@ -32,7 +32,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalySubscriptionConfig(rName, address),
+				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -105,7 +105,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalySubscriptionConfig(rName, address),
+				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test", "arn"),
@@ -120,7 +120,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 				Config: testAccAnomalySubscriptionConfig_MonitorARNList(rName2, rName3, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
-					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.1", "aws_ce_anomaly_monitor.test2", "arn"),
 				),
 			},
@@ -143,7 +143,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalySubscriptionConfig(rName, address1),
+				Config: testAccAnomalySubscriptionConfig_basic(rName, address1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
@@ -156,7 +156,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalySubscriptionConfig(rName, address2),
+				Config: testAccAnomalySubscriptionConfig_basic(rName, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
@@ -320,7 +320,7 @@ func testAccCheckAnomalySubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAnomalySubscriptionConfig(rName string, address string) string {
+func testAccAnomalySubscriptionConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name         = %[1]q
@@ -343,7 +343,13 @@ resource "aws_ce_anomaly_monitor" "test" {
 }
 JSON
 }
+`, rName)
+}
 
+func testAccAnomalySubscriptionConfig_basic(rName string, address string) string {
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
@@ -358,33 +364,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = %[2]q
   }
 }
-`, rName, address)
+`, rName, address))
 }
 
 func testAccAnomalySubscriptionConfig_MonitorARNList(rName string, rName2 string, address string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test1" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-{
-	"And": null,
-	"CostCategories": null,
-	"Dimensions": null,
-	"Not": null,
-	"Or": null,
-	"Tags": {
-		"Key": "CostCenter",
-		"MatchOptions": null,
-		"Values": [
-			"10000"
-		]
-	}
-}
-JSON
-}
-
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test2" {
   name         = %[2]q
   monitor_type = "CUSTOM"
@@ -413,7 +399,7 @@ resource "aws_ce_anomaly_subscription" "test" {
   frequency = "WEEKLY"
 
   monitor_arn_list = [
-    aws_ce_anomaly_monitor.test1.arn,
+    aws_ce_anomaly_monitor.test.arn,
     aws_ce_anomaly_monitor.test2.arn,
   ]
   subscriber {
@@ -421,33 +407,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = %[3]q
   }
 }
-`, rName, rName2, address)
+`, rName, rName2, address))
 }
 
 func testAccAnomalySubscriptionConfig_Frequency(rName string, rFrequency string, address string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-{
-	"And": null,
-	"CostCategories": null,
-	"Dimensions": null,
-	"Not": null,
-	"Or": null,
-	"Tags": {
-		"Key": "CostCenter",
-		"MatchOptions": null,
-		"Values": [
-			"10000"
-		]
-	}
-}
-JSON
-}
-
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
@@ -462,33 +428,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = %[3]q
   }
 }
-`, rName, rFrequency, address)
+`, rName, rFrequency, address))
 }
 
 func testAccAnomalySubscriptionConfig_Subscriber2(rName string, address1 string, address2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-{
-	"And": null,
-	"CostCategories": null,
-	"Dimensions": null,
-	"Not": null,
-	"Or": null,
-	"Tags": {
-		"Key": "CostCenter",
-		"MatchOptions": null,
-		"Values": [
-			"10000"
-		]
-	}
-}
-JSON
-}
-
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
@@ -507,11 +453,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = %[3]q
   }
 }
-`, rName, address1, address2)
+`, rName, address1, address2))
 }
 
 func testAccAnomalySubscriptionConfig_SubscriberSNS(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -583,28 +531,6 @@ resource "aws_sns_topic_policy" "test" {
   policy = data.aws_iam_policy_document.test.json
 }
 
-resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-  {
-	  "And": null,
-	  "CostCategories": null,
-	  "Dimensions": null,
-	  "Not": null,
-	  "Or": null,
-	  "Tags": {
-		  "Key": "CostCenter",
-		  "MatchOptions": null,
-		  "Values": [
-			  "10000"
-		  ]
-	  }
-  }
-  JSON
-}
-
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100000000
@@ -623,33 +549,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     aws_sns_topic_policy.test,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAnomalySubscriptionConfig_Threshold(rName string, rThreshold int, address string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-{
-	"And": null,
-	"CostCategories": null,
-	"Dimensions": null,
-	"Not": null,
-	"Or": null,
-	"Tags": {
-		"Key": "CostCenter",
-		"MatchOptions": null,
-		"Values": [
-			"10000"
-		]
-	}
-}
-JSON
-}
-
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = %[2]d
@@ -664,33 +570,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = %[3]q
   }
 }
-`, rName, rThreshold, address)
+`, rName, rThreshold, address))
 }
 
 func testAccAnomalySubscriptionConfig_Tags1(rName string, tagKey1, tagValue1 string, address string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-{
-	"And": null,
-	"CostCategories": null,
-	"Dimensions": null,
-	"Not": null,
-	"Or": null,
-	"Tags": {
-		"Key": "CostCenter",
-		"MatchOptions": null,
-		"Values": [
-			"10000"
-		]
-	}
-}
-JSON
-}
-
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
@@ -709,33 +595,13 @@ resource "aws_ce_anomaly_subscription" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1, address)
+`, rName, tagKey1, tagValue1, address))
 }
 
 func testAccAnomalySubscriptionConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, address string) string {
-	return fmt.Sprintf(`
-resource "aws_ce_anomaly_monitor" "test" {
-  name         = %[1]q
-  monitor_type = "CUSTOM"
-
-  monitor_specification = <<JSON
-{
-	"And": null,
-	"CostCategories": null,
-	"Dimensions": null,
-	"Not": null,
-	"Or": null,
-	"Tags": {
-		"Key": "CostCenter",
-		"MatchOptions": null,
-		"Values": [
-			"10000"
-		]
-	}
-}
-JSON
-}
-
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
@@ -755,5 +621,5 @@ resource "aws_ce_anomaly_subscription" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2, address)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2, address))
 }
