@@ -1546,8 +1546,6 @@ rules:
     paths:
       include:
         - internal/service/cloud9/*_test.go
-      exclude:
-        - internal/service/cloud9
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
