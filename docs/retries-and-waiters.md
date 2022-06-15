@@ -10,23 +10,6 @@ Terraform plugins may run into situations where calling the remote system after 
 
 This guide describes the behavior of the Terraform AWS Provider and provides code implementations that help ensure success in each of these situations.
 
-- [Terraform Plugin SDK Functionality](#terraform-plugin-sdk-functionality)
-    - [State Change Configuration and Functions](#state-change-configuration-and-functions)
-    - [Retry Functions](#retry-functions)
-- [AWS Request Handling](#aws-request-handling)
-    - [Default AWS Go SDK Retries](#default-aws-go-sdk-retries)
-    - [Lower Network Error Retries](#lower-network-error-retries)
-    - [Terraform AWS Provider Service Retries](#terraform-aws-provider-service-retries)
-- [Eventual Consistency](#eventual-consistency)
-    - [Operation Specific Error Retries](#operation-specific-error-retries)
-        - [IAM Error Retries](#iam-error-retries)
-        - [Asynchronous Operation Error Retries](#asynchronous-operation-error-retries)
-    - [Resource Lifecycle Retries](#resource-lifecycle-retries)
-    - [Resource Attribute Value Waiters](#resource-attribute-value-waiters)
-- [Asynchronous Operations](#asynchronous-operations)
-    - [AWS Go SDK Waiters](#aws-go-sdk-waiters)
-    - [Resource Lifecycle Waiters](#resource-lifecycle-waiters)
-
 ## Terraform Plugin SDK Functionality
 
 The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `resource.StateChangeConf{}` struct, and the retry functions, `resource.Retry()` and `resource.RetryContext()`. We will discuss these throughout the rest of this guide. Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
