@@ -55,7 +55,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContainerServiceConfig_Scale(rName),
+				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
@@ -146,7 +146,7 @@ func TestAccLightsailContainerService_IsDisabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContainerServiceConfig_Disabled(rName),
+				Config: testAccContainerServiceConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "true"),
@@ -178,7 +178,7 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContainerServiceConfig_Power(rName),
+				Config: testAccContainerServiceConfig_power(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "power", lightsail.ContainerServicePowerNameMicro),
@@ -202,7 +202,7 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccContainerServiceConfig_PublicDomainNames(rName),
+				Config:      testAccContainerServiceConfig_publicDomainNames(rName),
 				ExpectError: regexp.MustCompile(`do not exist`),
 			},
 		},
@@ -231,7 +231,7 @@ func TestAccLightsailContainerService_Scale(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContainerServiceConfig_Scale(rName),
+				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
@@ -344,7 +344,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfig_Disabled(rName string) string {
+func testAccContainerServiceConfig_disabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name        = %q
@@ -355,7 +355,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfig_Power(rName string) string {
+func testAccContainerServiceConfig_power(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
@@ -365,7 +365,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfig_PublicDomainNames(rName string) string {
+func testAccContainerServiceConfig_publicDomainNames(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
@@ -385,7 +385,7 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccContainerServiceConfig_Scale(rName string) string {
+func testAccContainerServiceConfig_scale(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
   name  = %q
