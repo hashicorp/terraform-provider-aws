@@ -3,7 +3,7 @@ package cloudtrail
 import "time"
 
 const (
-	ResCloudTrail = "Trail"
+	resTrail = "Trail"
 
 	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
 	resourceTypeLambdaFunction = "AWS::Lambda::Function"

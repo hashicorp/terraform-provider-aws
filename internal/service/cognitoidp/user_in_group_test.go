@@ -15,7 +15,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoUserInGroup_basic(t *testing.T) {
+func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_in_group.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -41,7 +41,7 @@ func TestAccCognitoUserInGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUserInGroup_disappears(t *testing.T) {
+func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_in_group.test"
 

@@ -1354,8 +1354,6 @@ rules:
     paths:
       include:
         - internal/service/budgets
-      exclude:
-        - internal/service/budgets
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1748,8 +1746,6 @@ rules:
     paths:
       include:
         - internal/service/cloudfront
-      exclude:
-        - internal/service/cloudfront
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1780,8 +1776,6 @@ rules:
     paths:
       include:
         - internal/service/cloudfront
-      exclude:
-        - internal/service/cloudfront
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1796,8 +1790,6 @@ rules:
     paths:
       include:
         - internal/service/cloudfront
-      exclude:
-        - internal/service/cloudfront
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1811,8 +1803,6 @@ rules:
     message: Do not use "cloudhsm" in func name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
-      exclude:
         - internal/service/cloudhsmv2
     patterns:
       - pattern: func $NAME( ... ) { ... }
@@ -1856,8 +1846,6 @@ rules:
     message: Do not use "CloudHSMV2" in func name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
-      exclude:
         - internal/service/cloudhsmv2
     patterns:
       - pattern: func $NAME( ... ) { ... }
@@ -1975,8 +1963,6 @@ rules:
     paths:
       include:
         - internal/service/cloudtrail
-      exclude:
-        - internal/service/cloudtrail
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1992,8 +1978,6 @@ rules:
     paths:
       include:
         - internal/service/cloudtrail/*_test.go
-      exclude:
-        - internal/service/cloudtrail
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2009,8 +1993,6 @@ rules:
     paths:
       include:
         - internal/service/cloudtrail
-      exclude:
-        - internal/service/cloudtrail
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2024,8 +2006,6 @@ rules:
     message: Do not use "CloudTrail" in var name inside cloudtrail package
     paths:
       include:
-        - internal/service/cloudtrail
-      exclude:
         - internal/service/cloudtrail
     patterns:
       - pattern: var $NAME = ...
@@ -2286,8 +2266,6 @@ rules:
     paths:
       include:
         - internal/service/codebuild
-      exclude:
-        - internal/service/codebuild
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2447,8 +2425,6 @@ rules:
     paths:
       include:
         - internal/service/codepipeline
-      exclude:
-        - internal/service/codepipeline
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2479,8 +2455,6 @@ rules:
     paths:
       include:
         - internal/service/codepipeline
-      exclude:
-        - internal/service/codepipeline
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2494,8 +2468,6 @@ rules:
     message: Do not use "CodePipeline" in var name inside codepipeline package
     paths:
       include:
-        - internal/service/codepipeline
-      exclude:
         - internal/service/codepipeline
     patterns:
       - pattern: var $NAME = ...
@@ -2627,8 +2599,6 @@ rules:
     paths:
       include:
         - internal/service/cognitoidentity
-      exclude:
-        - internal/service/cognitoidentity
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2745,8 +2715,6 @@ rules:
     paths:
       include:
         - internal/service/cognitoidp/*_test.go
-      exclude:
-        - internal/service/cognitoidp
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
