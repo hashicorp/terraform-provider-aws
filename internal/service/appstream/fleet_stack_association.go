@@ -66,7 +66,7 @@ func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error creating AppStream Fleet Stack Association (%s): %w", d.Id(), err))
 	}
 
-	d.SetId(EncodeStackFleetID(d.Get("stack_name").(string), d.Get("fleet_name").(string)))
+	d.SetId(EncodeStackFleetID(d.Get("fleet_name").(string), d.Get("stack_name").(string)))
 
 	return resourceFleetStackAssociationRead(ctx, d, meta)
 }
