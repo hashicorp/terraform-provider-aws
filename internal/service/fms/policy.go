@@ -489,8 +489,13 @@ func flattenPolicyOption(fmsPolicyOption *fms.PolicyOption) map[string]interface
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["network_firewall_policy"] = flattenPolicyOptionNetworkFirewall(fmsPolicyOption.NetworkFirewallPolicy)
-	tfMap["thirdparty_firewall_policy"] = flattenPolicyOptionThirdpartyFirewall(fmsPolicyOption.ThirdPartyFirewallPolicy)
+	if v := fmsPolicyOption.NetworkFirewallPolicy; v != nil {
+		tfMap["network_firewall_policy"] = flattenPolicyOptionNetworkFirewall(fmsPolicyOption.NetworkFirewallPolicy)
+	}
+
+	if v := fmsPolicyOption.ThirdPartyFirewallPolicy; v != nil {
+		tfMap["thirdparty_firewall_policy"] = flattenPolicyOptionThirdpartyFirewall(fmsPolicyOption.ThirdPartyFirewallPolicy)
+	}
 
 	return tfMap
 }
