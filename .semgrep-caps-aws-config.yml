@@ -399,7 +399,6 @@ rules:
         - internal/service/kinesis
         - internal/service/kinesisanalyticsv2
         - internal/service/lambda
-        - internal/service/meta
         - internal/service/networkmanager
         - internal/service/organizations
         - internal/service/ram
